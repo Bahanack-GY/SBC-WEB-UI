@@ -42,10 +42,69 @@ A modern web application for the Sniper Business Center (SBC) platform, built wi
 - `src/components/` — Reusable UI components (cards, buttons, skeletons, etc.)
 - `src/assets/` — Images and icons
 
+### Folder Structure
+
+```
+src/
+├── assets/
+│   └── icon/           # App icons and images
+├── components/
+│   ├── common/         # Shared UI components (BackButton, Skeleton, etc.)
+│   └── ...             # Other reusable components
+├── pages/
+│   ├── Abonnement.tsx
+│   ├── AjouterProduit.tsx
+│   ├── Marketplace.tsx
+│   ├── MesFilleuls.tsx
+│   ├── MesProduits.tsx
+│   ├── ModifierLeProfil.tsx
+│   ├── ModifierProduit.tsx
+│   ├── Profile.tsx
+│   └── ...             # Other main pages
+├── App.tsx             # Main app component and routes
+├── main.tsx            # App entry point
+├── index.css           # Global styles
+└── vite-env.d.ts       # Vite/TypeScript env types
+```
+
 ## Customization
 
 - Update business logic, API integration, and UI components as needed for your use case.
 - Tailwind CSS can be customized via `tailwind.config.js`.
+
+## Environment Variables
+
+- Create a `.env` file in the root for any API keys or environment-specific settings.
+- Example:
+  ```env
+  VITE_API_URL=https://api.example.com
+  ```
+
+## Browser Support
+
+- The app is tested on the latest versions of Chrome, Firefox, Edge, and Safari.
+- For best results, use a modern browser.
+
+## Contributing
+
+Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/YourFeature`)
+3. Commit your changes (`git commit -am 'Add some feature'`)
+4. Push to the branch (`git push origin feature/YourFeature`)
+5. Open a pull request
+
+## Support
+
+- If you encounter bugs or have feature requests, please open an issue in the repository.
+- For urgent issues, contact the SBC technical team.
+
+## Contact
+
+- **Sniper Business Center (SBC)**
+- Email: [support@sbc.com](mailto:support@sbc.com)
+- Website: [https://sbc.com](https://sbc.com)
 
 ## License
 
