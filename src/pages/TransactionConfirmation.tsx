@@ -1,51 +1,82 @@
-import { useState } from 'react';
-import { FiDownload, FiShare2, FiChevronDown, FiChevronUp } from 'react-icons/fi';
+import { useState, useEffect } from 'react';
+import { FiDownload, FiShare2, FiChevronDown, FiChevronUp, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const transaction = {
-  id: 123456,
-  name: 'Placement principal',
-  date: '14 Avril, Dimanche',
-  amount: 70500,
-  type: 'Paiement',
-  description: 'Paiement pour la réservation de la bannière principale.',
-  status: 'Succès',
-  phone: '+31611133458',
-};
+import { useLocation, useNavigate } from 'react-router-dom';
+import BackButton from '../components/common/BackButton';
 
 function TransactionConfirmation() {
   const [showDetails, setShowDetails] = useState(false);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const {
+    transactionId,
+    withdrawalAmount,
+    withdrawalCurrency,
+  } = location.state || {};
+
+  useEffect(() => {
+    if (!transactionId || withdrawalAmount === undefined) {
+      console.warn("Transaction ID or amount missing in state. Redirecting to Wallet.");
+      navigate('/wallet');
+    }
+  }, [transactionId, withdrawalAmount, navigate]);
 
   const handleDownload = () => {
-    alert('Téléchargement du reçu PDF...');
+    alert('Le reçu PDF sera disponible une fois la transaction finalisée.');
   };
   const handleShare = () => {
-    alert('Partage du reçu PDF...');
+    if (transactionId && withdrawalAmount !== undefined && withdrawalCurrency) {
+      const shareText = `Ma demande de retrait de ${withdrawalAmount.toLocaleString('fr-FR')} ${withdrawalCurrency} (ID: ${transactionId}) est en cours de traitement.`;
+      if (navigator.share) {
+        navigator.share({ text: shareText });
+      } else {
+        navigator.clipboard.writeText(shareText);
+        alert('Informations de la transaction copiées dans le presse-papier !');
+      }
+    } else {
+      alert("Informations de transaction insuffisantes pour partager.");
+    }
   };
+
+  if (!transactionId || withdrawalAmount === undefined) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white text-gray-700">
+        Redirection...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4 py-8">
+      <div className="w-full max-w-md flex justify-start mb-4">
+        <BackButton />
+      </div>
+
       {/* Transaction summary card */}
       <div className="w-full max-w-md bg-[#f8fafc] border border-dashed border-gray-200 rounded-xl p-4 flex items-center gap-4 mb-6">
+
         <div className="bg-[#115CF6]/10 rounded-full p-3 flex items-center justify-center">
-          <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#115CF6" opacity="0.1"/><path d="M8 12h8M8 16h5" stroke="#115CF6" strokeWidth="2" strokeLinecap="round"/></svg>
+          <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#115CF6" opacity="0.1" /><path d="M8 12h8M8 16h5" stroke="#115CF6" strokeWidth="2" strokeLinecap="round" /></svg>
         </div>
         <div className="flex-1">
           <div className="font-semibold text-gray-800">Retrait SBC</div>
-          <div className="text-xs text-gray-500">{transaction.date}</div>
+          <div className="text-xs text-gray-500">
+            {new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', weekday: 'long' })}
+          </div>
         </div>
-        <div className="text-[#115CF6] font-bold text-lg">{transaction.amount.toLocaleString()} F</div>
+        <div className="text-[#115CF6] font-bold text-lg">{withdrawalAmount.toLocaleString('fr-FR')} {withdrawalCurrency || 'F'}</div>
       </div>
-      {/* Checkmark */}
-      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', bounce: 0.4 }} className="mb-4">
-        <div className="bg-green-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto">
-          <svg width="48" height="48" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="12" fill="#22c55e" opacity="0.15"/><path d="M8 12.5l3 3 5-5.5" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+      {/* Processing indicator */}
+      <motion.div initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} className="mb-4">
+        <div className="bg-yellow-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto">
+          <FiLoader size={48} className="text-yellow-500 animate-spin" />
         </div>
       </motion.div>
-      {/* Success message */}
-      <div className="text-2xl font-bold text-gray-800 text-center mb-2">Votre transaction a été effectuée avec succès</div>
+      {/* Processing message */}
+      <div className="text-2xl font-bold text-gray-800 text-center mb-2">Votre retrait est en cours de traitement</div>
       <div className="text-gray-500 text-center max-w-md mb-6">
-        Vous allez recevoir un email de confirmation de votre transaction.
+        Votre demande de retrait a été enregistrée et est en cours de traitement. Vous recevrez une notification lorsque le processus sera terminé.
       </div>
       <div className="flex gap-3 mb-6">
         <button onClick={handleDownload} className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-5 py-2 font-bold shadow hover:bg-blue-800 transition-colors">
@@ -70,17 +101,24 @@ function TransactionConfirmation() {
             className="w-full max-w-md bg-white border border-gray-100 rounded-xl p-4 shadow mb-4"
           >
             <div className="mb-2 text-sm text-gray-500">ID de la transaction</div>
-            <div className="font-mono text-sm mb-2">{transaction.id}</div>
+            <div className="font-mono text-sm mb-2">{transactionId}</div>
             <div className="mb-2 text-sm text-gray-500">Type</div>
-            <div className="font-semibold mb-2">{transaction.type}</div>
+            <div className="font-semibold mb-2">Retrait</div>
+            <div className="mb-2 text-sm text-gray-500">Statut</div>
+            <div className="font-semibold mb-2 text-yellow-600">En cours de traitement</div>
             <div className="mb-2 text-sm text-gray-500">Montant</div>
-            <div className="font-bold text-lg mb-2 text-green-600">{transaction.amount.toLocaleString()} F</div>
+            <div className="font-bold text-lg mb-2 text-green-600">{withdrawalAmount.toLocaleString('fr-FR')} {withdrawalCurrency || 'F'}</div>
             <div className="mb-2 text-sm text-gray-500">Description</div>
-            <div className="mb-2">{transaction.description}</div>
+            <div className="mb-2">Demande de retrait de fonds</div>
             <div className="mb-2 text-sm text-gray-500">Date</div>
-            <div className="mb-2">{transaction.date}</div>
-            <div className="mb-2 text-sm text-gray-500">Téléphone</div>
-            <div>{transaction.phone}</div>
+            <div className="mb-2">
+              {new Date().toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

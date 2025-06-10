@@ -1,13 +1,16 @@
 import { useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 function Connexion() {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [errors, setErrors] = useState({ email: '', password: '' });
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const validate = () => {
     let valid = true;
@@ -17,19 +20,47 @@ function Connexion() {
       newErrors.email = 'Veuillez entrer un email valide.';
       valid = false;
     }
-    if (password.length < 8) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 8 caractères.';
+    if (password.length < 6) {
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères.';
       valid = false;
     }
     setErrors(newErrors);
     return valid;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (validate()) {
-      // Proceed with login (API call, etc.)
-      // ...
+      setLoading(true);
+      try {
+        console.log('Connexion: Starting login process for', email);
+        const result = await login(email, password);
+        console.log('Connexion: Login result:', result);
+
+        if (result.requiresOtp) {
+          console.log('Connexion: OTP required, redirecting to OTP page');
+          // Redirect to OTP verification page
+          navigate('/otp', {
+            state: {
+              userId: result.userId,
+              email: result.email || email,
+              fromLogin: true
+            }
+          });
+        } else {
+          console.log('Connexion: Direct login success, redirecting to home');
+          // Direct login success - redirect to home
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Connexion: Login error:', error);
+        setErrors({
+          email: '',
+          password: error instanceof Error ? error.message : 'Login failed'
+        });
+      } finally {
+        setLoading(false);
+      }
     }
   };
 
@@ -76,9 +107,10 @@ function Connexion() {
           </div>
           <button
             type="submit"
-            className="w-full bg-[#115CF6] hover:bg-blue-700 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow"
+            disabled={loading}
+            className="w-full bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-lg mt-2 shadow"
           >
-            Se connecter
+            {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
         <div className="text-center text-sm text-gray-500 mt-6">

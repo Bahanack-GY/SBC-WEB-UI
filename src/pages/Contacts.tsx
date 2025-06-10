@@ -1,370 +1,627 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import BackButton from "../components/common/BackButton";
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaWhatsapp } from 'react-icons/fa';
-import { FiDownload, FiFilter } from 'react-icons/fi';
+import { FaWhatsapp, FaFilter } from 'react-icons/fa';
+import { FiDownload, FiFilter, FiLoader } from 'react-icons/fi';
 import { Index } from 'flexsearch';
+import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelpers';
+import type { User } from '../types/api';
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
-const professions = ["Médecin", "Ingénieur", "Enseignant", "Commerçant", "Étudiant"];
-const interests = ["Sport", "Musique", "Voyage", "Lecture", "Technologie"];
+const professions = [
+    'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
+    'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Data scientist',
+    'Enseignant', 'Professeur d\'université', 'Formateur professionnel', 'Éducateur spécialisé', 'Conseiller pédagogique',
+    'Artiste (peintre, sculpteur)', 'Designer graphique', 'Photographe', 'Musicien', 'Écrivain', 'Réalisateur',
+    'Responsable marketing', 'Vendeur/Vendeuse', 'Gestionnaire de produit', 'Analyste de marché', 'Consultant en stratégie',
+    'Avocat', 'Notaire', 'Juge', 'Huissier de justice',
+    'Chercheur scientifique', 'Biologiste', 'Chimiste', 'Physicien', 'Statisticien',
+    'Travailleur social', 'Conseiller en orientation', 'Animateur socioculturel', 'Médiateur familial',
+    'Maçon', 'Électricien', 'Plombier', 'Charpentier', 'Architecte d\'intérieur',
+    'Chef cuisinier', 'Serveur/Serveuse', 'Gestionnaire d\'hôtel', 'Barman/Barmane',
+    'Conducteur de train', 'Pilote d\'avion', 'Logisticien', 'Gestionnaire de chaîne d\'approvisionnement',
+    'Administrateur système', 'Spécialiste en cybersécurité', 'Ingénieur réseau', 'Consultant en technologies de l\'information',
+    'Journaliste', 'Rédacteur web', 'Chargé de communication', 'Community manager',
+    'Comptable', 'Analyste financier', 'Auditeur interne', 'Conseiller fiscal',
+    'Agriculteur/Agricultrice', 'Ingénieur agronome', 'Écologiste', 'Gestionnaire de ressources naturelles',
+];
+const interests = [
+    'Football', 'Basketball', 'Course à pied', 'Natation', 'Yoga', 'Randonnée', 'Cyclisme',
+    'Musique (instruments, chant)', 'Danse', 'Peinture et dessin', 'Photographie', 'Théâtre', 'Cinéma',
+    'Programmation', 'Robotique', 'Sciences de la vie', 'Astronomie', 'Électronique',
+    'Découverte de nouvelles cultures', 'Randonnées en nature', 'Tourisme local et international',
+    'Cuisine du monde', 'Pâtisserie', 'Dégustation de vins', 'Aide aux personnes défavorisées',
+    'Protection de l\'environnement', 'Participation à des événements caritatifs', 'Lecture', 'Méditation',
+    'Apprentissage de nouvelles langues', 'Jeux vidéo', 'Jeux de société', 'Énigmes et casse-têtes',
+    'Stylisme', 'Décoration d\'intérieur', 'Artisanat', 'Fitness', 'Nutrition', 'Médecine alternative',
+];
+
 const sexes = ["Homme", "Femme", "Autre"];
 
 const westAfricanCountries = [
-  { name: 'Bénin', flag: '🇧🇯' },
-  { name: 'Burkina Faso', flag: '🇧🇫' },
-  { name: 'Cap-Vert', flag: '🇨🇻' },
-  { name: 'Côte d\'Ivoire', flag: '🇨🇮' },
-  { name: 'Gambie', flag: '🇬🇲' },
-  { name: 'Ghana', flag: '🇬🇭' },
-  { name: 'Guinée', flag: '🇬🇳' },
-  { name: 'Guinée-Bissau', flag: '🇬🇼' },
-  { name: 'Libéria', flag: '🇱🇷' },
-  { name: 'Mali', flag: '🇲🇱' },
-  { name: 'Niger', flag: '🇳🇪' },
-  { name: 'Nigéria', flag: '🇳🇬' },
-  { name: 'Sénégal', flag: '🇸🇳' },
-  { name: 'Sierra Leone', flag: '🇸🇱' },
-  { name: 'Togo', flag: '🇹🇬' },
+    { name: 'Bénin', flag: 'BJ' },
+    { name: 'Cameroun', flag: 'CM' },
+    { name: 'Burkina Faso', flag: 'BF' },
+    { name: 'Cap-Vert', flag: 'CV' },
+    { name: 'Côte d\'Ivoire', flag: 'CI' },
+    { name: 'Gambie', flag: 'GM' },
+    { name: 'Ghana', flag: 'GH' },
+    { name: 'Guinée', flag: 'GN' },
+    { name: 'Guinée-Bissau', flag: 'GW' },
+    { name: 'Libéria', flag: 'LR' },
+    { name: 'Mali', flag: 'ML' },
+    { name: 'Niger', flag: 'NE' },
+    { name: 'Nigéria', flag: 'NG' },
+    { name: 'Sénégal', flag: 'SN' },
+    { name: 'Sierra Leone', flag: 'SL' },
+    { name: 'Togo', flag: 'TG' },
 ];
 
 interface Criteria {
-  country: string;
-  age: string;
-  sex: string;
-  professions: string[];
-  interests: string[];
+    country: string;
+    minAge?: string;
+    maxAge?: string;
+    sex: string;
+    professions: string[];
+    interests: string[];
+    search: string;
 }
 
-const contacts = [
-  { name: 'Nicholas Gordon', phone: '+22990001111', avatar: 'https://randomuser.me/api/portraits/men/1.jpg' },
-  { name: 'Bradley Malone', phone: '+22990002222', avatar: 'https://randomuser.me/api/portraits/men/2.jpg' },
-  { name: 'Janie Todd', phone: '+22990003333', avatar: 'https://randomuser.me/api/portraits/women/1.jpg' },
-  { name: 'Marvin Lambert', phone: '+22990004444', avatar: 'https://randomuser.me/api/portraits/men/3.jpg' },
-  { name: 'Teresa Lloyd', phone: '+22990005555', avatar: 'https://randomuser.me/api/portraits/women/2.jpg' },
-  { name: 'Fred Haynes', phone: '+22990006666', avatar: 'https://randomuser.me/api/portraits/men/4.jpg' },
-  { name: 'Rose Peters', phone: '+22990007777', avatar: 'https://randomuser.me/api/portraits/women/3.jpg' },
-  { name: 'Jose Stone', phone: '+22990008888', avatar: 'https://randomuser.me/api/portraits/men/5.jpg', highlight: true },
-];
-
 function Contacts() {
-    const [search, setSearch] = useState("");
     const [modalOpen, setModalOpen] = useState(false);
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);
     const [filterDownloadModalOpen, setFilterDownloadModalOpen] = useState(false);
+    const [contacts, setContacts] = useState<User[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [downloading, setDownloading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
     const [criteria, setCriteria] = useState<Criteria>({
         country: "",
-        age: "",
+        minAge: "",
+        maxAge: "",
         sex: "",
         professions: [],
         interests: [],
+        search: ""
     });
-    const [dateRange, setDateRange] = useState({ from: '', to: '' });
+
+    // Helper to format date to YYYY-MM-DD
+    const formatDateForInput = (date: Date) => date.toISOString().split('T')[0];
+
+    // Calculate default dates for the last 7 days for the "Sélectionner une période" inputs
+    const today = new Date();
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(today.getDate() - 7);
+
+    const [dateRange, setDateRange] = useState({
+        from: formatDateForInput(sevenDaysAgo),
+        to: formatDateForInput(today),
+    });
+
+    // New state for the "Télécharger les contacts filtrés" modal's date inputs
+    const [filterModalDateRange, setFilterModalDateRange] = useState({ from: '', to: '' });
+
+    useEffect(() => {
+        // Reset filterModalDateRange when the filter download modal is closed
+        if (!filterDownloadModalOpen) {
+            setFilterModalDateRange({ from: '', to: '' });
+        }
+    }, [filterDownloadModalOpen]);
+
+    useEffect(() => {
+        const fetchContacts = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                // Map UI sex value to API sex value
+                const apiSex = criteria.sex === 'Homme' ? 'male' :
+                    criteria.sex === 'Femme' ? 'female' :
+                        criteria.sex === 'Autre' ? 'other' : '';
+
+                const filters = {
+                    search: criteria.search,
+                    country: criteria.country,
+                    minAge: criteria.minAge,
+                    maxAge: criteria.maxAge,
+                    sex: apiSex,
+                    // Apply removeAccents to each selected profession and interest before joining
+                    professions: criteria.professions.map(p => removeAccents(p)).join(','),
+                    interests: criteria.interests.map(i => removeAccents(i)).join(','),
+                };
+                const response = await sbcApiService.searchContacts(filters);
+                const result = handleApiResponse(response);
+                setContacts(result || []);
+            } catch (err) {
+                console.error("Failed to fetch contacts", err);
+                setError(err instanceof Error ? err.message : 'Failed to load contacts.');
+                setContacts([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const debounceFetch = setTimeout(() => {
+            fetchContacts();
+        }, 500); // Debounce API calls by 500ms
+
+        return () => clearTimeout(debounceFetch);
+    }, [criteria]);
+
+    const handleCriteriaChange = (key: keyof Criteria, value: string | string[]) => {
+        setCriteria(prev => ({ ...prev, [key]: value }));
+    };
 
     const handleMultiSelect = (key: 'professions' | 'interests', value: string) => {
         setCriteria(prev => {
             const arr = prev[key];
-            return {
-                ...prev,
-                [key]: arr.includes(value) ? arr.filter((v: string) => v !== value) : [...arr, value]
-            };
+            const newArr = arr.includes(value) ? arr.filter((v: string) => v !== value) : [...arr, value];
+            return { ...prev, [key]: newArr };
         });
     };
 
+    const RelanceMessage = `🚀 Rejoins la Révolution Entrepreneuriale avec le Sniper Business Center ! 🌍
+
+Tu es à un clic de faire partie de la meilleure communauté d'Afrique, où les opportunités d'affaires abondent et où ton succès est notre priorité!
+
+Voici ce que tu vas gagner en nous rejoignant dès maintenant:
+
+✨ Visibilité Maximale: Partage ton flyer ou affiche publicitaire dans nos groupes chaque samedi, atteignant ainsi des milliers de potentiels clients!
+
+📈 Accès à un Réseau Énorme:
+Profite de plus de 30 000 contacts WhatsApp ciblés qui verront tes produits et services.Ton succès commence ici!
+
+🎓 Formations Exclusives et Gratuites:
+Bénéficie de 5 formations complètes, accompagnées d'un suivi personnalisé chaque semaine sur Google Meet :
+
+   • Deviens expert en trading
+
+   • Maîtrise l'importation depuis la Chine
+
+   • Domine le marketing digital
+
+   • Excelle en art oratoire
+
+   • Crée des bots WhatsApp pour booster ton business
+
+🛒 Marketplace à Ta Disposition:
+ Mets en avant tes produits et services sur notre plateforme dédiée!
+
+💰 Gagne de l'Argent Facilement :
+Avec notre système de parrainage rémunéré:
+
+   • Niveau 1 : Parrainage direct = 1000 FCFA
+
+   • Niveau 2 : Ton filleul parraine = 500 FCFA
+
+   • Niveau 3 : Le filleul de ton filleul inscrit = 250 FCFA
+
+Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès ! J'ai remarqué que tu as créé ton compte, mais que tu n'as pas encore finalisé ton abonnement. Ne laisse pas passer cette chance incroyable !
+
+👉 Prends ta décision aujourd'hui et transforme ta vie avec nous !
+
+    https://sniperbuisnesscenter.com/ `;
+
     const handleWhatsapp = (phone: string) => {
-        window.open(`https://wa.me/${phone.replace(/[^\d]/g, '')}`, '_blank');
+        if (phone) window.open(`https://wa.me/${phone.replace(/[^\d]/g, '')}/?text=${RelanceMessage}`, '_blank');
     };
 
-    const handleDownloadAll = () => {
-        // Dummy handler for downloading all contacts
-        alert('Téléchargement de tous les contacts...');
+    const downloadFile = async (url: string, filename: string = 'contacts.vcf') => {
+        setDownloading(true);
+        try {
+            const token = localStorage.getItem('token');
+            const headers: HeadersInit = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const response = await fetch(url, { headers });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Erreur de téléchargement: ${response.status} ${response.statusText} - ${errorText}`);
+            }
+
+            const blob = await response.blob();
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let suggestedFilename = filename;
+
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename\*?=(?:UTF-8'')?([^;]+)/i);
+                if (filenameMatch && filenameMatch[1]) {
+                    try {
+                        suggestedFilename = decodeURIComponent(filenameMatch[1].trim().replace(/^"|"$/g, ''));
+                    } catch (e) {
+                        console.warn("Could not decode filename from Content-Disposition, using default.", e);
+                        suggestedFilename = filenameMatch[1].trim().replace(/^"|"$/g, '');
+                    }
+                }
+            }
+
+            const urlBlob = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = urlBlob;
+            a.download = suggestedFilename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(urlBlob);
+            alert('Téléchargement réussi!');
+        } catch (err) {
+            console.error("Failed to download contacts:", err);
+            setError(err instanceof Error ? err.message : 'Échec du téléchargement des contacts.');
+            alert('Échec du téléchargement des contacts.');
+        } finally {
+            setDownloading(false);
+        }
+    };
+
+    const handleDownloadAll = async () => {
+        const baseUrl = getBaseUrl();
+        // This button downloads ALL contacts, without any date filter
+        await downloadFile(`${baseUrl}/contacts/export`, `tous_contacts.vcf`);
         setDownloadModalOpen(false);
     };
-    const handleDownloadRange = () => {
-        // Dummy handler for downloading contacts in date range
-        alert(`Téléchargement des contacts du ${dateRange.from} au ${dateRange.to}`);
+
+    const handleDownloadRange = async () => {
+        if (!dateRange.from || !dateRange.to) {
+            alert("Veuillez sélectionner les deux dates.");
+            return;
+        }
+        const baseUrl = getBaseUrl();
+        const queryParams = new URLSearchParams({
+            startDate: dateRange.from,
+            endDate: dateRange.to,
+        }).toString();
+        await downloadFile(`${baseUrl}/contacts/export?${queryParams}`, `contacts_du_${dateRange.from}_au_${dateRange.to}.vcf`);
         setDownloadModalOpen(false);
     };
-    const handleDownloadFiltered = () => {
-        // Dummy handler for downloading filtered contacts
-        alert('Téléchargement des contacts selon le filtre courant.');
+
+    const handleDownloadFiltered = async () => {
+        const baseUrl = getBaseUrl();
+        // Map UI sex value to API sex value for download filter
+        const apiSex = criteria.sex === 'Homme' ? 'male' :
+            criteria.sex === 'Femme' ? 'female' :
+                criteria.sex === 'Autre' ? 'other' : '';
+
+        const filters: Record<string, string | string[]> = {
+            search: criteria.search,
+            country: criteria.country,
+            sex: apiSex,
+            // Apply removeAccents to each selected profession and interest before joining
+            professions: criteria.professions.map(p => removeAccents(p)).join(','),
+            interests: criteria.interests.map(i => removeAccents(i)).join(','),
+        };
+
+        if (criteria.minAge) filters.minAge = criteria.minAge;
+        if (criteria.maxAge) filters.maxAge = criteria.maxAge;
+        // Use the dates from the filterModalDateRange for filtered download
+        if (filterModalDateRange.from) filters.startDate = filterModalDateRange.from;
+        if (filterModalDateRange.to) filters.endDate = filterModalDateRange.to;
+
+        const queryParams = Object.entries(filters)
+            .filter(([, value]) => value !== null && value !== undefined && value !== '' && (Array.isArray(value) ? value.length > 0 : true))
+            .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
+            .join('&');
+
+        await downloadFile(`${baseUrl}/contacts/export?${queryParams}`, `contacts_filtres.vcf`);
         setFilterDownloadModalOpen(false);
     };
 
-    // FlexSearch index for fast fuzzy search
-    const flexIndex = useMemo(() => {
-        const index = new Index({ tokenize: 'forward', preset: 'match', cache: true });
-        contacts.forEach((c, i) => {
-            index.add(i, c.name + ' ' + c.phone);
-        });
-        return index;
-    }, []);
-
-    const filteredContacts = useMemo(() => {
-        if (!search.trim()) return contacts;
-        const results = flexIndex.search(search.trim()) as string[];
-        return results.map(i => contacts[Number(i)]);
-    }, [search, flexIndex]);
-
     return (
-        <div className="p-3 h-screen bg-white">
-            <div className="flex items-center mb-3">
-            <BackButton />
-            <h3 className="text-xl font-medium text-center w-full">Fiche de contact</h3>
-        </div>
-            {/* Search Bar */}
-            <input
-                type="text"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Rechercher un contact..."
-                className="w-full mb-3 rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
-            />
-            {/* Sort, Download & Modal Trigger */}
-            <div className="flex items-center gap-2 mb-4">
-                <button
-                    className="bg-gray-100 px-4 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200"
-                    onClick={() => setModalOpen(true)}
-                >
-                    <span className="font-bold">Trier</span> <span className="ml-1 text-[#22334d]">▼</span>
-                </button>
-                <span className="text-gray-500">A-Z</span>
-                <button
-                    className="ml-auto bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200 hover:bg-gray-200"
-                    onClick={() => setDownloadModalOpen(true)}
-                    title="Télécharger les contacts"
-                >
-                    <FiDownload size={18} />
-                </button>
-                <button
-                    className="bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200 hover:bg-gray-200"
-                    onClick={() => setFilterDownloadModalOpen(true)}
-                    title="Télécharger les contacts filtrés"
-                >
-                    <FiFilter size={18} />
-                </button>
-            </div>
-            {/* Download Modal */}
-            <AnimatePresence>
-                {downloadModalOpen && (
-                    <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
+        <ProtectedRoute>
+            <div className="p-3 h-screen bg-white">
+                <div className="flex items-center mb-3">
+                    <BackButton />
+                    <h3 className="text-xl font-medium text-center w-full">Fiche de contact</h3>
+                </div>
+                {/* Search Bar */}
+                <input
+                    type="text"
+                    value={criteria.search}
+                    onChange={e => handleCriteriaChange('search', e.target.value)}
+                    placeholder="Rechercher par nom, téléphone..."
+                    className="w-full mb-3 rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
+                />
+                {/* Sort, Download & Modal Trigger */}
+                <div className="flex items-center gap-2 mb-4">
+                    <button
+                        className="bg-gray-100 px-4 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200"
+                        onClick={() => setModalOpen(true)}
                     >
+                        <FaFilter className="text-green-700" />
+                        <span className="font-bold">Trier</span>
+                    </button>
+                    <span className="text-gray-500">A-Z</span>
+                    <button
+                        className="ml-auto bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200 hover:bg-gray-200"
+                        onClick={() => setDownloadModalOpen(true)}
+                        title="Télécharger les contacts"
+                        disabled={downloading}
+                    >
+                        <FiDownload size={18} />
+                    </button>
+                    <button
+                        className="bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200 hover:bg-gray-200"
+                        onClick={() => setFilterDownloadModalOpen(true)}
+                        title="Télécharger les contacts filtrés"
+                        disabled={downloading}
+                    >
+                        <FiFilter size={18} />
+                    </button>
+                </div>
+                {/* Download Modal */}
+                <AnimatePresence>
+                    {downloadModalOpen && (
                         <motion.div
-                            className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            transition={{ type: 'spring', bounce: 0.2 }}
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                         >
-                            <h4 className="text-lg font-bold mb-4">Télécharger les contacts</h4>
-                            <div className="flex flex-col gap-4">
+                            <motion.div
+                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                transition={{ type: 'spring', bounce: 0.2 }}
+                            >
+                                <h4 className="text-lg font-bold mb-4">Télécharger les contacts</h4>
+                                <div className="flex flex-col gap-4">
+                                    <button
+                                        className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
+                                        onClick={handleDownloadAll}
+                                        disabled={downloading}
+                                    >
+                                        {downloading ? 'Téléchargement...' : 'Télécharger tous les contacts'}
+                                    </button>
+                                    <div className="flex flex-col gap-2">
+                                        <label className="text-sm font-medium">Ou sélectionner une période :</label>
+                                        <div className="flex gap-2">
+                                            <input
+                                                type="date"
+                                                value={dateRange.from}
+                                                onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))}
+                                                className="rounded-lg border border-gray-200 px-3 py-2"
+                                            />
+                                            <input
+                                                type="date"
+                                                value={dateRange.to}
+                                                onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))}
+                                                className="rounded-lg border border-gray-200 px-3 py-2"
+                                            />
+                                        </div>
+                                        <button
+                                            className="w-full bg-green-700 text-white rounded-xl py-2 font-bold shadow hover:bg-green-800 transition-colors"
+                                            onClick={handleDownloadRange}
+                                            disabled={!dateRange.from || !dateRange.to || downloading}
+                                        >
+                                            {downloading ? 'Téléchargement...' : 'Télécharger la sélection'}
+                                        </button>
+                                    </div>
+                                </div>
                                 <button
-                                    className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
-                                    onClick={handleDownloadAll}
+                                    className="w-full mt-4 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                    onClick={() => setDownloadModalOpen(false)}
                                 >
-                                    Télécharger tous les contacts
+                                    Annuler
                                 </button>
-                                <div className="flex flex-col gap-2">
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                {/* Download Filtered Modal */}
+                <AnimatePresence>
+                    {filterDownloadModalOpen && (
+                        <motion.div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                        >
+                            <motion.div
+                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                transition={{ type: 'spring', bounce: 0.2 }}
+                            >
+                                <h4 className="text-lg font-bold mb-4">Télécharger les contacts filtrés</h4>
+                                <div className="mb-4 text-sm text-gray-700">
+                                    <span className="font-semibold">Résumé du filtre :</span><br />
+                                    Pays : {westAfricanCountries.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
+                                    Âge : {criteria.minAge && criteria.maxAge ? `${criteria.minAge} - ${criteria.maxAge}` : criteria.minAge ? `Min ${criteria.minAge}` : criteria.maxAge ? `Max ${criteria.maxAge}` : 'Tous'}<br />
+                                    Sexe : {criteria.sex || 'Tous'}<br />
+                                    Professions : {criteria.professions.length ? criteria.professions.join(', ') : 'Toutes'}<br />
+                                    Intérêts : {criteria.interests.length ? criteria.interests.join(', ') : 'Tous'}
+                                </div>
+                                <div className="flex flex-col gap-2 mb-4"> {/* Added date inputs here */}
                                     <label className="text-sm font-medium">Ou sélectionner une période :</label>
                                     <div className="flex gap-2">
                                         <input
                                             type="date"
-                                            value={dateRange.from}
-                                            onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))}
+                                            value={filterModalDateRange.from}
+                                            onChange={e => setFilterModalDateRange(r => ({ ...r, from: e.target.value }))}
                                             className="rounded-lg border border-gray-200 px-3 py-2"
                                         />
                                         <input
                                             type="date"
-                                            value={dateRange.to}
-                                            onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))}
+                                            value={filterModalDateRange.to}
+                                            onChange={e => setFilterModalDateRange(r => ({ ...r, to: e.target.value }))}
                                             className="rounded-lg border border-gray-200 px-3 py-2"
                                         />
                                     </div>
-                                    <button
-                                        className="w-full bg-green-700 text-white rounded-xl py-2 font-bold shadow hover:bg-green-800 transition-colors"
-                                        onClick={handleDownloadRange}
-                                        disabled={!dateRange.from || !dateRange.to}
-                                    >
-                                        Télécharger la sélection
-                                    </button>
                                 </div>
-                            </div>
-                            <button
-                                className="w-full mt-4 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
-                                onClick={() => setDownloadModalOpen(false)}
-                            >
-                                Annuler
-                            </button>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            {/* Download Filtered Modal */}
-            <AnimatePresence>
-                {filterDownloadModalOpen && (
-                    <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                    >
-                        <motion.div
-                            className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            transition={{ type: 'spring', bounce: 0.2 }}
-                        >
-                            <h4 className="text-lg font-bold mb-4">Télécharger les contacts filtrés</h4>
-                            <div className="mb-4 text-sm text-gray-700">
-                                Vous allez télécharger les contacts selon les critères de filtre actuels.<br />
-                                <span className="font-semibold">Résumé du filtre :</span><br />
-                                Pays : {criteria.country || 'Tous'}<br />
-                                Âge : {criteria.age || 'Tous'}<br />
-                                Sexe : {criteria.sex || 'Tous'}<br />
-                                Professions : {criteria.professions.length ? criteria.professions.join(', ') : 'Toutes'}<br />
-                                Intérêts : {criteria.interests.length ? criteria.interests.join(', ') : 'Tous'}
-                            </div>
-                            <button
-                                className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors mb-2"
-                                onClick={handleDownloadFiltered}
-                            >
-                                Télécharger les contacts filtrés
-                            </button>
-                            <button
-                                className="w-full bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
-                                onClick={() => setFilterDownloadModalOpen(false)}
-                            >
-                                Annuler
-                            </button>
-                        </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            {/* Modal for Sorting Criteria */}
-            <AnimatePresence>
-                {modalOpen && (
-                    <motion.div
-                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                    >
-                        <motion.div
-                            className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            transition={{ type: 'spring', bounce: 0.2 }}
-                        >
-                            <h4 className="text-lg font-bold mb-4">Trier par critères</h4>
-                            <div className="mb-3">
-                                <label className="block text-sm font-medium mb-1">Pays</label>
-                                <select
-                                    value={criteria.country}
-                                    onChange={e => setCriteria(c => ({ ...c, country: e.target.value }))}
-                                    className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
-                                >
-                                    <option value="">Sélectionner</option>
-                                    {westAfricanCountries.map(c => (
-                                        <option key={c.name} value={c.name}>
-                                            {c.flag} {c.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-                            <div className="mb-3">
-                                <label className="block text-sm font-medium mb-1">Âge</label>
-                                <input
-                                    type="number"
-                                    value={criteria.age}
-                                    onChange={e => setCriteria(c => ({ ...c, age: e.target.value }))}
-                                    placeholder="Entrer l'âge"
-                                    className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
-                                />
-                            </div>
-                            <div className="mb-3">
-                                <label className="block text-sm font-medium mb-1">Sexe</label>
-                                <select
-                                    value={criteria.sex}
-                                    onChange={e => setCriteria(c => ({ ...c, sex: e.target.value }))}
-                                    className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
-                                >
-                                    <option value="">Sélectionner</option>
-                                    {sexes.map(sex => <option key={sex} value={sex}>{sex}</option>)}
-                                </select>
-                            </div>
-                            <div className="mb-3">
-                                <label className="block text-sm font-medium mb-1">Profession</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {professions.map(prof => (
-                                        <button
-                                            key={prof}
-                                            type="button"
-                                            className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.professions.includes(prof) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                                            onClick={() => handleMultiSelect('professions', prof)}
-                                        >
-                                            {prof}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="mb-3">
-                                <label className="block text-sm font-medium mb-1">Intérêt</label>
-                                <div className="flex flex-wrap gap-2">
-                                    {interests.map(int => (
-                                        <button
-                                            key={int}
-                                            type="button"
-                                            className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.interests.includes(int) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                                            onClick={() => handleMultiSelect('interests', int)}
-                                        >
-                                            {int}
-                                        </button>
-                                    ))}
-                                </div>
-                            </div>
-                            <div className="flex gap-3 mt-4">
                                 <button
-                                    className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
-                                    onClick={() => setModalOpen(false)}
+                                    className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors mb-2"
+                                    onClick={handleDownloadFiltered}
+                                    disabled={downloading}
                                 >
-                                    Appliquer
+                                    {downloading ? 'Téléchargement...' : 'Télécharger les contacts filtrés'}
                                 </button>
                                 <button
-                                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
-                                    onClick={() => setModalOpen(false)}
+                                    className="w-full bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                    onClick={() => setFilterDownloadModalOpen(false)}
                                 >
                                     Annuler
                                 </button>
-                            </div>
+                            </motion.div>
                         </motion.div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-            <div className="flex flex-col divide-y divide-gray-100 bg-white rounded-xl shadow">
-                {filteredContacts.map((c) => (
-                    <div key={c.phone} className="flex items-center px-3 py-3 gap-3">
-                        <img src={c.avatar} alt={c.name} className="w-10 h-10 rounded-full object-cover border border-gray-200" />
-                        <div className="flex-1 min-w-0">
-                            <div className={`font-semibold text-sm truncate ${c.highlight ? 'text-blue-600' : 'text-gray-900'}`}>{c.name}</div>
-                            <div className="text-xs text-gray-400 truncate">{c.phone}</div>
-                        </div>
-                        <button
-                            className="ml-2 text-green-600 hover:bg-green-50 rounded-full p-2 transition-colors"
-                            onClick={() => handleWhatsapp(c.phone)}
-                            title="Discuter sur WhatsApp"
+                    )}
+                </AnimatePresence>
+                {/* Modal for Sorting Criteria */}
+                <AnimatePresence>
+                    {modalOpen && (
+                        <motion.div
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
                         >
-                            <FaWhatsapp size={20} />
-                        </button>
+                            <motion.div
+                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg overflow-y-auto max-h-[80vh]"
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                transition={{ type: 'spring', bounce: 0.2 }}
+                            >
+                                <h4 className="text-lg font-bold mb-4">Trier par critères</h4>
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium mb-1">Pays</label>
+                                    <select
+                                        value={criteria.country}
+                                        onChange={e => handleCriteriaChange('country', e.target.value)}
+                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2 bg-white"
+                                    >
+                                        <option value="">Sélectionner</option>
+                                        {westAfricanCountries.map(c => (
+                                            <option key={c.flag} value={c.flag}>
+                                                {c.name} ({c.flag})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium mb-1">Âge minimum</label>
+                                    <input
+                                        type="number"
+                                        value={criteria.minAge}
+                                        onChange={e => handleCriteriaChange('minAge', e.target.value)}
+                                        placeholder="Min. âge"
+                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium mb-1">Âge maximum</label>
+                                    <input
+                                        type="number"
+                                        value={criteria.maxAge}
+                                        onChange={e => handleCriteriaChange('maxAge', e.target.value)}
+                                        placeholder="Max. âge"
+                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
+                                    />
+                                </div>
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium mb-1">Sexe</label>
+                                    <select
+                                        value={criteria.sex}
+                                        onChange={e => handleCriteriaChange('sex', e.target.value)}
+                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2 bg-white"
+                                    >
+                                        <option value="">Sélectionner</option>
+                                        {sexes.map(sex => <option key={sex} value={sex}>{sex}</option>)}
+                                    </select>
+                                </div>
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium mb-1">Profession</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {professions.map(prof => (
+                                            <button
+                                                key={prof}
+                                                type="button"
+                                                className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.professions.includes(prof) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                                                onClick={() => handleMultiSelect('professions', prof)}
+                                            >
+                                                {prof}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="mb-3">
+                                    <label className="block text-sm font-medium mb-1">Intérêt</label>
+                                    <div className="flex flex-wrap gap-2">
+                                        {interests.map(int => (
+                                            <button
+                                                key={int}
+                                                type="button"
+                                                className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.interests.includes(int) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                                                onClick={() => handleMultiSelect('interests', int)}
+                                            >
+                                                {int}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 mt-4">
+                                    <button
+                                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
+                                        onClick={() => setModalOpen(false)}
+                                    >
+                                        Appliquer
+                                    </button>
+                                    <button
+                                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                        onClick={() => setModalOpen(false)}
+                                    >
+                                        Annuler
+                                    </button>
+                                </div>
+                            </motion.div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+                {loading ? (
+                    <div className="flex justify-center items-center p-10">
+                        <FiLoader className="animate-spin text-4xl text-green-700" />
                     </div>
-                ))}
-        </div>
-        </div>
-    )
+                ) : error ? (
+                    <div className="text-center py-8 text-red-500">
+                        {error}
+                    </div>
+                ) : (
+                    <div className="flex flex-col divide-y divide-gray-100 bg-white rounded-xl shadow">
+                        {contacts.map((c) => (
+                            <div key={c._id} className="flex items-center px-3 py-3 gap-3">
+                                <img
+                                    src={c.avatarId
+                                        ? sbcApiService.generateSettingsFileUrl(c.avatarId)
+                                        : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
+                                    alt={c.name}
+                                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                                />
+                                <div className="flex-1 min-w-0">
+                                    <div className={`font-semibold text-sm truncate text-gray-900`}>{c.name}</div>
+                                    <div className="text-xs text-gray-400 truncate">{c.phoneNumber}</div>
+                                </div>
+                                <button
+                                    className="ml-2 text-green-600 hover:bg-green-50 rounded-full p-2 transition-colors"
+                                    onClick={() => handleWhatsapp(c.phoneNumber || '')}
+                                    title="Discuter sur WhatsApp"
+                                >
+                                    <FaWhatsapp size={20} />
+                                </button>
+                            </div>
+                        ))}
+                        {contacts.length === 0 && (
+                            <div className="text-center py-8 text-gray-500">
+                                Aucun contact trouvé pour ces critères.
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        </ProtectedRoute>
+    );
 }
 
 export default Contacts;

@@ -2,108 +2,95 @@ import { useState, useEffect } from 'react';
 import BackButton from '../components/common/BackButton';
 import { FaWhatsapp, FaFilter } from 'react-icons/fa';
 import Skeleton from '../components/common/Skeleton';
-
-const filleulsData = [
-  // Direct
-  {
-    id: 1,
-    name: 'Nicholas Gordon',
-    phone: '+22990001111',
-    avatar: 'https://randomuser.me/api/portraits/men/1.jpg',
-    abonne: true,
-    type: 'direct',
-  },
-  {
-    id: 2,
-    name: 'Bradley Malone',
-    phone: '+22990002222',
-    avatar: 'https://randomuser.me/api/portraits/women/2.jpg',
-    abonne: true,
-    type: 'direct',
-  },
-  {
-    id: 3,
-    name: 'Janie Todd',
-    phone: '+22990003333',
-    avatar: 'https://randomuser.me/api/portraits/women/3.jpg',
-    abonne: false,
-    type: 'direct',
-  },
-  // Indirect
-  {
-    id: 4,
-    name: 'Marvin Lambert',
-    phone: '+22990004444',
-    avatar: 'https://randomuser.me/api/portraits/men/4.jpg',
-    abonne: false,
-    type: 'indirect',
-  },
-  {
-    id: 5,
-    name: 'Teresa Lloyd',
-    phone: '+22990005555',
-    avatar: 'https://randomuser.me/api/portraits/women/5.jpg',
-    abonne: true,
-    type: 'indirect',
-  },
-  {
-    id: 6,
-    name: 'Fred Haynes',
-    phone: '+22990006666',
-    avatar: 'https://randomuser.me/api/portraits/men/6.jpg',
-    abonne: false,
-    type: 'indirect',
-  },
-  {
-    id: 7,
-    name: 'Rose Peters',
-    phone: '+22990007777',
-    avatar: 'https://randomuser.me/api/portraits/women/7.jpg',
-    abonne: true,
-    type: 'indirect',
-  },
-  {
-    id: 8,
-    name: 'Jose Stone',
-    phone: '+22990008888',
-    avatar: 'https://randomuser.me/api/portraits/men/8.jpg',
-    abonne: false,
-    type: 'indirect',
-  },
-];
+import { useAuth } from '../contexts/AuthContext';
+import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse } from '../utils/apiHelpers';
+import type { User } from '../types/api';
 
 function MesFilleuls() {
+  const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'direct' | 'indirect'>('direct');
   const [filter, setFilter] = useState<'all' | 'abonne' | 'nonabonne'>('all');
   const [modalOpen, setModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [filleuls, setFilleuls] = useState<User[]>([]);
+  const [stats, setStats] = useState<{ direct: number; indirect: number } | null>(null);
+  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 1200);
-    return () => clearTimeout(timer);
-  }, []);
+    const fetchFilleuls = async () => {
+      if (!user) return;
+      setLoading(true);
+      try {
+        const [statsResponse, filleulsResponse] = await Promise.all([
+          sbcApiService.getReferralStats(),
+          sbcApiService.getReferredUsers({ type: selectedTab, ...(search ? { name: search } : {}) })
+        ]);
 
-  let filtered = filleulsData.filter(f => f.type === selectedTab);
-  if (filter === 'abonne') filtered = filtered.filter(f => f.abonne);
-  if (filter === 'nonabonne') filtered = filtered.filter(f => !f.abonne);
+        const statsResult = handleApiResponse(statsResponse);
+        setStats({
+          direct: statsResult.level1Count || 0,
+          indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
+        });
 
-  const directCount = filleulsData.filter(f => f.type === 'direct').length;
-  const indirectCount = filleulsData.filter(f => f.type === 'indirect').length;
+        const filleulsResult = handleApiResponse(filleulsResponse);
+        setFilleuls(filleulsResult.referredUsers || []);
+
+      } catch (error) {
+        console.error('Failed to fetch filleuls:', error);
+        setFilleuls([]);
+        setStats({ direct: 0, indirect: 0 });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchFilleuls();
+  }, [user, selectedTab, search]);
+
+
+  let filtered = filleuls;
+  if (filter === 'abonne') {
+    filtered = filleuls.filter(f => f.activeSubscriptions && f.activeSubscriptions.length > 0);
+  }
+  if (filter === 'nonabonne') {
+    filtered = filleuls.filter(f => !f.activeSubscriptions || f.activeSubscriptions.length === 0);
+  }
 
   return (
     <div className="p-3 min-h-screen bg-white">
-         <div className="flex items-center mb-3">
+      <div className="flex items-center mb-3">
         <BackButton />
         <h3 className="text-xl font-medium text-center w-full">Mes filleuls</h3>
       </div>
+      {/* Search Bar */}
+      <form
+        className="flex items-center gap-2 mb-4"
+        onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); }}
+      >
+        <input
+          type="text"
+          placeholder="Rechercher par nom ou téléphone"
+          value={searchInput}
+          onChange={e => setSearchInput(e.target.value)}
+          className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50"
+        />
+        <button
+          type="submit"
+          className="bg-green-700 text-white px-4 py-2 rounded-full font-semibold hover:bg-green-800 transition-colors"
+        >
+          Rechercher
+        </button>
+      </form>
       {/* Card for nombre de filleuls */}
       <div className="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between px-6 py-4 mb-4 border border-gray-100">
         <div className="font-semibold text-gray-700 text-base mb-2 md:mb-0">Nombre de filleuls</div>
         <div className="flex gap-4 text-sm font-bold">
-          <span className="text-green-700">Direct: <span className="text-gray-900">{directCount}</span></span>
-          <span className="text-green-700">Indirect: <span className="text-gray-900">{indirectCount}</span></span>
+          <span className="text-green-700">Direct: <span className="text-gray-900">{stats?.direct ?? '...'}</span></span>
+          <span className="text-green-700">Indirect: <span className="text-gray-900">{stats?.indirect ?? '...'}</span></span>
         </div>
       </div>
-     
+
       <div className="flex items-center gap-2 mb-4">
         <button
           className={`px-5 py-1 rounded-full border text-sm font-semibold transition-colors duration-150 ${selectedTab === 'direct' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
@@ -172,29 +159,34 @@ function MesFilleuls() {
           ))}
         </div>
       ) : (
-      <div className="bg-white rounded-xl shadow p-2 divide-y">
-        {filtered.map(user => (
-          <div key={user.id} className="flex items-center py-2 gap-3">
-            <img src={user.avatar} alt={user.name} className="w-10 h-10 rounded-full object-cover" />
-            <div className="flex-1">
-              <div className="font-medium text-gray-900 text-sm">{user.name}</div>
-              <div className="text-xs text-gray-500">{user.phone}</div>
+        <div className="bg-white rounded-xl shadow p-2 divide-y">
+          {filtered.map(filleul => (
+            <div key={filleul._id} className="flex items-center py-2 gap-3">
+              <img
+                src={filleul.avatarId
+                  ? sbcApiService.generateSettingsFileUrl(filleul.avatarId)
+                  : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
+                alt={filleul.name}
+                className="w-10 h-10 rounded-full object-cover" />
+              <div className="flex-1">
+                <div className="font-medium text-gray-900 text-sm">{filleul.name}</div>
+                <div className="text-xs text-gray-500">{filleul.phoneNumber}</div>
+              </div>
+              <a
+                href={`https://wa.me/${filleul.phoneNumber?.replace(/[^\d]/g, '')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-green-500 hover:text-green-600"
+                title="Contacter sur WhatsApp"
+              >
+                <FaWhatsapp size={22} />
+              </a>
             </div>
-            <a
-              href={`https://wa.me/${user.phone.replace(/[^\d]/g, '')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-green-500 hover:text-green-600"
-              title="Contacter sur WhatsApp"
-            >
-              <FaWhatsapp size={22} />
-            </a>
-          </div>
-        ))}
-        {filtered.length === 0 && (
-          <div className="text-center text-gray-400 py-8">Aucun filleul dans cette catégorie.</div>
-        )}
-      </div>
+          ))}
+          {filtered.length === 0 && (
+            <div className="text-center text-gray-400 py-8">Aucun filleul dans cette catégorie.</div>
+          )}
+        </div>
       )}
     </div>
   );

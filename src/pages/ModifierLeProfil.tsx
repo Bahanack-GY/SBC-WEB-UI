@@ -1,19 +1,24 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { FiEdit2, FiPhone } from 'react-icons/fi';
+import { FiEdit2, FiPhone, FiSave, FiLoader } from 'react-icons/fi';
+import { useAuth } from '../contexts/AuthContext';
+import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
+import BackButton from '../components/common/BackButton';
+import ProtectedRoute from '../components/common/ProtectedRoute';
 
-const countryOptions = [
-  { value: 'Cameroun', label: '🇨🇲 Cameroun' },
-  { value: 'Bénin', label: '🇧🇯 Bénin' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 Congo-Brazzaville' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 Congo-Kinshasa' },
-  { value: 'Ghana', label: '🇬🇭 Ghana' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire' },
-  { value: 'Sénégal', label: '🇸🇳 Sénégal' },
-  { value: 'Togo', label: '🇹🇬 Togo' },
-  { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso' },
+export const countryOptions = [
+  { value: 'Cameroun', label: '🇨🇲 Cameroun', code: 'CM' },
+  { value: 'Bénin', label: '🇧🇯 Bénin', code: 'BJ' },
+  { value: 'Congo-Brazzaville', label: '🇨🇬 Congo-Brazzaville', code: 'CG' },
+  { value: 'Congo-Kinshasa', label: '🇨🇩 Congo-Kinshasa', code: 'CD' },
+  { value: 'Ghana', label: '🇬🇭 Ghana', code: 'GH' },
+  { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: 'CI' },
+  { value: 'Sénégal', label: '🇸🇳 Sénégal', code: 'SN' },
+  { value: 'Togo', label: '🇹🇬 Togo', code: 'TG' },
+  { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: 'BF' },
 ];
-const professionOptions = [
+export const professionOptions = [
   'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
   'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Data scientist',
   'Enseignant', 'Professeur d\'université', 'Formateur professionnel', 'Éducateur spécialisé', 'Conseiller pédagogique',
@@ -31,125 +36,435 @@ const professionOptions = [
   'Agriculteur/Agricultrice', 'Ingénieur agronome', 'Écologiste', 'Gestionnaire de ressources naturelles',
 ];
 
-const initialUser = {
-  avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
-  nom: 'Michael B Murina',
-  telephone: '',
-  ville: '',
-  pays: '',
-  profession: '',
-  parrainage: '',
-  interet: '',
-};
-
-const interestOptions = [
-  'Sport', 'Musique', 'Lecture', 'Voyage', 'Technologie', 'Art', 'Cuisine', 'Cinéma', 'Jeux vidéo', 'Photographie', 'Mode', 'Danse', 'Écriture', 'Bricolage', 'Jardinage', 'Fitness', 'Animaux', 'Science', 'Histoire', 'Politique', 'Finance', 'Entrepreneuriat', 'Bénévolat', 'Autre'
+export const predefinedInterestOptions = [
+  'Football', 'Basketball', 'Course à pied', 'Natation', 'Yoga', 'Randonnée', 'Cyclisme',
+  'Musique (instruments, chant)', 'Danse', 'Peinture et dessin', 'Photographie', 'Théâtre', 'Cinéma',
+  'Programmation', 'Robotique', 'Sciences de la vie', 'Astronomie', 'Électronique',
+  'Découverte de nouvelles cultures', 'Randonnées en nature', 'Tourisme local et international',
+  'Cuisine du monde', 'Pâtisserie', 'Dégustation de vins', 'Aide aux personnes défavorisées',
+  'Protection de l\'environnement', 'Participation à des événements caritatifs', 'Lecture', 'Méditation',
+  'Apprentissage de nouvelles langues', 'Jeux vidéo', 'Jeux de société', 'Énigmes et casse-têtes',
+  'Stylisme', 'Décoration d\'intérieur', 'Artisanat', 'Fitness', 'Nutrition', 'Médecine alternative',
 ];
 
+// New: countryCodes array from Signup.tsx
+const countryCodes = [
+  { value: 'Cameroun', label: '🇨🇲 +237', code: '+237' },
+  { value: 'Bénin', label: '🇧🇯 +229', code: '+229' },
+  { value: 'Congo-Brazzaville', label: '🇨🇬 +242', code: '+242' },
+  { value: 'Congo-Kinshasa', label: '🇨🇩 +243', code: '+243' },
+  { value: 'Ghana', label: '🇬🇭 +233', code: '+233' },
+  { value: 'Côte d\'Ivoire', label: '🇨🇮 +225', code: '+225' },
+  { value: 'Sénégal', label: '🇸🇳 +221', code: '+221' },
+  { value: 'Togo', label: '🇹🇬 +228', code: '+228' },
+  { value: 'Burkina Faso', label: '🇧🇫 +226', code: '+226' },
+];
+
+// New: Define interfaces for the correspondents object structure
+interface CorrespondentData {
+  operators: string[];
+  currencies: string[];
+}
+
+interface CorrespondentsMap {
+  [key: string]: CorrespondentData;
+}
+
+// New: correspondents data with type assertion
+export const correspondents: CorrespondentsMap = {
+  'BJ': {
+    'operators': ['MTN_MOMO_BEN', 'MOOV_BEN'], // Benin
+    'currencies': ['XOF']
+  },
+  'CM': {
+    'operators': ['MTN_MOMO_CMR', 'ORANGE_CMR'], // Cameroon
+    'currencies': ['XAF']
+  },
+  'BF': {
+    'operators': ['MOOV_BFA', 'ORANGE_BFA'], // Burkina Faso
+    'currencies': ['XOF']
+  },
+  'CD': {
+    'operators': ['VODACOM_MPESA_COD', 'AIRTEL_COD', 'ORANGE_COD'], // DRC
+    'currencies': ['CDF']
+  },
+  'KE': {
+    'operators': ['MPESA_KEN'], // Kenya
+    'currencies': ['KES']
+  },
+  'NG': {
+    'operators': ['MTN_MOMO_NGA', 'AIRTEL_NGA'], // Nigeria
+    'currencies': ['NGN']
+  },
+  'SN': {
+    'operators': ['FREE_SEN', 'ORANGE_SEN'], // Senegal
+    'currencies': ['XOF']
+  },
+  'CG': {
+    'operators': ['AIRTEL_COG', 'MTN_MOMO_COG'], // Republic of the Congo
+    'currencies': ['XAF']
+  },
+  'GA': {
+    'operators': ['AIRTEL_GAB'], // Gabon
+    'currencies': ['XAF']
+  },
+  'CI': {
+    'operators': ['MTN_MOMO_CIV', 'ORANGE_CIV'], // Côte d'Ivoire
+    'currencies': ['XOF']
+  },
+};
+
+// New: Helper function to map operator values to display labels
+const getMomoOperatorDisplayName = (operatorValue: string) => {
+  switch (operatorValue) {
+    case 'MTN_MOMO_BEN': return 'MTN MoMo Bénin';
+    case 'MOOV_BEN': return 'Moov Bénin';
+    case 'MTN_MOMO_CMR': return 'MTN MoMo Cameroun';
+    case 'ORANGE_CMR': return 'Orange Money Cameroun';
+    case 'MOOV_BFA': return 'Moov Burkina Faso';
+    case 'ORANGE_BFA': return 'Orange Burkina Faso';
+    case 'VODACOM_MPESA_COD': return 'Vodacom M-Pesa RDC';
+    case 'AIRTEL_COD': return 'Airtel RDC';
+    case 'ORANGE_COD': return 'Orange RDC';
+    case 'MPESA_KEN': return 'M-Pesa Kenya';
+    case 'MTN_MOMO_NGA': return 'MTN MoMo Nigeria';
+    case 'AIRTEL_NGA': return 'Airtel Nigeria';
+    case 'FREE_SEN': return 'Free Money Sénégal';
+    case 'ORANGE_SEN': return 'Orange Money Sénégal';
+    case 'AIRTEL_COG': return 'Airtel Congo';
+    case 'MTN_MOMO_COG': return 'MTN MoMo Congo';
+    case 'AIRTEL_GAB': return 'Airtel Gabon';
+    case 'MTN_MOMO_CIV': return 'MTN MoMo Côte d\'Ivoire';
+    case 'ORANGE_CIV': return 'Orange Money Côte d\'Ivoire';
+    default: return operatorValue.replace(/_/g, ' '); // Fallback for new operators
+  }
+};
+
 function ModifierLeProfil() {
-  const [user, setUser] = useState(initialUser);
+  const { user, refreshUser, loading: authLoading } = useAuth();
+  const [formData, setFormData] = useState({
+    name: '',
+    phoneNumber: '', // This will now store the local part of the phone number
+    city: '',
+    country: '',
+    profession: '',
+    interests: [] as string[],
+    avatar: '',
+    birthDate: '',
+    sex: '',
+    momoNumber: '',
+    momoOperator: '',
+  });
+  // New state for the selected phone country code
+  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(countryCodes[0]);
+  const [loading, setLoading] = useState(false);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [displayedInterests, setDisplayedInterests] = useState<string[]>(predefinedInterestOptions);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (user) {
+      setFormData((prev) => {
+        const countryName = countryOptions.find((c: { value: string; code: string; }) => c.code === user.country)?.value || user.country || '';
+        const birthDate = user.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : '';
+        const initialMomoOperator = user.momoOperator || '';
+
+        // Determine the country code from the country name
+        const currentCountryCode = countryOptions.find((c: { value: string; }) => c.value === countryName)?.code;
+        const validOperatorsForCurrentCountry = currentCountryCode && correspondents[currentCountryCode]
+          ? correspondents[currentCountryCode].operators
+          : [];
+
+        // Only set momoOperator if it's valid for the current country
+        const momoOperatorToSet = validOperatorsForCurrentCountry.includes(initialMomoOperator)
+          ? initialMomoOperator
+          : ''; // Clear if invalid or country has no operators
+
+        // New: Parse existing phone number to set selectedPhoneCountryCode and local phoneNumber
+        let localPhoneNumber = user.phoneNumber || '';
+        let matchedCode = countryCodes[0]; // Default to the first code if no match
+        for (const c of countryCodes) {
+          if (user.phoneNumber && user.phoneNumber.startsWith(c.code)) {
+            matchedCode = c;
+            localPhoneNumber = user.phoneNumber.substring(c.code.length);
+            break;
+          }
+        }
+        setSelectedPhoneCountryCode(matchedCode); // Update the separate state for country code
+
+        return {
+          ...prev, // Keep other previous state values
+          name: user.name || '',
+          phoneNumber: localPhoneNumber, // Set the local part of the phone number
+          city: user.city || user.region || '',
+          country: countryName,
+          profession: user.profession || '',
+          interests: user.interests || [],
+          avatar: user.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360',
+          birthDate: birthDate,
+          sex: user.sex || '',
+          momoNumber: user.momoNumber || '',
+          momoOperator: momoOperatorToSet,
+        };
+      });
+
+      if (user.interests) {
+        const allInterests = Array.from(new Set([...predefinedInterestOptions, ...user.interests]));
+        setDisplayedInterests(allInterests);
+      }
+    }
+  }, [user]); // Depend on user
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setUser((prev) => ({ ...prev, [name]: value }));
+    if (name === 'countryCodeSelect') { // Handle country code select for phone number
+      const code = countryCodes.find(c => c.value === value);
+      if (code) {
+        setSelectedPhoneCountryCode(code);
+      }
+      return; // Don't update formData directly for this select
+    }
+
+    setFormData((prev) => {
+      if (name === 'country') {
+        // Reset momoOperator when country changes to force re-selection of a valid operator
+        return { ...prev, [name]: value, momoOperator: '' };
+      }
+      return { ...prev, [name]: value };
+    });
+    if (feedback) setFeedback(null);
   };
+
+  const handleInterestClick = (interest: string) => {
+    setFormData(prev => ({
+      ...prev,
+      interests: prev.interests.includes(interest)
+        ? prev.interests.filter(i => i !== interest)
+        : [...prev.interests, interest]
+    }));
+    if (feedback) setFeedback(null);
+  };
+
   const handleAvatarButtonClick = () => {
     fileInputRef.current?.click();
   };
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files && e.target.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        setUser((prev) => ({ ...prev, avatar: ev.target?.result as string }));
-      };
-      reader.readAsDataURL(file);
+      setAvatarUploading(true);
+      setFeedback(null);
+      try {
+        const response = await sbcApiService.uploadAvatar(file);
+        const result = handleApiResponse(response);
+        if (result.fileId) {
+          const newAvatarUrl = sbcApiService.generateSettingsFileUrl(result.fileId);
+          setFormData(prev => ({ ...prev, avatar: newAvatarUrl }));
+          setFeedback({ type: 'success', message: 'Avatar mis à jour avec succès!' });
+          await refreshUser(); // Refresh user context
+        }
+      } catch (error) {
+        console.error('Avatar upload failed', error);
+        const errorMessage = error instanceof Error ? error.message : "Erreur lors de l'envoi de l'avatar.";
+        setFeedback({ type: 'error', message: errorMessage });
+      } finally {
+        setAvatarUploading(false);
+      }
     }
   };
-  const handleSave = (e: React.FormEvent) => {
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Save logic here
+    setLoading(true);
+    setFeedback(null);
+    try {
+      const countryCode = countryOptions.find(c => c.value === formData.country)?.code || formData.country;
+      const fullPhoneNumber = `${selectedPhoneCountryCode.code}${formData.phoneNumber}`; // Reconstruct full phone number
+      const updates = {
+        name: formData.name,
+        phoneNumber: fullPhoneNumber, // Use the reconstructed full phone number
+        city: formData.city,
+        country: countryCode,
+        profession: formData.profession ? removeAccents(formData.profession) : '',
+        interests: formData.interests.map(i => removeAccents(i)),
+        birthDate: formData.birthDate,
+        sex: formData.sex,
+        momoNumber: formData.momoNumber,
+        momoOperator: formData.momoOperator,
+      };
+      await sbcApiService.updateUserProfile(updates);
+      await refreshUser(); // Refresh user in context
+      setFeedback({ type: 'success', message: 'Profil sauvegardé avec succès!' });
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'La sauvegarde a échoué.';
+      setFeedback({ type: 'error', message: errorMessage });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // New: Dynamically compute available MoMo operators based on selected country
+  const availableMomoOperators = useMemo(() => {
+    const selectedCountryCode = countryOptions.find((c: { value: string; code: string; }) => c.value === formData.country)?.code;
+    if (selectedCountryCode && correspondents[selectedCountryCode]) {
+      return [
+        { value: '', label: 'Sélectionner un opérateur MoMo' }, // Default option
+        ...correspondents[selectedCountryCode].operators.map(opValue => ({
+          value: opValue,
+          label: getMomoOperatorDisplayName(opValue)
+        }))
+      ];
+    }
+    // If no country selected or no operators for the country, provide only a default option
+    return [{ value: '', label: 'Sélectionner un opérateur MoMo' }];
+  }, [formData.country, countryOptions]); // Re-run when country or country options change
+
+  if (authLoading || !user) {
+    return <div>Chargement du profil...</div>;
+  }
+
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-[#f8fafc] px-4">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, type: 'spring' }}
-        className="w-full max-w-md bg-white rounded-3xl p-8"
-      >
-        <div className="flex flex-col items-center mb-6">
-          <div className="relative mb-2">
-            <img src={user.avatar} alt="avatar" className="w-24 h-24 rounded-full border-4 border-white object-cover shadow" />
-            <button
-              type="button"
-              onClick={handleAvatarButtonClick}
-              className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white shadow text-white hover:bg-blue-800 transition-colors"
-            >
-              <FiEdit2 size={16} />
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleAvatarChange}
-            />
+    <ProtectedRoute>
+      <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] p-4">
+        <div className="w-full max-w-md">
+          <div className="flex items-center mb-4">
+            <BackButton />
+            <h3 className="text-xl font-medium text-center w-full">Modifier le Profil</h3>
           </div>
-          <div className="text-lg font-bold text-gray-800">Modifier le profil</div>
         </div>
-        <form className="flex flex-col gap-4" onSubmit={handleSave}>
-          <div>
-            <label className="block text-gray-700 mb-1">Nom complet</label>
-            <input name="nom" value={user.nom} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Téléphone</label>
-            <div className="relative">
-              <input name="telephone" value={user.telephone} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none pr-10" />
-              <FiPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, type: 'spring' }}
+          className="w-full max-w-md bg-white rounded-3xl p-8"
+        >
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative mb-2">
+              <img src={formData.avatar} alt="avatar" className="w-24 h-24 rounded-full border-4 border-white object-cover shadow" />
+              <button
+                type="button"
+                onClick={handleAvatarButtonClick}
+                className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white shadow text-white hover:bg-blue-800 transition-colors disabled:bg-gray-400"
+                disabled={avatarUploading}
+              >
+                {avatarUploading ? <FiLoader className="animate-spin" /> : <FiEdit2 size={16} />}
+              </button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleAvatarChange}
+              />
             </div>
           </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Ville</label>
-            <input name="ville" value={user.ville} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Pays</label>
-            <select name="pays" value={user.pays} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none">
-              <option value="">Sélectionner le pays</option>
-              {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Profession</label>
-            <select name="profession" value={user.profession} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none">
-              <option value="">Sélectionner la profession</option>
-              {professionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
-            </select>
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Code de parrainage</label>
-            <input name="parrainage" value={user.parrainage} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Intérêt</label>
-            <select
-              name="interet"
-              value={user.interet}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+          <form className="flex flex-col gap-4" onSubmit={handleSave}>
+            <div>
+              <label className="block text-gray-700 mb-1">Nom complet</label>
+              <input name="name" value={formData.name} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Téléphone</label>
+              <div className="relative flex gap-2"> {/* Added flex and gap */}
+                <select
+                  className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
+                  name="countryCodeSelect" // Unique name for this select
+                  value={selectedPhoneCountryCode.value}
+                  onChange={handleChange}
+                >
+                  {countryCodes.map((c) => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
+                <input
+                  name="phoneNumber" // Name remains phoneNumber for the local part
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none pr-10"
+                  placeholder="Ex: 675080477" // Example placeholder
+                />
+                <FiPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              </div>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Date de naissance</label>
+              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Sexe</label>
+              <select name="sex" value={formData.sex} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+                <option value="">Sélectionner</option>
+                <option value="male">Homme</option>
+                <option value="female">Femme</option>
+                <option value="other">Autre</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Ville</label>
+              <input name="city" value={formData.city} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Pays</label>
+              <select name="country" value={formData.country} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+                <option value="">Sélectionner le pays</option>
+                {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Profession</label>
+              <select name="profession" value={formData.profession} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+                <option value="">Sélectionner la profession</option>
+                {professionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Numéro MoMo</label>
+              <input name="momoNumber" value={formData.momoNumber} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" placeholder="Ex: 2376XXXXXXXX" />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Opérateur MoMo</label>
+              <select name="momoOperator" value={formData.momoOperator} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+                {availableMomoOperators.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">Centres d'intérêt</label>
+              <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-xl">
+                {displayedInterests.map((interest) => (
+                  <button
+                    key={interest}
+                    type="button"
+                    onClick={() => handleInterestClick(interest)}
+                    className={`px-3 py-1 rounded-full border text-xs font-medium ${formData.interests.includes(interest) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                  >
+                    {interest}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {feedback && (
+              <div className={`p-3 rounded-lg text-center text-sm ${feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                {feedback.message}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
+              disabled={loading || avatarUploading}
             >
-              <option value="">Sélectionner un intérêt</option>
-              {interestOptions.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </div>
-          <button type="submit" className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow">Sauvegarder</button>
-        </form>
-      </motion.div>
-    </div>
+              {loading ? <FiLoader className="animate-spin" /> : <FiSave />}
+              {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+            </button>
+          </form>
+        </motion.div>
+      </div>
+    </ProtectedRoute>
   );
 }
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { FiSmile, FiUsers, FiMonitor, FiLock } from 'react-icons/fi';
@@ -26,9 +26,30 @@ const steps = [
   },
 ];
 
+const getSessionExpired = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('sessionExpired') === '1';
+  }
+  return false;
+};
+
+function clearSessionExpired() {
+  if (typeof window !== 'undefined') {
+    localStorage.removeItem('sessionExpired');
+  }
+}
+
 function SplashScreen() {
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
+  const [sessionExpired, setSessionExpired] = useState(false);
+
+  useEffect(() => {
+    if (getSessionExpired()) {
+      setSessionExpired(true);
+      clearSessionExpired();
+    }
+  }, []);
 
   const handleNext = () => {
     if (step < steps.length - 1) setStep(step + 1);
@@ -39,6 +60,11 @@ function SplashScreen() {
   return (
     <div className="flex flex-col min-h-screen w-full bg-white">
       <div className="flex flex-col flex-1 w-full h-full">
+        {sessionExpired && (
+          <div className="mb-4 px-4 py-2 bg-red-100 text-red-700 rounded shadow text-center font-semibold">
+            Votre session a expiré. Veuillez vous reconnecter.
+          </div>
+        )}
         <AnimatePresence mode="wait">
           <motion.div
             key={step}

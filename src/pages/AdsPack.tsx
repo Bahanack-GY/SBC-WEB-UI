@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import BackButton from "../components/common/BackButton";
 import { motion } from "framer-motion";
 import iconOne from "../assets/icon/Growth.png";
@@ -28,10 +28,10 @@ function AdsPack() {
             ) : (
                 <>
                     <div className="flex items-center">
-                        <BackButton />
+                        {/* <BackButton /> */}
                         <h3 className="text-xl font-medium text-center w-full">Offres publicitaires</h3>
                     </div>
-                    
+
                     <div className="flex flex-col gap-4 mt-6 ">
                         {/* Basic Pack */}
                         <motion.div
@@ -43,7 +43,7 @@ function AdsPack() {
                             <div>
                                 <div className="uppercase text-white text-xs">Basic</div>
                                 <div className="text-2xl font-bold text-white">2000F/mo</div>
-                                <div className="text-white text-sm mt-1">Promotion sur whatsapp<br/>Accès au marketplace</div>
+                                <div className="text-white text-sm mt-1">Promotion sur whatsapp<br />Accès au marketplace</div>
                                 <div className="mt-3">
                                     <button className="bg-orange-500 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-orange-500 transition-colors">Je souscris</button>
                                 </div>
@@ -62,7 +62,7 @@ function AdsPack() {
                             <div>
                                 <div className="uppercase text-white text-xs">Up to</div>
                                 <div className="text-2xl font-bold text-white">5000F/mo</div>
-                                <div className="text-white text-sm mt-1">Promotion sur whatsapp<br/>Accès au marketplace</div>
+                                <div className="text-white text-sm mt-1">Promotion sur whatsapp<br />Accès au marketplace</div>
                                 <div className="mt-3">
                                     <button className="bg-blue-700 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-blue-800 transition-colors">Je souscris</button>
                                 </div>
@@ -81,7 +81,7 @@ function AdsPack() {
                             <div>
                                 <div className="uppercase text-white text-xs">Up to</div>
                                 <div className="text-2xl font-bold text-white">10000F/mo</div>
-                                <div className="text-white text-sm mt-1">Promotion sur whatsapp<br/>Accès au marketplace<br/>Promotion sur Facebook<br/>Design de flyer</div>
+                                <div className="text-white text-sm mt-1">Promotion sur whatsapp<br />Accès au marketplace<br />Promotion sur Facebook<br />Design de flyer</div>
                                 <div className="mt-3">
                                     <button className="bg-green-700 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-green-700 transition-colors">Je souscris</button>
                                 </div>
@@ -95,6 +95,6 @@ function AdsPack() {
             )}
         </div>
     )
-}   
+}
 
 export default AdsPack;

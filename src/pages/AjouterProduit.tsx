@@ -1,119 +1,284 @@
-import { useState, useEffect } from 'react';
-import BackButton from "../components/common/BackButton";
-import Skeleton from '../components/common/Skeleton';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import BackButton from '../components/common/BackButton';
+import ProtectedRoute from '../components/common/ProtectedRoute';
+import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse } from '../utils/apiHelpers';
+import { motion } from 'framer-motion';
+import { FiUploadCloud, FiXCircle, FiLoader } from 'react-icons/fi';
+
+const subProducts = [
+    "mode et vêtements", "électronique et gadgets", "maison et jardin",
+    "beauté et soins personnels", "alimentation et boissons", "santé et bien-être",
+    "sport et loisirs", "jouets et jeux", "accessoires automobiles",
+    "outils et équipements de bricolage", "animaux de compagnie",
+    "livres et médias", "art et artisanat", "produits pour bébés et enfants",
+    "fournitures de bureau et papeterie", "équipements de voyage",
+    "instruments de musique", "produits technologiques",
+    "produits écologiques et durables", "autres"
+];
+
+const subServices = [
+    "consultation professionnelle", "services de formation et d'apprentissage",
+    "services de design", "services de rédaction et de traduction",
+    "services de programmation et de développement",
+    "services de marketing et de publicité",
+    "services de maintenance et de réparation",
+    "services de santé et de bien-être",
+    "services de consultation juridique",
+    "services de planification d'événements", "autres"
+];
 
 function AjouterProduit() {
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
+        category: '', // Can be 'Produit' or 'Service'
+        subcategory: '',
         description: '',
         price: '',
-        category: '',
-        images: [] as File[]
     });
-    const [loading, setLoading] = useState(true);
-    useEffect(() => {
-        const timer = setTimeout(() => setLoading(false), 1200);
-        return () => clearTimeout(timer);
-    }, []);
+    const [images, setImages] = useState<File[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        // TODO: Implement product submission logic
-        console.log('Form submitted:', formData);
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => {
+            if (name === 'category' && prev.category !== value) {
+                // Reset subcategory when category changes
+                return { ...prev, [name]: value, subcategory: '' };
+            }
+            return { ...prev, [name]: value };
+        });
+        if (feedback) setFeedback(null);
     };
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            const newFiles = Array.from(e.target.files);
+            // Limit to 10 images total
+            setImages(prev => {
+                const combined = [...prev, ...newFiles];
+                return combined.slice(0, 10);
+            });
+            setFeedback(null);
+        }
+    };
+
+    const handleRemoveImage = (index: number) => {
+        setImages(prev => prev.filter((_, i) => i !== index));
+        if (feedback) setFeedback(null);
+    };
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setFeedback(null);
+
+        // Client-side validation for required fields
+        if (!formData.name || !formData.category || !formData.description || !formData.price || !formData.subcategory) {
+            setFeedback({ type: 'error', message: 'Veuillez remplir tous les champs obligatoires.' });
+            setLoading(false);
+            return;
+        }
+
+        const priceNum = parseFloat(formData.price);
+        if (isNaN(priceNum) || priceNum <= 0) {
+            setFeedback({ type: 'error', message: 'Le prix doit être un nombre positif.' });
+            setLoading(false);
+            return;
+        }
+
+        // According to prdt.md, images are optional, so no validation for `images.length`.
+
+        try {
+            const productToCreate = {
+                name: formData.name,
+                category: formData.category,
+                subcategory: formData.subcategory,
+                description: formData.description,
+                price: priceNum,
+            };
+
+            const response = await sbcApiService.createProduct(productToCreate, images);
+            const result = handleApiResponse(response);
+
+            if (response.isOverallSuccess) {
+                setFeedback({ type: 'success', message: 'Produit ajouté avec succès!' });
+                setTimeout(() => {
+                    navigate('/mes-produits'); // Redirect to my products page after success
+                }, 1500);
+            } else {
+                setFeedback({ type: 'error', message: result.message || 'Échec de l\'ajout du produit.' });
+            }
+        } catch (error) {
+            console.error('Failed to add product:', error);
+            const errorMessage = error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
+            setFeedback({ type: 'error', message: errorMessage });
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Determine which subcategories to display based on the selected main category
+    const currentSubcategories = formData.category === 'Produit' ? subProducts :
+        formData.category === 'Service' ? subServices : [];
+
     return (
-        <div className="p-3 min-h-screen bg-white">
-            <div className="flex items-center mb-6">
-                <BackButton />
-                <h3 className="text-xl font-medium text-center w-full">Ajouter un produit</h3>
-            </div>
-            {loading ? (
-                <div className="space-y-4">
-                    <Skeleton height="h-10" rounded="rounded-xl" />
-                    <Skeleton height="h-20" rounded="rounded-xl" />
-                    <Skeleton height="h-10" rounded="rounded-xl" />
-                    <Skeleton height="h-10" rounded="rounded-xl" />
-                    <Skeleton height="h-10" rounded="rounded-xl" />
-                    <Skeleton height="h-12" rounded="rounded-xl" />
+        <ProtectedRoute>
+            <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] p-4">
+                <div className="w-full max-w-md">
+                    <div className="flex items-center mb-4">
+                        <BackButton />
+                        <h3 className="text-xl font-medium text-center w-full">Ajouter un produit</h3>
+                    </div>
                 </div>
-            ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Nom du produit
-                    </label>
-                    <input
-                        type="text"
-                        value={formData.name}
-                        onChange={(e) => setFormData({...formData, name: e.target.value})}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Description
-                    </label>
-                    <textarea
-                        value={formData.description}
-                        onChange={(e) => setFormData({...formData, description: e.target.value})}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-                        rows={4}
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Prix (FCFA)
-                    </label>
-                    <input
-                        type="number"
-                        value={formData.price}
-                        onChange={(e) => setFormData({...formData, price: e.target.value})}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-                        required
-                    />
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Catégorie
-                    </label>
-                    <select
-                        value={formData.category}
-                        onChange={(e) => setFormData({...formData, category: e.target.value})}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-                        required
-                    >
-                        <option value="">Sélectionner une catégorie</option>
-                        <option value="produit">Produit</option>
-                        <option value="service">Service</option>
-                    </select>
-                </div>
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Images
-                    </label>
-                    <input
-                        type="file"
-                        multiple
-                        accept="image/*"
-                        onChange={(e) => {
-                            const files = Array.from(e.target.files || []);
-                            setFormData({...formData, images: files});
-                        }}
-                        className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300"
-                    />
-                </div>
-                <button
-                    type="submit"
-                    className="w-full bg-green-600 text-white py-3 rounded-xl font-medium hover:bg-green-700 transition-colors"
+                <motion.div
+                    initial={{ opacity: 0, y: 30 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, type: 'spring' }}
+                    className="w-full max-w-md bg-white rounded-3xl p-8"
                 >
-                    Publier le produit
-                </button>
-            </form>
-            )}
-        </div>
+                    <form className="flex flex-col gap-4" onSubmit={handleSubmit}>
+                        <div>
+                            <label className="block text-gray-700 mb-1">Nom du produit</label>
+                            <input
+                                type="text"
+                                name="name"
+                                value={formData.name}
+                                onChange={handleChange}
+                                placeholder="Ex: Smartphone Samsung Galaxy S23"
+                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-gray-700 mb-1">Catégorie</label>
+                            <select
+                                name="category"
+                                value={formData.category}
+                                onChange={handleChange}
+                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                                required
+                            >
+                                <option value="">Sélectionner une catégorie</option>
+                                <option value="Produit">Produit</option>
+                                <option value="Service">Service</option>
+                            </select>
+                        </div>
+
+                        {formData.category && ( // Only show subcategory dropdown if a main category is selected
+                            <div>
+                                <label className="block text-gray-700 mb-1">Sous-catégorie</label>
+                                <select
+                                    name="subcategory"
+                                    value={formData.subcategory}
+                                    onChange={handleChange}
+                                    className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                                    required
+                                >
+                                    <option value="">Sélectionner une sous-catégorie</option>
+                                    {currentSubcategories.map((subcat) => (
+                                        <option key={subcat} value={subcat}>{subcat}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
+
+                        <div>
+                            <label className="block text-gray-700 mb-1">Description</label>
+                            <textarea
+                                name="description"
+                                value={formData.description}
+                                onChange={handleChange}
+                                placeholder="Décrivez votre produit ou service..."
+                                rows={4}
+                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none resize-none"
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-gray-700 mb-1">Prix (FCFA)</label>
+                            <input
+                                type="number"
+                                name="price"
+                                value={formData.price}
+                                onChange={handleChange}
+                                placeholder="Ex: 1200.50"
+                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                                step="0.01" // Allow decimal values for currency
+                                min="0" // Ensure price is non-negative
+                                required
+                            />
+                        </div>
+
+                        <div>
+                            <label className="block text-gray-700 mb-1">Images (max 10)</label>
+                            <input
+                                type="file"
+                                multiple
+                                accept="image/*"
+                                onChange={handleFileChange}
+                                className="block w-full text-sm text-gray-700
+                           file:mr-4 file:py-2 file:px-4
+                           file:rounded-full file:border-0
+                           file:text-sm file:font-semibold
+                           file:bg-blue-50 file:text-blue-700
+                           hover:file:bg-blue-100"
+                            />
+                            <div className="mt-2 flex flex-wrap gap-2">
+                                {images.map((file, index) => (
+                                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                                        <img
+                                            src={URL.createObjectURL(file)}
+                                            alt={`preview-${file.name}`}
+                                            className="w-full h-full object-cover"
+                                            onLoad={() => URL.revokeObjectURL(URL.createObjectURL(file))} // Clean up URL object
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleRemoveImage(index)}
+                                            className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
+                                            title="Supprimer l'image"
+                                        >
+                                            <FiXCircle size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                                {images.length < 10 && ( // Allow adding more images if limit not reached
+                                    <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
+                                        <FiUploadCloud size={24} />
+                                        {/* Hidden input to trigger file selection when label is clicked */}
+                                        <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
+                                    </label>
+                                )}
+                            </div>
+                        </div>
+
+                        {feedback && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className={`p-3 rounded-lg text-center text-sm ${feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}
+                            >
+                                {feedback.message}
+                            </motion.div>
+                        )}
+
+                        <button
+                            type="submit"
+                            className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
+                            disabled={loading} // Disable button during submission
+                        >
+                            {loading ? <FiLoader className="animate-spin" /> : 'Ajouter le produit'}
+                        </button>
+                    </form>
+                </motion.div>
+            </div>
+        </ProtectedRoute>
     );
 }
 

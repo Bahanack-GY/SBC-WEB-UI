@@ -1,6 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
+import { AuthProvider /* useAuth */ } from './contexts/AuthContext'
 import Money from './pages/Money'
 import AdsPack from './pages/AdsPack'
 import Marketplace from './pages/Marketplace'
@@ -21,9 +22,30 @@ import MesProduits from './pages/MesProduits'
 import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
+import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
+import { useEffect } from 'react'
 
-function App() {
+function AppContent() {
   const location = useLocation();
+  const { setAffiliationCode } = useAffiliation();
+  // const { isAuthenticated, loading } = useAuth();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const affiliationCodeFromUrl = params.get('affiliationCode');
+    if (affiliationCodeFromUrl) {
+      setAffiliationCode(affiliationCodeFromUrl);
+    }
+  }, [location.search, setAffiliationCode]);
+
+  // if (loading) {
+  //   return <div>Chargement...</div>;
+  // }
+
+  // if (!isAuthenticated) {
+  //   return <SplashScreen />;
+  // }
+
   const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/');
   return (
     <div className="bg-white">
@@ -43,7 +65,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/change-password" element={<ChangePassword />} />
         <Route path="/modifier-le-profil" element={<ModifierLeProfil />} />
-        <Route path="/single-product" element={<SingleProductPage />} />
+        <Route path="/single-product/:id" element={<SingleProductPage />} />
         <Route path="/ajouter-produit" element={<AjouterProduit />} />
         <Route path="/mes-produits" element={<MesProduits />} />
         <Route path="/modifier-produit/:id" element={<ModifierProduit />} />
@@ -52,6 +74,16 @@ function App() {
       </Routes>
       {!hideNav && <NavigationBar />}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AffiliationProvider>
+        <AppContent />
+      </AffiliationProvider>
+    </AuthProvider>
   )
 }
 
