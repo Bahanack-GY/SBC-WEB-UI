@@ -12,11 +12,11 @@ interface ApiCacheOptions {
 }
 
 class ApiCache {
-  private cache = new Map<string, CacheEntry<any>>();
-  private pendingRequests = new Map<string, Promise<any>>();
+  private cache = new Map<string, CacheEntry<unknown>>();
+  private pendingRequests = new Map<string, Promise<unknown>>();
 
   get<T>(key: string): CacheEntry<T> | undefined {
-    return this.cache.get(key);
+    return this.cache.get(key) as CacheEntry<T> | undefined;
   }
 
   set<T>(key: string, data: T): void {
@@ -46,15 +46,15 @@ class ApiCache {
     return this.pendingRequests.has(key);
   }
 
-  setPendingRequest(key: string, promise: Promise<any>): void {
+  setPendingRequest<T>(key: string, promise: Promise<T>): void {
     this.pendingRequests.set(key, promise);
     promise.finally(() => {
       this.pendingRequests.delete(key);
     });
   }
 
-  getPendingRequest(key: string): Promise<any> | undefined {
-    return this.pendingRequests.get(key);
+  getPendingRequest<T>(key: string): Promise<T> | undefined {
+    return this.pendingRequests.get(key) as Promise<T> | undefined;
   }
 
   clear(): void {
@@ -70,9 +70,8 @@ class ApiCache {
 
 const globalCache = new ApiCache();
 
-// src/utils/apiCache.ts (New file, or add to src/hooks/useApiCache.ts)
-// This is a conceptual global cache store for useApiCache
-const globalApiCache = new Map<string, { data: any, timestamp: number }>();
+// Global cache store for useApiCache
+const globalApiCache = new Map<string, { data: unknown, timestamp: number }>();
 
 export const invalidateApiCache = (key?: string | string[]) => {
   if (key) {
@@ -118,7 +117,7 @@ export function useApiCache<T>(
 
     // Check if there's already a pending request
     if (globalCache.hasPendingRequest(key)) {
-      const pendingRequest = globalCache.getPendingRequest(key);
+      const pendingRequest = globalCache.getPendingRequest<T>(key);
       if (pendingRequest) {
         try {
           const result = await pendingRequest;
@@ -146,7 +145,7 @@ export function useApiCache<T>(
 
     // Create new request
     const requestPromise = fetcher();
-    globalCache.setPendingRequest(key, requestPromise);
+    globalCache.setPendingRequest<T>(key, requestPromise);
 
     try {
       const result = await requestPromise;
@@ -154,7 +153,7 @@ export function useApiCache<T>(
       if (mountedRef.current) {
         setData(result);
         setLoading(false);
-        globalCache.set(key, result);
+        globalCache.set<T>(key, result);
       }
 
       return result;

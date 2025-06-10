@@ -11,22 +11,46 @@ import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { useApiCache } from '../hooks/useApiCache';
 import PromotionsCarousel from '../components/PromotionsCarousel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
-// Define interface for Formation (from formations.md example)
+// Define interfaces
 interface Formation {
   _id: string;
   title: string;
   link: string;
 }
 
+interface TransactionStats {
+  balance: number;
+  [key: string]: unknown;
+}
+
+interface ReferralStats {
+  totalReferrals: number;
+  [key: string]: unknown;
+}
+
+interface SubscriptionData {
+  status: 'active' | 'expired' | 'cancelled';
+  [key: string]: unknown;
+}
+
+// Query keys for consistent caching
+export const queryKeys = {
+  transactionStats: ['transaction-stats'] as const,
+  referralStats: ['referral-stats'] as const,
+  currentSubscription: ['current-subscription'] as const,
+  formations: ['formations'] as const,
+};
+
 function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Non abonné');
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);
 
@@ -37,75 +61,72 @@ function Home() {
     'https://res.cloudinary.com/people-matters/image/upload/fl_immutable_cache,w_624,h_351,q_auto,f_auto/v1598245577/1598245576.jpg'
   ];
 
-  // Use cached API calls to prevent duplicate requests
-  const {
-    data: statsData,
-    loading: statsLoading,
-    error: statsError
-  } = useApiCache(
-    'transaction-stats',
-    async () => {
+  // Use React Query for API calls with optimized settings
+  const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<TransactionStats>({
+    queryKey: queryKeys.transactionStats,
+    queryFn: async () => {
       const response = await sbcApiService.getTransactionStats();
       return handleApiResponse(response);
     },
-    { staleTime: 30000 } // 30 seconds
-  );
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 2,
+  });
 
-  const {
-    data: referralStats,
-    loading: referralLoading,
-    error: referralError
-  } = useApiCache(
-    'referral-stats',
-    async () => {
+  const { data: referralStats, isLoading: referralLoading, error: referralError } = useQuery<ReferralStats>({
+    queryKey: queryKeys.referralStats,
+    queryFn: async () => {
       const response = await sbcApiService.getReferralStats();
       return handleApiResponse(response);
     },
-    { staleTime: 60000 } // 1 minute
-  );
+    staleTime: 10 * 60 * 1000, // 10 minutes
+    gcTime: 60 * 60 * 1000, // 1 hour
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 2,
+  });
 
-  const {
-    data: subscriptionData,
-    loading: subscriptionLoading,
-    error: subscriptionError
-  } = useApiCache(
-    'current-subscription',
-    async () => {
+  const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery<SubscriptionData | null>({
+    queryKey: queryKeys.currentSubscription,
+    queryFn: async () => {
       try {
         const response = await sbcApiService.getCurrentSubscription();
         return handleApiResponse(response);
       } catch (err) {
-        // If subscription endpoint fails, return null instead of throwing
         console.warn('Subscription endpoint failed:', err);
         return null;
       }
     },
-    { staleTime: 120000 } // 2 minutes
-  );
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    retry: 1,
+  });
 
-  // New API call for formations
-  const {
-    data: formations,
-    loading: formationsLoading,
-    error: formationsError
-  } = useApiCache<Formation[]>(
-    'formations',
-    async () => {
+  const { data: formations, isLoading: formationsLoading, error: formationsError } = useQuery<Formation[]>({
+    queryKey: queryKeys.formations,
+    queryFn: async () => {
       try {
         const response = await sbcApiService.getFormations();
         return handleApiResponse(response);
       } catch (err) {
         console.error('Failed to fetch formations:', err);
-        return []; // Return an empty array on error
+        return [];
       }
     },
-    { staleTime: 300000 } // 5 minutes, assuming formations don't change often
-  );
+    staleTime: 30 * 60 * 1000, // 30 minutes
+    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 2,
+  });
 
   // Update subscription status when data changes
   useEffect(() => {
     if (subscriptionData) {
-      // Check if user has active subscriptions from user data
       if (user?.activeSubscriptions && user.activeSubscriptions.length > 0) {
         setSubscriptionStatus('Abonné');
       } else if (subscriptionData.status === 'active') {
@@ -114,7 +135,6 @@ function Home() {
         setSubscriptionStatus('Non abonné');
       }
     } else if (user?.activeSubscriptions && user.activeSubscriptions.length > 0) {
-      // Fallback to user data if subscription endpoint fails
       setSubscriptionStatus('Abonné');
     }
   }, [subscriptionData, user]);
@@ -125,8 +145,11 @@ function Home() {
   const balance = statsData?.balance || user?.balance || 0;
 
   const fetchHomeData = () => {
-    // This function can be used to manually refresh data if needed
-    window.location.reload();
+    // Invalidate and refetch all queries
+    queryClient.invalidateQueries({ queryKey: queryKeys.transactionStats });
+    queryClient.invalidateQueries({ queryKey: queryKeys.referralStats });
+    queryClient.invalidateQueries({ queryKey: queryKeys.currentSubscription });
+    queryClient.invalidateQueries({ queryKey: queryKeys.formations });
   };
 
   return (
@@ -146,7 +169,7 @@ function Home() {
         ) : error ? (
           <div className="flex flex-col items-center justify-center h-[60vh] text-gray-500">
             <p className="text-lg mb-2 text-red-500">Erreur lors du chargement</p>
-            <p className="text-sm mb-4">{error}</p>
+            <p className="text-sm mb-4">{error instanceof Error ? error.message : 'Une erreur est survenue'}</p>
             <button
               onClick={fetchHomeData}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"

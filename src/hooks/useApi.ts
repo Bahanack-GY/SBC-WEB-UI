@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
+import { ApiResponse } from '../services/ApiResponse';
+import type { Product, Transaction, ProductFilters, TransactionFilters } from '../types/api';
 
 /**
  * Custom hook for API calls with loading and error states
  */
-export const useApi = <T = any>(
-  apiCall: () => Promise<any>,
-  dependencies: any[] = [],
+export const useApi = <T>(
+  apiCall: () => Promise<ApiResponse>,
+  dependencies: unknown[] = [],
   immediate: boolean = true
 ) => {
   const [data, setData] = useState<T | null>(null);
@@ -20,7 +22,7 @@ export const useApi = <T = any>(
       setError(null);
       const response = await apiCall();
       const result = handleApiResponse(response);
-      setData(result);
+      setData(result as T);
       return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
@@ -49,8 +51,8 @@ export const useApi = <T = any>(
 /**
  * Hook for products
  */
-export const useProducts = (filters?: Record<string, any>) => {
-  return useApi(
+export const useProducts = (filters?: ProductFilters) => {
+  return useApi<Product[]>(
     () => sbcApiService.getProducts(filters),
     [JSON.stringify(filters)]
   );
@@ -66,8 +68,8 @@ export const useUserProfile = () => {
 /**
  * Hook for transaction history
  */
-export const useTransactionHistory = (filters?: Record<string, any>) => {
-  return useApi(
+export const useTransactionHistory = (filters?: TransactionFilters) => {
+  return useApi<Transaction[]>(
     () => sbcApiService.getTransactionHistory(filters),
     [JSON.stringify(filters)]
   );

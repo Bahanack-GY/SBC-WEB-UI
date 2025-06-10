@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { FaWhatsapp, FaFilter } from 'react-icons/fa';
 import Skeleton from '../components/common/Skeleton';
@@ -7,54 +8,56 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import type { User } from '../types/api';
 
+const queryKeys = {
+  stats: ['referral-stats'] as const,
+  filleuls: (type: string, search: string) => ['filleuls', type, search] as const,
+};
+
 function MesFilleuls() {
   const { user } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'direct' | 'indirect'>('direct');
   const [filter, setFilter] = useState<'all' | 'abonne' | 'nonabonne'>('all');
   const [modalOpen, setModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [filleuls, setFilleuls] = useState<User[]>([]);
-  const [stats, setStats] = useState<{ direct: number; indirect: number } | null>(null);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
 
-  useEffect(() => {
-    const fetchFilleuls = async () => {
-      if (!user) return;
-      setLoading(true);
-      try {
-        const [statsResponse, filleulsResponse] = await Promise.all([
-          sbcApiService.getReferralStats(),
-          sbcApiService.getReferredUsers({ type: selectedTab, ...(search ? { name: search } : {}) })
-        ]);
+  // Query for stats
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: queryKeys.stats,
+    queryFn: async () => {
+      const statsResponse = await sbcApiService.getReferralStats();
+      const statsResult = handleApiResponse(statsResponse);
+      return {
+        direct: statsResult.level1Count || 0,
+        indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
+      };
+    },
+    staleTime: 10 * 60 * 1000, // 10 min
+    gcTime: 60 * 60 * 1000, // 1 hour
+  });
 
-        const statsResult = handleApiResponse(statsResponse);
-        setStats({
-          direct: statsResult.level1Count || 0,
-          indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
-        });
+  // Query for filleuls
+  const { data: filleuls, isLoading: filleulsLoading, refetch } = useQuery<User[]>({
+    queryKey: queryKeys.filleuls(selectedTab, search),
+    queryFn: async () => {
+      if (!user) return [];
+      const filleulsResponse = await sbcApiService.getReferredUsers({ type: selectedTab, ...(search ? { name: search } : {}) });
+      const filleulsResult = handleApiResponse(filleulsResponse);
+      return filleulsResult.referredUsers || [];
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 min
+    gcTime: 30 * 60 * 1000, // 30 min
+  });
 
-        const filleulsResult = handleApiResponse(filleulsResponse);
-        setFilleuls(filleulsResult.referredUsers || []);
+  const filleulsList: User[] = filleuls ?? [];
 
-      } catch (error) {
-        console.error('Failed to fetch filleuls:', error);
-        setFilleuls([]);
-        setStats({ direct: 0, indirect: 0 });
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchFilleuls();
-  }, [user, selectedTab, search]);
-
-
-  let filtered = filleuls;
+  let filtered: User[] = filleulsList;
   if (filter === 'abonne') {
-    filtered = filleuls.filter(f => f.activeSubscriptions && f.activeSubscriptions.length > 0);
+    filtered = filleulsList.filter((f: User) => f.activeSubscriptions && f.activeSubscriptions.length > 0);
   }
   if (filter === 'nonabonne') {
-    filtered = filleuls.filter(f => !f.activeSubscriptions || f.activeSubscriptions.length === 0);
+    filtered = filleulsList.filter((f: User) => !f.activeSubscriptions || f.activeSubscriptions.length === 0);
   }
 
   return (
@@ -66,7 +69,7 @@ function MesFilleuls() {
       {/* Search Bar */}
       <form
         className="flex items-center gap-2 mb-4"
-        onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); }}
+        onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); refetch(); }}
       >
         <input
           type="text"
@@ -86,8 +89,8 @@ function MesFilleuls() {
       <div className="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between px-6 py-4 mb-4 border border-gray-100">
         <div className="font-semibold text-gray-700 text-base mb-2 md:mb-0">Nombre de filleuls</div>
         <div className="flex gap-4 text-sm font-bold">
-          <span className="text-green-700">Direct: <span className="text-gray-900">{stats?.direct ?? '...'}</span></span>
-          <span className="text-green-700">Indirect: <span className="text-gray-900">{stats?.indirect ?? '...'}</span></span>
+          <span className="text-green-700">Direct: <span className="text-gray-900">{statsLoading ? '...' : stats?.direct ?? '...'}</span></span>
+          <span className="text-green-700">Indirect: <span className="text-gray-900">{statsLoading ? '...' : stats?.indirect ?? '...'}</span></span>
         </div>
       </div>
 
@@ -145,7 +148,7 @@ function MesFilleuls() {
           </div>
         </div>
       )}
-      {loading ? (
+      {(filleulsLoading || statsLoading) ? (
         <div className="flex flex-col gap-2">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-2">
@@ -160,7 +163,7 @@ function MesFilleuls() {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow p-2 divide-y">
-          {filtered.map(filleul => (
+          {filtered.map((filleul: User) => (
             <div key={filleul._id} className="flex items-center py-2 gap-3">
               <img
                 src={filleul.avatarId

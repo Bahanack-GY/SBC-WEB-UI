@@ -2,9 +2,17 @@ import React, { useState } from 'react';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 
+type ApiResult = {
+  success: boolean;
+  message: string;
+  data?: unknown;
+  error?: string;
+  [key: string]: unknown;
+};
+
 const ApiTestComponent: React.FC = () => {
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<ApiResult | null>(null);
   const [error, setError] = useState<string>('');
 
   const testGetProducts = async () => {

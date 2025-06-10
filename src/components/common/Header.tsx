@@ -12,7 +12,7 @@ function Header() {
         <div className="flex justify-between items-center px-3 py-1  bg-white">
           <img src={logo} alt="logo" className="w-32 " />
           <div className="flex gap-3 items-center">
-            <button onClick={() => { }}><FiDownload size={22} /></button>
+            <button onClick={() => { alert("L'application mobile sera disponible prochainement") }}><FiDownload size={22} /></button>
             <button onClick={() => navigate("/wallet")}><AiFillWallet size={22} /></button>
             <button onClick={() => navigate("/profile")}><FaUser size={22} /></button>
           </div>

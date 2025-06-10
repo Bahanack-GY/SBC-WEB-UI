@@ -28,7 +28,7 @@ function AdsPack() {
             ) : (
                 <>
                     <div className="flex items-center">
-                        {/* <BackButton /> */}
+                        <BackButton /> 
                         <h3 className="text-xl font-medium text-center w-full">Offres publicitaires</h3>
                     </div>
 

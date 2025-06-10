@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import logo from '../assets/img/logo-sbc.png';
 
 function Connexion() {
   const [showPassword, setShowPassword] = useState(false);
@@ -67,6 +68,7 @@ function Connexion() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="w-full max-w-md p-8">
+        <img src={logo} alt="logo" className=" mb-4 object-contain" />
         <h1 className="text-3xl font-bold text-gray-800 mb-2">Connexion</h1>
         <p className="text-gray-500 mb-8">Entrez votre email et votre mot de passe pour vous connecter</p>
         <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
@@ -113,7 +115,7 @@ function Connexion() {
             {loading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
-        <div className="text-center text-sm text-gray-500 mt-6">
+        <div className="text-center text-md text-gray-500 mt-6">
           Pas de compte ?{' '}
           <button
             type="button"

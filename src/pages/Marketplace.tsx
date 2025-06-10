@@ -1,94 +1,142 @@
-import BackButton from "../components/common/BackButton";
-import iconGrowth from "../assets/icon/ecommerce.png";
 import { useState, useEffect, useRef } from "react";
-import MarketplaceProductCard from "../components/MarketplaceProductCard";
-import Skeleton from '../components/common/Skeleton';
+import { useNavigate } from "react-router-dom";
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from "framer-motion";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import { useNavigate } from "react-router-dom";
-import { useProducts } from '../hooks/useApi';
+import iconGrowth from "../assets/icon/ecommerce.png";
+import MarketplaceProductCard from "../components/MarketplaceProductCard";
+import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
+import BackButton from "../components/common/BackButton";
+
+// Define interfaces
+interface MarketplaceItem {
+  _id: string;
+  id?: string;
+  name: string;
+  price: number;
+  type?: 'product' | 'service';
+  category?: string;
+  seller?: {
+    name: string;
+  };
+  images?: Array<{
+    fileId: string;
+    url?: string;
+  }>;
+  whatsappLink?: string;
+}
+
+interface PaginatedResponse {
+  products: MarketplaceItem[];
+  paginationInfo: {
+    currentPage: number;
+    totalPages: number;
+    totalItems: number;
+  };
+}
+
+// Query keys for consistent caching
+const queryKeys = {
+  marketplace: (category: string, search: string, page: number) => 
+    ['marketplace', category, search, page] as const,
+};
 
 function Marketplace() {
     const [selectedCategory, setSelectedCategory] = useState('Tous');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [products, setProducts] = useState<any[]>([]);
-    const [services, setServices] = useState<any[]>([]);
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
+    const [allProducts, setAllProducts] = useState<MarketplaceItem[]>([]);
+    const [allServices, setAllServices] = useState<MarketplaceItem[]>([]);
     const limit = 10; // Number of items per page
     const navigate = useNavigate();
-    const loadMoreRef = useRef<HTMLDivElement | null>(null);
     const observerRef = useRef<HTMLDivElement | null>(null);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-    // Use the products API hook
-    const { data: allProducts, loading, error, refetch } = useProducts({
-        search: searchQuery,
-        category: selectedCategory === 'Tous' ? undefined : selectedCategory,
-        page,
-        limit
+    // Use React Query for API calls with optimized settings
+    const { data, isLoading, error, refetch } = useQuery<PaginatedResponse>({
+        queryKey: queryKeys.marketplace(
+            selectedCategory === 'Tous' ? '' : selectedCategory,
+            searchQuery,
+            page
+        ),
+        queryFn: async () => {
+            const response = await sbcApiService.getProducts({
+                search: searchQuery,
+                category: selectedCategory === 'Tous' ? undefined : selectedCategory,
+                page,
+                limit
+            });
+            return handleApiResponse(response) as PaginatedResponse;
+        },
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 30 * 60 * 1000, // 30 minutes
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+        retry: 2,
     });
 
     // Reset page and products when search/category changes
     useEffect(() => {
         setPage(1);
-        setProducts([]);
-        setServices([]);
+        setAllProducts([]);
+        setAllServices([]);
         setHasMore(true);
     }, [searchQuery, selectedCategory]);
 
-    // Handle new data: replace on page 1, append on page > 1
+    // Update products and services when new data arrives
     useEffect(() => {
-        const productsFromApi = allProducts?.products || [];
-        const productsArray = Array.isArray(productsFromApi) ? productsFromApi : [];
-        const productsList = productsArray.filter(
-            (item: any) =>
-                (item.type && item.type === 'product') ||
-                (!item.type && item.category && item.category.toLowerCase() !== 'services')
-        );
-        const servicesList = productsArray.filter(
-            (item: any) =>
-                (item.type && item.type === 'service') ||
-                (item.category && item.category.toLowerCase() === 'services')
-        );
+        if (data?.products) {
+            const newProducts = data.products.filter(item => 
+                (item.type === 'product') || 
+                (!item.type && item.category?.toLowerCase() !== 'services')
+            );
+            const newServices = data.products.filter(item => 
+                (item.type === 'service') || 
+                (item.category?.toLowerCase() === 'services')
+            );
 
-        if (page === 1) {
-            setProducts(productsList);
-            setServices(servicesList);
-        } else {
-            setProducts(prev => [...prev, ...productsList]);
-            setServices(prev => [...prev, ...servicesList]);
+            if (page === 1) {
+                setAllProducts(newProducts);
+                setAllServices(newServices);
+            } else {
+                setAllProducts(prev => [...prev, ...newProducts]);
+                setAllServices(prev => [...prev, ...newServices]);
+            }
+
+            setHasMore(data.paginationInfo.currentPage < data.paginationInfo.totalPages);
         }
-        const pagination = allProducts?.paginationInfo;
-        setHasMore(pagination ? (pagination.currentPage < pagination.totalPages) : productsArray.length === limit);
-    }, [allProducts]);
+    }, [data, page]);
 
     // Infinite scroll: load more when scroll is past 70% of the page
     useEffect(() => {
-        if (!hasMore || loading) return;
+        if (!hasMore || isLoading) return;
+
         const handleScroll = () => {
             const scrollY = window.scrollY;
             const windowHeight = window.innerHeight;
             const docHeight = document.body.scrollHeight;
             const scrollPercent = (scrollY + windowHeight) / docHeight;
+            
             if (scrollPercent > 0.7 && !isFetchingMore) {
                 setIsFetchingMore(true);
-                setPage((prev) => prev + 1);
+                setPage(prev => prev + 1);
             }
         };
+
         window.addEventListener('scroll', handleScroll);
         return () => window.removeEventListener('scroll', handleScroll);
-    }, [hasMore, loading, isFetchingMore]);
+    }, [hasMore, isLoading, isFetchingMore]);
 
     // Reset fetching state after data loads
     useEffect(() => {
-        if (isFetchingMore && !loading) {
+        if (isFetchingMore && !isLoading) {
             setIsFetchingMore(false);
         }
-    }, [loading, isFetchingMore]);
+    }, [isLoading, isFetchingMore]);
 
     const handleSearch = (query: string) => {
         setSearchQuery(query);
@@ -99,22 +147,20 @@ function Marketplace() {
         return () => clearTimeout(timeoutId);
     };
 
-    const handleLoadMore = () => {
-        setPage(prev => prev + 1);
-    };
-
     const menuItems = [
         { label: "Ajouter un produit", action: () => navigate('/ajouter-produit') },
         { label: "Voir mes produits", action: () => navigate('/mes-produits') }
     ];
 
-    const initialLoading = loading && page === 1;
+    const initialLoading = isLoading && page === 1;
+
     return (
-        <div className="p-3  bg-white relative pb-20">
+        <div className="p-3 bg-white relative pb-20">
             <div className="flex items-center">
-                {/* <BackButton /> */}
+                <BackButton /> 
                 <h3 className="text-xl font-medium text-center w-full">Marketplace</h3>
             </div>
+
             {/* Search Bar */}
             <div className="my-4">
                 <input
@@ -125,6 +171,7 @@ function Marketplace() {
                     className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
                 />
             </div>
+
             {/* Clearance Sales Card */}
             <div className="relative w-full h-28 rounded-2xl bg-[#2ecc40] flex items-center px-5 mb-5 overflow-visible">
                 <div className="flex-1 z-10">
@@ -137,6 +184,7 @@ function Marketplace() {
                 </div>
                 <img src={iconGrowth} alt="Ecommerce" className="absolute right-[32px] bottom-0 h-24 w-auto object-contain z-0" />
             </div>
+
             {/* Categories */}
             <div className="mb-4">
                 <div className="font-semibold text-gray-700 mb-2">Categories</div>
@@ -145,27 +193,21 @@ function Marketplace() {
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`px-4 py-1 rounded-full border text-sm font-medium whitespace-nowrap transition-colors duration-150 ${selectedCategory === cat ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                            className={`px-4 py-1 rounded-full border text-sm font-medium whitespace-nowrap transition-colors duration-150 ${
+                                selectedCategory === cat 
+                                    ? 'bg-green-700 text-white border-green-700' 
+                                    : 'bg-white text-gray-700 border-gray-300'
+                            }`}
                         >
                             {cat}
                         </button>
                     ))}
                 </div>
             </div>
-            {/* Loading Skeleton after categories */}
+
+            {/* Loading Skeleton */}
             {initialLoading ? (
                 <div className="flex flex-col gap-4 mt-4">
-                    {/* <Skeleton height="h-10" rounded="rounded-xl" />
-                    <Skeleton height="h-28" rounded="rounded-2xl" />
-                    <div className="flex gap-2">
-                        <Skeleton width="w-20" height="h-8" rounded="rounded-full" />
-                        <Skeleton width="w-20" height="h-8" rounded="rounded-full" />
-                        <Skeleton width="w-20" height="h-8" rounded="rounded-full" />
-                    </div> */}
-                    <div className="grid grid-cols-2 gap-4">
-                        <Skeleton height="h-60" rounded="rounded-xl" />
-                        <Skeleton height="h-60" rounded="rounded-xl" />
-                    </div>
                     <div className="grid grid-cols-2 gap-4">
                         <Skeleton height="h-60" rounded="rounded-xl" />
                         <Skeleton height="h-60" rounded="rounded-xl" />
@@ -196,15 +238,21 @@ function Marketplace() {
                             {selectedCategory === 'Tous' && (
                                 <>
                                     <div className="grid grid-cols-2 gap-4">
-                                        {[...services, ...products].map((item: any) => (
-                                            <div key={item.id || item._id} onClick={() => navigate(`/single-product/${item.id || item._id}`)} className="cursor-pointer">
+                                        {[...allServices, ...allProducts].map((item) => (
+                                            <div 
+                                                key={item._id} 
+                                                onClick={() => navigate(`/single-product/${item._id}`)} 
+                                                className="cursor-pointer"
+                                            >
                                                 <MarketplaceProductCard
-                                                    image={item.images?.[0]?.fileId ? sbcApiService.generateSettingsFileUrl(item.images[0].fileId) : iconGrowth}
-                                                    brand={item.seller?.name || (item.category && item.category.toLowerCase() === 'services' ? 'Service SBC' : 'Produit SBC')}
+                                                    image={item.images?.[0]?.fileId 
+                                                        ? sbcApiService.generateSettingsFileUrl(item.images[0].fileId) 
+                                                        : iconGrowth}
+                                                    brand={item.seller?.name || "SBC"}
                                                     name={item.name}
                                                     price={item.price}
                                                     whatsappLink={item.whatsappLink}
-                                                    productId={item.id || item._id}
+                                                    productId={item._id}
                                                 />
                                             </div>
                                         ))}
@@ -220,7 +268,7 @@ function Marketplace() {
                                         </div>
                                     )}
                                     {/* No results */}
-                                    {services.length === 0 && products.length === 0 && !loading && (
+                                    {allServices.length === 0 && allProducts.length === 0 && !isLoading && (
                                         <div className="text-center py-8 text-gray-500">
                                             Aucun produit ou service trouvé
                                         </div>
@@ -230,20 +278,26 @@ function Marketplace() {
 
                             {selectedCategory === 'Services' && (
                                 <div className="grid grid-cols-2 gap-4">
-                                    {services.length > 0 ? (
-                                        services.map((service: any) => (
-                                            <div key={service.id} onClick={() => navigate(`/single-product/${service.id || service._id}`)} className="cursor-pointer">
+                                    {allServices.length > 0 ? (
+                                        allServices.map((service) => (
+                                            <div 
+                                                key={service._id} 
+                                                onClick={() => navigate(`/single-product/${service._id}`)} 
+                                                className="cursor-pointer"
+                                            >
                                                 <MarketplaceProductCard
-                                                    image={service.images?.[0]?.fileId ? sbcApiService.generateSettingsFileUrl(service.images[0].fileId) : iconGrowth}
+                                                    image={service.images?.[0]?.fileId 
+                                                        ? sbcApiService.generateSettingsFileUrl(service.images[0].fileId) 
+                                                        : iconGrowth}
                                                     brand={service.seller?.name || "SBC"}
                                                     name={service.name}
                                                     price={service.price}
                                                     whatsappLink={service.whatsappLink}
-                                                    productId={service.id || service._id}
+                                                    productId={service._id}
                                                 />
                                             </div>
                                         ))
-                                    ) : !loading && (
+                                    ) : !isLoading && (
                                         <div className="col-span-2 text-center py-8 text-gray-500">
                                             Aucun service trouvé
                                         </div>
@@ -253,17 +307,23 @@ function Marketplace() {
 
                             {selectedCategory === 'Produits' && (
                                 <div className="grid grid-cols-2 gap-4">
-                                    {products.length > 0 ? (
+                                    {allProducts.length > 0 ? (
                                         <>
-                                            {products.map((product: any) => (
-                                                <div key={product.id} onClick={() => navigate(`/single-product/${product.id || product._id}`)} className="cursor-pointer">
+                                            {allProducts.map((product) => (
+                                                <div 
+                                                    key={product._id} 
+                                                    onClick={() => navigate(`/single-product/${product._id}`)} 
+                                                    className="cursor-pointer"
+                                                >
                                                     <MarketplaceProductCard
-                                                        image={product.images?.[0]?.fileId ? sbcApiService.generateSettingsFileUrl(product.images[0].fileId) : iconGrowth}
+                                                        image={product.images?.[0]?.fileId 
+                                                            ? sbcApiService.generateSettingsFileUrl(product.images[0].fileId) 
+                                                            : iconGrowth}
                                                         brand={product.seller?.name || "SBC"}
                                                         name={product.name}
                                                         price={product.price}
                                                         whatsappLink={product.whatsappLink}
-                                                        productId={product.id || product._id}
+                                                        productId={product._id}
                                                     />
                                                 </div>
                                             ))}
@@ -278,7 +338,7 @@ function Marketplace() {
                                                 </div>
                                             )}
                                         </>
-                                    ) : !loading && (
+                                    ) : !isLoading && (
                                         <div className="col-span-2 text-center py-8 text-gray-500">
                                             Aucun produit trouvé
                                         </div>
@@ -289,7 +349,9 @@ function Marketplace() {
                     )}
                 </>
             )}
-            {!loading && (
+
+            {/* Floating Action Button */}
+            {!isLoading && (
                 <motion.div
                     className="fixed bottom-20 right-4 z-50"
                     initial={{ scale: 0 }}
@@ -332,7 +394,7 @@ function Marketplace() {
                 </motion.div>
             )}
         </div>
-    )
+    );
 }
 
 export default Marketplace;

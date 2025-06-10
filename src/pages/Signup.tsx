@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiUser, FiMapPin, FiHeart, FiX } from 'react-icons/fi';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -131,14 +131,12 @@ function Signup() {
   const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
   const [loading, setLoading] = useState(false);
   const [checkingExistence, setCheckingExistence] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
   const [affiliateName, setAffiliateName] = useState<string | null>(null);
   const [affiliateLoading, setAffiliateLoading] = useState(false);
   const [isAffiliationCodeDisabled, setIsAffiliationCodeDisabled] = useState(false);
 
   const navigate = useNavigate();
   const { register } = useAuth();
-  const location = useLocation();
   const { affiliationCode } = useAffiliation();
 
   useEffect(() => {
@@ -263,14 +261,15 @@ function Signup() {
     setData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
 
     if (step === 0 && (name === 'email' || name === 'whatsapp' || name === 'parrain')) {
-      setApiError(null);
-      const updatedErrors = { ...errors, general: undefined, emailExists: undefined, whatsappExists: undefined };
-      if (name === 'parrain') {
-        updatedErrors.parrain = undefined;
-        setAffiliateName(null);
-        setAffiliateLoading(false);
-      }
-      setErrors(updatedErrors);
+      setErrors(prev => {
+        const updated = { ...prev, general: undefined, emailExists: undefined, whatsappExists: undefined };
+        if (name === 'parrain') {
+          updated.parrain = undefined;
+          setAffiliateName(null);
+          setAffiliateLoading(false);
+        }
+        return updated;
+      });
     }
 
     if (errors[name as keyof SignupErrors] && name !== 'parrain') {
@@ -291,7 +290,6 @@ function Signup() {
   const validateStep = async (): Promise<boolean> => {
     let valid = true;
     const newErrors: SignupErrors = {};
-    setApiError(null);
     setErrors(prev => ({ ...prev, general: undefined, emailExists: undefined, whatsappExists: undefined, parrain: undefined }));
 
     if (step === 0) {
@@ -411,7 +409,7 @@ function Signup() {
           sex: data.sexe,
           profession: data.profession ? removeAccents(data.profession) : undefined,
           language: data.langue,
-          interests: data.interets.length > 0 ? data.interets.map(i => removeAccents(i)).join(',') : undefined,
+          interests: data.interets.length > 0 ? data.interets.map(i => removeAccents(i)) : undefined,
         };
         console.log('Attempting registration with userData:', userData);
 
