@@ -90,8 +90,8 @@ export function useApiCache<T>(
   fetcher: () => Promise<T>,
   options: ApiCacheOptions = {}
 ) {
-  const { cacheTime = 5 * 60 * 1000, staleTime = 30 * 1000 } = options; // 5 min cache, 30s stale
-
+  const { staleTime = 30 * 1000 } = options; // 5 min cache, 30s stale
+  console.log('staleTime', staleTime);
   const [data, setData] = useState<T | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');

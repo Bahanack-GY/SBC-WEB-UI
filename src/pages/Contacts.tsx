@@ -1,9 +1,9 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import BackButton from "../components/common/BackButton";
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaWhatsapp, FaFilter } from 'react-icons/fa';
 import { FiDownload, FiFilter, FiLoader } from 'react-icons/fi';
-import { Index } from 'flexsearch';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelpers';
 import type { User } from '../types/api';
@@ -68,14 +68,13 @@ interface Criteria {
     search: string;
 }
 
+const PAGE_SIZE = 20;
+
 function Contacts() {
     const [modalOpen, setModalOpen] = useState(false);
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);
     const [filterDownloadModalOpen, setFilterDownloadModalOpen] = useState(false);
-    const [contacts, setContacts] = useState<User[]>([]);
-    const [loading, setLoading] = useState(true);
     const [downloading, setDownloading] = useState(false);
-    const [error, setError] = useState<string | null>(null);
     const [criteria, setCriteria] = useState<Criteria>({
         country: "",
         minAge: "",
@@ -85,68 +84,94 @@ function Contacts() {
         interests: [],
         search: ""
     });
+    const [debouncedCriteria, setDebouncedCriteria] = useState(criteria);
+    const [filterModalDateRange, setFilterModalDateRange] = useState({ from: '', to: '' });
+
+    // Debounce criteria changes
+    useEffect(() => {
+        const handler = setTimeout(() => setDebouncedCriteria(criteria), 500);
+        return () => clearTimeout(handler);
+    }, [criteria]);
 
     // Helper to format date to YYYY-MM-DD
     const formatDateForInput = (date: Date) => date.toISOString().split('T')[0];
-
-    // Calculate default dates for the last 7 days for the "Sélectionner une période" inputs
     const today = new Date();
     const sevenDaysAgo = new Date(today);
     sevenDaysAgo.setDate(today.getDate() - 7);
-
     const [dateRange, setDateRange] = useState({
         from: formatDateForInput(sevenDaysAgo),
         to: formatDateForInput(today),
     });
-
-    // New state for the "Télécharger les contacts filtrés" modal's date inputs
-    const [filterModalDateRange, setFilterModalDateRange] = useState({ from: '', to: '' });
-
     useEffect(() => {
-        // Reset filterModalDateRange when the filter download modal is closed
         if (!filterDownloadModalOpen) {
             setFilterModalDateRange({ from: '', to: '' });
         }
     }, [filterDownloadModalOpen]);
 
-    useEffect(() => {
-        const fetchContacts = async () => {
-            setLoading(true);
-            setError(null);
-            try {
-                // Map UI sex value to API sex value
-                const apiSex = criteria.sex === 'Homme' ? 'male' :
-                    criteria.sex === 'Femme' ? 'female' :
-                        criteria.sex === 'Autre' ? 'other' : '';
+    // Infinite Query for contacts
+    const {
+        data,
+        isLoading,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isFetchingNextPage
+    } = useInfiniteQuery<
+        { contacts: User[]; hasMore: boolean },
+        Error
+    >({
+        queryKey: ['contacts', debouncedCriteria],
+        queryFn: async ({ pageParam = 1 }) => {
+            const apiSex = debouncedCriteria.sex === 'Homme' ? 'male' :
+                debouncedCriteria.sex === 'Femme' ? 'female' :
+                    debouncedCriteria.sex === 'Autre' ? 'other' : '';
+            const filters = {
+                search: debouncedCriteria.search,
+                country: debouncedCriteria.country,
+                minAge: debouncedCriteria.minAge,
+                maxAge: debouncedCriteria.maxAge,
+                sex: apiSex,
+                professions: debouncedCriteria.professions.map(p => removeAccents(p)).join(','),
+                interests: debouncedCriteria.interests.map(i => removeAccents(i)).join(','),
+                page: pageParam,
+                limit: PAGE_SIZE,
+            };
+            const response = await sbcApiService.searchContacts(filters);
+            const result = handleApiResponse(response);
+            return {
+                contacts: result?.contacts || result || [],
+                hasMore: result?.paginationInfo ? result.paginationInfo.currentPage < result.paginationInfo.totalPages : (result?.contacts?.length === PAGE_SIZE)
+            };
+        },
+        getNextPageParam: (lastPage: { contacts: User[]; hasMore: boolean }, allPages) => {
+            if (lastPage.hasMore) {
+                return allPages.length + 1;
+            }
+            return undefined;
+        },
+        initialPageParam: 1,
+        staleTime: 5 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+    });
 
-                const filters = {
-                    search: criteria.search,
-                    country: criteria.country,
-                    minAge: criteria.minAge,
-                    maxAge: criteria.maxAge,
-                    sex: apiSex,
-                    // Apply removeAccents to each selected profession and interest before joining
-                    professions: criteria.professions.map(p => removeAccents(p)).join(','),
-                    interests: criteria.interests.map(i => removeAccents(i)).join(','),
-                };
-                const response = await sbcApiService.searchContacts(filters);
-                const result = handleApiResponse(response);
-                setContacts(result || []);
-            } catch (err) {
-                console.error("Failed to fetch contacts", err);
-                setError(err instanceof Error ? err.message : 'Failed to load contacts.');
-                setContacts([]);
-            } finally {
-                setLoading(false);
+    // Combine all loaded contacts
+    const contacts = data?.pages.flatMap((page: { contacts: User[] }) => page.contacts) || [];
+
+    // Infinite scroll: load more when scroll is past 80%
+    useEffect(() => {
+        if (!hasNextPage || isLoading || isFetchingNextPage) return;
+        const handleScroll = () => {
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const docHeight = document.body.scrollHeight;
+            const scrollPercent = (scrollY + windowHeight) / docHeight;
+            if (scrollPercent > 0.8 && hasNextPage && !isFetchingNextPage) {
+                fetchNextPage();
             }
         };
-
-        const debounceFetch = setTimeout(() => {
-            fetchContacts();
-        }, 500); // Debounce API calls by 500ms
-
-        return () => clearTimeout(debounceFetch);
-    }, [criteria]);
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [hasNextPage, isLoading, isFetchingNextPage, fetchNextPage]);
 
     const handleCriteriaChange = (key: keyof Criteria, value: string | string[]) => {
         setCriteria(prev => ({ ...prev, [key]: value }));
@@ -249,7 +274,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
             alert('Téléchargement réussi!');
         } catch (err) {
             console.error("Failed to download contacts:", err);
-            setError(err instanceof Error ? err.message : 'Échec du téléchargement des contacts.');
             alert('Échec du téléchargement des contacts.');
         } finally {
             setDownloading(false);
@@ -580,17 +604,17 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {loading ? (
+                {isLoading ? (
                     <div className="flex justify-center items-center p-10">
                         <FiLoader className="animate-spin text-4xl text-green-700" />
                     </div>
                 ) : error ? (
                     <div className="text-center py-8 text-red-500">
-                        {error}
+                        {error instanceof Error ? error.message : error}
                     </div>
                 ) : (
                     <div className="flex flex-col divide-y divide-gray-100 bg-white rounded-xl shadow">
-                        {contacts.map((c) => (
+                        {contacts.map((c: User) => (
                             <div key={c._id} className="flex items-center px-3 py-3 gap-3">
                                 <img
                                     src={c.avatarId

@@ -24,6 +24,8 @@ import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
 import { useEffect } from 'react'
+import VerifyOtp from './pages/VerifyOtp'
+import ResetPassword from './pages/ResetPassword'
 
 function AppContent() {
   const location = useLocation();
@@ -46,7 +48,7 @@ function AppContent() {
   //   return <SplashScreen />;
   // }
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/');
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' ;
   return (
     <div className="bg-white">
       <Routes>
@@ -71,6 +73,8 @@ function AppContent() {
         <Route path="/modifier-produit/:id" element={<ModifierProduit />} />
         <Route path="/abonnement" element={<Abonnement />} />
         <Route path="/filleuls" element={<MesFilleuls />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
       </Routes>
       {!hideNav && <NavigationBar />}
     </div>

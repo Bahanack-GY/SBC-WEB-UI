@@ -1,16 +1,26 @@
 import { FiLock, FiHelpCircle } from 'react-icons/fi';
 import { useState } from 'react';
+import { useMutation } from '@tanstack/react-query';
+import { sbcApiService } from '../services/SBCApiService';
+import { useNavigate } from 'react-router-dom';
 
 function ForgotPassword() {
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
+    const navigate = useNavigate();
+    const mutation = useMutation({
+        mutationFn: (email: string) => sbcApiService.requestPasswordResetOtp(email),
+        onSuccess: () => {
+            navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+        }
+    });
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!/^\S+@\S+\.\S+$/.test(email)) {
             setError('Veuillez entrer une adresse email valide.');
         } else {
             setError('');
-            // Envoyer la demande de réinitialisation ici
+            mutation.mutate(email);
         }
     };
     return (
@@ -24,6 +34,16 @@ function ForgotPassword() {
                     </div>
                     <p className="text-center text-gray-800 font-semibold mb-2">Veuillez entrer votre adresse email pour recevoir un code de vérification.</p>
                 </div>
+                {mutation.isSuccess && (
+                    <div className="text-green-600 text-center mb-2">
+                        Un code de vérification a été envoyé à votre adresse email.
+                    </div>
+                )}
+                {mutation.isError && (
+                    <div className="text-red-500 text-center mb-2">
+                        {(mutation.error as Error)?.message || "Erreur lors de l'envoi du code."}
+                    </div>
+                )}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div>
                         <label className="block text-gray-700 text-sm mb-1">Adresse email</label>
@@ -39,8 +59,9 @@ function ForgotPassword() {
                     <button
                         type="submit"
                         className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow"
+                        disabled={mutation.status === 'pending'}
                     >
-                        Envoyer
+                        {mutation.status === 'pending' ? 'Envoi en cours...' : 'Envoyer'}
                     </button>
                 </form>
             </div>
