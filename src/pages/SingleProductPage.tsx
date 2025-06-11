@@ -90,6 +90,7 @@ function SingleProductPage() {
             </div>
             <motion.div className="flex justify-center gap-2 mt-2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
               {images.map((img: string, i: number) => (
+                console.log("img", img),
                 <button
                   key={i}
                   onClick={() => setSelectedImg(i)}

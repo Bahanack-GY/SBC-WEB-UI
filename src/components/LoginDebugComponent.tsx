@@ -2,11 +2,22 @@ import React, { useState } from 'react';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 
+type LoginTestResult = {
+  rawResponse: unknown;
+  processedData: unknown;
+  analysis: {
+    hasToken: boolean;
+    hasUserId: boolean;
+    hasUser: boolean;
+    requiresOtp: boolean;
+  };
+} | null;
+
 const LoginDebugComponent: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<LoginTestResult>(null);
   const [error, setError] = useState<string>('');
 
   const testLogin = async () => {
@@ -102,11 +113,17 @@ const LoginDebugComponent: React.FC = () => {
           <div>
             <h5 className="font-medium text-purple-600">Raw Response:</h5>
             <pre className="text-xs overflow-auto max-h-32 bg-gray-100 p-2 rounded">
-              {JSON.stringify({
-                statusCode: result.rawResponse.statusCode,
-                body: result.rawResponse.body,
-                isOverallSuccess: result.rawResponse.isOverallSuccess
-              }, null, 2)}
+              {(() => {
+                if (result && typeof result.rawResponse === 'object' && result.rawResponse !== null) {
+                  const raw = result.rawResponse as { statusCode?: unknown; body?: unknown; isOverallSuccess?: unknown };
+                  return JSON.stringify({
+                    statusCode: raw.statusCode,
+                    body: raw.body,
+                    isOverallSuccess: raw.isOverallSuccess
+                  }, null, 2);
+                }
+                return '';
+              })()}
             </pre>
           </div>
         </div>

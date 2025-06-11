@@ -67,6 +67,7 @@ const PromotionsCarousel: React.FC<PromotionsCarouselProps> = ({ images }) => {
             {/* Indicators */}
             <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
                 {images.map((image, index) => (
+                    console.log("image", image),
                     <div
                         key={index}
                         className={`h-2.5 w-2.5 rounded-full transition-colors ${currentIndex === index ? 'bg-white' : 'bg-gray-400'}`}

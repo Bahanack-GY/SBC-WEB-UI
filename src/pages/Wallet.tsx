@@ -16,20 +16,23 @@ import { useApiCache } from '../hooks/useApiCache';
 import { useAuth } from '../contexts/AuthContext';
 import { correspondents, countryOptions } from './ModifierLeProfil'; // Assuming these are exported from ModifierLeProfil.tsx
 
-// Define the TransactionStatus as a string enum
-export enum TransactionStatus {
-  PENDING = 'pending',
-  COMPLETED = 'completed',
-  FAILED = 'failed',
-  CANCELLED = 'cancelled',
-  REFUNDED = 'refunded',
-  PROCESSING = 'processing',
-  PENDING_OTP_VERIFICATION = 'pending_otp_verification',
-}
+// Define the TransactionStatus as a string union type to match both backend and frontend usages
+export type TransactionStatus =
+  | 'pending'
+  | 'completed'
+  | 'failed'
+  | 'cancelled'
+  | 'refunded'
+  | 'processing'
+  | 'pending_otp_verification';
 
-// Extend the imported Transaction type to make the 'status' property more specific
-interface WalletTransaction extends Transaction {
-  status: TransactionStatus;
+// Chart data type
+interface ChartDataPoint {
+  name: string;
+  'Dépôt': number;
+  'Retrait': number;
+  'Dépôt_count': number;
+  'Retrait_count': number;
 }
 
 // Helper to get day name from date (for chart)
@@ -48,20 +51,20 @@ const getMonthName = (dateString: string) => {
 };
 
 // New: Function to get icon wrapper class based on status
-const getStatusIconWrapperClasses = (status: TransactionStatus) => {
+const getStatusIconWrapperClasses = (status: string) => {
   let bgColor = 'bg-gray-100'; // Default subtle background
   let textColor = 'text-gray-700'; // Default text color
 
-  if (status === TransactionStatus.FAILED) {
+  if (status === 'failed') {
     bgColor = 'bg-red-200'; // Light red background for failed
     textColor = 'text-red-700'; // Matching text color for failed
-  } else if (status === TransactionStatus.COMPLETED || status === TransactionStatus.REFUNDED) {
+  } else if (status === 'completed' || status === 'refunded') {
     bgColor = 'bg-green-100'; // Green background for successful transactions
     textColor = 'text-green-700';
   } else if (
-    status === TransactionStatus.PENDING ||
-    status === TransactionStatus.PROCESSING ||
-    status === TransactionStatus.PENDING_OTP_VERIFICATION
+    status === 'pending' ||
+    status === 'processing' ||
+    status === 'pending_otp_verification'
   ) {
     bgColor = 'bg-yellow-100'; // Yellow background for pending/processing/OTP
     textColor = 'text-yellow-700';
@@ -73,12 +76,12 @@ const getStatusIconWrapperClasses = (status: TransactionStatus) => {
 function Wallet() {
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
-  const [chartData, setChartData] = useState<any[]>([]);
+  const [chartData, setChartData] = useState<ChartDataPoint[]>([{ name: '', 'Dépôt': 0, 'Retrait': 0, 'Dépôt_count': 0, 'Retrait_count': 0 }]);
   const [chartTimeframe, setChartTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily'); // New state for chart timeframe
 
   // States for the "All Transactions" modal
   const [showAllTransactionsModal, setShowAllTransactionsModal] = useState(false);
-  const [allTransactions, setAllTransactions] = useState<any[]>([]);
+  const [allTransactions, setAllTransactions] = useState<Transaction[]>([]);
   const [allTransactionsPage, setAllTransactionsPage] = useState(1);
   const [allTransactionsHasMore, setAllTransactionsHasMore] = useState(true);
   const [allTransactionsLoadingMore, setAllTransactionsLoadingMore] = useState(false);
@@ -93,11 +96,19 @@ function Wallet() {
     async () => {
       const response = await sbcApiService.getTransactionHistory({ limit: 10 });
       const result = handleApiResponse(response) || response;
-      return (Array.isArray(result) ? result : []).map((tx: any) => ({
+      return (Array.isArray(result) ? result : []).map((tx: Record<string, unknown>) => ({
         ...tx,
-        id: tx._id || tx.transactionId || tx.id,
-        status: tx.status as TransactionStatus,
-      }));
+        id: (tx._id as string) || (tx.transactionId as string) || (tx.id as string) || '',
+        status: (tx.status as TransactionStatus) || 'pending',
+        type: (tx.type as Transaction['type']) || 'deposit',
+        amount: (typeof tx.amount === 'number' ? tx.amount : Number(tx.amount)) || 0,
+        createdAt: (tx.createdAt as string) || '',
+        description: (tx.description as string) || '',
+        reference: (tx.reference as string) || '',
+        userId: (tx.userId as string) || '',
+        currency: (tx.currency as string) || '',
+        updatedAt: (tx.updatedAt as string) || '',
+      } as Transaction));
     },
     { staleTime: 15000 } // 15 seconds
   );
@@ -131,7 +142,7 @@ function Wallet() {
       return;
     }
 
-    let dataToProcess: Record<string, any> = {};
+    let dataToProcess: Record<string, unknown> = {};
     let formatLabel: (key: string) => string;
 
     switch (chartTimeframe) {
@@ -154,15 +165,20 @@ function Wallet() {
 
     const processedData = Object.keys(dataToProcess)
       .sort() // Ensure chronological order
-      .map(key => ({
-        name: formatLabel(key),
-        'Dépôt': Number(dataToProcess[key]?.deposit?.totalAmount || 0),
-        'Retrait': Number(dataToProcess[key]?.withdrawal?.totalAmount || 0),
-        'Dépôt_count': Number(dataToProcess[key]?.deposit?.count || 0), // Include count
-        'Retrait_count': Number(dataToProcess[key]?.withdrawal?.count || 0), // Include count
-      }));
+      .map(key => {
+        const value = dataToProcess[key] as Record<string, unknown>;
+        const deposit = value?.deposit as { totalAmount?: number; count?: number } | undefined;
+        const withdrawal = value?.withdrawal as { totalAmount?: number; count?: number } | undefined;
+        return {
+          name: formatLabel(key),
+          'Dépôt': Number(deposit?.totalAmount || 0),
+          'Retrait': Number(withdrawal?.totalAmount || 0),
+          'Dépôt_count': Number(deposit?.count || 0),
+          'Retrait_count': Number(withdrawal?.count || 0),
+        };
+      });
 
-    setChartData(processedData.length > 0 ? processedData : [{ name: '', 'Dépôt': 0, 'Retrait': 0 }]);
+    setChartData(processedData.length > 0 ? processedData : [{ name: '', 'Dépôt': 0, 'Retrait': 0, 'Dépôt_count': 0, 'Retrait_count': 0 }]);
   }, [stats, chartTimeframe]); // Depend on stats and new timeframe
 
   const loading = transactionsLoading || statsLoading;
@@ -177,13 +193,12 @@ function Wallet() {
 
   const [chartType, setChartType] = useState('Reçu');
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawLoading, setWithdrawLoading] = useState(false);
 
   const openModal = (tx: Transaction) => {
-    setSelectedTx(tx as WalletTransaction);
+    setSelectedTx(tx);
     setModalOpen(true);
   };
   const closeModal = () => {
@@ -208,8 +223,6 @@ function Wallet() {
     e.preventDefault();
     if (withdrawAmount && Number(withdrawAmount) > 0) {
       try {
-        setWithdrawLoading(true);
-
         // Determine currency based on user's country
         const userCountryName = user?.country; // e.g., 'Cameroun'
         const userCountryDetails = countryOptions.find((c: { value: string; code: string; }) => c.value === userCountryName);
@@ -227,7 +240,7 @@ function Wallet() {
 
         if (data && response.isOverallSuccess) {
           // Handle success based on status from API response
-          if (data.status === TransactionStatus.PENDING_OTP_VERIFICATION && data.transactionId) {
+          if (data.status === 'pending_otp_verification' && data.transactionId) {
             alert(data.message || 'Demande de retrait initiée. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.');
             navigate('/otp', {
               state: {
@@ -240,7 +253,7 @@ function Wallet() {
             setWithdrawAmount(''); // Clear the input after initiating/re-sending OTP
             setShowWithdrawForm(false); // Hide the form
             refreshUser(); // Refresh user context if needed for balance update or other state
-          } else if (data.status === TransactionStatus.PROCESSING) {
+          } else if (data.status === 'processing') {
             // New: Navigate directly to TransactionConfirmation page for PROCESSING status
             alert(data.message || 'Retrait initié et en cours de traitement. Votre solde sera mis à jour une fois le transfert confirmé.');
             navigate('/transaction-confirmation', {
@@ -253,7 +266,7 @@ function Wallet() {
             setWithdrawAmount('');
             setShowWithdrawForm(false);
             refreshUser(); // Refresh user context to reflect potential balance changes
-          } else if (data.status === TransactionStatus.PENDING) {
+          } else if (data.status === 'pending') {
             // This covers a soft lock scenario where the status is 'pending' and no OTP is re-sent or needed at this point
             alert(data.message || 'Vous avez une demande de retrait en cours. Veuillez la compléter ou l\'annuler avant d\'en initier une nouvelle.');
             setWithdrawAmount('');
@@ -272,8 +285,8 @@ function Wallet() {
         let errorMessage = 'Échec de l\'initiation du retrait.';
         if (err instanceof Error) {
           errorMessage = err.message;
-        } else if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
-          errorMessage = (err as any).message;
+        } else if (err && typeof err === 'object' && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+          errorMessage = (err as { message: string }).message;
         }
 
         // Specific error handling based on API messages
@@ -290,8 +303,6 @@ function Wallet() {
           alert(errorMessage);
         }
 
-      } finally {
-        setWithdrawLoading(false);
       }
     } else {
       alert("Veuillez entrer un montant de retrait valide.");
@@ -353,10 +364,19 @@ function Wallet() {
         const fetchedTxs = (Array.isArray(result) ? result : []);
         const paginationInfo = response.body?.pagination; // Access pagination from the original response body
 
-        setAllTransactions(prev => [...prev, ...fetchedTxs.map((tx: any) => ({
+        setAllTransactions(prev => [...prev, ...fetchedTxs.map((tx: Record<string, unknown>) => ({
           ...tx,
-          id: tx._id || tx.transactionId || tx.id,
-        }))]);
+          id: (tx._id as string) || (tx.transactionId as string) || (tx.id as string) || '',
+          status: (tx.status as TransactionStatus) || 'pending',
+          type: (tx.type as Transaction['type']) || 'deposit',
+          amount: (typeof tx.amount === 'number' ? tx.amount : Number(tx.amount)) || 0,
+          createdAt: (tx.createdAt as string) || '',
+          description: (tx.description as string) || '',
+          reference: (tx.reference as string) || '',
+          userId: (tx.userId as string) || '',
+          currency: (tx.currency as string) || '',
+          updatedAt: (tx.updatedAt as string) || '',
+        } as Transaction))]);
         // Update hasMore based on pagination info
         if (paginationInfo) {
           const totalPages = Math.ceil(paginationInfo.total / paginationInfo.limit);
@@ -425,39 +445,6 @@ function Wallet() {
       setAllTransactionsLoadingMore(false);
     }
   }, [showAllTransactionsModal]);
-
-  const handleCancelWithdrawal = async () => {
-    if (!selectedTx || selectedTx.status !== TransactionStatus.PENDING_OTP_VERIFICATION) {
-      alert("Cette transaction ne peut pas être annulée ou son statut n'est pas 'en attente OTP'.");
-      return;
-    }
-
-    if (!window.confirm("Êtes-vous sûr de vouloir annuler cette demande de retrait ?")) {
-      return; // User cancelled the confirmation
-    }
-
-    setWithdrawLoading(true); // Reuse withdrawLoading state for cancellation too
-    try {
-      const response = await sbcApiService.cancelWithdrawal({ transactionId: selectedTx.id });
-      const result = handleApiResponse(response); // Handle successful response
-      alert(result.message || "Demande de retrait annulée avec succès.");
-      closeModal(); // Close the modal
-      refreshUser(); // Refresh user data and transaction history
-      // Optionally, you might want to refetch the transaction history specifically
-      // useApiCache.invalidate('transaction-history'); or similar mechanism
-    } catch (err) {
-      console.error('Withdrawal cancellation error:', err);
-      let errorMessage = 'Échec de l\'annulation du retrait.';
-      if (err instanceof Error) {
-        errorMessage = err.message;
-      } else if (err && typeof err === 'object' && 'message' in err && typeof (err as any).message === 'string') {
-        errorMessage = (err as any).message;
-      }
-      alert(errorMessage);
-    } finally {
-      setWithdrawLoading(false);
-    }
-  };
 
   return (
     <ProtectedRoute>
@@ -638,13 +625,13 @@ function Wallet() {
                     onClick={() => openModal(tx)}
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={getStatusIconWrapperClasses(tx.status as TransactionStatus)}>
+                      <div className={getStatusIconWrapperClasses(String(tx.status))}>
                         <span className="text-2xl">{formatTransactionIcon(tx)}</span>
                       </div>
                       <div className="min-w-0">
-                        <div className={`font-bold ${tx.status === TransactionStatus.COMPLETED ? 'text-white' :
-                          (tx.status === TransactionStatus.PENDING || tx.status === TransactionStatus.PROCESSING || tx.status === TransactionStatus.PENDING_OTP_VERIFICATION) ? 'text-yellow-400' :
-                            tx.status === TransactionStatus.FAILED ? 'text-red-400' : 'text-white'
+                        <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-white' :
+                          (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-yellow-400' :
+                            String(tx.status) === 'failed' ? 'text-red-400' : 'text-white'
                           } text-sm truncate max-w-[160px]`}>{formatTransactionName(tx)}</div>
                         <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
                       </div>
@@ -693,20 +680,20 @@ function Wallet() {
                       <div className="text-xs text-gray-400 mb-1">Type</div>
                       <div className="font-semibold mb-2">{selectedTx.type}</div>
                       <div className="text-xs text-gray-400 mb-1">Statut</div>
-                      <div className={`font-semibold mb-2 ${selectedTx.status === TransactionStatus.COMPLETED ? 'text-green-600' :
-                        (selectedTx.status === TransactionStatus.PENDING || selectedTx.status === TransactionStatus.PROCESSING || selectedTx.status === TransactionStatus.PENDING_OTP_VERIFICATION) ? 'text-yellow-600' :
-                          selectedTx.status === TransactionStatus.FAILED ? 'text-red-600' : 'text-gray-600'
+                      <div className={`font-semibold mb-2 ${String(selectedTx.status) === 'completed' ? 'text-green-600' :
+                        (String(selectedTx.status) === 'pending' || String(selectedTx.status) === 'processing' || String(selectedTx.status) === 'pending_otp_verification') ? 'text-yellow-600' :
+                          String(selectedTx.status) === 'failed' ? 'text-red-600' : 'text-gray-600'
                         }`}>
-                        {selectedTx.status === TransactionStatus.COMPLETED ? 'Terminé' :
-                          selectedTx.status === TransactionStatus.PENDING ? 'En attente' :
-                            selectedTx.status === TransactionStatus.PROCESSING ? 'En cours' :
-                              selectedTx.status === TransactionStatus.PENDING_OTP_VERIFICATION ? 'En attente OTP' :
-                                selectedTx.status === TransactionStatus.FAILED ? 'Échoué' : selectedTx.status}
+                        {String(selectedTx.status) === 'completed' ? 'Terminé' :
+                          String(selectedTx.status) === 'pending' ? 'En attente' :
+                            String(selectedTx.status) === 'processing' ? 'En cours' :
+                              String(selectedTx.status) === 'pending_otp_verification' ? 'En attente OTP' :
+                                String(selectedTx.status) === 'failed' ? 'Échoué' : selectedTx.status}
                       </div>
                       <div className="text-xs text-gray-400 mb-1">Montant</div>
-                      <div className={`font-bold text-lg mb-2 ${selectedTx.type === 'withdrawal' || selectedTx.type === 'payment' ? 'text-red-500' : 'text-green-600'
+                      <div className={`font-bold text-lg mb-2 ${String(selectedTx.type) === 'withdrawal' || String(selectedTx.type) === 'payment' ? 'text-red-500' : 'text-green-600'
                         }`}>
-                        {selectedTx.type === 'withdrawal' || selectedTx.type === 'payment' ? '-' : '+'}{selectedTx.amount.toLocaleString('fr-FR')} F
+                        {String(selectedTx.type) === 'withdrawal' || String(selectedTx.type) === 'payment' ? '-' : '+'}{selectedTx.amount.toLocaleString('fr-FR')} F
                       </div>
                       <div className="text-xs text-gray-400 mb-1">Description</div>
                       <div className="mb-2">{selectedTx.description || formatTransactionName(selectedTx as Transaction)}</div>
@@ -778,13 +765,13 @@ function Wallet() {
                             }}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className={getStatusIconWrapperClasses(tx.status as TransactionStatus)}>
+                              <div className={getStatusIconWrapperClasses(String(tx.status))}>
                                 <span className="text-2xl">{formatTransactionIcon(tx)}</span>
                               </div>
                               <div className="min-w-0">
-                                <div className={`font-bold ${tx.status === TransactionStatus.COMPLETED ? 'text-white' :
-                                  (tx.status === TransactionStatus.PENDING || tx.status === TransactionStatus.PROCESSING || tx.status === TransactionStatus.PENDING_OTP_VERIFICATION) ? 'text-yellow-400' :
-                                    tx.status === TransactionStatus.FAILED ? 'text-red-400' : 'text-white'
+                                <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-white' :
+                                  (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-yellow-400' :
+                                    String(tx.status) === 'failed' ? 'text-red-400' : 'text-white'
                                   } text-sm truncate max-w-[160px]`}>{formatTransactionName(tx)}</div>
                                 <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
                               </div>
