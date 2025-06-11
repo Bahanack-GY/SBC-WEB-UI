@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from "framer-motion";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import ecommerceIcon from '../assets/icon/ecommerce.png';
+import ecommerceIcon from '../assets/icon/Ecommerce.png';
 import MarketplaceProductCard from "../components/MarketplaceProductCard";
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -180,7 +180,7 @@ function Marketplace() {
                         <span className="bg-[#d7f6e6] text-green-700 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
                             Offres spéciales
                         </span>
-                    </div>npm ru 
+                    </div>npm ru
                 </div>
                 <img src={ecommerceIcon} alt="Ecommerce" className="absolute right-[32px] bottom-0 h-24 w-auto object-contain z-0" />
             </div>
