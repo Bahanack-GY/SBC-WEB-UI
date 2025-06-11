@@ -72,7 +72,8 @@ function AppContent() {
     const user = isAuthenticated && JSON.parse(localStorage.getItem('user') || 'null');
     const isSubscribed = !!(
       (user?.activeSubscriptions && user.activeSubscriptions.length > 0) ||
-      (subscriptionData && subscriptionData.status === 'active') || (subscriptionData && subscriptionData?.totalCount > 0)
+      (subscriptionData && subscriptionData.status === 'active') ||
+      (typeof subscriptionData?.totalCount === 'number' && subscriptionData.totalCount > 0)
     );
 console.log("subscriptionData", subscriptionData);
 console.log("subscriptionData.status", subscriptionData?.totalCount);
