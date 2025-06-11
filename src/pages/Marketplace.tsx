@@ -111,7 +111,7 @@ function Marketplace() {
 
             setHasMore(data.paginationInfo.currentPage < data.paginationInfo.totalPages);
         }
-    }, [data, page, loadedItemIds]);
+    }, [data, page]);
 
     // Reset loaded items when search/category changes
     useEffect(() => {
