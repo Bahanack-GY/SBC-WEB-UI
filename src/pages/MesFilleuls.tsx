@@ -10,7 +10,7 @@ import type { User } from '../types/api';
 
 const queryKeys = {
   stats: ['referral-stats'] as const,
-  filleuls: (type: string, search: string, page: number) => ['filleuls', type, search, page] as const,
+  filleuls: (type: string, search: string, page: number, filter?: string) => ['filleuls', type, search, page, filter] as const,
 };
 
 function MesFilleuls() {
@@ -61,22 +61,29 @@ function MesFilleuls() {
       return {
         direct: statsResult.level1Count || 0,
         indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
+        total: (statsResult.level1Count || 0) + (statsResult.level2Count || 0) + (statsResult.level3Count || 0)
       };
     },
     staleTime: 10 * 60 * 1000, // 10 min
     gcTime: 60 * 60 * 1000, // 1 hour
   });
 
-  // Query for filleuls
-  const { data: filleuls, isLoading: filleulsLoading, refetch } = useQuery<{ referredUsers: User[], totalPages: number }>({
-    queryKey: queryKeys.filleuls(selectedTab, search, page),
+  // Query for filleuls with filter
+  const { data: filleuls, isLoading: filleulsLoading, refetch } = useQuery<{ 
+    referredUsers: User[], 
+    totalPages: number,
+    totalCount: number,
+    filteredCount: number 
+  }>({
+    queryKey: queryKeys.filleuls(selectedTab, search, page, filter),
     queryFn: async () => {
-      if (!user) return { referredUsers: [], totalPages: 0 };
+      if (!user) return { referredUsers: [], totalPages: 0, totalCount: 0, filteredCount: 0 };
       const filleulsResponse = await sbcApiService.getReferredUsers({ 
         type: selectedTab, 
         ...(search ? { name: search } : {}),
         page,
-        limit
+        limit,
+        filter: filter === 'all' ? undefined : filter
       });
       return handleApiResponse(filleulsResponse);
     },
@@ -105,13 +112,13 @@ function MesFilleuls() {
     }
   }, [filleuls, page]);
 
-  // Reset state when search/category changes
+  // Reset state when search/category/filter changes
   useEffect(() => {
     setPage(1);
     setAllFilleuls([]);
     setLoadedFilleulIds(new Set());
     setHasMore(true);
-  }, [search, selectedTab]);
+  }, [search, selectedTab, filter]);
 
   // Reset fetching state after data loads
   useEffect(() => {
@@ -153,12 +160,29 @@ function MesFilleuls() {
           Rechercher
         </button>
       </form>
-      {/* Card for nombre de filleuls */}
-      <div className="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between px-6 py-4 mb-4 border border-gray-100">
-        <div className="font-semibold text-gray-700 text-base mb-2 md:mb-0">Nombre de filleuls</div>
-        <div className="flex gap-4 text-sm font-bold">
-          <span className="text-green-700">Direct: <span className="text-gray-900">{statsLoading ? '...' : stats?.direct ?? '...'}</span></span>
-          <span className="text-green-700">Indirect: <span className="text-gray-900">{statsLoading ? '...' : stats?.indirect ?? '...'}</span></span>
+      {/* Stats Cards */}
+      <div className="space-y-3 mb-4">
+        {/* Total Filleuls Card */}
+        <div className="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between px-6 py-4 border border-gray-100">
+          <div className="font-semibold text-gray-700 text-base mb-2 md:mb-0">Nombre total de filleuls</div>
+          <div className="flex gap-4 text-sm font-bold">
+            <span className="text-green-700">Direct: <span className="text-gray-900">{statsLoading ? '...' : stats?.direct?.toLocaleString() ?? '...'}</span></span>
+            <span className="text-green-700">Indirect: <span className="text-gray-900">{statsLoading ? '...' : stats?.indirect?.toLocaleString() ?? '...'}</span></span>
+          </div>
+        </div>
+
+        {/* Current Filter Stats */}
+        <div className="bg-white rounded-2xl shadow px-6 py-3 border border-gray-100">
+          <div className="flex items-center justify-between">
+            <div className="font-semibold text-gray-700 text-sm">
+              {filter === 'all' ? 'Tous les filleuls' : 
+               filter === 'abonne' ? 'Filleuls abonnés' : 
+               'Filleuls non abonnés'}
+            </div>
+            <div className="text-sm font-medium text-gray-600">
+              {filleulsLoading ? '...' : filleuls?.filteredCount?.toLocaleString() ?? '...'} {filleuls?.filteredCount === 1 ? 'filleul' : 'filleuls'}
+            </div>
+          </div>
         </div>
       </div>
 
