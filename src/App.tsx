@@ -85,23 +85,32 @@ console.log("subscriptionData.status", subscriptionData?.totalCount);
     if (affiliationCodeFromUrl) {
       setAffiliationCode(affiliationCodeFromUrl);
     }
+
     // If on splash screen and not yet marked as viewed, mark as viewed
     if (location.pathname === '/splash-screen' && !splashViewed) {
       localStorage.setItem('splashViewed', 'true');
       setSplashViewed(true);
     }
-    // If splash already viewed and user tries to access splash, redirect to login or home
-    if (location.pathname === '/splash-screen' && splashViewed && !isAuthenticated) {
-      window.location.replace('/connexion');
-    } else if (location.pathname === '/splash-screen' && splashViewed && isAuthenticated) {
-      window.location.replace('/');
+
+    // Handle splash screen redirects
+    if (location.pathname === '/splash-screen' && splashViewed) {
+      if (!isAuthenticated) {
+        window.location.replace('/connexion');
+      } else if (isAuthenticated) {
+        window.location.replace('/');
+      }
     }
-    // If user is authenticated and tries to access login, redirect to home
+
+    // Handle login page redirects
     if (location.pathname === '/connexion' && isAuthenticated) {
-      alert("Vous êtes déjà connecté");
-      window.location.replace('/');
+      if (isSubscribed) {
+        window.location.replace('/');
+      } else {
+        window.location.replace('/abonnement');
+      }
     }
-    // If user is not subscribed and tries to access any page except allowed, redirect to /abonnement
+
+    // Handle subscription redirects
     const allowed = ['/connexion', '/signup', '/splash-screen', '/abonnement'];
     if (
       isAuthenticated &&
@@ -110,6 +119,11 @@ console.log("subscriptionData.status", subscriptionData?.totalCount);
       !allowed.includes(location.pathname)
     ) {
       window.location.replace('/abonnement');
+    }
+
+    // Prevent subscribed users from accessing subscription page
+    if (isAuthenticated && isSubscribed && location.pathname === '/abonnement') {
+      window.location.replace('/');
     }
   }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed]);
 
@@ -153,6 +167,7 @@ console.log("subscriptionData.status", subscriptionData?.totalCount);
         <Route path="/mes-produits" element={<MesProduits />} />
         <Route path="/modifier-produit/:id" element={<ModifierProduit />} />
         <Route path="/abonnement" element={<Abonnement />} />
+        <Route path="/changer-abonnement" element={<Abonnement />} />
         <Route path="/filleuls" element={<MesFilleuls />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />

@@ -20,8 +20,8 @@ function NavigationBar() {
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-[#d7f699] rounded-full flex px-3 py-3 shadow-lg gap-2"
-      style={{ minWidth: 320 }}
+      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-[#d7f699] rounded-full flex px-3 py-3 shadow-lg gap-2 mt-3"
+      
     >
       {navItems.map((item) => {
         const isActive = location.pathname === item.path || (item.path === '/' && location.pathname === '/');
