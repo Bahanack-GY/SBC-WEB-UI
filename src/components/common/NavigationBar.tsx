@@ -1,14 +1,14 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import {  MdDeviceHub, MdPeople, MdHome, MdShoppingBasket } from 'react-icons/md';
-import { TbMoodDollar } from 'react-icons/tb';
+import {  MdDeviceHub,  MdHome, MdShoppingBasket } from 'react-icons/md';
+// import { TbMoodDollar } from 'react-icons/tb';
 
 const navItems = [
   { label: 'Publicité', icon: <MdDeviceHub size={24} />, path: '/ads-pack' },
   { label: 'Accueil', icon: <MdHome size={24} />, path: '/' },
   { label: 'Marketplace', icon: <MdShoppingBasket size={24} />, path: '/marketplace' },
-  { label: 'Divertissement', icon: <MdPeople size={24} />, path: '/people' },
-  { label: 'Investissement', icon: <TbMoodDollar size={24} />, path: '/money' },
+  // { label: 'Divertissement', icon: <MdPeople size={24} />, path: '/people' },
+  // { label: 'Investissement', icon: <TbMoodDollar size={24} />, path: '/money' },
 ];
 
 function NavigationBar() {
