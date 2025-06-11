@@ -263,11 +263,11 @@ function Signup() {
     if (step === 0 && (name === 'email' || name === 'whatsapp' || name === 'parrain')) {
       setErrors(prev => {
         const updated = { ...prev, general: undefined, emailExists: undefined, whatsappExists: undefined };
-        if (name === 'parrain') {
+      if (name === 'parrain') {
           updated.parrain = undefined;
-          setAffiliateName(null);
-          setAffiliateLoading(false);
-        }
+        setAffiliateName(null);
+        setAffiliateLoading(false);
+      }
         return updated;
       });
     }

@@ -16,6 +16,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import TourButton from '../components/common/TourButton';
 
 // Define interfaces
 interface Formation {
@@ -180,14 +181,16 @@ function Home() {
           </div>
         ) : (
           <>
-            <HomeUserCard
-              name={user ? user.name : "Utilisateur"}
-              image={user?.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : "https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360"}
-              affiliates={referralStats?.totalReferrals || 0}
-              status={subscriptionStatus}
-              promoCode={user?.referralCode || ""}
-            />
-            <div className="flex flex-col  gap-4">
+            <div className="home-header">
+              <HomeUserCard
+                name={user ? user.name : "Utilisateur"}
+                image={user?.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : "https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360"}
+                affiliates={referralStats?.totalReferrals || 0}
+                status={subscriptionStatus}
+                promoCode={user?.referralCode || ""}
+              />
+            </div>
+            <div className="quick-actions flex flex-col gap-4">
               <h2 className="text-2xl font-bold">Nos services</h2>
               <div className="flex justify-between overflow-x-auto gap-4">
                 <HomeButtons icon={<FaBook size={30} />} title="Formations" onClick={() => setIsFormationsModalOpen(true)} />
@@ -195,12 +198,16 @@ function Home() {
                 <HomeButtons icon={<FaPhone size={30} />} title="Contacts" onClick={() => navigate("/contacts")} />
               </div>
             </div>
-            <HomeBalanceCard
-              balance={balance}
-              icon={<img src={BalanceIcon} alt="Balance" className="size-48" />}
-            />
-            <h2 className="text-2xl font-bold mt-4">Decouvrez</h2>
-            <PromotionsCarousel images={promotionImages} />
+            <div className="balance-card">
+              <HomeBalanceCard
+                balance={balance}
+                icon={<img src={BalanceIcon} alt="Balance" className="size-48" />}
+              />
+            </div>
+            <div className="recent-transactions">
+              <h2 className="text-2xl font-bold mt-4">Decouvrez</h2>
+              <PromotionsCarousel images={promotionImages} />
+            </div>
           </>
         )}
       </div>
@@ -259,6 +266,8 @@ function Home() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <TourButton />
     </ProtectedRoute>
   )
 }

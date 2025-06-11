@@ -34,6 +34,7 @@ import PartnerSpace from './pages/PartnerSpace'
 import { useQuery } from '@tanstack/react-query'
 import { handleApiResponse } from './utils/apiHelpers'
 import { sbcApiService } from './services/SBCApiService'
+import { TourProvider } from './components/common/TourProvider'
 
 // Add this type definition at the top (after imports)
 type SubscriptionData = {
@@ -186,7 +187,9 @@ function App() {
   return (
     <AuthProvider>
       <AffiliationProvider>
-        <AppContent />
+        <TourProvider>
+          <AppContent />
+        </TourProvider>
       </AffiliationProvider>
     </AuthProvider>
   )

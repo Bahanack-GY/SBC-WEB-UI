@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FiEdit2,FiMail, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock } from 'react-icons/fi';
+import { FiEdit2,FiMail, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -9,6 +9,8 @@ import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
+import TourButton from '../components/common/TourButton';
+import { useTour } from '../components/common/TourProvider';
 
 const actions = [
   { label: 'Modifier le profil', icon: <FiEdit2 className="text-[#115CF6]" />, to: '/modifier-le-profil' },
@@ -23,6 +25,7 @@ const actions = [
 
 function Profile() {
   const { user, logout, loading: authLoading } = useAuth();
+  const { startTour, hasSeenTour } = useTour();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -93,7 +96,14 @@ function Profile() {
 
   const handleNavigation = (to: string, external?: boolean) => {
     if (external) {
-      window.open(to, '_blank');
+      // Create a temporary link element and trigger click
+      const link = document.createElement('a');
+      link.href = to;
+      link.target = '_blank';
+      link.rel = 'noopener noreferrer';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     } else {
       if (to === '/parrain') {
         if (affiliatorLoading) {
@@ -216,7 +226,15 @@ function Profile() {
                 <FiChevronRight className="text-gray-400" />
               </motion.button>
             ))}
-            <div className="px-6 pt-6">
+            <div className="px-6 pt-6 space-y-3">
+              <button
+                onClick={() => startTour()}
+                disabled={!hasSeenTour}
+                className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-medium py-3 rounded-xl hover:bg-blue-100 transition"
+              >
+                <FiHelpCircle size={20} />
+                <span>Voir le guide d'utilisation</span>
+              </button>
               <button
                 onClick={handleLogout}
                 disabled={loading}
@@ -227,6 +245,7 @@ function Profile() {
             </div>
           </div>
         </motion.div>
+        <TourButton />
         <footer className="text-xs text-gray-400 mt-6 mb-2 text-center">Développé par simbtech</footer>
       </div>
     </ProtectedRoute>

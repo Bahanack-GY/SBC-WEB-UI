@@ -36,7 +36,7 @@ export const handleApiResponse = (response: ApiResponse): any => {
   // Handle critical errors regardless of body.success
   if (response.statusCode === 401) {
     // Unauthorized - Throw a specific error, let the caller handle authentication/redirect
-    throw new Error('Unauthorized: Authentication token required or invalid.');
+    throw new Error('Mot de passe ou email incorrect');
   } else if (response.statusCode === -1) {
     // Network error (handled by ApiService fetch catch block)
     throw new Error(response.message || 'Network error: Please check your connection and try again.');

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import BackButton from "../components/common/BackButton";
 import MarketplaceProductCard from "../components/MarketplaceProductCard";
-import iconGrowth from "../assets/icon/ecommerce.png";
+import iconGrowth from "../assets/icon/Ecommerce.png";
 import { useNavigate } from 'react-router-dom';
 import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import Skeleton from '../components/common/Skeleton';

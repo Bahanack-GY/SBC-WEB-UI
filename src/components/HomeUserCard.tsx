@@ -48,7 +48,7 @@ function HomeUserCard({name, image, affiliates, status, promoCode}: HomeUserCard
                 whileHover={{ scale: 1.1 }}
                 whileTap={{ scale: 0.95 }}
                 className="text-[#F68F0F] bg-white rounded-full p-3" 
-                onClick={() => copyLink(`https://sniperbuisnesscenter.com/inscription?affiliationCode=${promoCode}`)}
+                onClick={() => copyLink(`https://sniperbuisnesscenter.com/signup?affiliationCode=${promoCode}`)}
             >
                 <FaLink />
             </motion.button>

@@ -125,19 +125,19 @@ function Contacts() {
             const apiSex = debouncedCriteria.sex === 'Homme' ? 'male' :
                 debouncedCriteria.sex === 'Femme' ? 'female' :
                     debouncedCriteria.sex === 'Autre' ? 'other' : '';
-            const filters = {
+                const filters = {
                 search: debouncedCriteria.search,
                 country: debouncedCriteria.country,
                 minAge: debouncedCriteria.minAge,
                 maxAge: debouncedCriteria.maxAge,
-                sex: apiSex,
+                    sex: apiSex,
                 professions: debouncedCriteria.professions.map(p => removeAccents(p)).join(','),
                 interests: debouncedCriteria.interests.map(i => removeAccents(i)).join(','),
                 page: pageParam,
                 limit: PAGE_SIZE,
-            };
-            const response = await sbcApiService.searchContacts(filters);
-            const result = handleApiResponse(response);
+                };
+                const response = await sbcApiService.searchContacts(filters);
+                const result = handleApiResponse(response);
             return {
                 contacts: result?.contacts || result || [],
                 hasMore: result?.paginationInfo ? result.paginationInfo.currentPage < result.paginationInfo.totalPages : (result?.contacts?.length === PAGE_SIZE)

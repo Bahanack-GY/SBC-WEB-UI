@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from "framer-motion";
 import { PlusIcon } from "@heroicons/react/24/solid";
-import iconGrowth from "../assets/icon/ecommerce.png";
+import ecommerceIcon from '../assets/icon/Ecommerce.png';
 import MarketplaceProductCard from "../components/MarketplaceProductCard";
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -12,35 +12,35 @@ import BackButton from "../components/common/BackButton";
 
 // Define interfaces
 interface MarketplaceItem {
-  _id: string;
-  id?: string;
-  name: string;
-  price: number;
-  type?: 'product' | 'service';
-  category?: string;
-  seller?: {
+    _id: string;
+    id?: string;
     name: string;
-  };
-  images?: Array<{
-    fileId: string;
-    url?: string;
-  }>;
-  whatsappLink?: string;
+    price: number;
+    type?: 'product' | 'service';
+    category?: string;
+    seller?: {
+        name: string;
+    };
+    images?: Array<{
+        fileId: string;
+        url?: string;
+    }>;
+    whatsappLink?: string;
 }
 
 interface PaginatedResponse {
-  products: MarketplaceItem[];
-  paginationInfo: {
-    currentPage: number;
-    totalPages: number;
-    totalItems: number;
-  };
+    products: MarketplaceItem[];
+    paginationInfo: {
+        currentPage: number;
+        totalPages: number;
+        totalItems: number;
+    };
 }
 
 // Query keys for consistent caching
 const queryKeys = {
-  marketplace: (category: string, search: string, page: number) => 
-    ['marketplace', category, search, page] as const,
+    marketplace: (category: string, search: string, page: number) =>
+        ['marketplace', category, search, page] as const,
 };
 
 function Marketplace() {
@@ -51,9 +51,12 @@ function Marketplace() {
     const [hasMore, setHasMore] = useState(true);
     const [allProducts, setAllProducts] = useState<MarketplaceItem[]>([]);
     const [allServices, setAllServices] = useState<MarketplaceItem[]>([]);
+    const [loadedItemIds, setLoadedItemIds] = useState<Set<string>>(new Set());
     const limit = 10; // Number of items per page
     const navigate = useNavigate();
-    const observerRef = useRef<HTMLDivElement | null>(null);
+    const [lastItemRef, setLastItemRef] = useState<HTMLDivElement | null>(null);
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const loadingRef = useRef<HTMLDivElement>(null);
     const [isFetchingMore, setIsFetchingMore] = useState(false);
 
     // Use React Query for API calls with optimized settings
@@ -84,18 +87,49 @@ function Marketplace() {
         setPage(1);
         setAllProducts([]);
         setAllServices([]);
+        setLoadedItemIds(new Set());
         setHasMore(true);
     }, [searchQuery, selectedCategory]);
+
+    // Setup intersection observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+                    setIsFetchingMore(true);
+                    setPage(prev => prev + 1);
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        observerRef.current = observer;
+
+        if (lastItemRef) {
+            observer.observe(lastItemRef);
+        }
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [lastItemRef, hasMore, isFetchingMore]);
 
     // Update products and services when new data arrives
     useEffect(() => {
         if (data?.products) {
-            const newProducts = data.products.filter(item => 
-                (item.type === 'product') || 
+            // Filter out duplicates using the loadedItemIds Set
+            const newItems = data.products.filter(item => !loadedItemIds.has(item._id));
+            
+            // Add new item IDs to the Set
+            const newIds = new Set(newItems.map(item => item._id));
+            setLoadedItemIds(prev => new Set([...prev, ...newIds]));
+
+            const newProducts = newItems.filter((item: MarketplaceItem) =>
+                (item.type === 'product') ||
                 (!item.type && item.category?.toLowerCase() !== 'services')
             );
-            const newServices = data.products.filter(item => 
-                (item.type === 'service') || 
+            const newServices = newItems.filter((item: MarketplaceItem) =>
+                (item.type === 'service') ||
                 (item.category?.toLowerCase() === 'services')
             );
 
@@ -110,26 +144,6 @@ function Marketplace() {
             setHasMore(data.paginationInfo.currentPage < data.paginationInfo.totalPages);
         }
     }, [data, page]);
-
-    // Infinite scroll: load more when scroll is past 70% of the page
-    useEffect(() => {
-        if (!hasMore || isLoading) return;
-
-        const handleScroll = () => {
-            const scrollY = window.scrollY;
-            const windowHeight = window.innerHeight;
-            const docHeight = document.body.scrollHeight;
-            const scrollPercent = (scrollY + windowHeight) / docHeight;
-            
-            if (scrollPercent > 0.7 && !isFetchingMore) {
-                setIsFetchingMore(true);
-                setPage(prev => prev + 1);
-            }
-        };
-
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [hasMore, isLoading, isFetchingMore]);
 
     // Reset fetching state after data loads
     useEffect(() => {
@@ -157,7 +171,7 @@ function Marketplace() {
     return (
         <div className="p-3 bg-white relative pb-20">
             <div className="flex items-center">
-                <BackButton /> 
+                <BackButton />
                 <h3 className="text-xl font-medium text-center w-full">Marketplace</h3>
             </div>
 
@@ -182,7 +196,7 @@ function Marketplace() {
                         </span>
                     </div>
                 </div>
-                <img src={iconGrowth} alt="Ecommerce" className="absolute right-[32px] bottom-0 h-24 w-auto object-contain z-0" />
+                <img src={ecommerceIcon} alt="Ecommerce" className="absolute right-[32px] bottom-0 h-24 w-auto object-contain z-0" />
             </div>
 
             {/* Categories */}
@@ -193,11 +207,10 @@ function Marketplace() {
                         <button
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
-                            className={`px-4 py-1 rounded-full border text-sm font-medium whitespace-nowrap transition-colors duration-150 ${
-                                selectedCategory === cat 
-                                    ? 'bg-green-700 text-white border-green-700' 
-                                    : 'bg-white text-gray-700 border-gray-300'
-                            }`}
+                            className={`px-4 py-1 rounded-full border text-sm font-medium whitespace-nowrap transition-colors duration-150 ${selectedCategory === cat
+                                ? 'bg-green-700 text-white border-green-700'
+                                : 'bg-white text-gray-700 border-gray-300'
+                                }`}
                         >
                             {cat}
                         </button>
@@ -238,16 +251,17 @@ function Marketplace() {
                             {selectedCategory === 'Tous' && (
                                 <>
                                     <div className="grid grid-cols-2 gap-4">
-                                        {[...allServices, ...allProducts].map((item) => (
-                                            <div 
-                                                key={item._id} 
-                                                onClick={() => navigate(`/single-product/${item._id}`)} 
+                                        {[...allServices, ...allProducts].map((item, index, array) => (
+                                            <div
+                                                key={item._id}
+                                                ref={index === array.length - 1 ? setLastItemRef : null}
+                                                onClick={() => navigate(`/single-product/${item._id}`)}
                                                 className="cursor-pointer"
                                             >
                                                 <MarketplaceProductCard
-                                                    image={item.images?.[0]?.fileId 
-                                                        ? sbcApiService.generateSettingsFileUrl(item.images[0].fileId) 
-                                                        : iconGrowth}
+                                                    image={item.images?.[0]?.fileId
+                                                        ? sbcApiService.generateSettingsFileUrl(item.images[0].fileId)
+                                                        : ecommerceIcon}
                                                     brand={item.seller?.name || "SBC"}
                                                     name={item.name}
                                                     price={item.price}
@@ -257,14 +271,12 @@ function Marketplace() {
                                             </div>
                                         ))}
                                     </div>
-                                    {hasMore && (
-                                        <div ref={observerRef} className="block mt-8 mb-4 w-full flex justify-center items-center min-h-[48px]">
-                                            {isFetchingMore && (
-                                                <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
-                                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                                </svg>
-                                            )}
+                                    {isFetchingMore && (
+                                        <div className="flex justify-center items-center py-4">
+                                            <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                                            </svg>
                                         </div>
                                     )}
                                     {/* No results */}
@@ -280,15 +292,15 @@ function Marketplace() {
                                 <div className="grid grid-cols-2 gap-4">
                                     {allServices.length > 0 ? (
                                         allServices.map((service) => (
-                                            <div 
-                                                key={service._id} 
-                                                onClick={() => navigate(`/single-product/${service._id}`)} 
+                                            <div
+                                                key={service._id}
+                                                onClick={() => navigate(`/single-product/${service._id}`)}
                                                 className="cursor-pointer"
                                             >
                                                 <MarketplaceProductCard
-                                                    image={service.images?.[0]?.fileId 
-                                                        ? sbcApiService.generateSettingsFileUrl(service.images[0].fileId) 
-                                                        : iconGrowth}
+                                                    image={service.images?.[0]?.fileId
+                                                        ? sbcApiService.generateSettingsFileUrl(service.images[0].fileId)
+                                                        : ecommerceIcon}
                                                     brand={service.seller?.name || "SBC"}
                                                     name={service.name}
                                                     price={service.price}
@@ -310,15 +322,15 @@ function Marketplace() {
                                     {allProducts.length > 0 ? (
                                         <>
                                             {allProducts.map((product) => (
-                                                <div 
-                                                    key={product._id} 
-                                                    onClick={() => navigate(`/single-product/${product._id}`)} 
+                                                <div
+                                                    key={product._id}
+                                                    onClick={() => navigate(`/single-product/${product._id}`)}
                                                     className="cursor-pointer"
                                                 >
                                                     <MarketplaceProductCard
-                                                        image={product.images?.[0]?.fileId 
-                                                            ? sbcApiService.generateSettingsFileUrl(product.images[0].fileId) 
-                                                            : iconGrowth}
+                                                        image={product.images?.[0]?.fileId
+                                                            ? sbcApiService.generateSettingsFileUrl(product.images[0].fileId)
+                                                            : ecommerceIcon}
                                                         brand={product.seller?.name || "SBC"}
                                                         name={product.name}
                                                         price={product.price}
@@ -328,7 +340,7 @@ function Marketplace() {
                                                 </div>
                                             ))}
                                             {hasMore && (
-                                                <div ref={observerRef} className="col-span-2 block mt-8 mb-4 w-full flex justify-center items-center min-h-[48px]">
+                                                <div ref={loadingRef} className="col-span-2 block mt-8 mb-4 w-full flex justify-center items-center min-h-[48px]">
                                                     {isFetchingMore && (
                                                         <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />

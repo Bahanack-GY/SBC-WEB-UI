@@ -53,7 +53,13 @@ function Connexion() {
           // Direct login success - redirect to home
           navigate('/');
         }
-      } catch (error) {
+      } catch (error: unknown) {
+        if (error instanceof Error && error.message.includes('401')) {
+          setErrors({
+            email: '',
+            password: 'Email ou mot de passe incorrect'
+          });
+        }
         console.error('Connexion: Login error:', error);
         setErrors({
           email: '',

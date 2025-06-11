@@ -4,6 +4,7 @@ import Skeleton from '../components/common/Skeleton';
 import { useEffect } from 'react';
 import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
+import TourButton from '../components/common/TourButton';
 
 function formatFCFA(amount: number) {
   return amount.toLocaleString('fr-FR', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).replace('XAF', 'FCFA');
@@ -108,6 +109,7 @@ const PartnerSpace = () => {
           )}
         </div>
       </div>
+      <TourButton />
     </div>
   );
 };

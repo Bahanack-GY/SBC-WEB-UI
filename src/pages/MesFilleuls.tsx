@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { FaWhatsapp, FaFilter } from 'react-icons/fa';
@@ -10,7 +10,7 @@ import type { User } from '../types/api';
 
 const queryKeys = {
   stats: ['referral-stats'] as const,
-  filleuls: (type: string, search: string) => ['filleuls', type, search] as const,
+  filleuls: (type: string, search: string, page: number) => ['filleuls', type, search, page] as const,
 };
 
 function MesFilleuls() {
@@ -20,6 +20,37 @@ function MesFilleuls() {
   const [modalOpen, setModalOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [searchInput, setSearchInput] = useState('');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [allFilleuls, setAllFilleuls] = useState<User[]>([]);
+  const [loadedFilleulIds, setLoadedFilleulIds] = useState<Set<string>>(new Set());
+  const [lastItemRef, setLastItemRef] = useState<HTMLDivElement | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const [isFetchingMore, setIsFetchingMore] = useState(false);
+  const limit = 10;
+
+  // Setup intersection observer for infinite scroll
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
+          setIsFetchingMore(true);
+          setPage(prev => prev + 1);
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    observerRef.current = observer;
+
+    if (lastItemRef) {
+      observer.observe(lastItemRef);
+    }
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [lastItemRef, hasMore, isFetchingMore]);
 
   // Query for stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -37,27 +68,64 @@ function MesFilleuls() {
   });
 
   // Query for filleuls
-  const { data: filleuls, isLoading: filleulsLoading, refetch } = useQuery<User[]>({
-    queryKey: queryKeys.filleuls(selectedTab, search),
+  const { data: filleuls, isLoading: filleulsLoading, refetch } = useQuery<{ referredUsers: User[], totalPages: number }>({
+    queryKey: queryKeys.filleuls(selectedTab, search, page),
     queryFn: async () => {
-      if (!user) return [];
-      const filleulsResponse = await sbcApiService.getReferredUsers({ type: selectedTab, ...(search ? { name: search } : {}) });
-      const filleulsResult = handleApiResponse(filleulsResponse);
-      return filleulsResult.referredUsers || [];
+      if (!user) return { referredUsers: [], totalPages: 0 };
+      const filleulsResponse = await sbcApiService.getReferredUsers({ 
+        type: selectedTab, 
+        ...(search ? { name: search } : {}),
+        page,
+        limit
+      });
+      return handleApiResponse(filleulsResponse);
     },
     enabled: !!user,
     staleTime: 5 * 60 * 1000, // 5 min
     gcTime: 30 * 60 * 1000, // 30 min
   });
 
-  const filleulsList: User[] = filleuls ?? [];
+  // Update filleuls when new data arrives
+  useEffect(() => {
+    if (filleuls?.referredUsers) {
+      // Filter out duplicates using the loadedFilleulIds Set
+      const newItems = filleuls.referredUsers.filter(item => !loadedFilleulIds.has(item._id));
+      
+      // Add new item IDs to the Set
+      const newIds = new Set(newItems.map(item => item._id));
+      setLoadedFilleulIds(prev => new Set([...prev, ...newIds]));
 
-  let filtered: User[] = filleulsList;
+      if (page === 1) {
+        setAllFilleuls(newItems);
+      } else {
+        setAllFilleuls(prev => [...prev, ...newItems]);
+      }
+
+      setHasMore(page < filleuls.totalPages);
+    }
+  }, [filleuls, page]);
+
+  // Reset state when search/category changes
+  useEffect(() => {
+    setPage(1);
+    setAllFilleuls([]);
+    setLoadedFilleulIds(new Set());
+    setHasMore(true);
+  }, [search, selectedTab]);
+
+  // Reset fetching state after data loads
+  useEffect(() => {
+    if (isFetchingMore && !filleulsLoading) {
+      setIsFetchingMore(false);
+    }
+  }, [filleulsLoading, isFetchingMore]);
+
+  let filtered: User[] = allFilleuls;
   if (filter === 'abonne') {
-    filtered = filleulsList.filter((f: User) => f.activeSubscriptions && f.activeSubscriptions.length > 0);
+    filtered = allFilleuls.filter((f: User) => f.activeSubscriptions && f.activeSubscriptions.length > 0);
   }
   if (filter === 'nonabonne') {
-    filtered = filleulsList.filter((f: User) => !f.activeSubscriptions || f.activeSubscriptions.length === 0);
+    filtered = allFilleuls.filter((f: User) => !f.activeSubscriptions || f.activeSubscriptions.length === 0);
   }
 
   return (
@@ -148,7 +216,7 @@ function MesFilleuls() {
           </div>
         </div>
       )}
-      {(filleulsLoading || statsLoading) ? (
+      {(filleulsLoading && page === 1) ? (
         <div className="flex flex-col gap-2">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-2">
@@ -163,8 +231,12 @@ function MesFilleuls() {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow p-2 divide-y">
-          {filtered.map((filleul: User) => (
-            <div key={filleul._id} className="flex items-center py-2 gap-3">
+          {filtered.map((filleul: User, index: number) => (
+            <div 
+              key={filleul._id} 
+              ref={index === filtered.length - 1 ? setLastItemRef : null}
+              className="flex items-center py-2 gap-3"
+            >
               <img
                 src={filleul.avatarId
                   ? sbcApiService.generateSettingsFileUrl(filleul.avatarId)
@@ -186,7 +258,15 @@ function MesFilleuls() {
               </a>
             </div>
           ))}
-          {filtered.length === 0 && (
+          {isFetchingMore && (
+            <div className="flex justify-center items-center py-4">
+              <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            </div>
+          )}
+          {filtered.length === 0 && !filleulsLoading && (
             <div className="text-center text-gray-400 py-8">Aucun filleul dans cette catégorie.</div>
           )}
         </div>

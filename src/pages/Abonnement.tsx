@@ -10,6 +10,7 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import type { SubscriptionPlan, Subscription } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useApiCache } from '../hooks/useApiCache';
+import TourButton from '../components/common/TourButton';
 // import { useNavigate } from 'react-router-dom';
 
 function Abonnement() {
@@ -73,7 +74,14 @@ function Abonnement() {
             const sessionId = data?.paymentDetails?.sessionId;
             if (sessionId) {
                 const paymentUrl = sbcApiService.generatePaymentUrl(sessionId);
-                window.open(paymentUrl, '_blank');
+                // Create a temporary link element and trigger click
+                const link = document.createElement('a');
+                link.href = paymentUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             } else {
                 await fetchSubscriptionData();
             }
@@ -93,7 +101,14 @@ function Abonnement() {
             const sessionId = data?.paymentDetails?.sessionId;
             if (sessionId) {
                 const paymentUrl = sbcApiService.generatePaymentUrl(sessionId);
-                window.open(paymentUrl, '_blank');
+                // Create a temporary link element and trigger click
+                const link = document.createElement('a');
+                link.href = paymentUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             } else {
                 await fetchSubscriptionData();
             }
@@ -226,6 +241,7 @@ function Abonnement() {
                         )}
                     </div>
                 )}
+                <TourButton />
             </div>
         </ProtectedRoute>
     );

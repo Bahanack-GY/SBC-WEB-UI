@@ -15,6 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { useApiCache } from '../hooks/useApiCache';
 import { useAuth } from '../contexts/AuthContext';
 import { correspondents, countryOptions } from './ModifierLeProfil'; // Assuming these are exported from ModifierLeProfil.tsx
+import TourButton from '../components/common/TourButton';
 
 // Define the TransactionStatus as a string union type to match both backend and frontend usages
 export type TransactionStatus =
@@ -802,6 +803,7 @@ function Wallet() {
             </AnimatePresence>
           </>
         )}
+        <TourButton />
       </div>
     </ProtectedRoute>
   )
