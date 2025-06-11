@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import iconOne from "../assets/icon/Growth.png";
 import iconTwo from "../assets/icon/analyse.png";
@@ -10,10 +10,10 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import type { SubscriptionPlan, Subscription } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useApiCache } from '../hooks/useApiCache';
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 function Abonnement() {
-    const navigate = useNavigate();
+    
     const [purchasing, setPurchasing] = useState<string | null>(null);
 
     // Use cached API calls to prevent duplicate requests
@@ -34,7 +34,7 @@ function Abonnement() {
     const {
         data: currentSubscriptionData,
         loading: subscriptionLoading,
-        error: subscriptionError,
+        // error: subscriptionError,
         refetch: refetchSubscription
     } = useApiCache(
         'current-subscription',

@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+// import { useNavigate } from 'react-router-dom';
 
 //These buttons are used to navigate to the different features of the app
 interface HomeButtonsProps {

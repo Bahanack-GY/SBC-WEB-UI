@@ -105,6 +105,7 @@ function Home() {
     refetchOnMount: true,
     retry: 1,
   });
+  console.log(subscriptionData);
 
   const { data: formations, isLoading: formationsLoading, error: formationsError } = useQuery<Formation[]>({
     queryKey: queryKeys.formations,

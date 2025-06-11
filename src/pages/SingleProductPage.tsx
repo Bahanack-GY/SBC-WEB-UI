@@ -5,9 +5,21 @@ import { useParams } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';
 import Skeleton from '../components/common/Skeleton';
 
+// Define types for product and images
+export type ProductImage = { fileId?: string; url?: string };
+export type Product = {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  images: ProductImage[];
+  whatsappLink?: string;
+  // Add other fields as needed
+};
+
 function SingleProductPage() {
   const { id } = useParams();
-  const [product, setProduct] = useState<any>(null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedImg, setSelectedImg] = useState(0);
 
@@ -17,7 +29,8 @@ function SingleProductPage() {
       try {
         const response = await sbcApiService.getProductDetails(id!);
         setProduct(response.body.data || response.body.product || response.body);
-      } catch (e) {
+      } catch (e: unknown) {
+        console.log(e);
         setProduct(null);
       } finally {
         setLoading(false);
@@ -28,7 +41,9 @@ function SingleProductPage() {
 
   let images: string[] = ["https://via.placeholder.com/300x300?text=No+Image"];
   if (product && product.images && product.images.length > 0) {
-    images = product.images.map((img: any) => img.fileId ? sbcApiService.generateSettingsFileUrl(img.fileId) : img.url);
+    images = product.images
+      .map((img: ProductImage) => img.fileId ? sbcApiService.generateSettingsFileUrl(img.fileId) : img.url)
+      .filter((url): url is string => typeof url === 'string' && !!url);
   }
   if (loading) {
     return (

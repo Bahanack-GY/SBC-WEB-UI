@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { FiEdit2, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink } from 'react-icons/fi';
+import { FiEdit2,FiMail, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,6 +12,8 @@ import BackButton from '../components/common/BackButton';
 
 const actions = [
   { label: 'Modifier le profil', icon: <FiEdit2 className="text-[#115CF6]" />, to: '/modifier-le-profil' },
+  { label: 'Modifier mon email', icon: <FiMail className="text-[#115CF6]" />, to: '/modifier-email' },
+  { label: 'Modifier mon mot de passe', icon: <FiLock className="text-[#115CF6]" />, to: '/change-password' },
   { label: 'Mon Abonnement', icon: <FiCreditCard className="text-[#115CF6]" />, to: '/abonnement' },
   { label: 'Mes filleuls', icon: <FiUsers className="text-[#115CF6]" />, to: '/filleuls' },
   { label: 'Mon Parrain', icon: <FiUserCheck className="text-[#115CF6]" />, to: '/parrain' },
@@ -30,7 +32,7 @@ function Profile() {
     level2Count: number;
     level3Count: number;
   } | null>(null);
-  const [affiliator, setAffiliator] = useState<any | null>(null);
+  const [affiliator, setAffiliator] = useState<{ name: string; email: string; phoneNumber: string } | null>(null);
   const [affiliatorLoading, setAffiliatorLoading] = useState(true);
 
   const referralLink = user?.referralCode ? `${window.location.origin}/signup?affiliationCode=${user.referralCode}` : '';

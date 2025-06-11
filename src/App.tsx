@@ -1,7 +1,7 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
-import { AuthProvider /* useAuth */ } from './contexts/AuthContext'
+import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Money from './pages/Money'
 import AdsPack from './pages/AdsPack'
 import Marketplace from './pages/Marketplace'
@@ -23,14 +23,60 @@ import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import VerifyOtp from './pages/VerifyOtp'
 import ResetPassword from './pages/ResetPassword'
+import VerifyEmailOtp from './pages/VerifyEmailOtp'
+import ChangeEmail from './pages/ChangeEmail'
+import ChangePasswordOtp from './pages/ChangePasswordOtp'
+import ChangePasswordNew from './pages/ChangePasswordNew'
+import PartnerSpace from './pages/PartnerSpace'
+import { useQuery } from '@tanstack/react-query'
+import { handleApiResponse } from './utils/apiHelpers'
+import { sbcApiService } from './services/SBCApiService'
+
+// Add this type definition at the top (after imports)
+type SubscriptionData = {
+  status?: string;
+  totalCount?: number;
+  s?: string;
+  [key: string]: unknown;
+};
 
 function AppContent() {
   const location = useLocation();
   const { setAffiliationCode } = useAffiliation();
-  // const { isAuthenticated, loading } = useAuth();
+  const [splashViewed, setSplashViewed] = useState(() => localStorage.getItem('splashViewed') === 'true');
+  const { isAuthenticated, logout } = useAuth();
+
+  // Fetch subscription status globally
+  const { data: subscriptionData, isLoading: subscriptionLoading } = useQuery<SubscriptionData | null>({
+    queryKey: ["current-subscription"],
+    queryFn: async () => {
+      try {
+        const response = await sbcApiService.getCurrentSubscription();
+        return handleApiResponse(response);
+      } catch (err) {
+        console.warn('Subscription endpoint failed:', err);
+        return null;
+      }
+    },
+    staleTime: 2 * 60 * 1000, // 2 minutes
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true,
+    refetchOnMount: true,
+    retry: 1,
+  });
+
+  // Determine if user is subscribed
+    const user = isAuthenticated && JSON.parse(localStorage.getItem('user') || 'null');
+    const isSubscribed = !!(
+      (user?.activeSubscriptions && user.activeSubscriptions.length > 0) ||
+      (subscriptionData && subscriptionData.status === 'active') || (subscriptionData && subscriptionData?.totalCount > 0)
+    );
+console.log("subscriptionData", subscriptionData);
+console.log("subscriptionData.status", subscriptionData?.totalCount);
+  console.log("isSubscribed", isSubscribed);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -38,19 +84,53 @@ function AppContent() {
     if (affiliationCodeFromUrl) {
       setAffiliationCode(affiliationCodeFromUrl);
     }
-  }, [location.search, setAffiliationCode]);
+    // If on splash screen and not yet marked as viewed, mark as viewed
+    if (location.pathname === '/splash-screen' && !splashViewed) {
+      localStorage.setItem('splashViewed', 'true');
+      setSplashViewed(true);
+    }
+    // If splash already viewed and user tries to access splash, redirect to login or home
+    if (location.pathname === '/splash-screen' && splashViewed && !isAuthenticated) {
+      window.location.replace('/connexion');
+    } else if (location.pathname === '/splash-screen' && splashViewed && isAuthenticated) {
+      window.location.replace('/');
+    }
+    // If user is authenticated and tries to access login, redirect to home
+    if (location.pathname === '/connexion' && isAuthenticated) {
+      alert("Vous êtes déjà connecté");
+      window.location.replace('/');
+    }
+    // If user is not subscribed and tries to access any page except allowed, redirect to /abonnement
+    const allowed = ['/connexion', '/signup', '/splash-screen', '/abonnement'];
+    if (
+      isAuthenticated &&
+      !subscriptionLoading &&
+      !isSubscribed &&
+      !allowed.includes(location.pathname)
+    ) {
+      window.location.replace('/abonnement');
+    }
+  }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed]);
 
-  // if (loading) {
-  //   return <div>Chargement...</div>;
-  // }
+  // Optionally, block rendering until subscription status is known
+  if (isAuthenticated && subscriptionLoading) {
+    return <div className="flex items-center justify-center min-h-screen text-lg">Vérification de l'abonnement...</div>;
+  }
 
-  // if (!isAuthenticated) {
-  //   return <SplashScreen />;
-  // }
+  // Logout button for unsubscribed users
+  const showLogout = isAuthenticated && !isSubscribed;
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' ;
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/changer-mot-de-passe-otp' || location.pathname === '/changer-mot-de-passe-nouveau' || location.pathname === '/changer-mot-de-passe';
   return (
-    <div className="bg-white">
+    <div className="bg-white relative">
+      {showLogout && (
+        <button
+          onClick={async () => { await logout(); window.location.replace('/connexion'); }}
+          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl shadow z-50"
+        >
+          Se déconnecter
+        </button>
+      )}
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/money" element={<Money />} />
@@ -74,7 +154,12 @@ function AppContent() {
         <Route path="/abonnement" element={<Abonnement />} />
         <Route path="/filleuls" element={<MesFilleuls />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
+        <Route path="/modifier-email" element={<ChangeEmail />} />
+        <Route path="/changer-mot-de-passe-otp" element={<ChangePasswordOtp />} />
+        <Route path="/changer-mot-de-passe-nouveau" element={<ChangePasswordNew />} />
+        <Route path="/partenaire" element={<PartnerSpace />} />
       </Routes>
       {!hideNav && <NavigationBar />}
     </div>
