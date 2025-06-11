@@ -117,19 +117,12 @@ function Marketplace() {
     // Update products and services when new data arrives
     useEffect(() => {
         if (data?.products) {
-            // Filter out duplicates using the loadedItemIds Set
-            const newItems = data.products.filter(item => !loadedItemIds.has(item._id));
-            
-            // Add new item IDs to the Set
-            const newIds = new Set(newItems.map(item => item._id));
-            setLoadedItemIds(prev => new Set([...prev, ...newIds]));
-
-            const newProducts = newItems.filter((item: MarketplaceItem) =>
-                (item.type === 'product') ||
+            const newProducts = data.products.filter(item => 
+                (item.type === 'product') || 
                 (!item.type && item.category?.toLowerCase() !== 'services')
             );
-            const newServices = newItems.filter((item: MarketplaceItem) =>
-                (item.type === 'service') ||
+            const newServices = data.products.filter(item => 
+                (item.type === 'service') || 
                 (item.category?.toLowerCase() === 'services')
             );
 
@@ -144,6 +137,26 @@ function Marketplace() {
             setHasMore(data.paginationInfo.currentPage < data.paginationInfo.totalPages);
         }
     }, [data, page]);
+
+    // Infinite scroll: load more when scroll is past 70% of the page
+    useEffect(() => {
+        if (!hasMore || isLoading) return;
+
+        const handleScroll = () => {
+            const scrollY = window.scrollY;
+            const windowHeight = window.innerHeight;
+            const docHeight = document.body.scrollHeight;
+            const scrollPercent = (scrollY + windowHeight) / docHeight;
+            
+            if (scrollPercent > 0.7 && !isFetchingMore) {
+                setIsFetchingMore(true);
+                setPage(prev => prev + 1);
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [hasMore, isLoading, isFetchingMore]);
 
     // Reset fetching state after data loads
     useEffect(() => {
@@ -194,7 +207,7 @@ function Marketplace() {
                         <span className="bg-[#d7f6e6] text-green-700 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
                             Offres spéciales
                         </span>
-                    </div>
+                    </div>npm ru
                 </div>
                 <img src={ecommerceIcon} alt="Ecommerce" className="absolute right-[32px] bottom-0 h-24 w-auto object-contain z-0" />
             </div>
@@ -251,11 +264,10 @@ function Marketplace() {
                             {selectedCategory === 'Tous' && (
                                 <>
                                     <div className="grid grid-cols-2 gap-4">
-                                        {[...allServices, ...allProducts].map((item, index, array) => (
-                                            <div
-                                                key={item._id}
-                                                ref={index === array.length - 1 ? setLastItemRef : null}
-                                                onClick={() => navigate(`/single-product/${item._id}`)}
+                                        {[...allServices, ...allProducts].map((item) => (
+                                            <div 
+                                                key={item._id} 
+                                                onClick={() => navigate(`/single-product/${item._id}`)} 
                                                 className="cursor-pointer"
                                             >
                                                 <MarketplaceProductCard
