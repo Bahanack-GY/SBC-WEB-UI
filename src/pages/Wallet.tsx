@@ -239,6 +239,9 @@ function Wallet() {
         const response = await sbcApiService.initiateWithdrawal(Number(withdrawAmount));
         const data = handleApiResponse(response); // This assumes handleApiResponse throws on !success
 
+        console.log("data", data);
+        console.log("response", response);
+
         if (data && response.isOverallSuccess) {
           // Handle success based on status from API response
           if (data.status === 'pending_otp_verification' && data.transactionId) {

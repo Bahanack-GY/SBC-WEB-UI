@@ -16,14 +16,17 @@ function OTP() {
   const { verifyOtp: authVerifyOtp } = useAuth();
 
   // Get data from navigation state, including withdrawalId, amount, and currency
-  const { userId, email, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency } = location.state || {};
+  const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow } = location.state || {};
+  // Prioritize email from state, then from search params (for legacy/direct links), then from userId for login/registration
+  const currentEmail = emailFromState || new URLSearchParams(location.search).get('email') || (fromLogin || fromRegistration ? userIdFromState : '');
+  const actualUserId = (fromLogin || fromRegistration) ? userIdFromState : undefined; // Only use userId for login/registration
 
   useEffect(() => {
-    // If not from any known flow (registration, login, withdrawal), redirect
-    if (!userId && !email && !withdrawalId) {
+    // If not from any known flow (registration, login, withdrawal, or passwordReset), redirect
+    if (!actualUserId && !currentEmail && !withdrawalId && flow !== 'passwordReset') {
       navigate('/connexion'); // Or appropriate fallback
     }
-  }, [userId, email, withdrawalId, navigate]);
+  }, [actualUserId, currentEmail, withdrawalId, flow, navigate]);
 
   const handleChange = (i: number, val: string) => {
     if (!/^[a-zA-Z0-9]?$/.test(val)) return;
@@ -60,10 +63,9 @@ function OTP() {
     setError('');
 
     try {
-      if (fromRegistration || fromLogin) {
-        await authVerifyOtp(userId, otpCode);
-        navigate('/');
-      } else if (withdrawalId) {
+      if (flow === 'passwordReset') { // Correctly handle password reset flow: just navigate
+        navigate('/reset-password', { state: { email: currentEmail, otpCode: otpCode } });
+      } else if (withdrawalId) { // Existing withdrawal flow
         const response = await sbcApiService.verifyWithdrawal({
           transactionId: withdrawalId,
           verificationCode: otpCode,
@@ -71,8 +73,13 @@ function OTP() {
         handleApiResponse(response);
         alert('Retrait vérifié. Votre paiement est en cours de traitement.');
         navigate('/transaction-confirmation', { state: { transactionId: withdrawalId, withdrawalAmount, withdrawalCurrency } });
+      } else if (fromRegistration || fromLogin) { // Existing login/registration flow
+        // For these flows, userId is indeed needed and comes from state
+        await authVerifyOtp(actualUserId, otpCode);
+        navigate('/');
       } else {
-        setError('Contexte de vérification OTP inconnu.');
+        // Fallback for unknown contexts
+        setError('Contexte de vérification OTP inconnu. Veuillez recommencer le processus.');
         return;
       }
     } catch (error) {
@@ -87,22 +94,25 @@ function OTP() {
     setError('');
 
     try {
-      if (fromRegistration || fromLogin) {
-        const otpUserId = userId || sessionStorage.getItem('tempUserId');
-        if (!otpUserId) {
+      if (flow === 'passwordReset') { // Handle resending OTP for password reset
+        const response = await sbcApiService.requestPasswordResetOtp(currentEmail);
+        handleApiResponse(response);
+        alert('Code renvoyé ! Veuillez vérifier votre email.');
+      } else if (fromRegistration || fromLogin) { // Handle resending OTP for registration/login
+        if (!actualUserId) {
           setError('Session expirée. Veuillez réessayer de vous connecter.');
           return;
         }
         const purpose = fromRegistration ? 'register' : 'login';
-        const response = await sbcApiService.resendVerificationOtp(otpUserId, email, purpose);
+        const response = await sbcApiService.resendVerificationOtp(actualUserId, currentEmail, purpose);
         handleApiResponse(response);
         alert('Code renvoyé ! Veuillez vérifier votre email.');
-      } else if (withdrawalId && withdrawalAmount !== undefined) {
+      } else if (withdrawalId && withdrawalAmount !== undefined) { // Handle resending OTP for withdrawal
         const response = await sbcApiService.initiateWithdrawal(withdrawalAmount);
         const result = handleApiResponse(response);
         alert(result.message || 'Code de retrait renvoyé ! Veuillez vérifier votre téléphone.');
       } else {
-        console.warn("Resend OTP called without clear purpose context or missing withdrawal details.");
+        console.warn("Resend OTP called without clear purpose context or missing details.");
         setError('Impossible de renvoyer l\'OTP. Informations manquantes.');
         return;
       }
@@ -125,12 +135,13 @@ function OTP() {
           <div className="text-center mb-2 font-semibold text-lg text-gray-800">
             {fromLogin ? 'Connexion - Code de vérification' :
               withdrawalId ? 'Retrait - Code de vérification' :
-                'Entrez le code de vérification envoyé à'}
+                flow === 'passwordReset' ? 'Réinitialisation mot de passe - Code de vérification' :
+                  'Entrez le code de vérification envoyé à'}
           </div>
-          <div className="text-center text-gray-600 mb-1">{email || 'votre numéro enregistré'}</div>
-          {(fromLogin || withdrawalId) && (
+          <div className="text-center text-gray-600 mb-1">{currentEmail || 'votre numéro enregistré'}</div>
+          {(fromLogin || withdrawalId || flow === 'passwordReset') && ( // Updated condition to include passwordReset
             <div className="text-center text-sm text-gray-500 mb-2">
-              Un code de vérification a été envoyé à votre {email ? 'email' : 'numéro de téléphone'} pour finaliser la {fromLogin ? 'connexion' : 'demande de retrait'}.
+              Un code de vérification a été envoyé à votre {currentEmail ? 'email' : 'numéro de téléphone'} pour finaliser la {fromLogin ? 'connexion' : withdrawalId ? 'demande de retrait' : 'réinitialisation du mot de passe'}.
             </div>
           )}
           {error && (

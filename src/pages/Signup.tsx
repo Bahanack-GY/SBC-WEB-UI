@@ -401,7 +401,7 @@ function Signup() {
           password: data.password,
           name: data.nom,
           phoneNumber: `${selectedCode.code}${data.whatsapp}`,
-          referralCode: data.parrain || undefined,
+          referrerCode: data.parrain || undefined,
           city: data.ville,
           region: data.region,
           country: data.pays,

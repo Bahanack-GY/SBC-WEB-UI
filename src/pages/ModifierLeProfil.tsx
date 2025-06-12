@@ -49,15 +49,15 @@ export const predefinedInterestOptions = [
 
 // New: countryCodes array from Signup.tsx
 const countryCodes = [
-  { value: 'Cameroun', label: '🇨🇲 +237', code: '+237' },
-  { value: 'Bénin', label: '🇧🇯 +229', code: '+229' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 +242', code: '+242' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 +243', code: '+243' },
-  { value: 'Ghana', label: '🇬🇭 +233', code: '+233' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 +225', code: '+225' },
-  { value: 'Sénégal', label: '🇸🇳 +221', code: '+221' },
-  { value: 'Togo', label: '🇹🇬 +228', code: '+228' },
-  { value: 'Burkina Faso', label: '🇧🇫 +226', code: '+226' },
+  { value: 'Cameroun', label: '🇨🇲 +237', code: '237' },
+  { value: 'Bénin', label: '🇧🇯 +229', code: '229' },
+  { value: 'Congo-Brazzaville', label: '🇨🇬 +242', code: '242' },
+  { value: 'Congo-Kinshasa', label: '🇨🇩 +243', code: '243' },
+  { value: 'Ghana', label: '🇬🇭 +233', code: '233' },
+  { value: 'Côte d\'Ivoire', label: '🇨🇮 +225', code: '225' },
+  { value: 'Sénégal', label: '🇸🇳 +221', code: '221' },
+  { value: 'Togo', label: '🇹🇬 +228', code: '228' },
+  { value: 'Burkina Faso', label: '🇧🇫 +226', code: '226' },
 ];
 
 // New: Define interfaces for the correspondents object structure

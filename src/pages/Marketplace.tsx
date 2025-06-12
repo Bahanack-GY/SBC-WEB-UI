@@ -207,7 +207,7 @@ function Marketplace() {
                         <span className="bg-[#d7f6e6] text-green-700 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1">
                             Offres spéciales
                         </span>
-                    </div>npm ru
+                    </div>
                 </div>
                 <img src={ecommerceIcon} alt="Ecommerce" className="absolute right-[32px] bottom-0 h-24 w-auto object-contain z-0" />
             </div>

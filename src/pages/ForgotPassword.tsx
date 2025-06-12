@@ -11,7 +11,12 @@ function ForgotPassword() {
     const mutation = useMutation({
         mutationFn: (email: string) => sbcApiService.requestPasswordResetOtp(email),
         onSuccess: () => {
-            navigate(`/verify-otp?email=${encodeURIComponent(email)}`);
+            navigate('/otp', {
+                state: {
+                    email: email,
+                    flow: 'passwordReset'
+                }
+            });
         }
     });
     const handleSubmit = (e: React.FormEvent) => {
@@ -26,7 +31,7 @@ function ForgotPassword() {
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-white px-4">
             <div className="w-full max-w-sm mx-auto">
-                
+
                 <div className="flex flex-col items-center mt-8 mb-6">
                     <div className="bg-yellow-100 rounded-full w-24 h-24 flex items-center justify-center mb-4">
                         <FiLock className="text-yellow-500" size={40} />

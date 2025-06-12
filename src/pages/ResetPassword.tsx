@@ -3,24 +3,40 @@ import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { handleApiResponse } from '../utils/apiHelpers';
 
 function ResetPassword() {
     const navigate = useNavigate();
     const location = useLocation();
-    const params = new URLSearchParams(location.search);
-    const email = params.get('email') || '';
+    // Get email and otpCode from location state, passed by OTP.tsx after verification
+    const { email, otpCode } = location.state || {}; // Extract both email and otpCode
+
+    // If email or otpCode are missing, redirect the user back to ForgotPassword
+    // This handles direct access or incomplete flow scenarios
+    if (!email || !otpCode) {
+        // You might want a more user-friendly message or a toast notification here
+        alert("Les informations de réinitialisation sont manquantes. Veuillez recommencer le processus.");
+        navigate('/forgot-password');
+        return null; // Return null to prevent rendering if redirecting
+    }
+
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
     const [error, setError] = useState('');
     const [showSuccessModal, setShowSuccessModal] = useState(false);
     const mutation = useMutation({
-        mutationFn: ({ email, newPassword }: { email: string, newPassword: string }) =>
-            sbcApiService.resetPassword(email, '', newPassword),
+        mutationFn: async ({ email, otpCode, newPassword }: { email: string, otpCode: string, newPassword: string }) => {
+            const response = await sbcApiService.resetPassword(email, otpCode, newPassword);
+            return handleApiResponse(response);
+        },
         onSuccess: () => {
             setShowSuccessModal(true);
             setTimeout(() => {
                 navigate('/connexion');
             }, 3000);
+        },
+        onError: (error) => {
+            setError(error.message || "Une erreur est survenue lors de la réinitialisation de votre mot de passe.");
         }
     });
     const handleSubmit = (e: React.FormEvent) => {
@@ -34,7 +50,7 @@ function ResetPassword() {
             return;
         }
         setError('');
-        mutation.mutate({ email, newPassword });
+        mutation.mutate({ email, otpCode, newPassword }); // Pass otpCode to mutate
     };
     return (
         <div className="min-h-screen flex flex-col justify-center items-center bg-white px-4">
@@ -86,7 +102,7 @@ function ResetPassword() {
                     <div className="bg-white rounded-2xl shadow-lg max-w-sm w-full p-6 relative animate-fadeIn flex flex-col items-center">
                         <FiLock className="text-green-500 mb-4" size={48} />
                         <h3 className="text-xl font-bold mb-2 text-center">Mot de passe réinitialisé !</h3>
-                        <p className="text-gray-700 text-center mb-2">Votre mot de passe a été changé avec succès.<br/>Vous allez être redirigé vers la page de connexion...</p>
+                        <p className="text-gray-700 text-center mb-2">Votre mot de passe a été changé avec succès.<br />Vous allez être redirigé vers la page de connexion...</p>
                         <div className="text-gray-400 text-xs mt-2">Redirection dans 5 secondes...</div>
                     </div>
                 </div>
