@@ -101,14 +101,9 @@ function Abonnement() {
             const sessionId = data?.paymentDetails?.sessionId;
             if (sessionId) {
                 const paymentUrl = sbcApiService.generatePaymentUrl(sessionId);
-                // Create a temporary link element and trigger click
-                const link = document.createElement('a');
-                link.href = paymentUrl;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                // Use window.open() instead of creating a temporary link
+                // window.open(paymentUrl, '_blank', 'noopener,noreferrer');
+                window.location.href = paymentUrl;
             } else {
                 await fetchSubscriptionData();
             }
