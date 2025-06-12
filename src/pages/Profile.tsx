@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { FiEdit2,FiMail, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FiEdit2, FiMail, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle, FiLoader } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -24,7 +24,7 @@ const actions = [
 ];
 
 function Profile() {
-  const { user, logout, loading: authLoading } = useAuth();
+  const { user, logout, loading: authLoading, refreshUser } = useAuth();
   const { startTour, hasSeenTour } = useTour();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
@@ -37,6 +37,12 @@ function Profile() {
   } | null>(null);
   const [affiliator, setAffiliator] = useState<{ name: string; email: string; phoneNumber: string } | null>(null);
   const [affiliatorLoading, setAffiliatorLoading] = useState(true);
+
+  // New states for the change referral code modal
+  const [showChangeReferralCodeModal, setShowChangeReferralCodeModal] = useState(false);
+  const [newReferralCode, setNewReferralCode] = useState('');
+  const [changeCodeLoading, setChangeCodeLoading] = useState(false);
+  const [changeCodeFeedback, setChangeCodeFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   const referralLink = user?.referralCode ? `${window.location.origin}/signup?affiliationCode=${user.referralCode}` : '';
 
@@ -67,6 +73,14 @@ function Profile() {
 
     loadProfileData();
   }, [user]);
+
+  // New useEffect to set newReferralCode when modal opens
+  useEffect(() => {
+    if (showChangeReferralCodeModal && user?.referralCode) {
+      setNewReferralCode(user.referralCode);
+      setChangeCodeFeedback(null); // Clear any previous feedback when opening
+    }
+  }, [showChangeReferralCodeModal, user?.referralCode]);
 
   const handleCopy = (type: 'code' | 'link') => {
     if (!user) return;
@@ -116,6 +130,35 @@ function Profile() {
       } else {
         navigate(to);
       }
+    }
+  };
+
+  // New function to handle referral code change
+  const handleChangeReferralCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setChangeCodeLoading(true);
+    setChangeCodeFeedback(null);
+
+    if (!newReferralCode.trim()) {
+      setChangeCodeFeedback({ type: 'error', message: 'Le code de parrainage ne peut pas être vide.' });
+      setChangeCodeLoading(false);
+      return;
+    }
+
+    try {
+      const updates = { referralCode: newReferralCode.trim() };
+      const response = await sbcApiService.updateUserProfile(updates);
+      handleApiResponse(response); // This will throw on error or return data on success
+
+      setChangeCodeFeedback({ type: 'success', message: 'Code de parrainage mis à jour avec succès!' });
+      await refreshUser(); // Refresh user context to reflect the new referral code
+      setTimeout(() => setShowChangeReferralCodeModal(false), 1500); // Close modal after success
+    } catch (error) {
+      console.error('Failed to change referral code:', error);
+      const errorMessage = error instanceof Error ? error.message : "Échec de la mise à jour du code de parrainage.";
+      setChangeCodeFeedback({ type: 'error', message: errorMessage });
+    } finally {
+      setChangeCodeLoading(false);
     }
   };
 
@@ -211,6 +254,18 @@ function Profile() {
               </button>
             </div>
           )}
+          {/* New: Change Referral Code Button */}
+          {user?.referralCode && (
+            <div className="mt-4 mx-4">
+              <button
+                onClick={() => setShowChangeReferralCodeModal(true)}
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-indigo-600 text-white rounded-xl px-4 py-3 shadow-lg hover:from-green-700 hover:to-indigo-700 transition-all font-bold"
+              >
+                <FiEdit2 size={18} />
+                Changer mon code parrain
+              </button>
+            </div>
+          )}
           <div className="mt-4 divide-y divide-gray-100">
             {actions.map((action, i) => (
               <motion.button
@@ -247,6 +302,72 @@ function Profile() {
         </motion.div>
         <TourButton />
         <footer className="text-xs text-gray-400 mt-6 mb-2 text-center">Développé par simbtech</footer>
+
+        {/* New: Change Referral Code Modal */}
+        <AnimatePresence>
+          {showChangeReferralCodeModal && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', bounce: 0.2 }}
+              >
+                <h4 className="text-lg font-bold mb-4 text-center">Changer le code parrain</h4>
+                <form onSubmit={handleChangeReferralCode} className="flex flex-col gap-4">
+                  <div>
+                    <label htmlFor="newReferralCode" className="block text-gray-700 mb-1">Nouveau code de parrainage</label>
+                    <input
+                      type="text"
+                      id="newReferralCode"
+                      name="newReferralCode"
+                      value={newReferralCode}
+                      onChange={(e) => {
+                        setNewReferralCode(e.target.value);
+                        setChangeCodeFeedback(null); // Clear feedback on input change
+                      }}
+                      className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                      placeholder="Entrez le nouveau code"
+                      required
+                    />
+                  </div>
+                  {changeCodeFeedback && (
+                    <div className={`p-3 rounded-lg text-center text-sm ${changeCodeFeedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+                      {changeCodeFeedback.message}
+                    </div>
+                  )}
+                  <div className="flex gap-3 mt-2">
+                    <button
+                      type="submit"
+                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
+                      disabled={changeCodeLoading}
+                    >
+                      {changeCodeLoading ? <FiLoader className="animate-spin" /> : 'Sauvegarder'}
+                    </button>
+                    <button
+                      type="button"
+                      className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                      onClick={() => {
+                        setShowChangeReferralCodeModal(false);
+                        setNewReferralCode(user?.referralCode || ''); // Reset input to current code
+                        setChangeCodeFeedback(null); // Clear feedback
+                      }}
+                      disabled={changeCodeLoading}
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </ProtectedRoute>
   );

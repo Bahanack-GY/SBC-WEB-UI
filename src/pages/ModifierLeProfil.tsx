@@ -149,11 +149,12 @@ function ModifierLeProfil() {
     country: '',
     profession: '',
     interests: [] as string[],
-    avatar: '',
+    avatar: 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360',
     birthDate: '',
     sex: '',
     momoNumber: '',
     momoOperator: '',
+    referralCode: '',
   });
   // New state for the selected phone country code
   const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(countryCodes[0]);
@@ -206,6 +207,7 @@ function ModifierLeProfil() {
           sex: user.sex || '',
           momoNumber: user.momoNumber || '',
           momoOperator: momoOperatorToSet,
+          referralCode: user.referralCode || '',
         };
       });
 
@@ -292,6 +294,7 @@ function ModifierLeProfil() {
         sex: formData.sex,
         momoNumber: formData.momoNumber,
         momoOperator: formData.momoOperator,
+        referralCode: formData.referralCode,
       };
       await sbcApiService.updateUserProfile(updates);
       await refreshUser(); // Refresh user in context
@@ -389,6 +392,15 @@ function ModifierLeProfil() {
               </div>
             </div>
             <div>
+              <label className="block text-gray-700 mb-1">Code de parrainage</label>
+              <input
+                name="referralCode"
+                value={formData.referralCode}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+              />
+            </div>
+            <div>
               <label className="block text-gray-700 mb-1">Date de naissance</label>
               <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
             </div>
@@ -446,13 +458,11 @@ function ModifierLeProfil() {
                 ))}
               </div>
             </div>
-
             {feedback && (
               <div className={`p-3 rounded-lg text-center text-sm ${feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {feedback.message}
               </div>
             )}
-
             <button
               type="submit"
               className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"

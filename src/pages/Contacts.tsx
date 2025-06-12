@@ -8,6 +8,8 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelpers';
 import type { User } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import { useAuth } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const professions = [
     'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
@@ -71,6 +73,11 @@ interface Criteria {
 const PAGE_SIZE = 20;
 
 function Contacts() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
+    const isRestrictedToBasicFilters = user?.activeSubscriptions?.includes('CLASSIQUE') && !user.activeSubscriptions.includes('CIBLE');
+
     const [modalOpen, setModalOpen] = useState(false);
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);
     const [filterDownloadModalOpen, setFilterDownloadModalOpen] = useState(false);
@@ -87,13 +94,11 @@ function Contacts() {
     const [debouncedCriteria, setDebouncedCriteria] = useState(criteria);
     const [filterModalDateRange, setFilterModalDateRange] = useState({ from: '', to: '' });
 
-    // Debounce criteria changes
     useEffect(() => {
         const handler = setTimeout(() => setDebouncedCriteria(criteria), 500);
         return () => clearTimeout(handler);
     }, [criteria]);
 
-    // Helper to format date to YYYY-MM-DD
     const formatDateForInput = (date: Date) => date.toISOString().split('T')[0];
     const today = new Date();
     const sevenDaysAgo = new Date(today);
@@ -108,7 +113,19 @@ function Contacts() {
         }
     }, [filterDownloadModalOpen]);
 
-    // Infinite Query for contacts
+    useEffect(() => {
+        if (modalOpen && isRestrictedToBasicFilters) {
+            setCriteria(prev => ({
+                ...prev,
+                minAge: "",
+                maxAge: "",
+                sex: "",
+                professions: [],
+                interests: [],
+            }));
+        }
+    }, [modalOpen, isRestrictedToBasicFilters]);
+
     const {
         data,
         isLoading,
@@ -120,24 +137,29 @@ function Contacts() {
         { contacts: User[]; hasMore: boolean },
         Error
     >({
-        queryKey: ['contacts', debouncedCriteria],
+        queryKey: ['contacts', debouncedCriteria, isRestrictedToBasicFilters],
         queryFn: async ({ pageParam = 1 }) => {
             const apiSex = debouncedCriteria.sex === 'Homme' ? 'male' :
                 debouncedCriteria.sex === 'Femme' ? 'female' :
                     debouncedCriteria.sex === 'Autre' ? 'other' : '';
-                const filters = {
+
+            const filters: Record<string, any | any[]> = {
                 search: debouncedCriteria.search,
                 country: debouncedCriteria.country,
-                minAge: debouncedCriteria.minAge,
-                maxAge: debouncedCriteria.maxAge,
-                    sex: apiSex,
-                professions: debouncedCriteria.professions.map(p => removeAccents(p)).join(','),
-                interests: debouncedCriteria.interests.map(i => removeAccents(i)).join(','),
                 page: pageParam,
                 limit: PAGE_SIZE,
-                };
-                const response = await sbcApiService.searchContacts(filters);
-                const result = handleApiResponse(response);
+            };
+
+            if (!isRestrictedToBasicFilters) {
+                if (debouncedCriteria.minAge) filters.minAge = debouncedCriteria.minAge;
+                if (debouncedCriteria.maxAge) filters.maxAge = debouncedCriteria.maxAge;
+                if (apiSex) filters.sex = apiSex;
+                if (debouncedCriteria.professions.length > 0) filters.professions = debouncedCriteria.professions.map(p => removeAccents(p)).join(',');
+                if (debouncedCriteria.interests.length > 0) filters.interests = debouncedCriteria.interests.map(i => removeAccents(i)).join(',');
+            }
+
+            const response = await sbcApiService.searchContacts(filters);
+            const result = handleApiResponse(response);
             return {
                 contacts: result?.contacts || result || [],
                 hasMore: result?.paginationInfo ? result.paginationInfo.currentPage < result.paginationInfo.totalPages : (result?.contacts?.length === PAGE_SIZE)
@@ -154,10 +176,8 @@ function Contacts() {
         gcTime: 30 * 60 * 1000,
     });
 
-    // Combine all loaded contacts
     const contacts = data?.pages.flatMap((page: { contacts: User[] }) => page.contacts) || [];
 
-    // Infinite scroll: load more when scroll is past 80%
     useEffect(() => {
         if (!hasNextPage || isLoading || isFetchingNextPage) return;
         const handleScroll = () => {
@@ -174,10 +194,16 @@ function Contacts() {
     }, [hasNextPage, isLoading, isFetchingNextPage, fetchNextPage]);
 
     const handleCriteriaChange = (key: keyof Criteria, value: string | string[]) => {
+        if (isRestrictedToBasicFilters && ['minAge', 'maxAge', 'sex', 'professions', 'interests'].includes(key)) {
+            return;
+        }
         setCriteria(prev => ({ ...prev, [key]: value }));
     };
 
     const handleMultiSelect = (key: 'professions' | 'interests', value: string) => {
+        if (isRestrictedToBasicFilters) {
+            return;
+        }
         setCriteria(prev => {
             const arr = prev[key];
             const newArr = arr.includes(value) ? arr.filter((v: string) => v !== value) : [...arr, value];
@@ -267,6 +293,8 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
             const a = document.createElement('a');
             a.href = urlBlob;
             a.download = suggestedFilename;
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
             document.body.appendChild(a);
             a.click();
             a.remove();
@@ -282,7 +310,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
 
     const handleDownloadAll = async () => {
         const baseUrl = getBaseUrl();
-        // This button downloads ALL contacts, without any date filter
         await downloadFile(`${baseUrl}/contacts/export`, `tous_contacts.vcf`);
         setDownloadModalOpen(false);
     };
@@ -303,7 +330,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
 
     const handleDownloadFiltered = async () => {
         const baseUrl = getBaseUrl();
-        // Map UI sex value to API sex value for download filter
         const apiSex = criteria.sex === 'Homme' ? 'male' :
             criteria.sex === 'Femme' ? 'female' :
                 criteria.sex === 'Autre' ? 'other' : '';
@@ -311,15 +337,16 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
         const filters: Record<string, string | string[]> = {
             search: criteria.search,
             country: criteria.country,
-            sex: apiSex,
-            // Apply removeAccents to each selected profession and interest before joining
-            professions: criteria.professions.map(p => removeAccents(p)).join(','),
-            interests: criteria.interests.map(i => removeAccents(i)).join(','),
         };
 
-        if (criteria.minAge) filters.minAge = criteria.minAge;
-        if (criteria.maxAge) filters.maxAge = criteria.maxAge;
-        // Use the dates from the filterModalDateRange for filtered download
+        if (!isRestrictedToBasicFilters) {
+            if (criteria.minAge) filters.minAge = criteria.minAge;
+            if (criteria.maxAge) filters.maxAge = criteria.maxAge;
+            if (apiSex) filters.sex = apiSex;
+            if (criteria.professions.length > 0) filters.professions = criteria.professions.map(p => removeAccents(p)).join(',');
+            if (criteria.interests.length > 0) filters.interests = criteria.interests.map(i => removeAccents(i)).join(',');
+        }
+
         if (filterModalDateRange.from) filters.startDate = filterModalDateRange.from;
         if (filterModalDateRange.to) filters.endDate = filterModalDateRange.to;
 
@@ -339,7 +366,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     <BackButton />
                     <h3 className="text-xl font-medium text-center w-full">Fiche de contact</h3>
                 </div>
-                {/* Search Bar */}
                 <input
                     type="text"
                     value={criteria.search}
@@ -347,7 +373,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     placeholder="Rechercher par nom, téléphone..."
                     className="w-full mb-3 rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
                 />
-                {/* Sort, Download & Modal Trigger */}
                 <div className="flex items-center gap-2 mb-4">
                     <button
                         className="bg-gray-100 px-4 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200"
@@ -374,7 +399,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         <FiFilter size={18} />
                     </button>
                 </div>
-                {/* Download Modal */}
                 <AnimatePresence>
                     {downloadModalOpen && (
                         <motion.div
@@ -434,7 +458,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {/* Download Filtered Modal */}
                 <AnimatePresence>
                     {filterDownloadModalOpen && (
                         <motion.div
@@ -454,12 +477,29 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 <div className="mb-4 text-sm text-gray-700">
                                     <span className="font-semibold">Résumé du filtre :</span><br />
                                     Pays : {westAfricanCountries.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
-                                    Âge : {criteria.minAge && criteria.maxAge ? `${criteria.minAge} - ${criteria.maxAge}` : criteria.minAge ? `Min ${criteria.minAge}` : criteria.maxAge ? `Max ${criteria.maxAge}` : 'Tous'}<br />
-                                    Sexe : {criteria.sex || 'Tous'}<br />
-                                    Professions : {criteria.professions.length ? criteria.professions.join(', ') : 'Toutes'}<br />
-                                    Intérêts : {criteria.interests.length ? criteria.interests.join(', ') : 'Tous'}
+                                    {isRestrictedToBasicFilters ? (
+                                        <p className="text-orange-600 font-medium">Les filtres avancés (âge, sexe, professions, intérêts) sont réservés aux abonnés CIBLÉ.</p>
+                                    ) : (
+                                        <>
+                                            Âge : {criteria.minAge && criteria.maxAge ? `${criteria.minAge} - ${criteria.maxAge}` : criteria.minAge ? `Min ${criteria.minAge}` : criteria.maxAge ? `Max ${criteria.maxAge}` : 'Tous'}<br />
+                                            Sexe : {criteria.sex || 'Tous'}<br />
+                                            Professions : {criteria.professions.length ? criteria.professions.join(', ') : 'Toutes'}<br />
+                                            Intérêts : {criteria.interests.length ? criteria.interests.join(', ') : 'Tous'}
+                                        </>
+                                    )}
                                 </div>
-                                <div className="flex flex-col gap-2 mb-4"> {/* Added date inputs here */}
+                                {isRestrictedToBasicFilters && (
+                                    <button
+                                        onClick={() => {
+                                            navigate('/abonnement');
+                                            setFilterDownloadModalOpen(false);
+                                        }}
+                                        className="w-full bg-gradient-to-r from-[#F68F0F] to-orange-400 text-white rounded-xl py-2 font-bold shadow hover:bg-green-800 transition-colors mb-4"
+                                    >
+                                        Mettre à niveau vers l'abonnement CIBLÉ
+                                    </button>
+                                )}
+                                <div className="flex flex-col gap-2 mb-4">
                                     <label className="text-sm font-medium">Ou sélectionner une période :</label>
                                     <div className="flex gap-2">
                                         <input
@@ -493,7 +533,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         </motion.div>
                     )}
                 </AnimatePresence>
-                {/* Modal for Sorting Criteria */}
                 <AnimatePresence>
                     {modalOpen && (
                         <motion.div
@@ -525,67 +564,87 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                         ))}
                                     </select>
                                 </div>
-                                <div className="mb-3">
-                                    <label className="block text-sm font-medium mb-1">Âge minimum</label>
-                                    <input
-                                        type="number"
-                                        value={criteria.minAge}
-                                        onChange={e => handleCriteriaChange('minAge', e.target.value)}
-                                        placeholder="Min. âge"
-                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
-                                    />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="block text-sm font-medium mb-1">Âge maximum</label>
-                                    <input
-                                        type="number"
-                                        value={criteria.maxAge}
-                                        onChange={e => handleCriteriaChange('maxAge', e.target.value)}
-                                        placeholder="Max. âge"
-                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
-                                    />
-                                </div>
-                                <div className="mb-3">
-                                    <label className="block text-sm font-medium mb-1">Sexe</label>
-                                    <select
-                                        value={criteria.sex}
-                                        onChange={e => handleCriteriaChange('sex', e.target.value)}
-                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2 bg-white"
-                                    >
-                                        <option value="">Sélectionner</option>
-                                        {sexes.map(sex => <option key={sex} value={sex}>{sex}</option>)}
-                                    </select>
-                                </div>
-                                <div className="mb-3">
-                                    <label className="block text-sm font-medium mb-1">Profession</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {professions.map(prof => (
-                                            <button
-                                                key={prof}
-                                                type="button"
-                                                className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.professions.includes(prof) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                                                onClick={() => handleMultiSelect('professions', prof)}
+                                {isRestrictedToBasicFilters ? (
+                                    <>
+                                        <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm text-center mb-4">
+                                            Les filtres par âge, sexe, profession et centres d'intérêt sont une fonctionnalité exclusive pour les abonnés **CIBLÉ**.
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                navigate('/changer-abonnement');
+                                                setModalOpen(false); // Close the modal
+                                            }}
+                                            className="w-full bg-gradient-to-r from-[#F68F0F] to-orange-400 text-white rounded-xl py-2 font-bold shadow hover:bg-green-800 transition-colors mb-2"
+                                        >
+                                            Mettre à niveau vers l'abonnement CIBLÉ
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium mb-1">Âge minimum</label>
+                                            <input
+                                                type="number"
+                                                value={criteria.minAge}
+                                                onChange={e => handleCriteriaChange('minAge', e.target.value)}
+                                                placeholder="Min. âge"
+                                                className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium mb-1">Âge maximum</label>
+                                            <input
+                                                type="number"
+                                                value={criteria.maxAge}
+                                                onChange={e => handleCriteriaChange('maxAge', e.target.value)}
+                                                placeholder="Max. âge"
+                                                className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
+                                            />
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium mb-1">Sexe</label>
+                                            <select
+                                                name="sex"
+                                                value={criteria.sex}
+                                                onChange={e => handleCriteriaChange('sex', e.target.value)}
+                                                className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2 bg-white"
                                             >
-                                                {prof}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="mb-3">
-                                    <label className="block text-sm font-medium mb-1">Intérêt</label>
-                                    <div className="flex flex-wrap gap-2">
-                                        {interests.map(int => (
-                                            <button
-                                                key={int}
-                                                type="button"
-                                                className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.interests.includes(int) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                                                onClick={() => handleMultiSelect('interests', int)}
-                                            >
-                                                {int}
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
+                                                <option value="">Sélectionner</option>
+                                                {sexes.map(sex => <option key={sex} value={sex}>{sex}</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium mb-1">Profession</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {professions.map(prof => (
+                                                    <button
+                                                        key={prof}
+                                                        type="button"
+                                                        className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.professions.includes(prof) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                                                        onClick={() => handleMultiSelect('professions', prof)}
+                                                    >
+                                                        {prof}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div className="mb-3">
+                                            <label className="block text-sm font-medium mb-1">Intérêt</label>
+                                            <div className="flex flex-wrap gap-2">
+                                                {interests.map(int => (
+                                                    <button
+                                                        key={int}
+                                                        type="button"
+                                                        className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.interests.includes(int) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                                                        onClick={() => handleMultiSelect('interests', int)}
+                                                    >
+                                                        {int}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
+                                )}
                                 <div className="flex gap-3 mt-4">
                                     <button
                                         className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"

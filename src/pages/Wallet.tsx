@@ -481,7 +481,7 @@ function Wallet() {
         ) : (
           <>
             {/* Balance Card */}
-            <div className="rounded-2xl bg-gradient-to-r from-violet-600 to-indigo-600 p-5 mb-6 shadow-lg">
+            <div className="rounded-2xl bg-gradient-to-r from-blue-500 to-green-600 p-5 mb-6 shadow-lg">
               <div className="text-sm opacity-80">Solde total</div>
               <div className="text-3xl font-bold mb-2">{balance.toLocaleString('fr-FR')} F</div>
               <div className="flex justify-between text-sm mt-2">

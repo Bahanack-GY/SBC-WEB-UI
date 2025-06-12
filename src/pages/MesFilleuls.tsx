@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { FaWhatsapp, FaFilter } from 'react-icons/fa';
 import Skeleton from '../components/common/Skeleton';
@@ -10,47 +10,82 @@ import type { User } from '../types/api';
 
 const queryKeys = {
   stats: ['referral-stats'] as const,
-  filleuls: (type: string, search: string, page: number, filter?: string) => ['filleuls', type, search, page, filter] as const,
+  filleuls: (type: string, search: string, subTypeFilter: string) => ['filleuls', type, search, subTypeFilter] as const,
 };
 
+// Define RelanceMessage outside the component for better scope management
+const RelanceMessage = `🚀 Rejoins la Révolution Entrepreneuriale avec le Sniper Business Center ! 🌍
+
+Tu es à un clic de faire partie de la meilleure communauté d'Afrique, où les opportunités d'affaires abondent et où ton succès est notre priorité!
+
+Voici ce que tu vas gagner en nous rejoignant dès maintenant:
+
+✨ Visibilité Maximale: Partage ton flyer ou affiche publicitaire dans nos groupes chaque samedi, atteignant ainsi des milliers de potentiels clients!
+
+📈 Accès à un Réseau Énorme:
+Profite de plus de 30 000 contacts WhatsApp ciblés qui verront tes produits et services.Ton succès commence ici!
+
+🎓 Formations Exclusives et Gratuites:
+Bénéficie de 5 formations complètes, accompagnées d'un suivi personnalisé chaque semaine sur Google Meet :
+
+   • Deviens expert en trading
+
+   • Maîtrise l'importation depuis la Chine
+
+   • Domine le marketing digital
+
+   • Excelle en art oratoire
+
+   • Crée des bots WhatsApp pour booster ton business
+
+🛒 Marketplace à Ta Disposition:
+ Mets en avant tes produits et services sur notre plateforme dédiée!
+
+💰 Gagne de l'Argent Facilement :
+Avec notre système de parrainage rémunéré:
+
+   • Niveau 1 : Parrainage direct = 1000 FCFA
+
+   • Niveau 2 : Ton filleul parraine = 500 FCFA
+
+   • Niveau 3 : Le filleul de ton filleul inscrit = 250 FCFA
+
+Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès ! J'ai remarqué que tu as créé ton compte, mais que tu n'as pas encore finalisé ton abonnement. Ne laisse pas passer cette chance incroyable !
+
+👉 Prends ta décision aujourd'hui et transforme ta vie avec nous !
+
+    https://sniperbuisnesscenter.com/ `;
+
 function MesFilleuls() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'direct' | 'indirect'>('direct');
-  const [filter, setFilter] = useState<'all' | 'abonne' | 'nonabonne'>('all');
   const [modalOpen, setModalOpen] = useState(false);
-  const [search, setSearch] = useState('');
+
+  // Filter states for input and debounced values
   const [searchInput, setSearchInput] = useState('');
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [allFilleuls, setAllFilleuls] = useState<User[]>([]);
-  const [loadedFilleulIds, setLoadedFilleulIds] = useState<Set<string>>(new Set());
-  const [lastItemRef, setLastItemRef] = useState<HTMLDivElement | null>(null);
-  const observerRef = useRef<IntersectionObserver | null>(null);
-  const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const limit = 10;
+  const [subTypeFilterInput, setSubTypeFilterInput] = useState<'all' | 'none' | 'CLASSIQUE' | 'CIBLE' | 'undefined'>('undefined');
 
-  // Setup intersection observer for infinite scroll
+  // Debounced states for actual API calls
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [debouncedSubTypeFilter, setDebouncedSubTypeFilter] = useState<'all' | 'none' | 'CLASSIQUE' | 'CIBLE' | 'undefined'>('undefined');
+
+  // Debounce effect for search input
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
-          setIsFetchingMore(true);
-          setPage(prev => prev + 1);
-        }
-      },
-      { threshold: 0.1 }
-    );
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchInput.trim());
+    }, 500); // 500ms debounce
+    return () => clearTimeout(handler);
+  }, [searchInput]);
 
-    observerRef.current = observer;
+  // Debounce effect for subType filter
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSubTypeFilter(subTypeFilterInput);
+    }, 300); // shorter debounce for filter button clicks
+    return () => clearTimeout(handler);
+  }, [subTypeFilterInput]);
 
-    if (lastItemRef) {
-      observer.observe(lastItemRef);
-    }
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [lastItemRef, hasMore, isFetchingMore]);
+  const limit = 10;
 
   // Query for stats
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -61,79 +96,107 @@ function MesFilleuls() {
       return {
         direct: statsResult.level1Count || 0,
         indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
-        total: (statsResult.level1Count || 0) + (statsResult.level2Count || 0) + (statsResult.level3Count || 0)
+        total: (statsResult.level1Count || 0) + (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
+        totalReferrals: statsResult.totalReferrals || 0
       };
     },
     staleTime: 10 * 60 * 1000, // 10 min
     gcTime: 60 * 60 * 1000, // 1 hour
   });
 
-  // Query for filleuls with filter
-  const { data: filleuls, isLoading: filleulsLoading, refetch } = useQuery<{ 
-    referredUsers: User[], 
-    totalPages: number,
-    totalCount: number,
-    filteredCount: number 
-  }>({
-    queryKey: queryKeys.filleuls(selectedTab, search, page, filter),
-    queryFn: async () => {
-      if (!user) return { referredUsers: [], totalPages: 0, totalCount: 0, filteredCount: 0 };
-      const filleulsResponse = await sbcApiService.getReferredUsers({ 
-        type: selectedTab, 
-        ...(search ? { name: search } : {}),
-        page,
+  // Query for filleuls using useInfiniteQuery
+  const {
+    data,
+    isLoading: filleulsLoading,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isInitialLoading, // Renamed from isLoading to distinguish initial load
+  } = useInfiniteQuery<
+    { referredUsers: User[], totalPages: number, totalCount: number, filteredCount: number }, // TQueryFnData
+    Error, // TError
+    InfiniteData<{ referredUsers: User[], totalPages: number, totalCount: number, filteredCount: number }>, // TData
+    ReturnType<typeof queryKeys.filleuls>, // TQueryKey: Use ReturnType to get the tuple type
+    number // TPageParam
+  >({
+    queryKey: queryKeys.filleuls(selectedTab, debouncedSearch, debouncedSubTypeFilter),
+    queryFn: async ({ pageParam = 1 }) => {
+      if (!user) { // Ensure user is available before making API call
+        // This case should be handled by `enabled` but a fallback is good
+        throw new Error("User not authenticated or loaded.");
+      }
+      const filleulsResponse = await sbcApiService.getReferredUsers({
+        type: selectedTab,
+        ...(debouncedSearch ? { name: debouncedSearch } : {}),
+        page: pageParam,
         limit,
-        filter: filter === 'all' ? undefined : filter
+        subType: debouncedSubTypeFilter === 'undefined' ? undefined : debouncedSubTypeFilter
       });
       return handleApiResponse(filleulsResponse);
     },
-    enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 min
-    gcTime: 30 * 60 * 1000, // 30 min
+    getNextPageParam: (lastPage, allPages) => {
+      // Assuming API returns totalPages or enough info to calculate hasMore
+      return lastPage.totalPages && (allPages.length < lastPage.totalPages) ? allPages.length + 1 : undefined;
+    },
+    initialPageParam: 1,
+    staleTime: 0, // Always refetch on queryKey change or background refetch
+    gcTime: 30 * 60 * 1000,
+    enabled: !authLoading && !!user, // Only fetch if user is loaded and authenticated
   });
 
-  // Update filleuls when new data arrives
-  useEffect(() => {
-    if (filleuls?.referredUsers) {
-      // Filter out duplicates using the loadedFilleulIds Set
-      const newItems = filleuls.referredUsers.filter(item => !loadedFilleulIds.has(item._id));
-      
-      // Add new item IDs to the Set
-      const newIds = new Set(newItems.map(item => item._id));
-      setLoadedFilleulIds(prev => new Set([...prev, ...newIds]));
+  // Setup intersection observer for infinite scroll
+  const lastItemRef = useRef<HTMLDivElement>(null);
+  const observer = useRef<IntersectionObserver | null>(null);
 
-      if (page === 1) {
-        setAllFilleuls(newItems);
-      } else {
-        setAllFilleuls(prev => [...prev, ...newItems]);
+  useEffect(() => {
+    if (observer.current) observer.current.disconnect();
+
+    observer.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+          fetchNextPage();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (lastItemRef.current) {
+      observer.current.observe(lastItemRef.current);
+    }
+
+    return () => {
+      if (observer.current) {
+        observer.current.disconnect();
       }
+    };
+  }, [lastItemRef, hasNextPage, isFetchingNextPage, fetchNextPage]); // Depend on hasNextPage and isFetchingNextPage
 
-      setHasMore(page < filleuls.totalPages);
+
+  // Flatten the data for rendering
+  const allFilleuls = data?.pages.flatMap(page => page.referredUsers) || [];
+  // Get the total filtered count from the first page's data
+  const filteredCount = data?.pages[0]?.totalCount ?? 0;
+
+  // Function to get display name for filter status
+  const getFilterDisplayName = (currentSubType: typeof subTypeFilterInput) => {
+    switch (currentSubType) {
+      case 'undefined': return 'Tous les filleuls';
+      case 'all': return 'Tous abonnés';
+      case 'CLASSIQUE': return 'Abonnés CLASSIQUE';
+      case 'CIBLE': return 'Abonnés CIBLÉ';
+      case 'none': return 'Non abonnés';
+      default: return 'Filtre inconnu';
     }
-  }, [filleuls, page]);
+  };
 
-  // Reset state when search/category/filter changes
-  useEffect(() => {
-    setPage(1);
-    setAllFilleuls([]);
-    setLoadedFilleulIds(new Set());
-    setHasMore(true);
-  }, [search, selectedTab, filter]);
-
-  // Reset fetching state after data loads
-  useEffect(() => {
-    if (isFetchingMore && !filleulsLoading) {
-      setIsFetchingMore(false);
-    }
-  }, [filleulsLoading, isFetchingMore]);
-
-  let filtered: User[] = allFilleuls;
-  if (filter === 'abonne') {
-    filtered = allFilleuls.filter((f: User) => f.activeSubscriptions && f.activeSubscriptions.length > 0);
-  }
-  if (filter === 'nonabonne') {
-    filtered = allFilleuls.filter((f: User) => !f.activeSubscriptions || f.activeSubscriptions.length === 0);
-  }
+  // // Render loading state for authentication first
+  // if (authLoading || isInitialLoading) { // Check both auth loading and initial query loading
+  //   return (
+  //     <div className="flex items-center justify-center min-h-screen text-lg text-gray-700">
+  //       Chargement des informations utilisateur...
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="p-3 min-h-screen bg-white">
@@ -144,7 +207,7 @@ function MesFilleuls() {
       {/* Search Bar */}
       <form
         className="flex items-center gap-2 mb-4"
-        onSubmit={e => { e.preventDefault(); setSearch(searchInput.trim()); refetch(); }}
+        onSubmit={e => { e.preventDefault(); setSearchInput(searchInput.trim()); }} // Trigger debounce manually on submit
       >
         <input
           type="text"
@@ -175,12 +238,10 @@ function MesFilleuls() {
         <div className="bg-white rounded-2xl shadow px-6 py-3 border border-gray-100">
           <div className="flex items-center justify-between">
             <div className="font-semibold text-gray-700 text-sm">
-              {filter === 'all' ? 'Tous les filleuls' : 
-               filter === 'abonne' ? 'Filleuls abonnés' : 
-               'Filleuls non abonnés'}
+              {getFilterDisplayName(subTypeFilterInput)} {/* Use input state for display */}
             </div>
             <div className="text-sm font-medium text-gray-600">
-              {filleulsLoading ? '...' : filleuls?.filteredCount?.toLocaleString() ?? '...'} {filleuls?.filteredCount === 1 ? 'filleul' : 'filleuls'}
+              {filleulsLoading ? '...' : filteredCount?.toLocaleString() ?? '...'} {filteredCount === 1 ? 'filleul' : 'filleuls'}
             </div>
           </div>
         </div>
@@ -214,22 +275,34 @@ function MesFilleuls() {
           <div className="bg-white rounded-2xl shadow-lg p-6 w-80 flex flex-col gap-4">
             <div className="font-bold text-lg mb-2 text-center">Filtrer les filleuls</div>
             <button
-              className={`w-full py-2 rounded-xl font-medium border ${filter === 'abonne' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setFilter('abonne'); setModalOpen(false); }}
+              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'undefined' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+              onClick={() => { setSubTypeFilterInput('undefined'); setModalOpen(false); }}
             >
-              Abonnés
+              Tous les filleuls
             </button>
             <button
-              className={`w-full py-2 rounded-xl font-medium border ${filter === 'nonabonne' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setFilter('nonabonne'); setModalOpen(false); }}
+              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'all' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+              onClick={() => { setSubTypeFilterInput('all'); setModalOpen(false); }}
+            >
+              Tous abonnés
+            </button>
+            <button
+              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'CLASSIQUE' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+              onClick={() => { setSubTypeFilterInput('CLASSIQUE'); setModalOpen(false); }}
+            >
+              Abonnés CLASSIQUE
+            </button>
+            <button
+              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'CIBLE' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+              onClick={() => { setSubTypeFilterInput('CIBLE'); setModalOpen(false); }}
+            >
+              Abonnés CIBLÉ
+            </button>
+            <button
+              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'none' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+              onClick={() => { setSubTypeFilterInput('none'); setModalOpen(false); }}
             >
               Non abonnés
-            </button>
-            <button
-              className={`w-full py-2 rounded-xl font-medium border ${filter === 'all' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setFilter('all'); setModalOpen(false); }}
-            >
-              Tous
             </button>
             <button
               className="w-full py-2 rounded-xl font-medium border border-gray-300 text-gray-500 mt-2 hover:bg-gray-100"
@@ -240,7 +313,7 @@ function MesFilleuls() {
           </div>
         </div>
       )}
-      {(filleulsLoading && page === 1) ? (
+      {(filleulsLoading && !isFetchingNextPage) ? ( // Use !isFetchingNextPage to show initial loading only
         <div className="flex flex-col gap-2">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="flex items-center gap-3 py-2">
@@ -255,10 +328,10 @@ function MesFilleuls() {
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow p-2 divide-y">
-          {filtered.map((filleul: User, index: number) => (
-            <div 
-              key={filleul._id} 
-              ref={index === filtered.length - 1 ? setLastItemRef : null}
+          {allFilleuls.map((filleul: User, index: number) => (
+            <div
+              key={filleul._id}
+              ref={index === allFilleuls.length - 1 ? lastItemRef : null} // Assign ref to the last item
               className="flex items-center py-2 gap-3"
             >
               <img
@@ -272,7 +345,7 @@ function MesFilleuls() {
                 <div className="text-xs text-gray-500">{filleul.phoneNumber}</div>
               </div>
               <a
-                href={`https://wa.me/${filleul.phoneNumber?.replace(/[^\d]/g, '')}`}
+                href={`https://wa.me/${filleul.phoneNumber?.replace(/[^\d]/g, '')}/?text=${RelanceMessage}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-green-500 hover:text-green-600"
@@ -282,7 +355,7 @@ function MesFilleuls() {
               </a>
             </div>
           ))}
-          {isFetchingMore && (
+          {isFetchingNextPage && ( // Use isFetchingNextPage for loading more indicator
             <div className="flex justify-center items-center py-4">
               <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
@@ -290,7 +363,7 @@ function MesFilleuls() {
               </svg>
             </div>
           )}
-          {filtered.length === 0 && !filleulsLoading && (
+          {allFilleuls.length === 0 && !filleulsLoading && !isFetchingNextPage && ( // Ensure nothing is loading
             <div className="text-center text-gray-400 py-8">Aucun filleul dans cette catégorie.</div>
           )}
         </div>
