@@ -82,7 +82,38 @@ function Marketplace() {
         retry: 2,
     });
 
-    // Reset page and products when search/category changes
+    // Update products and services when new data arrives
+    useEffect(() => {
+        if (data?.products) {
+            // Filter out duplicates using the loadedItemIds Set
+            const newItems = data.products.filter(item => !loadedItemIds.has(item._id));
+            
+            // Add new item IDs to the Set
+            const newIds = new Set(newItems.map(item => item._id));
+            setLoadedItemIds(prev => new Set([...prev, ...newIds]));
+
+            const newProducts = newItems.filter((item: MarketplaceItem) =>
+                (item.type === 'product') ||
+                (!item.type && item.category?.toLowerCase() !== 'services')
+            );
+            const newServices = newItems.filter((item: MarketplaceItem) =>
+                (item.type === 'service') ||
+                (item.category?.toLowerCase() === 'services')
+            );
+
+            if (page === 1) {
+                setAllProducts(newProducts);
+                setAllServices(newServices);
+            } else {
+                setAllProducts(prev => [...prev, ...newProducts]);
+                setAllServices(prev => [...prev, ...newServices]);
+            }
+
+            setHasMore(data.paginationInfo.currentPage < data.paginationInfo.totalPages);
+        }
+    }, [data, page]);
+
+    // Reset loaded items when search/category changes
     useEffect(() => {
         setPage(1);
         setAllProducts([]);
@@ -113,30 +144,6 @@ function Marketplace() {
             observer.disconnect();
         };
     }, [lastItemRef, hasMore, isFetchingMore]);
-
-    // Update products and services when new data arrives
-    useEffect(() => {
-        if (data?.products) {
-            const newProducts = data.products.filter(item => 
-                (item.type === 'product') || 
-                (!item.type && item.category?.toLowerCase() !== 'services')
-            );
-            const newServices = data.products.filter(item => 
-                (item.type === 'service') || 
-                (item.category?.toLowerCase() === 'services')
-            );
-
-            if (page === 1) {
-                setAllProducts(newProducts);
-                setAllServices(newServices);
-            } else {
-                setAllProducts(prev => [...prev, ...newProducts]);
-                setAllServices(prev => [...prev, ...newServices]);
-            }
-
-            setHasMore(data.paginationInfo.currentPage < data.paginationInfo.totalPages);
-        }
-    }, [data, page]);
 
     // Infinite scroll: load more when scroll is past 70% of the page
     useEffect(() => {
@@ -264,10 +271,11 @@ function Marketplace() {
                             {selectedCategory === 'Tous' && (
                                 <>
                                     <div className="grid grid-cols-2 gap-4">
-                                        {[...allServices, ...allProducts].map((item) => (
-                                            <div 
-                                                key={item._id} 
-                                                onClick={() => navigate(`/single-product/${item._id}`)} 
+                                        {[...allServices, ...allProducts].map((item, index, array) => (
+                                            <div
+                                                key={item._id}
+                                                ref={index === array.length - 1 ? setLastItemRef : null}
+                                                onClick={() => navigate(`/single-product/${item._id}`)}
                                                 className="cursor-pointer"
                                             >
                                                 <MarketplaceProductCard
