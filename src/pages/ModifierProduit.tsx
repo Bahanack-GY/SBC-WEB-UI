@@ -102,11 +102,19 @@ function ModifierProduit() {
     const handleNewFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const uploadedFiles = Array.from(e.target.files);
-            // Limit total images (existing + new) to 10 if needed by backend, otherwise just new ones.
-            // For now, only new images are handled, existing are assumed to persist unless removed via backend.
+            const validFiles: File[] = [];
+
+            uploadedFiles.forEach(file => {
+                if (file.size > 5 * 1024 * 1024) { // 5 MB in bytes
+                    alert(`L'image "${file.name}" dépasse la taille maximale autorisée de 5 Mo et ne sera pas ajoutée.`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+
             setNewImages(prev => {
-                const combined = [...prev, ...uploadedFiles];
-                return combined.slice(0, 10 - existingImageUrls.length); // Ensure total does not exceed 10 (or whatever max is)
+                const combined = [...prev, ...validFiles];
+                return combined.slice(0, 10 - existingImageUrls.length); // Ensure total does not exceed max (10)
             });
             setFeedback(null);
         }

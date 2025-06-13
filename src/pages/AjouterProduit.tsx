@@ -57,9 +57,19 @@ function AjouterProduit() {
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files) {
             const newFiles = Array.from(e.target.files);
+            const validFiles: File[] = [];
+
+            newFiles.forEach(file => {
+                if (file.size > 5 * 1024 * 1024) { // 5 MB in bytes
+                    alert(`L'image "${file.name}" dépasse la taille maximale autorisée de 5 Mo et ne sera pas ajoutée.`);
+                } else {
+                    validFiles.push(file);
+                }
+            });
+
             // Limit to 10 images total
             setImages(prev => {
-                const combined = [...prev, ...newFiles];
+                const combined = [...prev, ...validFiles];
                 return combined.slice(0, 10);
             });
             setFeedback(null);

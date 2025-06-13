@@ -111,7 +111,6 @@ function MesFilleuls() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-    isInitialLoading, // Renamed from isLoading to distinguish initial load
   } = useInfiniteQuery<
     { referredUsers: User[], totalPages: number, totalCount: number, filteredCount: number }, // TQueryFnData
     Error, // TError
