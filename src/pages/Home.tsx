@@ -11,7 +11,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import PromotionsCarousel from '../components/PromotionsCarousel';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
@@ -55,13 +54,6 @@ function Home() {
   const queryClient = useQueryClient();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Non abonné');
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);
-
-  // Static image URLs for the carousel
-  const promotionImages = [
-    'https://img.freepik.com/premium-photo/technical-price-graph-indicator-red-green-candlestick-chart-blue-theme-screen-market-volatility-up-down-trend-stock-trading-crypto-currency-background_372999-3847.jpg',
-    'https://tangem.com/_astro/How_Many_Cryptocurrencies_Are_There_in_February_2025_db69a4d53f_cXX7N.png',
-    'https://res.cloudinary.com/people-matters/image/upload/fl_immutable_cache,w_624,h_351,q_auto,f_auto/v1598245577/1598245576.jpg'
-  ];
 
   // Use React Query for API calls with optimized settings
   const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<TransactionStats>({
@@ -214,11 +206,6 @@ function Home() {
                 poster="/sbc_presentation_thumbnail.jpg"
                 title="SBC Presentation Video"
               />
-            </div>
-
-            <div className="recent-transactions">
-              <h2 className="text-2xl font-bold mt-4">Decouvrez</h2>
-              <PromotionsCarousel images={promotionImages} />
             </div>
           </>
         )}
