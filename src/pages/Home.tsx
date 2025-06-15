@@ -17,6 +17,7 @@ import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
+import CustomVideoPlayer from '../components/CustomVideoPlayer';
 
 // Define interfaces
 interface Formation {
@@ -204,6 +205,17 @@ function Home() {
                 icon={<img src={BalanceIcon} alt="Balance" className="size-48" />}
               />
             </div>
+
+            {/* Video Presentation */}
+            <div className="video-presentation mt-6">
+              <h2 className="text-2xl font-bold mb-4">Présentation</h2>
+              <CustomVideoPlayer
+                src="/sbc presentation.mp4"
+                poster="/sbc_presentation_thumbnail.jpg"
+                title="SBC Presentation Video"
+              />
+            </div>
+
             <div className="recent-transactions">
               <h2 className="text-2xl font-bold mt-4">Decouvrez</h2>
               <PromotionsCarousel images={promotionImages} />
