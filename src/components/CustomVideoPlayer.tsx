@@ -107,6 +107,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
                 ref={videoRef}
                 src={src}
                 poster={poster}
+                title={title}
                 className="w-full aspect-video object-contain"
                 onClick={togglePlay}
             />
