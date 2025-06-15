@@ -6,6 +6,7 @@ import { useAffiliation } from '../contexts/AffiliationContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import { ApiResponse } from '../services/ApiResponse';
+import { useQuery } from '@tanstack/react-query';
 
 interface SignupData {
   nom: string;
@@ -44,6 +45,15 @@ interface SignupErrors {
   emailExists?: string;
   whatsappExists?: string;
   parrain?: string;
+}
+
+interface SettingsData {
+  termsAndConditionsPdf?: {
+    fileId: string;
+    fileName: string;
+    mimeType: string;
+  };
+  [key: string]: unknown;
 }
 
 const initialData: SignupData = {
@@ -138,6 +148,31 @@ function Signup() {
   const navigate = useNavigate();
   const { register } = useAuth();
   const { affiliationCode } = useAffiliation();
+
+  const { data: settingsData, isLoading: settingsLoading, error: settingsError } = useQuery<SettingsData>({
+    queryKey: ['settings'],
+    queryFn: async () => {
+      const response = await sbcApiService.getAppSettings();
+      return handleApiResponse(response);
+    },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 2,
+  });
+
+  const termsAndConditionsUrl = settingsData?.termsAndConditionsPdf?.fileId
+    ? sbcApiService.generateSettingsFileUrl(settingsData.termsAndConditionsPdf.fileId)
+    : undefined;
+
+  const handleOpenTerms = () => {
+    if (termsAndConditionsUrl) {
+      window.open(termsAndConditionsUrl, '_blank');
+    } else {
+      console.warn('Terms and Conditions URL not available yet.');
+    }
+  };
 
   useEffect(() => {
     try {
@@ -263,11 +298,11 @@ function Signup() {
     if (step === 0 && (name === 'email' || name === 'whatsapp' || name === 'parrain')) {
       setErrors(prev => {
         const updated = { ...prev, general: undefined, emailExists: undefined, whatsappExists: undefined };
-      if (name === 'parrain') {
+        if (name === 'parrain') {
           updated.parrain = undefined;
-        setAffiliateName(null);
-        setAffiliateLoading(false);
-      }
+          setAffiliateName(null);
+          setAffiliateLoading(false);
+        }
         return updated;
       });
     }
@@ -582,7 +617,7 @@ function Signup() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input type="checkbox" name="cgu" checked={data.cgu} onChange={handleChange} className="accent-[#115CF6]" />
-                <span>J'accepte les <button type="button" onClick={() => setShowModal(true)} className="text-[#115CF6] underline bg-transparent">conditions d'utilisation</button></span>
+                <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-[#115CF6] underline bg-transparent">conditions d'utilisation</button></span>
               </div>
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
             </>
@@ -621,19 +656,17 @@ function Signup() {
             <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"><FiX /></button>
             <h3 className="text-xl font-bold mb-4 text-center">Conditions d'utilisation</h3>
             <div className="text-gray-700 text-sm max-h-[60vh] overflow-y-auto px-1">
-              <p><strong>Bienvenue sur SBC !</strong></p>
-              <p className="mt-2">En créant un compte, vous acceptez les conditions suivantes :</p>
-              <ul className="list-disc pl-5 mt-2 space-y-1">
-                <li>Vous devez fournir des informations exactes et à jour lors de votre inscription.</li>
-                <li>Votre mot de passe doit rester confidentiel et ne pas être partagé.</li>
-                <li>Vous êtes responsable de toute activité effectuée depuis votre compte.</li>
-                <li>Vous vous engagez à respecter les lois en vigueur et à ne pas utiliser la plateforme à des fins frauduleuses ou illicites.</li>
-                <li>Vos données personnelles sont protégées conformément à notre politique de confidentialité.</li>
-                <li>Vous pouvez demander la suppression de votre compte à tout moment.</li>
-                <li>L'équipe SBC se réserve le droit de suspendre ou supprimer un compte en cas de non-respect des conditions.</li>
-              </ul>
-              <p className="mt-4">Pour toute question, contactez notre support.</p>
-              <p className="mt-2">Merci de faire partie de notre communauté !</p>
+              {settingsLoading ? (
+                <div className="flex justify-center items-center py-8 text-gray-500">
+                  Chargement des conditions d'utilisation...
+                </div>
+              ) : settingsError ? (
+                <div className="text-red-500 text-center py-8">
+                  Erreur lors du chargement des conditions d'utilisation.
+                </div>
+              ) : (
+                <p>Veuillez cliquer sur le lien pour ouvrir les conditions d'utilisation.</p>
+              )}
             </div>
           </div>
         </div>

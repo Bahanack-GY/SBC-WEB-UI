@@ -40,12 +40,23 @@ interface SubscriptionData {
   [key: string]: unknown;
 }
 
+interface SettingsData {
+  presentationPdf?: {
+    fileId: string;
+  };
+  presentationVideo?: {
+    fileId: string;
+  };
+  [key: string]: unknown;
+}
+
 // Query keys for consistent caching
 export const queryKeys = {
   transactionStats: ['transaction-stats'] as const,
   referralStats: ['referral-stats'] as const,
   currentSubscription: ['current-subscription'] as const,
   formations: ['formations'] as const,
+  settings: ['settings'] as const,
 };
 
 function Home() {
@@ -119,6 +130,19 @@ function Home() {
     retry: 2,
   });
 
+  const { data: settingsData, isLoading: settingsLoading, error: settingsError } = useQuery<SettingsData>({
+    queryKey: queryKeys.settings,
+    queryFn: async () => {
+      const response = await sbcApiService.getAppSettings();
+      return handleApiResponse(response);
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 30 * 60 * 1000, // 30 minutes
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    retry: 2,
+  });
+
   // Update subscription status when data changes
   useEffect(() => {
     if (subscriptionData) {
@@ -134,8 +158,8 @@ function Home() {
     }
   }, [subscriptionData, user]);
 
-  const loading = statsLoading || referralLoading || subscriptionLoading || formationsLoading;
-  const error = statsError || referralError || formationsError;
+  const loading = statsLoading || referralLoading || subscriptionLoading || formationsLoading || settingsLoading;
+  const error = statsError || referralError || formationsError || settingsError;
 
   const balance = statsData?.balance || user?.balance || 0;
 
@@ -145,7 +169,12 @@ function Home() {
     queryClient.invalidateQueries({ queryKey: queryKeys.referralStats });
     queryClient.invalidateQueries({ queryKey: queryKeys.currentSubscription });
     queryClient.invalidateQueries({ queryKey: queryKeys.formations });
+    queryClient.invalidateQueries({ queryKey: queryKeys.settings });
   };
+
+  const presentationPdfUrl = settingsData?.presentationPdf?.fileId
+    ? sbcApiService.generateSettingsFileUrl(settingsData.presentationPdf.fileId)
+    : '/sbc_presentation.pdf'; // Fallback to local path
 
   return (
     <ProtectedRoute>
@@ -206,6 +235,17 @@ function Home() {
                 poster="/sbc_presentation_thumbnail.jpg"
                 title="SBC Presentation Video"
               />
+            </div>
+
+            {/* Download Presentation Document Button */}
+            <div className="mt-4 text-center">
+              <a
+                href={presentationPdfUrl}
+                download="document_de_presentation_sbc.pdf"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                Téléchargez le document de présentation de la SBC
+              </a>
             </div>
           </>
         )}
