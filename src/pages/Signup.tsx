@@ -393,7 +393,8 @@ function Signup() {
     if (step === 2) {
       if (!data.langue) { newErrors.langue = 'Langue requise'; valid = false; }
       if (!data.interets || data.interets.length === 0) { newErrors.interets = 'Au moins un centre d\'intérêt requis'; valid = false; }
-      if (data.parrain && !isAffiliationCodeDisabled && !affiliateName) {
+      if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
+      else if (!isAffiliationCodeDisabled && !affiliateName) {
         newErrors.parrain = 'Code parrain invalide ou non vérifié.';
         valid = false;
       }
@@ -638,7 +639,7 @@ function Signup() {
             {step === 2 && (
               <button
                 onClick={handleRegister}
-                disabled={loading || !data.cgu}
+                disabled={loading || !data.cgu || affiliateLoading}
                 className="bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
                 {loading ? 'Inscription...' : "S'inscrire"}

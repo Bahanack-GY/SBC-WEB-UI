@@ -35,7 +35,7 @@ function Profile() {
     level2Count: number;
     level3Count: number;
   } | null>(null);
-  const [affiliator, setAffiliator] = useState<{ name: string; email: string; phoneNumber: string } | null>(null);
+  const [affiliator, setAffiliator] = useState<{ name: string; email: string; phoneNumber: string; avatarId?: string; } | null>(null);
   const [affiliatorLoading, setAffiliatorLoading] = useState(true);
 
   // New states for the change referral code modal
@@ -43,6 +43,14 @@ function Profile() {
   const [newReferralCode, setNewReferralCode] = useState('');
   const [changeCodeLoading, setChangeCodeLoading] = useState(false);
   const [changeCodeFeedback, setChangeCodeFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+
+  // New states for the affiliator info modal
+  const [showAffiliatorModal, setShowAffiliatorModal] = useState(false);
+  const [affiliatorModalContent, setAffiliatorModalContent] = useState<string | null>(null);
+
+  // New states for the generic info/confirmation modal
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm'; message: string; onConfirm?: () => void } | null>(null);
 
   const referralLink = user?.referralCode ? `${window.location.origin}/signup?affiliationCode=${user.referralCode}` : '';
 
@@ -62,7 +70,7 @@ function Profile() {
         setAffiliatorLoading(true);
         const affiliatorResponse = await sbcApiService.getMyAffiliator();
         const affiliatorResult = handleApiResponse(affiliatorResponse);
-        setAffiliator(affiliatorResult.affiliator);
+        setAffiliator(affiliatorResult);
       } catch (error) {
         console.warn('Error fetching affiliator info (might not have one):', error);
         setAffiliator(null);
@@ -95,17 +103,46 @@ function Profile() {
   };
 
   const handleLogout = async () => {
-    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-      setLoading(true);
-      try {
-        await logout();
-        navigate('/connexion');
-      } catch (error) {
-        console.error('Logout failed:', error);
-      } finally {
-        setLoading(false);
+    setModalContent({
+      type: 'confirm',
+      message: 'Êtes-vous sûr de vouloir vous déconnecter ?',
+      onConfirm: async () => {
+        setLoading(true);
+        try {
+          await logout();
+          navigate('/connexion');
+        } catch (error) {
+          console.error('Logout failed:', error);
+          setModalContent({ type: 'error', message: 'Échec de la déconnexion.' });
+          setShowModal(true);
+        } finally {
+          setLoading(false);
+        }
       }
+    });
+    setShowModal(true);
+  };
+
+  const handleOpenAffiliatorModal = () => {
+    if (affiliatorLoading) {
+      setAffiliatorModalContent("Chargement des informations du parrain...");
+    } else if (affiliator) {
+      const avatarUrl = affiliator.avatarId
+        ? sbcApiService.generateSettingsFileUrl(affiliator.avatarId)
+        : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360';
+
+      setAffiliatorModalContent(`
+        <div class="flex flex-col items-center justify-center p-4">
+          <img src="${avatarUrl}" alt="avatar" class="w-20 h-20 rounded-full object-cover mb-4 border-2 border-gray-200"/>
+          <p class="text-lg font-bold mb-1">${affiliator.name}</p>
+          <p class="text-sm text-gray-600 mb-1">Email: ${affiliator.email}</p>
+          <p class="text-sm text-gray-600">WhatsApp: ${affiliator.phoneNumber}</p>
+        </div>
+      `);
+    } else {
+      setAffiliatorModalContent("Vous n'avez pas de parrain ou les informations ne sont pas disponibles.");
     }
+    setShowAffiliatorModal(true);
   };
 
   const handleNavigation = (to: string, external?: boolean) => {
@@ -120,13 +157,7 @@ function Profile() {
       document.body.removeChild(link);
     } else {
       if (to === '/parrain') {
-        if (affiliatorLoading) {
-          alert("Chargement des informations du parrain...");
-        } else if (affiliator) {
-          alert(`Votre parrain: ${affiliator.name}\nEmail: ${affiliator.email}\nWhatsApp: ${affiliator.phoneNumber}`);
-        } else {
-          alert("Vous n'avez pas de parrain ou les informations ne sont pas disponibles.");
-        }
+        handleOpenAffiliatorModal();
       } else {
         navigate(to);
       }
@@ -368,6 +399,102 @@ function Profile() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* New: Affiliator Info Modal */}
+        <AnimatePresence>
+          {showAffiliatorModal && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', bounce: 0.2 }}
+              >
+                <h4 className="text-lg font-bold mb-4 text-center">Informations sur le parrain</h4>
+                <div className="text-sm text-gray-700 mb-4"
+                  dangerouslySetInnerHTML={{ __html: affiliatorModalContent || '' }}
+                >
+                </div>
+                <div className="flex gap-3 mt-2">
+                  <button
+                    type="button"
+                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                    onClick={() => {
+                      setShowAffiliatorModal(false);
+                      setAffiliatorModalContent(null);
+                    }}
+                  >
+                    Fermer
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* New: Generic Info/Confirmation Modal */}
+        {showModal && modalContent && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', bounce: 0.2 }}
+            >
+              <h4 className={`text-lg font-bold mb-4 text-center ${modalContent.type === 'success' ? 'text-green-600' :
+                modalContent.type === 'error' ? 'text-red-600' : 'text-gray-800'
+                }`}>
+                {modalContent.type === 'success' ? 'Succès' :
+                  modalContent.type === 'error' ? 'Erreur' : 'Confirmation'}
+              </h4>
+              <p className="text-sm text-gray-700 text-center mb-4"
+                dangerouslySetInnerHTML={{ __html: modalContent.message || '' }}
+              />
+              {modalContent.type === 'confirm' ? (
+                <div className="flex gap-3 mt-2">
+                  <button
+                    type="button"
+                    className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                    onClick={() => {
+                      modalContent.onConfirm?.();
+                      setShowModal(false);
+                    }}
+                  >
+                    Confirmer
+                  </button>
+                  <button
+                    type="button"
+                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                    onClick={() => setShowModal(false)}
+                  >
+                    Annuler
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                  onClick={() => setShowModal(false)}
+                >
+                  Fermer
+                </button>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
+
       </div>
     </ProtectedRoute>
   );

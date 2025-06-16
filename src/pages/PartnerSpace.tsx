@@ -11,8 +11,8 @@ function formatFCFA(amount: number) {
 }
 
 type PartnerTransaction = {
-  id: string;
-  type: string;
+  _id: string;
+  transType: string;
   amount: number;
   createdAt: string;
 };
@@ -68,10 +68,10 @@ const PartnerSpace = () => {
             <>
               <div className="flex-1">
                 <div className="text-lg font-semibold text-gray-700 mb-1">{partnerData.name || 'Partenaire'}</div>
-                <div className="text-gray-500 mb-1">Email: {partnerData.email}</div>
-                <div className="text-gray-500 mb-1">Téléphone: {partnerData.phoneNumber}</div>
-                <div className="text-gray-500 mb-1">Statut: <span className="font-medium text-green-600">{partnerData.status || 'Actif'}</span></div>
-                <div className="text-gray-700 mt-2 font-bold">Solde: {formatFCFA(partnerData.balance || 0)}</div>
+                <div className="text-gray-500 mb-1">Email: {partnerData.email || 'N/A'}</div>
+                <div className="text-gray-500 mb-1">Téléphone: {partnerData.phoneNumber || 'N/A'}</div>
+                <div className="text-gray-500 mb-1">Statut: <span className="font-medium text-green-600">{partnerData.isActive ? 'Actif' : 'Inactif'}</span></div>
+                <div className="text-gray-700 mt-2 font-bold">Solde: {formatFCFA(partnerData.amount || 0)}</div>
               </div>
               {partnerData.avatarId && (
                 <img src={sbcApiService.generateSettingsFileUrl(partnerData.avatarId)} alt="avatar" className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg" />
@@ -90,15 +90,15 @@ const PartnerSpace = () => {
             </div>
           ) : errorTx ? (
             <div className="text-red-500">Erreur: {String(errorTx)}</div>
-          ) : transactionsData && transactionsData.transactions && transactionsData.transactions.length > 0 ? (
+          ) : transactionsData && transactionsData.data && transactionsData.data.length > 0 ? (
             <ul className="divide-y divide-gray-100">
-              {transactionsData.transactions.slice(0, 5).map((tx: PartnerTransaction) => (
-                <li key={tx.id} className="py-3 flex items-center justify-between">
+              {transactionsData.data.slice(0, 5).map((tx: PartnerTransaction) => (
+                <li key={tx._id} className="py-3 flex items-center justify-between">
                   <div>
-                    <div className="font-medium text-gray-800">{tx.type}</div>
+                    <div className="font-medium text-gray-800">{tx.transType}</div>
                     <div className="text-xs text-gray-500">{new Date(tx.createdAt).toLocaleString('fr-FR')}</div>
                   </div>
-                  <div className="font-bold text-right {tx.amount >= 0 ? 'text-green-600' : 'text-red-600'}">
+                  <div className={`font-bold text-right ${tx.transType === 'deposit' ? 'text-green-600' : 'text-red-600'}`}>
                     {formatFCFA(tx.amount)}
                   </div>
                 </li>

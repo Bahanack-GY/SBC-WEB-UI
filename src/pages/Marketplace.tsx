@@ -87,7 +87,7 @@ function Marketplace() {
         if (data?.products) {
             // Filter out duplicates using the loadedItemIds Set
             const newItems = data.products.filter(item => !loadedItemIds.has(item._id));
-            
+
             // Add new item IDs to the Set
             const newIds = new Set(newItems.map(item => item._id));
             setLoadedItemIds(prev => new Set([...prev, ...newIds]));
@@ -154,7 +154,7 @@ function Marketplace() {
             const windowHeight = window.innerHeight;
             const docHeight = document.body.scrollHeight;
             const scrollPercent = (scrollY + windowHeight) / docHeight;
-            
+
             if (scrollPercent > 0.7 && !isFetchingMore) {
                 setIsFetchingMore(true);
                 setPage(prev => prev + 1);

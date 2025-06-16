@@ -46,6 +46,8 @@ function ModifierProduit() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
     useEffect(() => {
         const fetchProduct = async () => {
@@ -105,8 +107,9 @@ function ModifierProduit() {
             const validFiles: File[] = [];
 
             uploadedFiles.forEach(file => {
-                if (file.size > 5 * 1024 * 1024) { // 5 MB in bytes
-                    alert(`L'image "${file.name}" dépasse la taille maximale autorisée de 5 Mo et ne sera pas ajoutée.`);
+                if (file.size > 10 * 1024 * 1024) { // 10 MB in bytes
+                    setModalContent({ type: 'error', message: `L'image "${file.name}" dépasse la taille maximale autorisée de 10 Mo et ne sera pas ajoutée.` });
+                    setShowModal(true);
                 } else {
                     validFiles.push(file);
                 }
@@ -371,6 +374,36 @@ function ModifierProduit() {
                     </form>
                 </motion.div>
             </div>
+            {showModal && modalContent && (
+                <motion.div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        transition={{ type: 'spring', bounce: 0.2 }}
+                    >
+                        <h4 className={`text-lg font-bold mb-4 text-center ${modalContent.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                            {modalContent.type === 'success' ? 'Succès' : 'Erreur'}
+                        </h4>
+                        <p className="text-sm text-gray-700 text-center mb-4">
+                            {modalContent.message}
+                        </p>
+                        <button
+                            type="button"
+                            className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                            onClick={() => setShowModal(false)}
+                        >
+                            Fermer
+                        </button>
+                    </motion.div>
+                </motion.div>
+            )}
         </ProtectedRoute>
     );
 }

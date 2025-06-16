@@ -163,6 +163,8 @@ function ModifierLeProfil() {
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [displayedInterests, setDisplayedInterests] = useState<string[]>(predefinedInterestOptions);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   useEffect(() => {
     if (user) {
@@ -253,8 +255,17 @@ function ModifierLeProfil() {
   };
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files && e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5 MB in bytes
+        setModalContent({ type: 'error', message: `L'image "${file.name}" dépasse la taille maximale autorisée de 5 Mo et ne sera pas ajoutée.` });
+        setShowModal(true);
+        if (fileInputRef.current) {
+          fileInputRef.current.value = ''; // Clear the input field
+        }
+        return;
+      }
+
       setAvatarUploading(true);
       setFeedback(null);
       try {
@@ -463,15 +474,48 @@ function ModifierLeProfil() {
                 {feedback.message}
               </div>
             )}
-            <button
-              type="submit"
-              className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
-              disabled={loading || avatarUploading}
-            >
-              {loading ? <FiLoader className="animate-spin" /> : <FiSave />}
-              {loading ? 'Sauvegarde...' : 'Sauvegarder'}
-            </button>
+            <footer className="px-4 py-4 mt-6">
+              <button
+                onClick={handleSave}
+                disabled={loading || avatarUploading}
+                className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
+              >
+                {loading ? <FiLoader className="animate-spin" /> : <FiSave />}
+                {loading ? 'Sauvegarde...' : 'Sauvegarder'}
+              </button>
+            </footer>
           </form>
+
+          {showModal && modalContent && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: 'spring', bounce: 0.2 }}
+              >
+                <h4 className={`text-lg font-bold mb-4 text-center ${modalContent.type === 'success' ? 'text-green-600' : 'text-red-600'}`}>
+                  {modalContent.type === 'success' ? 'Succès' : 'Erreur'}
+                </h4>
+                <p className="text-sm text-gray-700 text-center mb-4">
+                  {modalContent.message}
+                </p>
+                <button
+                  type="button"
+                  className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                  onClick={() => setShowModal(false)}
+                >
+                  Fermer
+                </button>
+              </motion.div>
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </ProtectedRoute>

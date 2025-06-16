@@ -197,6 +197,8 @@ function Wallet() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [showModal, setShowModal] = useState(false);
+  const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
 
   const openModal = (tx: Transaction) => {
     setSelectedTx(tx);
@@ -213,7 +215,8 @@ function Wallet() {
         navigator.share({ text: shareText });
       } else {
         navigator.clipboard.writeText(shareText);
-        alert('Transaction copiée dans le presse-papier !');
+        setModalContent({ type: 'success', message: 'Transaction copiée dans le presse-papier !' });
+        setShowModal(true);
       }
     }
   };
@@ -245,7 +248,8 @@ function Wallet() {
         if (data && response.isOverallSuccess) {
           // Handle success based on status from API response
           if (data.status === 'pending_otp_verification' && data.transactionId) {
-            alert(data.message || 'Demande de retrait initiée. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.');
+            setModalContent({ type: 'success', message: data.message || 'Demande de retrait initiée. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.' });
+            setShowModal(true);
             navigate('/otp', {
               state: {
                 fromWithdrawal: true,
@@ -259,7 +263,8 @@ function Wallet() {
             refreshUser(); // Refresh user context if needed for balance update or other state
           } else if (data.status === 'processing') {
             // New: Navigate directly to TransactionConfirmation page for PROCESSING status
-            alert(data.message || 'Retrait initié et en cours de traitement. Votre solde sera mis à jour une fois le transfert confirmé.');
+            setModalContent({ type: 'success', message: data.message || 'Retrait initié et en cours de traitement. Votre solde sera mis à jour une fois le transfert confirmé.' });
+            setShowModal(true);
             navigate('/transaction-confirmation', {
               state: {
                 transactionId: data.transactionId,
@@ -272,16 +277,19 @@ function Wallet() {
             refreshUser(); // Refresh user context to reflect potential balance changes
           } else if (data.status === 'pending') {
             // This covers a soft lock scenario where the status is 'pending' and no OTP is re-sent or needed at this point
-            alert(data.message || 'Vous avez une demande de retrait en cours. Veuillez la compléter ou l\'annuler avant d\'en initier une nouvelle.');
+            setModalContent({ type: 'error', message: data.message || 'Vous avez une demande de retrait en cours. Veuillez la compléter ou l\'annuler avant d\'en initier une nouvelle.' });
+            setShowModal(true);
             setWithdrawAmount('');
             setShowWithdrawForm(false);
             refreshUser(); // Refresh in case the existing transaction details are updated
           } else {
-            alert(data.message || 'Une erreur inattendue est survenue lors de l\'initiation du retrait. Veuillez réessayer.');
+            setModalContent({ type: 'error', message: data.message || 'Une erreur inattendue est survenue lors de l\'initiation du retrait. Veuillez réessayer.' });
+            setShowModal(true);
           }
         } else {
           // This block is for cases where handleApiResponse doesn't throw but response.isOverallSuccess is false
-          alert(data.message || 'Échec de l\'initiation du retrait.');
+          setModalContent({ type: 'error', message: data.message || 'Échec de l\'initiation du retrait.' });
+          setShowModal(true);
         }
 
       } catch (err) {
@@ -295,21 +303,27 @@ function Wallet() {
 
         // Specific error handling based on API messages
         if (errorMessage.includes("Your account does not have registered Mobile Money details")) {
-          alert("Votre profil n'a pas de détails Mobile Money enregistrés. Veuillez mettre à jour votre profil pour ajouter votre numéro et opérateur MoMo.");
+          setModalContent({ type: 'error', message: "Votre profil n'a pas de détails Mobile Money enregistrés. Veuillez mettre à jour votre profil pour ajouter votre numéro et opérateur MoMo." });
+          setShowModal(true);
           navigate('/modifier-le-profil'); // Direct user to update profile
         } else if (errorMessage.includes("You have reached your daily limit")) {
-          alert(errorMessage);
+          setModalContent({ type: 'error', message: errorMessage });
+          setShowModal(true);
         } else if (errorMessage.includes("Insufficient balance")) {
-          alert(errorMessage);
+          setModalContent({ type: 'error', message: errorMessage });
+          setShowModal(true);
         } else if (errorMessage.includes("ongoing withdrawal request")) {
-          alert(errorMessage); // Soft lock message, already handled in success but duplicated for safety
+          setModalContent({ type: 'error', message: errorMessage }); // Soft lock message, already handled in success but duplicated for safety
+          setShowModal(true);
         } else {
-          alert(errorMessage);
+          setModalContent({ type: 'error', message: errorMessage });
+          setShowModal(true);
         }
 
       }
     } else {
-      alert("Veuillez entrer un montant de retrait valide.");
+      setModalContent({ type: 'error', message: "Veuillez entrer un montant de retrait valide." });
+      setShowModal(true);
     }
   };
 
@@ -804,6 +818,63 @@ function Wallet() {
                 </motion.div>
               )}
             </AnimatePresence>
+
+            {/* New: Generic Info/Confirmation Modal */}
+            {showModal && modalContent && (
+              <motion.div
+                className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <motion.div
+                  className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                  initial={{ scale: 0.9, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.9, opacity: 0 }}
+                  transition={{ type: 'spring', bounce: 0.2 }}
+                >
+                  <h4 className={`text-lg font-bold mb-4 text-center ${modalContent.type === 'success' ? 'text-green-600' :
+                      modalContent.type === 'error' ? 'text-red-600' : 'text-gray-800'
+                    }`}>
+                    {modalContent.type === 'success' ? 'Succès' :
+                      modalContent.type === 'error' ? 'Erreur' : 'Confirmation'}
+                  </h4>
+                  <p className="text-sm text-gray-700 text-center mb-4">
+                    {modalContent.message}
+                  </p>
+                  {modalContent.type === 'confirm' ? (
+                    <div className="flex gap-3 mt-2">
+                      <button
+                        type="button"
+                        className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                        onClick={() => {
+                          modalContent.onConfirm?.();
+                          setShowModal(false);
+                        }}
+                      >
+                        Confirmer
+                      </button>
+                      <button
+                        type="button"
+                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                        onClick={() => setShowModal(false)}
+                      >
+                        Annuler
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                      onClick={() => setShowModal(false)}
+                    >
+                      Fermer
+                    </button>
+                  )}
+                </motion.div>
+              </motion.div>
+            )}
           </>
         )}
         <TourButton />

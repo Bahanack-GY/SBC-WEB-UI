@@ -9,6 +9,7 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import type { Product } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import { motion } from 'framer-motion';
 
 function MesProduits() {
     const navigate = useNavigate();
@@ -16,6 +17,8 @@ function MesProduits() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string>('');
     const [deleting, setDeleting] = useState<string | null>(null);
+    const [showModal, setShowModal] = useState(false);
+    const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
 
     useEffect(() => {
         fetchUserProducts();
@@ -40,24 +43,29 @@ function MesProduits() {
     };
 
     const handleDelete = async (productId: string) => {
-        if (!confirm('Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.')) {
-            return;
-        }
+        setModalContent({
+            type: 'confirm',
+            message: 'Êtes-vous sûr de vouloir supprimer ce produit ? Cette action est irréversible.',
+            onConfirm: async () => {
+                try {
+                    setDeleting(productId);
+                    const response = await sbcApiService.deleteProduct(productId);
+                    handleApiResponse(response); // This will throw an error if API reports failure
 
-        try {
-            setDeleting(productId);
-            const response = await sbcApiService.deleteProduct(productId);
-            handleApiResponse(response); // This will throw an error if API reports failure
-
-            // If successful, remove product from local state
-            setProducts(products.filter(p => p._id !== productId));
-            alert('Produit supprimé avec succès!'); // Success feedback
-        } catch (err) {
-            console.error("Failed to delete product:", err);
-            alert(err instanceof Error ? `Échec de la suppression: ${err.message}` : 'Échec de la suppression du produit.'); // Error feedback
-        } finally {
-            setDeleting(null);
-        }
+                    // If successful, remove product from local state
+                    setProducts(products.filter(p => p._id !== productId));
+                    setModalContent({ type: 'success', message: 'Produit supprimé avec succès!' }); // Success feedback
+                    setShowModal(true);
+                } catch (err) {
+                    console.error("Failed to delete product:", err);
+                    setModalContent({ type: 'error', message: err instanceof Error ? `Échec de la suppression: ${err.message}` : 'Échec de la suppression du produit.' }); // Error feedback
+                    setShowModal(true);
+                } finally {
+                    setDeleting(null);
+                }
+            }
+        });
+        setShowModal(true);
     };
 
     const handleRefresh = () => {
@@ -143,6 +151,62 @@ function MesProduits() {
                     </div>
                 )}
             </div>
+
+            {showModal && modalContent && (
+                <motion.div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                >
+                    <motion.div
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0.9, opacity: 0 }}
+                        transition={{ type: 'spring', bounce: 0.2 }}
+                    >
+                        <h4 className={`text-lg font-bold mb-4 text-center ${modalContent.type === 'success' ? 'text-green-600' :
+                                modalContent.type === 'error' ? 'text-red-600' : 'text-gray-800'
+                            }`}>
+                            {modalContent.type === 'success' ? 'Succès' :
+                                modalContent.type === 'error' ? 'Erreur' : 'Confirmation'}
+                        </h4>
+                        <p className="text-sm text-gray-700 text-center mb-4">
+                            {modalContent.message}
+                        </p>
+                        {modalContent.type === 'confirm' ? (
+                            <div className="flex gap-3 mt-2">
+                                <button
+                                    type="button"
+                                    className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                                    onClick={() => {
+                                        modalContent.onConfirm?.();
+                                        setShowModal(false);
+                                    }}
+                                >
+                                    Confirmer
+                                </button>
+                                <button
+                                    type="button"
+                                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                    onClick={() => setShowModal(false)}
+                                >
+                                    Annuler
+                                </button>
+                            </div>
+                        ) : (
+                            <button
+                                type="button"
+                                className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                                onClick={() => setShowModal(false)}
+                            >
+                                Fermer
+                            </button>
+                        )}
+                    </motion.div>
+                </motion.div>
+            )}
         </ProtectedRoute>
     );
 }
