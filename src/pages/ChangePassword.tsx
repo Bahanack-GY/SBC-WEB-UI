@@ -23,7 +23,7 @@ function ChangePassword() {
         setLoading(true);
 
         try {
-            const response = await sbcApiService.requestPasswordResetOtp(user.email);
+            await sbcApiService.requestPasswordResetOtp(user.email);
             // Note: handleApiResponse is not used here because the API always returns success for security
 
             setModalContent({
@@ -115,8 +115,8 @@ function ChangePassword() {
                         <button
                             type="button"
                             className={`w-full ${modalContent.type === 'success'
-                                    ? 'bg-green-500 hover:bg-green-600'
-                                    : 'bg-red-500 hover:bg-red-600'
+                                ? 'bg-green-500 hover:bg-green-600'
+                                : 'bg-red-500 hover:bg-red-600'
                                 } text-white rounded-xl py-2 font-bold shadow transition-colors`}
                             onClick={() => setShowModal(false)}
                         >
