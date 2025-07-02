@@ -28,8 +28,6 @@ import VerifyOtp from './pages/VerifyOtp'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmailOtp from './pages/VerifyEmailOtp'
 import ChangeEmail from './pages/ChangeEmail'
-import ChangePasswordOtp from './pages/ChangePasswordOtp'
-import ChangePasswordNew from './pages/ChangePasswordNew'
 import PartnerSpace from './pages/PartnerSpace'
 import { useQuery } from '@tanstack/react-query'
 import { handleApiResponse } from './utils/apiHelpers'
@@ -70,14 +68,14 @@ function AppContent() {
   });
 
   // Determine if user is subscribed
-    const user = isAuthenticated && JSON.parse(localStorage.getItem('user') || 'null');
-    const isSubscribed = !!(
-      (user?.activeSubscriptions && user.activeSubscriptions.length > 0) ||
-      (subscriptionData && subscriptionData.status === 'active') ||
-      (typeof subscriptionData?.totalCount === 'number' && subscriptionData.totalCount > 0)
-    );
-console.log("subscriptionData", subscriptionData);
-console.log("subscriptionData.status", subscriptionData?.totalCount);
+  const user = isAuthenticated && JSON.parse(localStorage.getItem('user') || 'null');
+  const isSubscribed = !!(
+    (user?.activeSubscriptions && user.activeSubscriptions.length > 0) ||
+    (subscriptionData && subscriptionData.status === 'active') ||
+    (typeof subscriptionData?.totalCount === 'number' && subscriptionData.totalCount > 0)
+  );
+  console.log("subscriptionData", subscriptionData);
+  console.log("subscriptionData.status", subscriptionData?.totalCount);
   console.log("isSubscribed", isSubscribed);
 
   useEffect(() => {
@@ -136,7 +134,7 @@ console.log("subscriptionData.status", subscriptionData?.totalCount);
   // Logout button for unsubscribed users
   const showLogout = isAuthenticated && !isSubscribed;
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/changer-mot-de-passe-otp' || location.pathname === '/changer-mot-de-passe-nouveau' || location.pathname === '/changer-mot-de-passe';
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/changer-mot-de-passe';
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -174,8 +172,6 @@ console.log("subscriptionData.status", subscriptionData?.totalCount);
         <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/modifier-email" element={<ChangeEmail />} />
-        <Route path="/changer-mot-de-passe-otp" element={<ChangePasswordOtp />} />
-        <Route path="/changer-mot-de-passe-nouveau" element={<ChangePasswordNew />} />
         <Route path="/partenaire" element={<PartnerSpace />} />
       </Routes>
       {!hideNav && <NavigationBar />}

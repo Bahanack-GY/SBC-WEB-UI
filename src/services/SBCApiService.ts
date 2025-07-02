@@ -162,11 +162,21 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * Verify password reset OTP
+   */
+  async verifyPasswordResetOtp(email: string, otpCode: string): Promise<ApiResponse> {
+    return await this.post('/users/verify-password-reset-otp', {
+      body: { email, otpCode },
+      requiresAuth: false
+    });
+  }
+
+  /**
    * Reset password
    */
-  async resetPassword(email: string, otp: string, newPassword: string): Promise<ApiResponse> {
+  async resetPassword(email: string, passwordResetToken: string, newPassword: string): Promise<ApiResponse> {
     return await this.post('/users/reset-password', {
-      body: { email, otpCode: otp, newPassword },
+      body: { email, passwordResetToken, newPassword },
       requiresAuth: false
     });
   }

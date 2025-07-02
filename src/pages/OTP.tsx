@@ -66,8 +66,18 @@ function OTP() {
     setError('');
 
     try {
-      if (flow === 'passwordReset') { // Correctly handle password reset flow: just navigate
-        navigate('/reset-password', { state: { email: currentEmail, otpCode: otpCode } });
+      if (flow === 'passwordReset') { // Handle password reset flow: verify OTP and get reset token
+        const response = await sbcApiService.verifyPasswordResetOtp(currentEmail, otpCode);
+        const result = handleApiResponse(response);
+
+        // Store the password reset token and navigate to reset password page
+        const passwordResetToken = result.passwordResetToken;
+        navigate('/reset-password', {
+          state: {
+            email: currentEmail,
+            passwordResetToken: passwordResetToken
+          }
+        });
       } else if (withdrawalId) { // Existing withdrawal flow
         const response = await sbcApiService.verifyWithdrawal({
           transactionId: withdrawalId,
