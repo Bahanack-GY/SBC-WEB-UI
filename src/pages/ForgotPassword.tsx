@@ -2,7 +2,6 @@ import { FiLock, FiHelpCircle } from 'react-icons/fi';
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { sbcApiService } from '../services/SBCApiService';
-import { handleApiResponse } from '../utils/apiHelpers';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 
