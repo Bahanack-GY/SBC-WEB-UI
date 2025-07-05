@@ -26,13 +26,12 @@ function ForgotPassword() {
         setLoading(true);
 
         try {
-            const response = await sbcApiService.requestPasswordResetOtp(email);
-            handleApiResponse(response);
+            await sbcApiService.requestPasswordResetOtp(email);
+            // Note: handleApiResponse is not used here because the API always returns success for security
 
-            // Show success message
             setModalContent({
                 type: 'success',
-                message: 'Si votre email est enregistré, un code de vérification a été envoyé. Veuillez vérifier votre boîte mail.'
+                message: 'Un code de vérification a été envoyé à votre email.'
             });
             setShowModal(true);
 
@@ -48,7 +47,7 @@ function ForgotPassword() {
 
         } catch (error) {
             console.error('Password reset request error:', error);
-            const errorMessage = error instanceof Error ? error.message : "Erreur lors de l'envoi du code.";
+            const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'envoi du code OTP.';
             setModalContent({
                 type: 'error',
                 message: errorMessage

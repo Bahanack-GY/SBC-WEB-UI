@@ -58,6 +58,10 @@ const westAfricanCountries = [
     { name: 'Sénégal', flag: 'SN' },
     { name: 'Sierra Leone', flag: 'SL' },
     { name: 'Togo', flag: 'TG' },
+    { name: 'Congo-Brazzaville', flag: 'CG' },
+    { name: 'Gabon', flag: 'GA' },
+    { name: 'Congo-Kinshasa', flag: 'CD' },
+    { name: 'Kenya', flag: 'KE' },
 ];
 
 interface Criteria {

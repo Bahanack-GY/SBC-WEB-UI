@@ -86,6 +86,11 @@ const countryOptions = [
   { value: 'Sénégal', label: '🇸🇳 Sénégal', code: '+221' },
   { value: 'Togo', label: '🇹🇬 Togo', code: '+228' },
   { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: '+226' },
+  { value: 'Mali', label: '🇲🇱 Mali', code: '+223' },
+  { value: 'Niger', label: '🇳🇪 Niger', code: '+227' },
+  { value: 'Guinée', label: '🇬🇳 Guinée', code: '+224' },
+  { value: 'Gabon', label: '🇬🇦 Gabon', code: '+241' },
+  { value: 'Kenya', label: '🇰🇪 Kenya', code: '+254' },
 ];
 
 const professionOptions = [
@@ -123,10 +128,15 @@ const countryCodes = [
   { value: 'Congo-Brazzaville', label: '🇨🇬 +242', code: '+242' },
   { value: 'Congo-Kinshasa', label: '🇨🇩 +243', code: '+243' },
   { value: 'Ghana', label: '🇬🇭 +233', code: '+233' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: '+225' },
-  { value: 'Sénégal', label: '🇸🇳 Sénégal', code: '+221' },
-  { value: 'Togo', label: '🇹🇬 Togo', code: '+228' },
-  { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: '+226' },
+  { value: 'Côte d\'Ivoire', label: '🇨🇮 +225', code: '+225' },
+  { value: 'Sénégal', label: '🇸🇳 +221', code: '+221' },
+  { value: 'Togo', label: '🇹🇬 +228', code: '+228' },
+  { value: 'Burkina Faso', label: '🇧🇫 +226', code: '+226' },
+  { value: 'Mali', label: '🇲🇱 +223', code: '+223' },
+  { value: 'Niger', label: '🇳🇪 +227', code: '+227' },
+  { value: 'Guinée', label: '🇬🇳 +224', code: '+224' },
+  { value: 'Gabon', label: '🇬🇦 +241', code: '+241' },
+  { value: 'Kenya', label: '🇰🇪 +254', code: '+254' },
 ];
 
 const DEBOUNCE_DELAY = 3000;

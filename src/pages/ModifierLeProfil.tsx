@@ -17,6 +17,11 @@ export const countryOptions = [
   { value: 'Sénégal', label: '🇸🇳 Sénégal', code: 'SN' },
   { value: 'Togo', label: '🇹🇬 Togo', code: 'TG' },
   { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: 'BF' },
+  { value: 'Mali', label: '🇲🇱 Mali', code: 'ML' },
+  { value: 'Niger', label: '🇳🇪 Niger', code: 'NE' },
+  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN' },
+  { value: 'Gabon', label: '🇬🇦 Gabon', code: 'GA' },
+  { value: 'Kenya', label: '🇰🇪 Kenya', code: 'KE' },
 ];
 export const professionOptions = [
   'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
@@ -58,6 +63,11 @@ const countryCodes = [
   { value: 'Sénégal', label: '🇸🇳 +221', code: '221' },
   { value: 'Togo', label: '🇹🇬 +228', code: '228' },
   { value: 'Burkina Faso', label: '🇧🇫 +226', code: '226' },
+  { value: 'Mali', label: '🇲🇱 +223', code: '223' },
+  { value: 'Niger', label: '🇳🇪 +227', code: '227' },
+  { value: 'Guinée', label: '🇬🇳 +224', code: '224' },
+  { value: 'Gabon', label: '🇬🇦 +241', code: '241' },
+  { value: 'Kenya', label: '🇰🇪 +254', code: '254' },
 ];
 
 // New: Define interfaces for the correspondents object structure
@@ -112,6 +122,18 @@ export const correspondents: CorrespondentsMap = {
     'operators': ['MTN_MOMO_CIV', 'ORANGE_CIV'], // Côte d'Ivoire
     'currencies': ['XOF']
   },
+  'ML': {
+    'operators': ['ORANGE_MLI', 'MOOV_MLI'], // Mali
+    'currencies': ['XOF']
+  },
+  'NE': {
+    'operators': ['ORANGE_NER', 'MOOV_NER'], // Niger
+    'currencies': ['XOF']
+  },
+  'GH': {
+    'operators': ['MTN_MOMO_GHA', 'VODAFONE_GHA'], // Ghana
+    'currencies': ['GHS']
+  },
 };
 
 // New: Helper function to map operator values to display labels
@@ -136,6 +158,12 @@ const getMomoOperatorDisplayName = (operatorValue: string) => {
     case 'AIRTEL_GAB': return 'Airtel Gabon';
     case 'MTN_MOMO_CIV': return 'MTN MoMo Côte d\'Ivoire';
     case 'ORANGE_CIV': return 'Orange Money Côte d\'Ivoire';
+    case 'ORANGE_MLI': return 'Orange Money Mali';
+    case 'MOOV_MLI': return 'Moov Mali';
+    case 'ORANGE_NER': return 'Orange Money Niger';
+    case 'MOOV_NER': return 'Moov Niger';
+    case 'MTN_MOMO_GHA': return 'MTN MoMo Ghana';
+    case 'VODAFONE_GHA': return 'Vodafone Ghana';
     default: return operatorValue.replace(/_/g, ' '); // Fallback for new operators
   }
 };

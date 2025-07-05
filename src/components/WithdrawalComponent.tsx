@@ -20,7 +20,12 @@ const countryOperators: CountryOperator[] = [
   { country: 'Mali', countryCode: '223', currency: 'XOF', operators: ['ORANGE', 'MOOV'], minAmount: 500 },
   { country: 'Burkina Faso', countryCode: '226', currency: 'XOF', operators: ['ORANGE', 'MOOV'], minAmount: 500 },
   { country: 'Guinea', countryCode: '224', currency: 'GNF', operators: ['ORANGE', 'MTN'], minAmount: 1000 },
-  { country: 'Congo (RDC)', countryCode: '243', currency: 'CDF', operators: ['ORANGE', 'MPESA', 'AIRTEL'], minAmount: 1000 }
+  { country: 'Congo (RDC)', countryCode: '243', currency: 'CDF', operators: ['ORANGE', 'MPESA', 'AIRTEL'], minAmount: 1000 },
+  { country: 'Niger', countryCode: '227', currency: 'XOF', operators: ['ORANGE', 'MOOV'], minAmount: 500 },
+  { country: 'Congo (Brazzaville)', countryCode: '242', currency: 'XAF', operators: ['AIRTEL', 'MTN'], minAmount: 500 },
+  { country: 'Gabon', countryCode: '241', currency: 'XAF', operators: ['AIRTEL'], minAmount: 500 },
+  { country: 'Kenya', countryCode: '254', currency: 'KES', operators: ['MPESA'], minAmount: 100 },
+  { country: 'Ghana', countryCode: '233', currency: 'GHS', operators: ['MTN', 'VODAFONE'], minAmount: 10 }
 ];
 
 const WithdrawalComponent: React.FC = () => {
@@ -44,7 +49,7 @@ const WithdrawalComponent: React.FC = () => {
   useEffect(() => {
     // Auto-detect country from phone number
     if (momoNumber.length >= 3) {
-      const detected = countryOperators.find(country => 
+      const detected = countryOperators.find(country =>
         momoNumber.startsWith(country.countryCode)
       );
       setDetectedCountry(detected || null);
@@ -76,10 +81,10 @@ const WithdrawalComponent: React.FC = () => {
     try {
       const response = await sbcApiService.updateMomoDetails(momoNumber, momoOperator);
       handleApiResponse(response);
-      
+
       // Update local user context
       await updateProfile({ momoNumber, momoOperator });
-      
+
       setSuccess('Mobile money details updated successfully!');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to update mobile money details');
@@ -142,7 +147,7 @@ const WithdrawalComponent: React.FC = () => {
       {/* Mobile Money Configuration */}
       <div className="mb-6">
         <h4 className="text-lg font-semibold mb-4">Configure Mobile Money Details</h4>
-        
+
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -208,7 +213,7 @@ const WithdrawalComponent: React.FC = () => {
       {/* Withdrawal Form */}
       <div className="mb-6">
         <h4 className="text-lg font-semibold mb-4">Withdraw Funds</h4>
-        
+
         <form onSubmit={handleWithdrawal} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
