@@ -197,8 +197,20 @@ function Wallet() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
   const [withdrawAmount, setWithdrawAmount] = useState('');
+  const [withdrawalFee, setWithdrawalFee] = useState(0);
+  const [totalDeduction, setTotalDeduction] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
+
+  // Calculate withdrawal fee and total deduction in real-time
+  useEffect(() => {
+    const amount = Number(withdrawAmount) || 0;
+    const fee = amount * 0.025; // 2.5% fee
+    const total = amount + fee;
+
+    setWithdrawalFee(fee);
+    setTotalDeduction(total);
+  }, [withdrawAmount]);
 
   const openModal = (tx: Transaction) => {
     setSelectedTx(tx);
@@ -221,11 +233,28 @@ function Wallet() {
     }
   };
   const handleWithdraw = () => {
-    setShowWithdrawForm((v) => !v);
+    setShowWithdrawForm((v) => {
+      // Clear form data when closing
+      if (v) {
+        setWithdrawAmount('');
+        setWithdrawalFee(0);
+        setTotalDeduction(0);
+      }
+      return !v;
+    });
   };
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (withdrawAmount && Number(withdrawAmount) > 0) {
+      // Check if user has sufficient balance including the fee
+      if (balance < totalDeduction) {
+        setModalContent({
+          type: 'error',
+          message: `Solde insuffisant. Vous avez ${balance.toLocaleString('fr-FR')} F mais il faut ${totalDeduction.toLocaleString('fr-FR')} F (montant + frais de 2.5%).`
+        });
+        setShowModal(true);
+        return;
+      }
       try {
         // Determine currency based on user's country
         const userCountryName = user?.country; // e.g., 'Cameroun'
@@ -239,6 +268,7 @@ function Wallet() {
           console.warn(`Could not determine specific currency for country: ${userCountryName} (code: ${userCountryCode}). Defaulting to XAF.`);
         }
 
+        // Note: The backend should also validate and apply the 2.5% fee
         const response = await sbcApiService.initiateWithdrawal(Number(withdrawAmount));
         const data = handleApiResponse(response); // This assumes handleApiResponse throws on !success
 
@@ -259,6 +289,8 @@ function Wallet() {
               }
             });
             setWithdrawAmount(''); // Clear the input after initiating/re-sending OTP
+            setWithdrawalFee(0); // Clear fee calculation
+            setTotalDeduction(0); // Clear total deduction
             setShowWithdrawForm(false); // Hide the form
             refreshUser(); // Refresh user context if needed for balance update or other state
           } else if (data.status === 'processing') {
@@ -273,6 +305,8 @@ function Wallet() {
               }
             });
             setWithdrawAmount('');
+            setWithdrawalFee(0);
+            setTotalDeduction(0);
             setShowWithdrawForm(false);
             refreshUser(); // Refresh user context to reflect potential balance changes
           } else if (data.status === 'pending') {
@@ -280,6 +314,8 @@ function Wallet() {
             setModalContent({ type: 'error', message: data.message || 'Vous avez une demande de retrait en cours. Veuillez la compléter ou l\'annuler avant d\'en initier une nouvelle.' });
             setShowModal(true);
             setWithdrawAmount('');
+            setWithdrawalFee(0);
+            setTotalDeduction(0);
             setShowWithdrawForm(false);
             refreshUser(); // Refresh in case the existing transaction details are updated
           } else {
@@ -527,7 +563,7 @@ function Wallet() {
               </button>
             </div>
             {showWithdrawForm && (
-              <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col  gap-3 bg-gray-50 rounded-2xl p-4 shadow">
+              <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col gap-3 bg-gray-50 rounded-2xl p-4 shadow">
                 <label className="text-gray-800 font-semibold">Montant à retirer</label>
                 <div className="flex justify-between gap-2">
                   <input
@@ -542,6 +578,30 @@ function Wallet() {
                   <button type="submit" className="bg-[#115CF6] text-white rounded-full p-3 font-bold shadow hover:bg-blue-800 transition-colors"><FaMoneyBill1 size={24} /></button>
                 </div>
 
+                {/* Fee calculation display */}
+                {withdrawAmount && Number(withdrawAmount) > 0 && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-gray-700">Montant à retirer:</span>
+                      <span className="font-semibold text-gray-900">{Number(withdrawAmount).toLocaleString('fr-FR')} F</span>
+                    </div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-gray-700">Frais (2.5%):</span>
+                      <span className="font-semibold text-orange-600">{withdrawalFee.toLocaleString('fr-FR')} F</span>
+                    </div>
+                    <div className="border-t border-blue-200 pt-2 mt-2">
+                      <div className="flex justify-between items-center">
+                        <span className="font-semibold text-gray-800">Total déduit:</span>
+                        <span className="font-bold text-red-600">{totalDeduction.toLocaleString('fr-FR')} F</span>
+                      </div>
+                    </div>
+                    {balance < totalDeduction && (
+                      <div className="mt-2 text-red-600 text-xs font-medium">
+                        ⚠️ Solde insuffisant. Solde actuel: {balance.toLocaleString('fr-FR')} F
+                      </div>
+                    )}
+                  </div>
+                )}
               </form>
             )}
             {/* Bar Chart */}
@@ -835,7 +895,7 @@ function Wallet() {
                   transition={{ type: 'spring', bounce: 0.2 }}
                 >
                   <h4 className={`text-lg font-bold mb-4 text-center ${modalContent.type === 'success' ? 'text-green-600' :
-                      modalContent.type === 'error' ? 'text-red-600' : 'text-gray-800'
+                    modalContent.type === 'error' ? 'text-red-600' : 'text-gray-800'
                     }`}>
                     {modalContent.type === 'success' ? 'Succès' :
                       modalContent.type === 'error' ? 'Erreur' : 'Confirmation'}
