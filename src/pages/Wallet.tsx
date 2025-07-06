@@ -274,8 +274,26 @@ function Wallet() {
 
         console.log("data", data);
         console.log("response", response);
+        console.log("data.message:", data?.message);
+        console.log("response.isOverallSuccess:", response.isOverallSuccess);
 
         if (data && response.isOverallSuccess) {
+          // Check for Mobile Money details error even in successful responses
+          if (data.message && (
+            data.message.includes("Mobile Money details") ||
+            data.message.includes("registered Mobile Money") ||
+            data.message.includes("mobile money") ||
+            data.message.includes("MoMo details")
+          )) {
+            setModalContent({
+              type: 'confirm',
+              message: "Pour effectuer un retrait, vous devez d'abord ajouter votre numéro Mobile Money et choisir votre opérateur (MTN, Orange, etc.) dans votre profil. Voulez-vous aller à la page de modification du profil maintenant ?",
+              onConfirm: () => navigate('/modifier-le-profil')
+            });
+            setShowModal(true);
+            return;
+          }
+
           // Handle success based on status from API response
           if (data.status === 'pending_otp_verification' && data.transactionId) {
             setModalContent({ type: 'success', message: data.message || 'Demande de retrait initiée. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.' });
@@ -324,8 +342,23 @@ function Wallet() {
           }
         } else {
           // This block is for cases where handleApiResponse doesn't throw but response.isOverallSuccess is false
-          setModalContent({ type: 'error', message: data.message || 'Échec de l\'initiation du retrait.' });
-          setShowModal(true);
+          const errorMessage = data?.message || 'Échec de l\'initiation du retrait.';
+
+          // Check for Mobile Money details error in failed responses too
+          if (errorMessage.includes("Mobile Money details") ||
+            errorMessage.includes("registered Mobile Money") ||
+            errorMessage.includes("mobile money") ||
+            errorMessage.includes("MoMo details")) {
+            setModalContent({
+              type: 'confirm',
+              message: "Pour effectuer un retrait, vous devez d'abord ajouter votre numéro Mobile Money et choisir votre opérateur (MTN, Orange, etc.) dans votre profil. Voulez-vous aller à la page de modification du profil maintenant ?",
+              onConfirm: () => navigate('/modifier-le-profil')
+            });
+            setShowModal(true);
+          } else {
+            setModalContent({ type: 'error', message: errorMessage });
+            setShowModal(true);
+          }
         }
 
       } catch (err) {
@@ -339,9 +372,12 @@ function Wallet() {
 
         // Specific error handling based on API messages
         if (errorMessage.includes("Your account does not have registered Mobile Money details")) {
-          setModalContent({ type: 'error', message: "Votre profil n'a pas de détails Mobile Money enregistrés. Veuillez mettre à jour votre profil pour ajouter votre numéro et opérateur MoMo." });
+          setModalContent({
+            type: 'confirm',
+            message: "Pour effectuer un retrait, vous devez d'abord ajouter votre numéro Mobile Money et choisir votre opérateur (MTN, Orange, etc.) dans votre profil. Voulez-vous aller à la page de modification du profil maintenant ?",
+            onConfirm: () => navigate('/modifier-le-profil')
+          });
           setShowModal(true);
-          navigate('/modifier-le-profil'); // Direct user to update profile
         } else if (errorMessage.includes("You have reached your daily limit")) {
           setModalContent({ type: 'error', message: errorMessage });
           setShowModal(true);
