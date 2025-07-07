@@ -430,8 +430,11 @@ export class SBCApiService extends ApiService {
    * Search contacts
    */
   async searchContacts(filters: Record<string, any>): Promise<ApiResponse> {
+    // Filter out empty values to avoid sending empty string parameters
     const queryParams = Object.fromEntries(
-      Object.entries(filters).map(([key, value]) => [key, String(value || '')])
+      Object.entries(filters)
+        .filter(([, value]) => value !== null && value !== undefined && value !== '' && value !== 0)
+        .map(([key, value]) => [key, String(value)])
     );
     return await this.get('/contacts/search', {
       queryParameters: queryParams
@@ -442,8 +445,11 @@ export class SBCApiService extends ApiService {
    * Export contacts
    */
   async exportContacts(filters: Record<string, any>): Promise<ApiResponse> {
+    // Filter out empty values to avoid sending empty string parameters
     const queryParams = Object.fromEntries(
-      Object.entries(filters).map(([key, value]) => [key, String(value || '')])
+      Object.entries(filters)
+        .filter(([, value]) => value !== null && value !== undefined && value !== '' && value !== 0)
+        .map(([key, value]) => [key, String(value)])
     );
     return await this.get('/contacts/export', {
       queryParameters: queryParams

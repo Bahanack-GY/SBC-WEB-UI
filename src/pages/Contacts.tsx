@@ -147,10 +147,10 @@ function Contacts() {
                 debouncedCriteria.sex === 'Femme' ? 'female' :
                     debouncedCriteria.sex === 'Autre' ? 'other' : '';
 
-            const filters: Record<string, any | any[]> = {
+            const filters: Record<string, string | number> = {
                 search: debouncedCriteria.search,
                 country: debouncedCriteria.country,
-                page: pageParam,
+                page: Number(pageParam),
                 limit: PAGE_SIZE,
             };
 
@@ -162,12 +162,27 @@ function Contacts() {
                 if (debouncedCriteria.interests.length > 0) filters.interests = debouncedCriteria.interests.map(i => removeAccents(i)).join(',');
             }
 
-            const response = await sbcApiService.searchContacts(filters);
-            const result = handleApiResponse(response);
-            return {
-                contacts: result?.contacts || result || [],
-                hasMore: result?.paginationInfo ? result.paginationInfo.currentPage < result.paginationInfo.totalPages : (result?.contacts?.length === PAGE_SIZE)
-            };
+            try {
+                const response = await sbcApiService.searchContacts(filters);
+                const result = handleApiResponse(response);
+                return {
+                    contacts: result?.contacts || result?.users || result || [],
+                    hasMore: result?.paginationInfo ? result.paginationInfo.currentPage < result.paginationInfo.totalPages :
+                        result?.totalPages ? result.page < result.totalPages :
+                            (result?.contacts?.length === PAGE_SIZE || result?.users?.length === PAGE_SIZE)
+                };
+            } catch (error) {
+                // Handle subscription validation errors specifically
+                if (error instanceof Error) {
+                    if (error.message.includes('subscription') || error.message.includes('contact plan')) {
+                        throw new Error('Votre abonnement ne permet pas d\'accéder aux contacts. Veuillez mettre à niveau vers l\'abonnement CIBLÉ.');
+                    }
+                    if (error.message.includes('Advanced filtering')) {
+                        throw new Error('Les filtres avancés nécessitent un abonnement CIBLÉ.');
+                    }
+                }
+                throw error;
+            }
         },
         getNextPageParam: (lastPage: { contacts: User[]; hasMore: boolean }, allPages) => {
             if (lastPage.hasMore) {
