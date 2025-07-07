@@ -134,6 +134,10 @@ export const correspondents: CorrespondentsMap = {
     'operators': ['MTN_MOMO_GHA', 'VODAFONE_GHA'], // Ghana
     'currencies': ['GHS']
   },
+  'TG': {
+    'operators': ['TOGOCOM_TG', 'MOOV_TG'], // Togo
+    'currencies': ['XOF']
+  },
 };
 
 // New: Helper function to map operator values to display labels
@@ -164,6 +168,8 @@ const getMomoOperatorDisplayName = (operatorValue: string) => {
     case 'MOOV_NER': return 'Moov Niger';
     case 'MTN_MOMO_GHA': return 'MTN MoMo Ghana';
     case 'VODAFONE_GHA': return 'Vodafone Ghana';
+    case 'TOGOCOM_TG': return 'Togocom';
+    case 'MOOV_TG': return 'Moov Togo';
     default: return operatorValue.replace(/_/g, ' '); // Fallback for new operators
   }
 };
