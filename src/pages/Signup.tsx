@@ -77,20 +77,20 @@ const initialData: SignupData = {
 const icons = [<FiUser size={48} className="text-[#115CF6] mx-auto" />, <FiMapPin size={48} className="text-[#115CF6] mx-auto" />, <FiHeart size={48} className="text-[#115CF6] mx-auto" />];
 
 const countryOptions = [
-  { value: 'Cameroun', label: '🇨🇲 Cameroun' },
-  { value: 'Bénin', label: '🇧🇯 Bénin' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 Congo-Brazzaville' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 Congo-Kinshasa' },
-  { value: 'Ghana', label: '🇬🇭 Ghana' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: '+225' },
-  { value: 'Sénégal', label: '🇸🇳 Sénégal', code: '+221' },
-  { value: 'Togo', label: '🇹🇬 Togo', code: '+228' },
-  { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: '+226' },
-  { value: 'Mali', label: '🇲🇱 Mali', code: '+223' },
-  { value: 'Niger', label: '🇳🇪 Niger', code: '+227' },
-  { value: 'Guinée', label: '🇬🇳 Guinée', code: '+224' },
-  { value: 'Gabon', label: '🇬🇦 Gabon', code: '+241' },
-  { value: 'Kenya', label: '🇰🇪 Kenya', code: '+254' },
+  { value: 'Cameroun', label: '🇨🇲 Cameroun', code: 'CM' },
+  { value: 'Bénin', label: '🇧🇯 Bénin', code: 'BJ' },
+  { value: 'Congo-Brazzaville', label: '🇨🇬 Congo-Brazzaville', code: 'CG' },
+  { value: 'Congo-Kinshasa', label: '🇨🇩 Congo-Kinshasa', code: 'CD' },
+  { value: 'Ghana', label: '🇬🇭 Ghana', code: 'GH' },
+  { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: 'CI' },
+  { value: 'Sénégal', label: '🇸🇳 Sénégal', code: 'SN' },
+  { value: 'Togo', label: '🇹🇬 Togo', code: 'TG' },
+  { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: 'BF' },
+  { value: 'Mali', label: '🇲🇱 Mali', code: 'ML' },
+  { value: 'Niger', label: '🇳🇪 Niger', code: 'NE' },
+  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN' },
+  { value: 'Gabon', label: '🇬🇦 Gabon', code: 'GA' },
+  { value: 'Kenya', label: '🇰🇪 Kenya', code: 'KE' },
 ];
 
 const professionOptions = [
@@ -442,6 +442,7 @@ function Signup() {
       setLoading(true);
       setErrors({});
       try {
+        const countryCode = countryOptions.find(c => c.value === data.pays)?.code || data.pays;
         const userData = {
           email: data.email,
           password: data.password,
@@ -450,7 +451,7 @@ function Signup() {
           referrerCode: data.parrain || undefined,
           city: data.ville,
           region: data.region,
-          country: data.pays,
+          country: countryCode,
           birthDate: data.naissance,
           sex: data.sexe,
           profession: data.profession ? removeAccents(data.profession) : undefined,
