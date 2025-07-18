@@ -7,7 +7,7 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import { ApiResponse } from '../services/ApiResponse';
 import { useQuery } from '@tanstack/react-query';
-import { clearSignupCache, SIGNUP_STORAGE_KEYS, getSignupCache } from '../utils/signupHelpers';
+import { clearSignupCache } from '../utils/signupHelpers';
 
 interface SignupData {
   nom: string;

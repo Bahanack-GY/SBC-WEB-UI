@@ -18,7 +18,6 @@ function OTP() {
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
   const [showMethodModal, setShowMethodModal] = useState(false);
-  const [selectedMethod, setSelectedMethod] = useState<'email' | 'whatsapp' | ''>('');
 
   // Get data from navigation state, including withdrawalId, amount, and currency
   const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow } = location.state || {};
@@ -108,7 +107,6 @@ function OTP() {
   const handleResendOtp = () => {
     // Show method selection modal first
     setShowMethodModal(true);
-    setSelectedMethod('');
   };
 
   const handleResendWithMethod = async (method: 'email' | 'whatsapp') => {
@@ -295,7 +293,7 @@ function OTP() {
             <p className="text-sm text-gray-700 text-center mb-6">
               Comment souhaitez-vous recevoir le nouveau code OTP ?
             </p>
-            
+
             <div className="space-y-3">
               <button
                 type="button"
@@ -309,7 +307,7 @@ function OTP() {
                   <div className="text-sm text-gray-500">Recevoir le code par email</div>
                 </div>
               </button>
-              
+
               <button
                 type="button"
                 onClick={() => handleResendWithMethod('whatsapp')}
