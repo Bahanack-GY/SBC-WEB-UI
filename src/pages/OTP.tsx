@@ -17,6 +17,8 @@ function OTP() {
   const { verifyOtp: authVerifyOtp } = useAuth();
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
+  const [showMethodModal, setShowMethodModal] = useState(false);
+  const [selectedMethod, setSelectedMethod] = useState<'email' | 'whatsapp' | ''>('');
 
   // Get data from navigation state, including withdrawalId, amount, and currency
   const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow } = location.state || {};
@@ -103,15 +105,23 @@ function OTP() {
     }
   };
 
-  const handleResendOtp = async () => {
+  const handleResendOtp = () => {
+    // Show method selection modal first
+    setShowMethodModal(true);
+    setSelectedMethod('');
+  };
+
+  const handleResendWithMethod = async (method: 'email' | 'whatsapp') => {
     setLoading(true);
     setError('');
+    setShowMethodModal(false);
 
     try {
       if (flow === 'passwordReset') { // Handle resending OTP for password reset
-        const response = await sbcApiService.requestPasswordResetOtp(currentEmail);
+        const response = await sbcApiService.requestPasswordResetOtp(currentEmail, method);
         handleApiResponse(response);
-        setModalContent({ type: 'success', message: 'Code renvoyé ! Veuillez vérifier votre email.' });
+        const methodText = method === 'whatsapp' ? 'WhatsApp' : 'email';
+        setModalContent({ type: 'success', message: `Code renvoyé via ${methodText} ! Veuillez vérifier.` });
         setShowModal(true);
       } else if (fromRegistration || fromLogin) { // Handle resending OTP for registration/login
         if (!actualUserId) {
@@ -119,11 +129,18 @@ function OTP() {
           return;
         }
         const purpose = fromRegistration ? 'register' : 'login';
-        const response = await sbcApiService.resendVerificationOtp(actualUserId, currentEmail, purpose);
+        const response = await sbcApiService.resendOtpEnhanced({
+          userId: actualUserId,
+          identifier: currentEmail,
+          purpose,
+          channel: method
+        });
         handleApiResponse(response);
-        setModalContent({ type: 'success', message: 'Code renvoyé ! Veuillez vérifier votre email.' });
+        const methodText = method === 'whatsapp' ? 'WhatsApp' : 'email';
+        setModalContent({ type: 'success', message: `Code renvoyé via ${methodText} ! Veuillez vérifier.` });
         setShowModal(true);
       } else if (withdrawalId && withdrawalAmount !== undefined) { // Handle resending OTP for withdrawal
+        // For withdrawal, we typically use WhatsApp, but we can still respect user choice
         const response = await sbcApiService.initiateWithdrawal(withdrawalAmount);
         const result = handleApiResponse(response);
         setModalContent({ type: 'success', message: result.message || 'Code de retrait renvoyé ! Veuillez vérifier votre téléphone.' });
@@ -253,6 +270,68 @@ function OTP() {
                 Fermer
               </button>
             )}
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* Method Selection Modal */}
+      {showMethodModal && (
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+        >
+          <motion.div
+            className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            transition={{ type: 'spring', bounce: 0.2 }}
+          >
+            <h4 className="text-lg font-bold mb-4 text-center text-blue-600">
+              📬 Choisir la méthode de réception
+            </h4>
+            <p className="text-sm text-gray-700 text-center mb-6">
+              Comment souhaitez-vous recevoir le nouveau code OTP ?
+            </p>
+            
+            <div className="space-y-3">
+              <button
+                type="button"
+                onClick={() => handleResendWithMethod('email')}
+                disabled={loading}
+                className="w-full flex items-center gap-3 p-4 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-2xl">📧</span>
+                <div className="text-left">
+                  <div className="font-medium text-gray-800">Email</div>
+                  <div className="text-sm text-gray-500">Recevoir le code par email</div>
+                </div>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => handleResendWithMethod('whatsapp')}
+                disabled={loading}
+                className="w-full flex items-center gap-3 p-4 border-2 border-green-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <span className="text-2xl">📱</span>
+                <div className="text-left">
+                  <div className="font-medium text-gray-800">WhatsApp</div>
+                  <div className="text-sm text-gray-500">Recevoir le code via WhatsApp</div>
+                </div>
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowMethodModal(false)}
+              disabled={loading}
+              className="w-full mt-4 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors disabled:opacity-50"
+            >
+              Annuler
+            </button>
           </motion.div>
         </motion.div>
       )}

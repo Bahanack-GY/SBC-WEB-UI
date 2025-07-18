@@ -31,6 +31,7 @@ export interface User {
   updatedAt?: string;
   balance?: number;
   activeSubscriptions?: string[];
+  notificationPreference?: 'email' | 'whatsapp';
 }
 
 // Product Types
@@ -259,6 +260,7 @@ export interface RegisterRequest {
   profession?: string;
   language?: string;
   interests?: string;
+  notificationPreference?: 'email' | 'whatsapp';
 }
 
 export interface ProductFilters {

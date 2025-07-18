@@ -12,8 +12,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const professions = [
+    'Étudiant(e)', 'Sans emploi',
     'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
-    'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Data scientist',
+    'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Scientifique des données',
     'Enseignant', 'Professeur d\'université', 'Formateur professionnel', 'Éducateur spécialisé', 'Conseiller pédagogique',
     'Artiste (peintre, sculpteur)', 'Designer graphique', 'Photographe', 'Musicien', 'Écrivain', 'Réalisateur',
     'Responsable marketing', 'Vendeur/Vendeuse', 'Gestionnaire de produit', 'Analyste de marché', 'Consultant en stratégie',
@@ -24,11 +25,12 @@ const professions = [
     'Chef cuisinier', 'Serveur/Serveuse', 'Gestionnaire d\'hôtel', 'Barman/Barmane',
     'Conducteur de train', 'Pilote d\'avion', 'Logisticien', 'Gestionnaire de chaîne d\'approvisionnement',
     'Administrateur système', 'Spécialiste en cybersécurité', 'Ingénieur réseau', 'Consultant en technologies de l\'information',
-    'Journaliste', 'Rédacteur web', 'Chargé de communication', 'Community manager',
+    'Journaliste', 'Rédacteur web', 'Chargé de communication', 'Gestionnaire de communauté',
     'Comptable', 'Analyste financier', 'Auditeur interne', 'Conseiller fiscal',
     'Agriculteur/Agricultrice', 'Ingénieur agronome', 'Écologiste', 'Gestionnaire de ressources naturelles',
 ];
-const interests = [
+// Base interest options without emojis (for data storage)
+const baseInterests = [
     'Football', 'Basketball', 'Course à pied', 'Natation', 'Yoga', 'Randonnée', 'Cyclisme',
     'Musique (instruments, chant)', 'Danse', 'Peinture et dessin', 'Photographie', 'Théâtre', 'Cinéma',
     'Programmation', 'Robotique', 'Sciences de la vie', 'Astronomie', 'Électronique',
@@ -38,6 +40,24 @@ const interests = [
     'Apprentissage de nouvelles langues', 'Jeux vidéo', 'Jeux de société', 'Énigmes et casse-têtes',
     'Stylisme', 'Décoration d\'intérieur', 'Artisanat', 'Fitness', 'Nutrition', 'Médecine alternative',
 ];
+
+// Display interest options with emojis (for UI display)
+const interests = [
+    '⚽ Football', '🏀 Basketball', '🏃 Course à pied', '🏊 Natation', '🧘 Yoga', '🥾 Randonnée', '🚴 Cyclisme',
+    '🎵 Musique (instruments, chant)', '💃 Danse', '🎨 Peinture et dessin', '📸 Photographie', '🎭 Théâtre', '🎬 Cinéma',
+    '💻 Programmation', '🤖 Robotique', '🔬 Sciences de la vie', '🌌 Astronomie', '⚡ Électronique',
+    '🌍 Découverte de nouvelles cultures', '🌿 Randonnées en nature', '✈️ Tourisme local et international',
+    '🍽️ Cuisine du monde', '🧁 Pâtisserie', '🍷 Dégustation de vins', '🤝 Aide aux personnes défavorisées',
+    '🌱 Protection de l\'environnement', '❤️ Participation à des événements caritatifs', '📚 Lecture', '🧘‍♀️ Méditation',
+    '🗣️ Apprentissage de nouvelles langues', '🎮 Jeux vidéo', '🎲 Jeux de société', '🧩 Énigmes et casse-têtes',
+    '👗 Stylisme', '🏠 Décoration d\'intérieur', '🎨 Artisanat', '💪 Fitness', '🥗 Nutrition', '🌿 Médecine alternative',
+];
+
+// Helper function to get base value without emoji
+const getInterestBaseValue = (displayValue: string): string => {
+    const index = interests.indexOf(displayValue);
+    return index !== -1 ? baseInterests[index] : displayValue.replace(/^[^\w\s]+\s*/, ''); // Remove emoji prefix
+};
 
 const sexes = ["Homme", "Femme", "Autre"];
 
@@ -650,16 +670,20 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                         <div className="mb-3">
                                             <label className="block text-sm font-medium mb-1">Intérêt</label>
                                             <div className="flex flex-wrap gap-2">
-                                                {interests.map(int => (
-                                                    <button
-                                                        key={int}
-                                                        type="button"
-                                                        className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.interests.includes(int) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                                                        onClick={() => handleMultiSelect('interests', int)}
-                                                    >
-                                                        {int}
-                                                    </button>
-                                                ))}
+                                                {interests.map(displayInterest => {
+                                                    const baseInterest = getInterestBaseValue(displayInterest);
+                                                    const isSelected = criteria.interests.includes(baseInterest);
+                                                    return (
+                                                        <button
+                                                            key={displayInterest}
+                                                            type="button"
+                                                            className={`px-3 py-1 rounded-full border text-xs font-medium ${isSelected ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                                                            onClick={() => handleMultiSelect('interests', baseInterest)}
+                                                        >
+                                                            {displayInterest}
+                                                        </button>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                     </>

@@ -6,18 +6,20 @@ import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 
 function ForgotPassword() {
-    const [email, setEmail] = useState('');
+    const [identifier, setIdentifier] = useState('');
+    const [channel, setChannel] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    const [showChannelOptions, setShowChannelOptions] = useState(false);
     const navigate = useNavigate();
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
-        if (!/^\S+@\S+\.\S+$/.test(email)) {
-            setError('Veuillez entrer une adresse email valide.');
+        if (!identifier.trim()) {
+            setError('Veuillez entrer votre email ou numéro de téléphone.');
             return;
         }
 
@@ -25,12 +27,12 @@ function ForgotPassword() {
         setLoading(true);
 
         try {
-            await sbcApiService.requestPasswordResetOtp(email);
-            // Note: handleApiResponse is not used here because the API always returns success for security
-
+            await sbcApiService.requestPasswordResetOtp(identifier, channel as 'email' | 'whatsapp' || undefined);
+            
+            const channelText = channel || 'votre méthode préférée';
             setModalContent({
                 type: 'success',
-                message: 'Un code de vérification a été envoyé à votre email.'
+                message: `Un code de vérification a été envoyé via ${channelText}.`
             });
             setShowModal(true);
 
@@ -38,7 +40,7 @@ function ForgotPassword() {
             setTimeout(() => {
                 navigate('/otp', {
                     state: {
-                        email: email,
+                        email: identifier,
                         flow: 'passwordReset'
                     }
                 });
@@ -78,25 +80,53 @@ function ForgotPassword() {
                     </div>
                     <h2 className="text-xl font-bold text-gray-800 mb-2">Réinitialiser le mot de passe</h2>
                     <p className="text-center text-gray-600 text-sm">
-                        Entrez votre adresse email pour recevoir un code de vérification
+                        Entrez votre email ou numéro de téléphone pour recevoir un code de vérification
                     </p>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div>
-                        <label className="block text-gray-700 text-sm mb-1 font-medium">Adresse email</label>
+                        <label className="block text-gray-700 text-sm mb-1 font-medium">Email ou numéro de téléphone</label>
                         <input
-                            type="email"
-                            value={email}
+                            type="text"
+                            value={identifier}
                             onChange={e => {
-                                setEmail(e.target.value);
+                                setIdentifier(e.target.value);
                                 setError(''); // Clear error when user types
                             }}
-                            placeholder="Ex : jeanpierre@gmail.com"
+                            placeholder="Ex : jeanpierre@gmail.com ou +237675090755"
                             className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 placeholder-gray-400`}
                             required
                         />
                         {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
+                    </div>
+
+                    {/* Optional: Channel override */}
+                    <div className="channel-options">
+                        <button 
+                            type="button"
+                            onClick={() => setShowChannelOptions(!showChannelOptions)}
+                            className="text-yellow-500 text-sm font-medium hover:underline bg-transparent"
+                        >
+                            ⚙️ Options avancées
+                        </button>
+                        
+                        {showChannelOptions && (
+                            <div className="mt-2 p-3 bg-gray-50 rounded-xl">
+                                <label className="block text-gray-700 text-sm mb-1 font-medium">
+                                    Forcer la méthode de livraison pour cette demande:
+                                </label>
+                                <select 
+                                    value={channel} 
+                                    onChange={(e) => setChannel(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white text-sm"
+                                >
+                                    <option value="">Utiliser ma préférence</option>
+                                    <option value="email">📧 Email</option>
+                                    <option value="whatsapp">📱 WhatsApp</option>
+                                </select>
+                            </div>
+                        )}
                     </div>
 
                     <button

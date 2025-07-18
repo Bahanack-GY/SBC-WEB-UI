@@ -28,6 +28,7 @@ import VerifyOtp from './pages/VerifyOtp'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmailOtp from './pages/VerifyEmailOtp'
 import ChangeEmail from './pages/ChangeEmail'
+import ChangePhoneNumber from './pages/ChangePhoneNumber'
 import PartnerSpace from './pages/PartnerSpace'
 import { useQuery } from '@tanstack/react-query'
 import { handleApiResponse } from './utils/apiHelpers'
@@ -134,7 +135,7 @@ function AppContent() {
   // Logout button for unsubscribed users
   const showLogout = isAuthenticated && !isSubscribed;
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/changer-mot-de-passe';
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe';
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -172,6 +173,7 @@ function AppContent() {
         <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/modifier-email" element={<ChangeEmail />} />
+        <Route path="/change-phone" element={<ChangePhoneNumber />} />
         <Route path="/partenaire" element={<PartnerSpace />} />
       </Routes>
       {!hideNav && <NavigationBar />}

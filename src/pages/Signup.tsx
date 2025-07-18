@@ -7,6 +7,7 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import { ApiResponse } from '../services/ApiResponse';
 import { useQuery } from '@tanstack/react-query';
+import { clearSignupCache, SIGNUP_STORAGE_KEYS, getSignupCache } from '../utils/signupHelpers';
 
 interface SignupData {
   nom: string;
@@ -24,6 +25,7 @@ interface SignupData {
   interets: string[];
   parrain: string;
   cgu: boolean;
+  notificationPreference: 'email' | 'whatsapp';
 }
 
 interface SignupErrors {
@@ -72,6 +74,7 @@ const initialData: SignupData = {
   interets: [],
   parrain: '',
   cgu: false,
+  notificationPreference: 'email',
 };
 
 const icons = [<FiUser size={48} className="text-[#115CF6] mx-auto" />, <FiMapPin size={48} className="text-[#115CF6] mx-auto" />, <FiHeart size={48} className="text-[#115CF6] mx-auto" />];
@@ -94,8 +97,9 @@ const countryOptions = [
 ];
 
 const professionOptions = [
+  'Étudiant(e)', 'Sans emploi',
   'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
-  'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Data scientist',
+  'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Scientifique des données',
   'Enseignant', 'Professeur d\'université', 'Formateur professionnel', 'Éducateur spécialisé', 'Conseiller pédagogique',
   'Artiste (peintre, sculpteur)', 'Designer graphique', 'Photographe', 'Musicien', 'Écrivain', 'Réalisateur',
   'Responsable marketing', 'Vendeur/Vendeuse', 'Gestionnaire de produit', 'Analyste de marché', 'Consultant en stratégie',
@@ -106,12 +110,13 @@ const professionOptions = [
   'Chef cuisinier', 'Serveur/Serveuse', 'Gestionnaire d\'hôtel', 'Barman/Barmane',
   'Conducteur de train', 'Pilote d\'avion', 'Logisticien', 'Gestionnaire de chaîne d\'approvisionnement',
   'Administrateur système', 'Spécialiste en cybersécurité', 'Ingénieur réseau', 'Consultant en technologies de l\'information',
-  'Journaliste', 'Rédacteur web', 'Chargé de communication', 'Community manager',
+  'Journaliste', 'Rédacteur web', 'Chargé de communication', 'Gestionnaire de communauté',
   'Comptable', 'Analyste financier', 'Auditeur interne', 'Conseiller fiscal',
   'Agriculteur/Agricultrice', 'Ingénieur agronome', 'Écologiste', 'Gestionnaire de ressources naturelles',
 ];
 
-const interetOptions = [
+// Base interest options without emojis (for data storage)
+const baseInteretOptions = [
   'Football', 'Basketball', 'Course à pied', 'Natation', 'Yoga', 'Randonnée', 'Cyclisme',
   'Musique (instruments, chant)', 'Danse', 'Peinture et dessin', 'Photographie', 'Théâtre', 'Cinéma',
   'Programmation', 'Robotique', 'Sciences de la vie', 'Astronomie', 'Électronique',
@@ -121,6 +126,24 @@ const interetOptions = [
   'Apprentissage de nouvelles langues', 'Jeux vidéo', 'Jeux de société', 'Énigmes et casse-têtes',
   'Stylisme', 'Décoration d\'intérieur', 'Artisanat', 'Fitness', 'Nutrition', 'Médecine alternative',
 ];
+
+// Display interest options with emojis (for UI display)
+const interetOptions = [
+  '⚽ Football', '🏀 Basketball', '🏃 Course à pied', '🏊 Natation', '🧘 Yoga', '🥾 Randonnée', '🚴 Cyclisme',
+  '🎵 Musique (instruments, chant)', '💃 Danse', '🎨 Peinture et dessin', '📸 Photographie', '🎭 Théâtre', '🎬 Cinéma',
+  '💻 Programmation', '🤖 Robotique', '🔬 Sciences de la vie', '🌌 Astronomie', '⚡ Électronique',
+  '🌍 Découverte de nouvelles cultures', '🌿 Randonnées en nature', '✈️ Tourisme local et international',
+  '🍽️ Cuisine du monde', '🧁 Pâtisserie', '🍷 Dégustation de vins', '🤝 Aide aux personnes défavorisées',
+  '🌱 Protection de l\'environnement', '❤️ Participation à des événements caritatifs', '📚 Lecture', '🧘‍♀️ Méditation',
+  '🗣️ Apprentissage de nouvelles langues', '🎮 Jeux vidéo', '🎲 Jeux de société', '🧩 Énigmes et casse-têtes',
+  '👗 Stylisme', '🏠 Décoration d\'intérieur', '🎨 Artisanat', '💪 Fitness', '🥗 Nutrition', '🌿 Médecine alternative',
+];
+
+// Helper function to get base value without emoji
+const getInterestBaseValue = (displayValue: string): string => {
+  const index = interetOptions.indexOf(displayValue);
+  return index !== -1 ? baseInteretOptions[index] : displayValue.replace(/^[^\w\s]+\s*/, ''); // Remove emoji prefix
+};
 
 const countryCodes = [
   { value: 'Cameroun', label: '🇨🇲 +237', code: '+237' },
@@ -322,12 +345,15 @@ function Signup() {
     }
   };
 
-  const handleInterestClick = (interest: string) => {
+  const handleInterestClick = (displayInterest: string) => {
+    // Convert display value (with emoji) to base value (without emoji) for storage
+    const baseInterest = getInterestBaseValue(displayInterest);
+    
     setData(prev => ({
       ...prev,
-      interets: prev.interets.includes(interest)
-        ? prev.interets.filter(i => i !== interest)
-        : [...prev.interets, interest]
+      interets: prev.interets.includes(baseInterest)
+        ? prev.interets.filter(i => i !== baseInterest)
+        : [...prev.interets, baseInterest]
     }));
     setErrors(prev => ({ ...prev, interets: undefined }));
   };
@@ -457,13 +483,14 @@ function Signup() {
           profession: data.profession ? removeAccents(data.profession) : undefined,
           language: data.langue,
           interests: data.interets.length > 0 ? data.interets.map(i => removeAccents(i)) : undefined,
+          notificationPreference: data.notificationPreference,
         };
         console.log('Attempting registration with userData:', userData);
 
         const result = await register(userData);
 
-        localStorage.removeItem(STORAGE_KEY_DATA);
-        localStorage.removeItem(STORAGE_KEY_STEP);
+        // Clear all signup cache including URL parameters
+        clearSignupCache();
 
         navigate('/otp', {
           state: {
@@ -493,28 +520,28 @@ function Signup() {
           {step === 0 && (
             <>
               <div>
-                <label className="block text-gray-700 mb-1">Nom complet</label>
+                <label className="block text-gray-700 mb-1">👤 Nom complet</label>
                 <input name="nom" value={data.nom} onChange={handleChange} placeholder="Ex: Jean Paul" className={`w-full border ${errors.nom ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.nom && <div className="text-red-500 text-xs">{errors.nom}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Email</label>
+                <label className="block text-gray-700 mb-1">📧 Email</label>
                 <input name="email" value={data.email} onChange={handleChange} placeholder="Ex: Jeanpierre@gmail.com" className={`w-full border ${errors.email || errors.emailExists ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
                 {errors.emailExists && <div className="text-red-500 text-xs">{errors.emailExists}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Mot de passe</label>
+                <label className="block text-gray-700 mb-1">🔒 Mot de passe</label>
                 <input name="password" type="password" value={data.password} onChange={handleChange} placeholder="Mot de passe" className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Confirmer le mot de passe</label>
+                <label className="block text-gray-700 mb-1">🔐 Confirmer le mot de passe</label>
                 <input name="confirmPassword" type="password" value={data.confirmPassword} onChange={handleChange} placeholder="Confirmer mot de passe" className={`w-full border ${errors.confirmPassword ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.confirmPassword && <div className="text-red-500 text-xs">{errors.confirmPassword}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Numéro WhatsApp</label>
+                <label className="block text-gray-700 mb-1">📱 Numéro WhatsApp</label>
                 <div className="flex gap-2">
                   <select
                     className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
@@ -544,32 +571,32 @@ function Signup() {
           {step === 1 && (
             <>
               <div>
-                <label className="block text-gray-700 mb-1">Ville</label>
+                <label className="block text-gray-700 mb-1">🏙️ Ville</label>
                 <input name="ville" value={data.ville} onChange={handleChange} placeholder="Ex: Douala" className={`w-full border ${errors.ville ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.ville && <div className="text-red-500 text-xs">{errors.ville}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Région</label>
+                <label className="block text-gray-700 mb-1">🗺️ Région</label>
                 <input name="region" value={data.region} onChange={handleChange} placeholder="Entrer la région" className={`w-full border ${errors.region ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.region && <div className="text-red-500 text-xs">{errors.region}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Date de naissance</label>
+                <label className="block text-gray-700 mb-1">🎂 Date de naissance</label>
                 <input name="naissance" type="date" value={data.naissance} onChange={handleChange} className={`w-full border ${errors.naissance ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.naissance && <div className="text-red-500 text-xs">{errors.naissance}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Sexe</label>
+                <label className="block text-gray-700 mb-1">⚧️ Sexe</label>
                 <select name="sexe" value={data.sexe} onChange={handleChange} className={`w-full border ${errors.sexe ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner</option>
-                  <option value="male">Homme</option>
-                  <option value="female">Femme</option>
-                  <option value="other">Autre</option>
+                  <option value="male">👨 Homme</option>
+                  <option value="female">👩 Femme</option>
+                  <option value="other">🧑 Autre</option>
                 </select>
                 {errors.sexe && <div className="text-red-500 text-xs">{errors.sexe}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Pays</label>
+                <label className="block text-gray-700 mb-1">🌍 Pays</label>
                 <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner le pays</option>
                   {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
@@ -577,7 +604,7 @@ function Signup() {
                 {errors.pays && <div className="text-red-500 text-xs">{errors.pays}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Profession</label>
+                <label className="block text-gray-700 mb-1">💼 Profession</label>
                 <select name="profession" value={data.profession} onChange={handleChange} className={`w-full border ${errors.profession ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner la profession</option>
                   {professionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
@@ -589,32 +616,81 @@ function Signup() {
           {step === 2 && (
             <>
               <div>
-                <label className="block text-gray-700 mb-1">Langue</label>
+                <label className="block text-gray-700 mb-1">🗣️ Langue</label>
                 <select name="langue" value={data.langue} onChange={handleChange} className={`w-full border ${errors.langue ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner la langue</option>
-                  <option value="fr">Français</option>
-                  <option value="en">Anglais</option>
+                  <option value="fr">🇫🇷 Français</option>
+                  <option value="en">🇬🇧 Anglais</option>
                 </select>
                 {errors.langue && <div className="text-red-500 text-xs">{errors.langue}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">Centres d\'intérêt</label>
+                <label className="block text-gray-700 mb-1">❤️ Centres d'intérêt</label>
                 <div className="flex flex-wrap gap-2">
-                  {interetOptions.map(interest => (
-                    <button
-                      key={interest}
-                      type="button"
-                      className={`px-3 py-1 rounded-full border text-xs font-medium ${data.interets.includes(interest) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                      onClick={() => handleInterestClick(interest)}
-                    >
-                      {interest}
-                    </button>
-                  ))}
+                  {interetOptions.map(displayInterest => {
+                    const baseInterest = getInterestBaseValue(displayInterest);
+                    const isSelected = data.interets.includes(baseInterest);
+                    return (
+                      <button
+                        key={displayInterest}
+                        type="button"
+                        className={`px-3 py-1 rounded-full border text-xs font-medium ${isSelected ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                        onClick={() => handleInterestClick(displayInterest)}
+                      >
+                        {displayInterest}
+                      </button>
+                    );
+                  })}
                 </div>
                 {errors.interets && <div className="text-red-500 text-xs">{errors.interets}</div>}
               </div>
+
+              {/* NEW: Notification Preference Section */}
               <div>
-                <label className="block text-gray-700 mb-1">Code parrain</label>
+                <label className="block text-gray-700 mb-1">📬 Préférences de notification</label>
+                <div className="space-y-2">
+                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="notificationPreference"
+                      value="email"
+                      checked={data.notificationPreference === 'email'}
+                      onChange={handleChange}
+                      className="text-blue-600 focus:ring-blue-500"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📧</span>
+                      <div>
+                        <div className="font-medium text-gray-700 text-sm">Email</div>
+                        <div className="text-xs text-gray-500">Recevoir les codes OTP par email</div>
+                      </div>
+                    </div>
+                  </label>
+                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="notificationPreference"
+                      value="whatsapp"
+                      checked={data.notificationPreference === 'whatsapp'}
+                      onChange={handleChange}
+                      className="text-green-600 focus:ring-green-500"
+                    />
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">📱</span>
+                      <div>
+                        <div className="font-medium text-gray-700 text-sm">WhatsApp</div>
+                        <div className="text-xs text-gray-500">Recevoir les codes OTP via WhatsApp</div>
+                      </div>
+                    </div>
+                  </label>
+                </div>
+                <div className="mt-2 text-xs text-gray-500">
+                  💡 Vous pourrez modifier cette préférence plus tard
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-gray-700 mb-1">🔗 Code parrain</label>
                 <input
                   name="parrain"
                   value={data.parrain}

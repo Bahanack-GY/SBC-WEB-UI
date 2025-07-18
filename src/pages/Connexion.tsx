@@ -3,6 +3,7 @@ import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import logo from '../assets/img/logo-sbc.png';
+import { clearSignupCacheWithFeedback } from '../utils/signupHelpers';
 
 function Connexion() {
   const [showPassword, setShowPassword] = useState(false);
@@ -37,6 +38,9 @@ function Connexion() {
         console.log('Connexion: Starting login process for', email);
         const result = await login(email, password);
         console.log('Connexion: Login result:', result);
+
+        // Clear any cached signup data since user is now logging in
+        clearSignupCacheWithFeedback();
 
         if (result.requiresOtp) {
           console.log('Connexion: OTP required, redirecting to OTP page');

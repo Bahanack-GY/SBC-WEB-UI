@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiEdit2, FiMail, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle, FiLoader } from 'react-icons/fi';
+import { FiEdit2, FiMail, FiPhone, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle, FiLoader } from 'react-icons/fi';
 import { FaWhatsapp } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -15,6 +15,7 @@ import { useTour } from '../components/common/TourProvider';
 const actions = [
   { label: 'Modifier le profil', icon: <FiEdit2 className="text-[#115CF6]" />, to: '/modifier-le-profil' },
   { label: 'Modifier mon email', icon: <FiMail className="text-[#115CF6]" />, to: '/modifier-email' },
+  { label: 'Changer le numéro de téléphone', icon: <FiPhone className="text-[#115CF6]" />, to: '/change-phone' },
   { label: 'Modifier mon mot de passe', icon: <FiLock className="text-[#115CF6]" />, to: '/change-password' },
   { label: 'Mon Abonnement', icon: <FiCreditCard className="text-[#115CF6]" />, to: '/changer-abonnement' },
   { label: 'Mes filleuls', icon: <FiUsers className="text-[#115CF6]" />, to: '/filleuls' },
@@ -249,6 +250,17 @@ function Profile() {
             </div>
             <div className="bg-gray-100 text-gray-500 rounded-lg px-3 py-1 text-sm mt-2">
               {user?.email}
+            </div>
+            {/* Notification Preference Display */}
+            <div className="mt-3 flex items-center gap-2">
+              <span className="text-sm text-gray-600">Notifications OTP:</span>
+              <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                user?.notificationPreference === 'whatsapp' 
+                  ? 'bg-green-100 text-green-700' 
+                  : 'bg-blue-100 text-blue-700'
+              }`}>
+                {user?.notificationPreference === 'whatsapp' ? '📱 WhatsApp' : '📧 Email'}
+              </span>
             </div>
             {referralStats && (
               <div className="text-sm text-gray-600 mt-2">

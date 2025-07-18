@@ -58,6 +58,22 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * Resend OTP with enhanced options (supports identifier and channel override)
+   */
+  async resendOtpEnhanced(options: {
+    identifier?: string;
+    email?: string; // Legacy support
+    purpose: string;
+    channel?: 'email' | 'whatsapp';
+    userId?: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/users/resend-otp', {
+      body: options,
+      requiresAuth: false
+    });
+  }
+
+  /**
    * Get user profile
    */
   async getUserProfile(): Promise<ApiResponse> {
@@ -152,11 +168,15 @@ export class SBCApiService extends ApiService {
   // ==================== PASSWORD MANAGEMENT ====================
 
   /**
-   * Request password reset OTP
+   * Request password reset OTP (enhanced with channel support)
    */
-  async requestPasswordResetOtp(email: string): Promise<ApiResponse> {
-    return await this.post('/users/request-password-reset', {
-      body: { email },
+  async requestPasswordResetOtp(identifier: string, channel?: 'email' | 'whatsapp'): Promise<ApiResponse> {
+    const body: any = { identifier };
+    if (channel) {
+      body.channel = channel;
+    }
+    return await this.post('/users/request-password-reset-otp', {
+      body,
       requiresAuth: false
     });
   }
@@ -216,6 +236,26 @@ export class SBCApiService extends ApiService {
   async resendOtpByEmail(email: string, purpose: string): Promise<ApiResponse> {
     return await this.post('/users/resend-otp', {
       body: { email, purpose }
+    });
+  }
+
+  // ==================== PHONE NUMBER MANAGEMENT ====================
+
+  /**
+   * Request phone number change OTP
+   */
+  async requestPhoneChangeOtp(newPhoneNumber: string): Promise<ApiResponse> {
+    return await this.post('/users/request-change-phone', {
+      body: { newPhoneNumber }
+    });
+  }
+
+  /**
+   * Confirm phone number change
+   */
+  async confirmPhoneChange(newPhoneNumber: string, otpCode: string): Promise<ApiResponse> {
+    return await this.post('/users/confirm-change-phone', {
+      body: { newPhoneNumber, otpCode }
     });
   }
 
