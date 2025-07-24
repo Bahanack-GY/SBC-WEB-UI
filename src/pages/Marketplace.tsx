@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from "framer-motion";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import ecommerceIcon from '../assets/icon/Ecommerce.png';
@@ -39,146 +39,92 @@ interface PaginatedResponse {
 
 // Query keys for consistent caching
 const queryKeys = {
-    marketplace: (category: string, search: string, page: number) =>
-        ['marketplace', category, search, page] as const,
+    marketplace: (category: string, search: string) =>
+        ['marketplace', category, search] as const,
 };
 
 function Marketplace() {
     const [selectedCategory, setSelectedCategory] = useState('Tous');
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [page, setPage] = useState(1);
-    const [hasMore, setHasMore] = useState(true);
-    const [allProducts, setAllProducts] = useState<MarketplaceItem[]>([]);
-    const [allServices, setAllServices] = useState<MarketplaceItem[]>([]);
-    const [loadedItemIds, setLoadedItemIds] = useState<Set<string>>(new Set());
     const limit = 10; // Number of items per page
     const navigate = useNavigate();
-    const [lastItemRef, setLastItemRef] = useState<HTMLDivElement | null>(null);
     const observerRef = useRef<IntersectionObserver | null>(null);
-    const loadingRef = useRef<HTMLDivElement>(null);
-    const [isFetchingMore, setIsFetchingMore] = useState(false);
 
-    // Use React Query for API calls with optimized settings
-    const { data, isLoading, error, refetch } = useQuery<PaginatedResponse>({
+    // Use React Query's useInfiniteQuery for pagination
+    const {
+        data,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isLoading,
+        isFetchingNextPage,
+        refetch,
+    } = useInfiniteQuery<PaginatedResponse>({
         queryKey: queryKeys.marketplace(
             selectedCategory === 'Tous' ? '' : selectedCategory,
-            searchQuery,
-            page
+            searchQuery
         ),
-        queryFn: async () => {
+        queryFn: async ({ pageParam = 1 }) => {
             const response = await sbcApiService.getProducts({
                 search: searchQuery,
                 category: selectedCategory === 'Tous' ? undefined : selectedCategory,
-                page,
+                page: pageParam,
                 limit
             });
             return handleApiResponse(response) as PaginatedResponse;
         },
+        getNextPageParam: (lastPage) => {
+            const { currentPage, totalPages } = lastPage.paginationInfo;
+            return currentPage < totalPages ? currentPage + 1 : undefined;
+        },
+        initialPageParam: 1,
         staleTime: 5 * 60 * 1000, // 5 minutes
         gcTime: 30 * 60 * 1000, // 30 minutes
         refetchOnWindowFocus: false,
-        refetchOnMount: false,
-        retry: 2,
     });
 
-    // Update products and services when new data arrives
-    useEffect(() => {
-        if (data?.products) {
-            // Filter out duplicates using the loadedItemIds Set
-            const newItems = data.products.filter(item => !loadedItemIds.has(item._id));
+    // Flatten pages into a single array of items
+    const allItems = data?.pages.flatMap(page => page.products) ?? [];
 
-            // Add new item IDs to the Set
-            const newIds = new Set(newItems.map(item => item._id));
-            setLoadedItemIds(prev => new Set([...prev, ...newIds]));
-
-            const newProducts = newItems.filter((item: MarketplaceItem) =>
-                (item.type === 'product') ||
-                (!item.type && item.category?.toLowerCase() !== 'services')
-            );
-            const newServices = newItems.filter((item: MarketplaceItem) =>
-                (item.type === 'service') ||
-                (item.category?.toLowerCase() === 'services')
-            );
-
-            if (page === 1) {
-                setAllProducts(newProducts);
-                setAllServices(newServices);
-            } else {
-                setAllProducts(prev => [...prev, ...newProducts]);
-                setAllServices(prev => [...prev, ...newServices]);
-            }
-
-            setHasMore(data.paginationInfo.currentPage < data.paginationInfo.totalPages);
-        }
-    }, [data, page]);
-
-    // Reset loaded items when search/category changes
-    useEffect(() => {
-        setPage(1);
-        setAllProducts([]);
-        setAllServices([]);
-        setLoadedItemIds(new Set());
-        setHasMore(true);
-    }, [searchQuery, selectedCategory]);
+    const allProducts = allItems.filter((item: MarketplaceItem) =>
+        (item.type === 'product') ||
+        (!item.type && item.category?.toLowerCase() !== 'services')
+    );
+    const allServices = allItems.filter((item: MarketplaceItem) =>
+        (item.type === 'service') ||
+        (item.category?.toLowerCase() === 'services')
+    );
 
     // Setup intersection observer for infinite scroll
     useEffect(() => {
-        const observer = new IntersectionObserver(
+        observerRef.current = new IntersectionObserver(
             (entries) => {
-                if (entries[0].isIntersecting && hasMore && !isFetchingMore) {
-                    setIsFetchingMore(true);
-                    setPage(prev => prev + 1);
+                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
                 }
             },
             { threshold: 0.1 }
         );
 
-        observerRef.current = observer;
-
-        if (lastItemRef) {
-            observer.observe(lastItemRef);
-        }
-
         return () => {
-            observer.disconnect();
-        };
-    }, [lastItemRef, hasMore, isFetchingMore]);
-
-    // Infinite scroll: load more when scroll is past 70% of the page
-    useEffect(() => {
-        if (!hasMore || isLoading) return;
-
-        const handleScroll = () => {
-            const scrollY = window.scrollY;
-            const windowHeight = window.innerHeight;
-            const docHeight = document.body.scrollHeight;
-            const scrollPercent = (scrollY + windowHeight) / docHeight;
-
-            if (scrollPercent > 0.7 && !isFetchingMore) {
-                setIsFetchingMore(true);
-                setPage(prev => prev + 1);
+            if (observerRef.current) {
+                observerRef.current.disconnect();
             }
         };
+    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
 
-        window.addEventListener('scroll', handleScroll);
-        return () => window.removeEventListener('scroll', handleScroll);
-    }, [hasMore, isLoading, isFetchingMore]);
-
-    // Reset fetching state after data loads
-    useEffect(() => {
-        if (isFetchingMore && !isLoading) {
-            setIsFetchingMore(false);
+    const lastItemRef = (node: HTMLDivElement) => {
+        if (observerRef.current) {
+            observerRef.current.disconnect();
         }
-    }, [isLoading, isFetchingMore]);
+        if (node) {
+            observerRef.current?.observe(node);
+        }
+    };
 
-    const handleSearch = (query: string) => {
-        setSearchQuery(query);
-        // Debounce search to avoid too many API calls
-        const timeoutId = setTimeout(() => {
-            refetch();
-        }, 500);
-        return () => clearTimeout(timeoutId);
+    const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setSearchQuery(e.target.value);
     };
 
     const menuItems = [
@@ -186,7 +132,19 @@ function Marketplace() {
         { label: "Voir mes produits", action: () => navigate('/mes-produits') }
     ];
 
-    const initialLoading = isLoading && page === 1;
+    const getVisibleItems = () => {
+        switch (selectedCategory) {
+            case 'Services':
+                return allServices;
+            case 'Produits':
+                return allProducts;
+            case 'Tous':
+            default:
+                return allItems;
+        }
+    };
+
+    const visibleItems = getVisibleItems();
 
     return (
         <div className="p-3 bg-white relative pb-20">
@@ -201,7 +159,7 @@ function Marketplace() {
                     type="text"
                     placeholder="Rechercher un produit ou un service"
                     value={searchQuery}
-                    onChange={(e) => handleSearch(e.target.value)}
+                    onChange={handleSearch}
                     className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
                 />
             </div>
@@ -239,7 +197,7 @@ function Marketplace() {
             </div>
 
             {/* Loading Skeleton */}
-            {initialLoading ? (
+            {isLoading ? (
                 <div className="flex flex-col gap-4 mt-4">
                     <div className="grid grid-cols-2 gap-4">
                         <Skeleton height="h-60" rounded="rounded-xl" />
@@ -250,134 +208,56 @@ function Marketplace() {
                         <Skeleton height="h-60" rounded="rounded-xl" />
                     </div>
                 </div>
+            ) : error ? (
+                <div className="text-center py-8">
+                    <div className="text-red-500 mb-2">Erreur lors du chargement</div>
+                    <button
+                        onClick={() => refetch()}
+                        className="text-blue-600 underline"
+                    >
+                        Réessayer
+                    </button>
+                </div>
             ) : (
                 <>
-                    {/* Error State */}
-                    {error && (
-                        <div className="text-center py-8">
-                            <div className="text-red-500 mb-2">Erreur lors du chargement</div>
-                            <button
-                                onClick={() => refetch()}
-                                className="text-blue-600 underline"
+                    {/* Content */}
+                    <div className="grid grid-cols-2 gap-4">
+                        {visibleItems.map((item, index) => (
+                            <div
+                                key={item._id}
+                                ref={index === visibleItems.length - 1 ? lastItemRef : null}
+                                onClick={() => navigate(`/single-product/${item._id}`)}
+                                className="cursor-pointer"
                             >
-                                Réessayer
-                            </button>
+                                <MarketplaceProductCard
+                                    image={item.images?.[0]?.url
+                                        ? item.images[0].url
+                                        : ecommerceIcon}
+                                    brand={item.seller?.name || "SBC"}
+                                    name={item.name}
+                                    price={item.price}
+                                    whatsappLink={item.whatsappLink}
+                                    productId={item._id}
+                                />
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* Loading more spinner */}
+                    {isFetchingNextPage && (
+                        <div className="flex justify-center items-center py-4">
+                            <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                            </svg>
                         </div>
                     )}
 
-                    {/* Content based on selected category */}
-                    {!error && (
-                        <>
-                            {selectedCategory === 'Tous' && (
-                                <>
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {[...allServices, ...allProducts].map((item, index, array) => (
-                                            <div
-                                                key={item._id}
-                                                ref={index === array.length - 1 ? setLastItemRef : null}
-                                                onClick={() => navigate(`/single-product/${item._id}`)}
-                                                className="cursor-pointer"
-                                            >
-                                                <MarketplaceProductCard
-                                                    image={item.images?.[0]?.url
-                                                        ? item.images[0].url
-                                                        : ecommerceIcon}
-                                                    brand={item.seller?.name || "SBC"}
-                                                    name={item.name}
-                                                    price={item.price}
-                                                    whatsappLink={item.whatsappLink}
-                                                    productId={item._id}
-                                                />
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {isFetchingMore && (
-                                        <div className="flex justify-center items-center py-4">
-                                            <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
-                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                    {/* No results */}
-                                    {allServices.length === 0 && allProducts.length === 0 && !isLoading && (
-                                        <div className="text-center py-8 text-gray-500">
-                                            Aucun produit ou service trouvé
-                                        </div>
-                                    )}
-                                </>
-                            )}
-
-                            {selectedCategory === 'Services' && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    {allServices.length > 0 ? (
-                                        allServices.map((service) => (
-                                            <div
-                                                key={service._id}
-                                                onClick={() => navigate(`/single-product/${service._id}`)}
-                                                className="cursor-pointer"
-                                            >
-                                                <MarketplaceProductCard
-                                                    image={service.images?.[0]?.url
-                                                        ? service.images[0].url
-                                                        : ecommerceIcon}
-                                                    brand={service.seller?.name || "SBC"}
-                                                    name={service.name}
-                                                    price={service.price}
-                                                    whatsappLink={service.whatsappLink}
-                                                    productId={service._id}
-                                                />
-                                            </div>
-                                        ))
-                                    ) : !isLoading && (
-                                        <div className="col-span-2 text-center py-8 text-gray-500">
-                                            Aucun service trouvé
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {selectedCategory === 'Produits' && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    {allProducts.length > 0 ? (
-                                        <>
-                                            {allProducts.map((product) => (
-                                                <div
-                                                    key={product._id}
-                                                    onClick={() => navigate(`/single-product/${product._id}`)}
-                                                    className="cursor-pointer"
-                                                >
-                                                    <MarketplaceProductCard
-                                                        image={product.images?.[0]?.url
-                                                            ? product.images[0].url
-                                                            : ecommerceIcon}
-                                                        brand={product.seller?.name || "SBC"}
-                                                        name={product.name}
-                                                        price={product.price}
-                                                        whatsappLink={product.whatsappLink}
-                                                        productId={product._id}
-                                                    />
-                                                </div>
-                                            ))}
-                                            {hasMore && (
-                                                <div ref={loadingRef} className="col-span-2 block mt-8 mb-4 w-full flex justify-center items-center min-h-[48px]">
-                                                    {isFetchingMore && (
-                                                        <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-                                                        </svg>
-                                                    )}
-                                                </div>
-                                            )}
-                                        </>
-                                    ) : !isLoading && (
-                                        <div className="col-span-2 text-center py-8 text-gray-500">
-                                            Aucun produit trouvé
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </>
+                    {/* No results message */}
+                    {visibleItems.length === 0 && !isLoading && !isFetchingNextPage && (
+                        <div className="col-span-2 text-center py-8 text-gray-500">
+                            Aucun {selectedCategory !== 'Tous' ? selectedCategory.toLowerCase() : 'produit ou service'} trouvé
+                        </div>
                     )}
                 </>
             )}
