@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from "framer-motion";
@@ -49,7 +49,7 @@ function Marketplace() {
     const [searchQuery, setSearchQuery] = useState('');
     const limit = 10; // Number of items per page
     const navigate = useNavigate();
-    const observerRef = useRef<IntersectionObserver | null>(null);
+    const observer = useRef<IntersectionObserver>();
 
     // Use React Query's useInfiniteQuery for pagination
     const {
@@ -97,31 +97,19 @@ function Marketplace() {
     );
 
     // Setup intersection observer for infinite scroll
-    useEffect(() => {
-        observerRef.current = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) {
-                    fetchNextPage();
-                }
-            },
-            { threshold: 0.1 }
-        );
+    const lastItemRef = useCallback((node: HTMLDivElement) => {
+        if (isLoading || isFetchingNextPage) return;
+        if (observer.current) observer.current.disconnect();
 
-        return () => {
-            if (observerRef.current) {
-                observerRef.current.disconnect();
+        observer.current = new IntersectionObserver(entries => {
+            if (entries[0].isIntersecting && hasNextPage) {
+                fetchNextPage();
             }
-        };
-    }, [hasNextPage, isFetchingNextPage, fetchNextPage]);
+        });
 
-    const lastItemRef = (node: HTMLDivElement) => {
-        if (observerRef.current) {
-            observerRef.current.disconnect();
-        }
-        if (node) {
-            observerRef.current?.observe(node);
-        }
-    };
+        if (node) observer.current.observe(node);
+    }, [isLoading, isFetchingNextPage, hasNextPage, fetchNextPage]);
+
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchQuery(e.target.value);
