@@ -334,8 +334,11 @@ function MesFilleuls() {
               className="flex items-center py-2 gap-3"
             >
               <img
-                src={filleul.avatarId
-                  ? sbcApiService.generateSettingsFileUrl(filleul.avatarId)
+                src={
+                  filleul.avatar
+                    ? filleul.avatar
+                    : filleul.avatarId
+                    ? sbcApiService.generateSettingsFileUrl(filleul.avatarId)
                   : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
                 alt={filleul.name}
                 className="w-10 h-10 rounded-full object-cover" />

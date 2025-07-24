@@ -11,6 +11,7 @@ interface User {
   lastName: string;
   phoneNumber?: string;
   avatar?: string;
+  avatarId?: string;
   referralCode?: string;
   momoNumber?: string;
   momoOperator?: string;

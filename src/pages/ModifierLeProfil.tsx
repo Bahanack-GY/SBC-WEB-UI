@@ -265,7 +265,7 @@ function ModifierLeProfil() {
           country: countryName,
           profession: user.profession || '',
           interests: user.interests || [],
-          avatar: user.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360',
+          avatar: user.avatar ? user.avatar : user.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360',
           birthDate: birthDate,
           sex: user.sex || '',
           momoNumber: user.momoNumber || '',

@@ -206,7 +206,7 @@ function Home() {
             <div className="home-header">
               <HomeUserCard
                 name={user ? user.name : "Utilisateur"}
-                image={user?.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : "https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360"}
+                image={user?.avatar ? user.avatar : user?.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : "https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360"}
                 affiliates={referralStats?.totalReferrals || 0}
                 status={subscriptionStatus}
                 promoCode={user?.referralCode || ""}

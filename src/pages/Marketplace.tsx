@@ -279,8 +279,8 @@ function Marketplace() {
                                                 className="cursor-pointer"
                                             >
                                                 <MarketplaceProductCard
-                                                    image={item.images?.[0]?.fileId
-                                                        ? sbcApiService.generateSettingsFileUrl(item.images[0].fileId)
+                                                    image={item.images?.[0]?.url
+                                                        ? item.images[0].url
                                                         : ecommerceIcon}
                                                     brand={item.seller?.name || "SBC"}
                                                     name={item.name}
@@ -318,8 +318,8 @@ function Marketplace() {
                                                 className="cursor-pointer"
                                             >
                                                 <MarketplaceProductCard
-                                                    image={service.images?.[0]?.fileId
-                                                        ? sbcApiService.generateSettingsFileUrl(service.images[0].fileId)
+                                                    image={service.images?.[0]?.url
+                                                        ? service.images[0].url
                                                         : ecommerceIcon}
                                                     brand={service.seller?.name || "SBC"}
                                                     name={service.name}
@@ -348,8 +348,8 @@ function Marketplace() {
                                                     className="cursor-pointer"
                                                 >
                                                     <MarketplaceProductCard
-                                                        image={product.images?.[0]?.fileId
-                                                            ? sbcApiService.generateSettingsFileUrl(product.images[0].fileId)
+                                                        image={product.images?.[0]?.url
+                                                            ? product.images[0].url
                                                             : ecommerceIcon}
                                                         brand={product.seller?.name || "SBC"}
                                                         name={product.name}

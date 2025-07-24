@@ -72,7 +72,7 @@ function ModifierProduit() {
                     });
                     if (product.images && Array.isArray(product.images)) {
                         // Use fileId to generate the full URL for existing images
-                        setExistingImageUrls(product.images.map(img => sbcApiService.generateSettingsFileUrl(img.fileId)));
+                        setExistingImageUrls(product.images.map(img => img.url));
                     } else {
                         setExistingImageUrls([]);
                     }

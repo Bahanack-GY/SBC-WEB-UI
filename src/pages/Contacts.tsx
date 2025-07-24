@@ -719,9 +719,10 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         {contacts.map((c: User) => (
                             <div key={c._id} className="flex items-center px-3 py-3 gap-3">
                                 <img
-                                    src={c.avatarId
-                                        ? sbcApiService.generateSettingsFileUrl(c.avatarId)
-                                        : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
+                                    src={
+                                        c.avatar ? c.avatar : c.avatarId
+                                            ? sbcApiService.generateSettingsFileUrl(c.avatarId)
+                                            : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
                                     alt={c.name}
                                     className="w-10 h-10 rounded-full object-cover border border-gray-200"
                                 />

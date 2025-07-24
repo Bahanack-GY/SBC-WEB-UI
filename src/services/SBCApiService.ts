@@ -939,31 +939,10 @@ export class SBCApiService extends ApiService {
   // ==================== FILE MANAGEMENT ====================
 
   /**
-   * Get settings file
-   */
-  async getSettingsFile(fileId: string): Promise<ApiResponse> {
-    return await this.get(`/settings/files/${fileId}`, { requiresAuth: false });
-  }
-
-  /**
-   * Get file thumbnail
-   */
-  async getFileThumbnail(fileId: string): Promise<ApiResponse> {
-    return await this.get(`/settings/thumbnails/${fileId}`, { requiresAuth: false });
-  }
-
-  /**
    * Generate settings file URL
    */
   generateSettingsFileUrl(fileId: string): string {
-    return `${this.baseUrl}/settings/files/${fileId}`;
-  }
-
-  /**
-   * Generate settings thumbnail URL
-   */
-  generateSettingsThumbnailUrl(fileId: string): string {
-    return `${this.baseUrl}/settings/thumbnails/${fileId}`;
+    return `https://storage.googleapis.com/sbc-file-storage/${fileId}`;
   }
 
   // ==================== CURRENCY CONVERSION ====================
