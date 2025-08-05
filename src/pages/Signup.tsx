@@ -348,7 +348,7 @@ function Signup() {
   const handleInterestClick = (displayInterest: string) => {
     // Convert display value (with emoji) to base value (without emoji) for storage
     const baseInterest = getInterestBaseValue(displayInterest);
-    
+
     setData(prev => ({
       ...prev,
       interets: prev.interets.includes(baseInterest)

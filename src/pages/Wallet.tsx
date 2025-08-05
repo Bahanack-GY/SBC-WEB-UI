@@ -257,9 +257,17 @@ function Wallet() {
       }
       try {
         // Determine currency based on user's country
-        const userCountryName = user?.country; // e.g., 'Cameroun'
-        const userCountryDetails = countryOptions.find((c: { value: string; code: string; }) => c.value === userCountryName);
-        const userCountryCode = userCountryDetails?.code; // This would be 'CM', 'BJ' etc.
+        const userCountryName = user?.country; // Could be either country name like 'Cameroun' or country code like 'TG'
+        
+        // First try to find by country name (value field)
+        let userCountryDetails = countryOptions.find((c: { value: string; code: string; }) => c.value === userCountryName);
+        
+        // If not found, try to find by country code (code field) - in case user.country stores the code directly
+        if (!userCountryDetails) {
+          userCountryDetails = countryOptions.find((c: { value: string; code: string; }) => c.code === userCountryName);
+        }
+        
+        const userCountryCode = userCountryDetails?.code; // This would be 'CM', 'BJ', 'TG' etc.
 
         let currency = 'XAF'; // Default for Central African CFA franc
         if (userCountryCode && correspondents[userCountryCode] && correspondents[userCountryCode].currencies.length > 0) {

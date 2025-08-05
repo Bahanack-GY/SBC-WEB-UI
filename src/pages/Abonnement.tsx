@@ -14,7 +14,7 @@ import TourButton from '../components/common/TourButton';
 // import { useNavigate } from 'react-router-dom';
 
 function Abonnement() {
-    
+
     const [purchasing, setPurchasing] = useState<string | null>(null);
 
     // Use cached API calls to prevent duplicate requests
@@ -86,7 +86,7 @@ function Abonnement() {
                 await fetchSubscriptionData();
             }
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Purchase failed');
+            alert(err instanceof Error ? err.message : 'Paiement échoué');
         } finally {
             setPurchasing(null);
         }
@@ -108,7 +108,7 @@ function Abonnement() {
                 await fetchSubscriptionData();
             }
         } catch (err) {
-            alert(err instanceof Error ? err.message : 'Upgrade failed');
+            alert(err instanceof Error ? err.message : 'Mise à niveau échouée');
         } finally {
             setPurchasing(null);
         }
@@ -152,7 +152,7 @@ function Abonnement() {
                 disabled={isPurchasing}
                 className="bg-blue-700 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-                {isPurchasing ? 'Achat...' : 'Acheter'}
+                {isPurchasing ? 'Paiement...' : 'Payer'}
             </button>
         );
     };
@@ -209,16 +209,80 @@ function Abonnement() {
                                         </div>
                                         <div className="text-white text-sm mt-1">{plan.description}</div>
 
-                                        {plan.features && plan.features.length > 0 && (
-                                            <ul className="mt-2 mb-2 space-y-1">
-                                                {plan.features.map((feature: string, idx: number) => (
-                                                    <li key={idx} className="flex items-center text-white text-sm gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-4 h-4" />
-                                                        {feature}
+                                        {/* Custom features based on subscription type */}
+                                        <ul className="mt-3 mb-2 space-y-1">
+                                            {plan.type === 'CLASSIQUE' ? (
+                                                <>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Possibilité de gagner 5000fcfa à 10.000fcfa/jour</span>
                                                     </li>
-                                                ))}
-                                            </ul>
-                                        )}
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation en trading</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation sur l'achat en chine</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation en art oratoire</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation en marketing digital</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation création des bots WhatsApp</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Accès marketplace</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Contacts WhatsApp</span>
+                                                    </li>
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Possibilité de gagner 12.500fcfa à 25.000fcfa/jour</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation en trading</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation sur l'achat en chine</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation en art oratoire</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation en marketing digital</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation création des bots WhatsApp</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Accès marketplace</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Contacts WhatsApp</span>
+                                                    </li>
+                                                </>
+                                            )}
+                                        </ul>
 
                                         <div className="mt-3">
                                             {getSubscriptionButton(plan)}
