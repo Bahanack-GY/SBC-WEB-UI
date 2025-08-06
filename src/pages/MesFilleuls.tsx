@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
-import { FaWhatsapp, FaFilter } from 'react-icons/fa';
+import { FaWhatsapp, FaFilter, FaSearch, FaTimes } from 'react-icons/fa';
 import Skeleton from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -61,6 +61,11 @@ function MesFilleuls() {
   const [selectedTab, setSelectedTab] = useState<'direct' | 'indirect'>('direct');
   const [modalOpen, setModalOpen] = useState(false);
 
+  // Debug logging
+  useEffect(() => {
+    console.log('MesFilleuls - Auth state:', { user: !!user, authLoading });
+  }, [user, authLoading]);
+
   // Filter states for input and debounced values
   const [searchInput, setSearchInput] = useState('');
   const [subTypeFilterInput, setSubTypeFilterInput] = useState<'all' | 'none' | 'CLASSIQUE' | 'CIBLE' | 'undefined'>('undefined');
@@ -88,11 +93,14 @@ function MesFilleuls() {
   const limit = 10;
 
   // Query for stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
     queryKey: queryKeys.stats,
     queryFn: async () => {
+      console.log('Fetching referral stats...');
       const statsResponse = await sbcApiService.getReferralStats();
+      console.log('Stats response:', statsResponse);
       const statsResult = handleApiResponse(statsResponse);
+      console.log('Processed stats result:', statsResult);
       return {
         direct: statsResult.level1Count || 0,
         indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
@@ -100,8 +108,11 @@ function MesFilleuls() {
         totalReferrals: statsResult.totalReferrals || 0
       };
     },
-    staleTime: 10 * 60 * 1000, // 10 min
-    gcTime: 60 * 60 * 1000, // 1 hour
+    enabled: !authLoading && !!user, // Add the same condition as filleuls query
+    staleTime: 5 * 60 * 1000, // Reduce to 5 min for testing
+    gcTime: 30 * 60 * 1000, // Reduce cache time
+    retry: 3,
+    retryDelay: 1000,
   });
 
   // Query for filleuls using useInfiniteQuery
@@ -111,6 +122,7 @@ function MesFilleuls() {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
+    error,
   } = useInfiniteQuery<
     { referredUsers: User[], totalPages: number, totalCount: number, filteredCount: number }, // TQueryFnData
     Error, // TError
@@ -120,22 +132,43 @@ function MesFilleuls() {
   >({
     queryKey: queryKeys.filleuls(selectedTab, debouncedSearch, debouncedSubTypeFilter),
     queryFn: async ({ pageParam = 1 }) => {
-      if (!user) { // Ensure user is available before making API call
-        // This case should be handled by `enabled` but a fallback is good
+      if (!user) {
         throw new Error("User not authenticated or loaded.");
       }
-      const filleulsResponse = await sbcApiService.getReferredUsers({
+
+      const params: any = {
         type: selectedTab,
-        ...(debouncedSearch ? { name: debouncedSearch } : {}),
         page: pageParam,
         limit,
-        subType: debouncedSubTypeFilter === 'undefined' ? undefined : debouncedSubTypeFilter
-      });
-      return handleApiResponse(filleulsResponse);
+      };
+
+      if (debouncedSearch) {
+        params.name = debouncedSearch;
+      }
+
+      if (debouncedSubTypeFilter !== 'undefined') {
+        params.subType = debouncedSubTypeFilter;
+      }
+
+      const filleulsResponse = await sbcApiService.getReferredUsers(params);
+      const result = handleApiResponse(filleulsResponse);
+
+      // Ensure the response has the expected structure
+      if (!result || typeof result !== 'object') {
+        throw new Error('Invalid API response structure');
+      }
+
+      return {
+        referredUsers: result.referredUsers || [],
+        totalPages: result.totalPages || 1,
+        totalCount: result.totalCount || 0,
+        filteredCount: result.filteredCount || result.totalCount || 0
+      };
     },
     getNextPageParam: (lastPage, allPages) => {
-      // Assuming API returns totalPages or enough info to calculate hasMore
-      return lastPage.totalPages && (allPages.length < lastPage.totalPages) ? allPages.length + 1 : undefined;
+      // Check if there are more pages available
+      const currentPage = allPages.length;
+      return currentPage < lastPage.totalPages ? currentPage + 1 : undefined;
     },
     initialPageParam: 1,
     staleTime: 0, // Always refetch on queryKey change or background refetch
@@ -174,7 +207,7 @@ function MesFilleuls() {
   // Flatten the data for rendering
   const allFilleuls = data?.pages.flatMap(page => page.referredUsers) || [];
   // Get the total filtered count from the first page's data
-  const filteredCount = data?.pages[0]?.totalCount ?? 0;
+  const filteredCount = data?.pages?.[0]?.totalCount ?? 0;
 
   // Function to get display name for filter status
   const getFilterDisplayName = (currentSubType: typeof subTypeFilterInput) => {
@@ -197,179 +230,289 @@ function MesFilleuls() {
   //   );
   // }
 
+  // Handle error state
+  if (error) {
+    return (
+      <div className="p-3 min-h-screen bg-white">
+        <div className="flex items-center mb-3">
+          <BackButton />
+          <h3 className="text-xl font-medium text-center w-full">Mes filleuls</h3>
+        </div>
+        <div className="flex items-center justify-center min-h-[200px] text-red-600">
+          Erreur lors du chargement: {error.message}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="p-3 min-h-screen bg-white">
-      <div className="flex items-center mb-3">
-        <BackButton />
-        <h3 className="text-xl font-medium text-center w-full">Mes filleuls</h3>
-      </div>
-      {/* Search Bar */}
-      <form
-        className="flex items-center gap-2 mb-4"
-        onSubmit={e => { e.preventDefault(); setSearchInput(searchInput.trim()); }} // Trigger debounce manually on submit
-      >
-        <input
-          type="text"
-          placeholder="Rechercher par nom ou téléphone"
-          value={searchInput}
-          onChange={e => setSearchInput(e.target.value)}
-          className="flex-1 rounded-full border border-gray-300 px-4 py-2 text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50"
-        />
-        <button
-          type="submit"
-          className="bg-green-700 text-white px-4 py-2 rounded-full font-semibold hover:bg-green-800 transition-colors"
-        >
-          Rechercher
-        </button>
-      </form>
-      {/* Stats Cards */}
-      <div className="space-y-3 mb-4">
-        {/* Total Filleuls Card */}
-        <div className="bg-white rounded-2xl shadow flex flex-col md:flex-row items-center justify-between px-6 py-4 border border-gray-100">
-          <div className="font-semibold text-gray-700 text-base mb-2 md:mb-0">Nombre total de filleuls</div>
-          <div className="flex gap-4 text-sm font-bold">
-            <span className="text-green-700">Direct: <span className="text-gray-900">{statsLoading ? '...' : stats?.direct?.toLocaleString() ?? '...'}</span></span>
-            <span className="text-green-700">Indirect: <span className="text-gray-900">{statsLoading ? '...' : stats?.indirect?.toLocaleString() ?? '...'}</span></span>
-          </div>
-        </div>
-
-        {/* Current Filter Stats */}
-        <div className="bg-white rounded-2xl shadow px-6 py-3 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div className="font-semibold text-gray-700 text-sm">
-              {getFilterDisplayName(subTypeFilterInput)} {/* Use input state for display */}
-            </div>
-            <div className="text-sm font-medium text-gray-600">
-              {filleulsLoading ? '...' : filteredCount?.toLocaleString() ?? '...'} {filteredCount === 1 ? 'filleul' : 'filleuls'}
-            </div>
-          </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="flex items-center p-4">
+          <BackButton />
+          <h1 className="text-xl font-semibold text-gray-900 ml-3">Mes filleuls</h1>
+          {/* Debug button - remove in production */}
+          <button
+            onClick={() => refetchStats()}
+            className="ml-auto text-xs bg-gray-200 px-2 py-1 rounded"
+            title="Refresh stats"
+          >
+            🔄
+          </button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 mb-4">
-        <button
-          className={`px-5 py-1 rounded-full border text-sm font-semibold transition-colors duration-150 ${selectedTab === 'direct' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-          onClick={() => setSelectedTab('direct')}
-        >
-          Direct
-        </button>
-        <button
-          className={`px-5 py-1 rounded-full border text-sm font-semibold transition-colors duration-150 ${selectedTab === 'indirect' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-          onClick={() => setSelectedTab('indirect')}
-        >
-          Indirect
-        </button>
-        <div className="flex-1" />
-        <button
-          className="flex items-center gap-2 border border-gray-300 rounded-full px-3 py-1 text-gray-700 hover:bg-gray-100 transition ml-auto"
-          onClick={() => setModalOpen(true)}
-        >
-          <FaFilter className="text-green-700" />
-          <span className="text-sm font-medium">Filtrer</span>
-        </button>
-      </div>
-      {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
-          <div className="bg-white rounded-2xl shadow-lg p-6 w-80 flex flex-col gap-4">
-            <div className="font-bold text-lg mb-2 text-center">Filtrer les filleuls</div>
+      <div className="p-4 space-y-4">
+        {/* Search Bar */}
+        <div className="relative">
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <FaSearch className="h-4 w-4 text-gray-400" />
+          </div>
+          <input
+            type="text"
+            placeholder="Rechercher un filleul..."
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
+            className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          />
+          {searchInput && (
             <button
-              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'undefined' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setSubTypeFilterInput('undefined'); setModalOpen(false); }}
+              onClick={() => setSearchInput('')}
+              className="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
-              Tous les filleuls
+              <FaTimes className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+            </button>
+          )}
+        </div>
+        {/* Stats Overview */}
+        <div className="bg-white rounded-xl p-4 shadow-sm">
+          {statsError ? (
+            <div className="text-center text-red-600 text-sm">
+              Erreur de chargement des statistiques
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center">
+                <div className="text-2xl font-bold text-green-600">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-12 mx-auto rounded"></div>
+                  ) : (
+                    stats?.direct?.toLocaleString() ?? '0'
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">Filleuls directs</div>
+              </div>
+              <div className="text-center">
+                <div className="text-2xl font-bold text-blue-600">
+                  {statsLoading ? (
+                    <div className="animate-pulse bg-gray-200 h-8 w-12 mx-auto rounded"></div>
+                  ) : (
+                    stats?.indirect?.toLocaleString() ?? '0'
+                  )}
+                </div>
+                <div className="text-sm text-gray-600">Filleuls indirects</div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Tabs and Filter */}
+        <div className="flex items-center justify-between">
+          <div className="flex bg-gray-100 rounded-lg p-1">
+            <button
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'direct'
+                ? 'bg-white text-green-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
+              onClick={() => setSelectedTab('direct')}
+            >
+              Direct ({statsLoading || authLoading ? '...' : stats?.direct ?? 0})
             </button>
             <button
-              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'all' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setSubTypeFilterInput('all'); setModalOpen(false); }}
+              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'indirect'
+                ? 'bg-white text-blue-600 shadow-sm'
+                : 'text-gray-600 hover:text-gray-900'
+                }`}
+              onClick={() => setSelectedTab('indirect')}
             >
-              Tous abonnés
-            </button>
-            <button
-              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'CLASSIQUE' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setSubTypeFilterInput('CLASSIQUE'); setModalOpen(false); }}
-            >
-              Abonnés CLASSIQUE
-            </button>
-            <button
-              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'CIBLE' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setSubTypeFilterInput('CIBLE'); setModalOpen(false); }}
-            >
-              Abonnés CIBLÉ
-            </button>
-            <button
-              className={`w-full py-2 rounded-xl font-medium border ${subTypeFilterInput === 'none' ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-              onClick={() => { setSubTypeFilterInput('none'); setModalOpen(false); }}
-            >
-              Non abonnés
-            </button>
-            <button
-              className="w-full py-2 rounded-xl font-medium border border-gray-300 text-gray-500 mt-2 hover:bg-gray-100"
-              onClick={() => setModalOpen(false)}
-            >
-              Annuler
+              Indirect ({statsLoading || authLoading ? '...' : stats?.indirect ?? 0})
             </button>
           </div>
+
+          <button
+            className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+            onClick={() => setModalOpen(true)}
+          >
+            <FaFilter className="text-gray-500" size={14} />
+            <span className="text-sm">Filtrer</span>
+          </button>
         </div>
-      )}
-      {(filleulsLoading && !isFetchingNextPage) ? ( // Use !isFetchingNextPage to show initial loading only
-        <div className="flex flex-col gap-2">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-3 py-2">
-              <Skeleton width="w-10" height="h-10" rounded="rounded-full" />
-              <div className="flex-1">
-                <Skeleton width="w-32" height="h-4" rounded="rounded" />
-                <Skeleton width="w-24" height="h-3" rounded="rounded" />
-              </div>
-              <Skeleton width="w-8" height="h-8" rounded="rounded-full" />
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="bg-white rounded-xl shadow p-2 divide-y">
-          {allFilleuls.map((filleul: User, index: number) => (
-            <div
-              key={filleul._id}
-              ref={index === allFilleuls.length - 1 ? lastItemRef : null} // Assign ref to the last item
-              className="flex items-center py-2 gap-3"
-            >
-              <img
-                src={
-                  filleul.avatar
-                    ? filleul.avatar
-                    : filleul.avatarId
-                    ? sbcApiService.generateSettingsFileUrl(filleul.avatarId)
-                  : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
-                alt={filleul.name}
-                className="w-10 h-10 rounded-full object-cover" />
-              <div className="flex-1">
-                <div className="font-medium text-gray-900 text-sm">{filleul.name}</div>
-                <div className="text-xs text-gray-500">{filleul.phoneNumber}</div>
-              </div>
-              <a
-                href={`https://wa.me/${filleul.phoneNumber?.replace(/[^\d]/g, '')}/?text=${RelanceMessage}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-green-500 hover:text-green-600"
-                title="Contacter sur WhatsApp"
+
+        {/* Current Filter Display */}
+        {subTypeFilterInput !== 'undefined' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-blue-800">
+                Filtre actif: {getFilterDisplayName(subTypeFilterInput)}
+              </span>
+              <button
+                onClick={() => setSubTypeFilterInput('undefined')}
+                className="text-blue-600 hover:text-blue-800 text-sm font-medium"
               >
-                <FaWhatsapp size={22} />
-              </a>
+                Supprimer
+              </button>
             </div>
-          ))}
-          {isFetchingNextPage && ( // Use isFetchingNextPage for loading more indicator
-            <div className="flex justify-center items-center py-4">
-              <svg className="animate-spin h-8 w-8 text-green-600" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
-              </svg>
+          </div>
+        )}
+        {/* Filter Modal */}
+        {modalOpen && (
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:w-96 max-w-md">
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-gray-900">Filtrer par abonnement</h3>
+                  <button
+                    onClick={() => setModalOpen(false)}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <FaTimes size={20} />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  {[
+                    { value: 'undefined', label: 'Tous les filleuls', icon: '👥' },
+                    { value: 'all', label: 'Tous abonnés', icon: '✅' },
+                    { value: 'CLASSIQUE', label: 'Abonnés CLASSIQUE', icon: '🥉' },
+                    { value: 'CIBLE', label: 'Abonnés CIBLÉ', icon: '🎯' },
+                    { value: 'none', label: 'Non abonnés', icon: '❌' },
+                  ].map((filter) => (
+                    <button
+                      key={filter.value}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${subTypeFilterInput === filter.value
+                        ? 'bg-green-50 border-green-200 text-green-800'
+                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                        }`}
+                      onClick={() => {
+                        setSubTypeFilterInput(filter.value as any);
+                        setModalOpen(false);
+                      }}
+                    >
+                      <span className="text-lg">{filter.icon}</span>
+                      <span className="font-medium">{filter.label}</span>
+                      {subTypeFilterInput === filter.value && (
+                        <span className="ml-auto text-green-600">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </div>
-          )}
-          {allFilleuls.length === 0 && !filleulsLoading && !isFetchingNextPage && ( // Ensure nothing is loading
-            <div className="text-center text-gray-400 py-8">Aucun filleul dans cette catégorie.</div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+        {/* Results */}
+        {(filleulsLoading && !isFetchingNextPage) ? (
+          <div className="space-y-3">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="bg-white rounded-xl p-4 flex items-center gap-3">
+                <Skeleton width="w-12" height="h-12" rounded="rounded-full" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton width="w-32" height="h-4" rounded="rounded" />
+                  <Skeleton width="w-24" height="h-3" rounded="rounded" />
+                </div>
+                <Skeleton width="w-10" height="h-10" rounded="rounded-full" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {allFilleuls.length > 0 ? (
+              <>
+                <div className="text-sm text-gray-600 mb-3">
+                  {filteredCount} {filteredCount === 1 ? 'filleul trouvé' : 'filleuls trouvés'}
+                </div>
+                {allFilleuls.map((filleul: User, index: number) => (
+                  <div
+                    key={filleul._id}
+                    ref={index === allFilleuls.length - 1 ? lastItemRef : null}
+                    className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        <img
+                          src={
+                            filleul.avatar
+                              ? filleul.avatar
+                              : filleul.avatarId
+                                ? sbcApiService.generateSettingsFileUrl(filleul.avatarId)
+                                : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'
+                          }
+                          alt={filleul.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                        {filleul.activeSubscriptions && filleul.activeSubscriptions.length > 0 && (
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>
+                        )}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium text-gray-900 truncate">{filleul.name}</div>
+                        <div className="text-sm text-gray-500">{filleul.phoneNumber}</div>
+                        {filleul.activeSubscriptions && filleul.activeSubscriptions.length > 0 && (
+                          <div className="flex gap-1 mt-1">
+                            {filleul.activeSubscriptions.map((sub, idx) => (
+                              <span
+                                key={idx}
+                                className={`text-xs px-2 py-1 rounded-full ${sub === 'CLASSIQUE'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-purple-100 text-purple-800'
+                                  }`}
+                              >
+                                {sub}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      <a
+                        href={`https://wa.me/${filleul.phoneNumber?.replace(/[^\d]/g, '')}/?text=${encodeURIComponent(RelanceMessage)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
+                        title="Contacter sur WhatsApp"
+                      >
+                        <FaWhatsapp size={20} />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+
+                {isFetchingNextPage && (
+                  <div className="flex justify-center items-center py-6">
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+                      </svg>
+                      <span className="text-sm">Chargement...</span>
+                    </div>
+                  </div>
+                )}
+              </>
+            ) : (
+              <div className="bg-white rounded-xl p-8 text-center">
+                <div className="text-gray-400 text-4xl mb-4">👥</div>
+                <div className="text-gray-600 font-medium mb-2">Aucun filleul trouvé</div>
+                <div className="text-gray-500 text-sm">
+                  {searchInput ? 'Essayez avec un autre terme de recherche' : 'Vous n\'avez pas encore de filleuls dans cette catégorie'}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
