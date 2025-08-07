@@ -95,7 +95,7 @@ function MesFilleuls() {
   const limit = 10;
 
   // Query for stats - always fetch fresh data when component mounts
-  const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: queryKeys.stats,
     queryFn: async () => {
       console.log('Fetching referral stats...');
@@ -234,8 +234,8 @@ function MesFilleuls() {
         return parseInt(year) === currentYear && parseInt(monthNum) <= currentMonth;
       })
       .sort((a, b) => {
-        const [yearA, monthA] = a.month.split('-');
-        const [yearB, monthB] = b.month.split('-');
+        const [, monthA] = a.month.split('-');
+        const [, monthB] = b.month.split('-');
         return parseInt(monthA) - parseInt(monthB);
       });
 
@@ -264,7 +264,7 @@ function MesFilleuls() {
             {/* Chart */}
             <div className="relative">
               <div className="flex items-end justify-between h-32 px-1 gap-1">
-                {relevantMonths.map((month, index) => {
+                {relevantMonths.map((month) => {
                   const totalHeight = maxValue > 0 ? (month.total / maxValue) * chartHeight : 0;
                   const activeHeight = maxValue > 0 ? (month.totalActiveSubscribers / maxValue) * chartHeight : 0;
                   const isSelected = selectedMonth?.month === month.month;
