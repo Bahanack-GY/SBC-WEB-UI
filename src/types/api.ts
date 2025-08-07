@@ -87,11 +87,12 @@ export interface Subscription {
 // Transaction Types
 export interface Transaction {
   id: string;
+  transactionId?: string; // Add transactionId field for API calls
   userId: string;
   type: 'deposit' | 'withdrawal' | 'payment' | 'refund';
   amount: number;
   currency: string;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled';
+  status: 'pending' | 'completed' | 'failed' | 'cancelled' | 'refunded' | 'processing' | 'pending_otp_verification';
   description?: string;
   reference?: string;
   paymentMethod?: string;

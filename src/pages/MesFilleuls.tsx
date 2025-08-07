@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useQuery, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
-import { FaWhatsapp, FaFilter, FaSearch, FaTimes } from 'react-icons/fa';
+import { FaWhatsapp, FaFilter, FaSearch, FaTimes, FaChartLine, FaUsers, FaUserCheck, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import Skeleton from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -60,6 +60,8 @@ function MesFilleuls() {
   const { user, loading: authLoading } = useAuth();
   const [selectedTab, setSelectedTab] = useState<'direct' | 'indirect'>('direct');
   const [modalOpen, setModalOpen] = useState(false);
+  const [showChart, setShowChart] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<any>(null);
 
   // Debug logging
   useEffect(() => {
@@ -92,7 +94,7 @@ function MesFilleuls() {
 
   const limit = 10;
 
-  // Query for stats
+  // Query for stats - always fetch fresh data when component mounts
   const { data: stats, isLoading: statsLoading, error: statsError, refetch: refetchStats } = useQuery({
     queryKey: queryKeys.stats,
     queryFn: async () => {
@@ -105,12 +107,19 @@ function MesFilleuls() {
         direct: statsResult.level1Count || 0,
         indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
         total: (statsResult.level1Count || 0) + (statsResult.level2Count || 0) + (statsResult.level3Count || 0),
-        totalReferrals: statsResult.totalReferrals || 0
+        totalReferrals: statsResult.totalReferrals || 0,
+        level1ActiveSubscribers: statsResult.level1ActiveSubscribers || 0,
+        level2ActiveSubscribers: statsResult.level2ActiveSubscribers || 0,
+        level3ActiveSubscribers: statsResult.level3ActiveSubscribers || 0,
+        totalActiveSubscribers: (statsResult.level1ActiveSubscribers || 0) + (statsResult.level2ActiveSubscribers || 0) + (statsResult.level3ActiveSubscribers || 0),
+        monthlyData: statsResult.monthlyData || []
       };
     },
-    enabled: !authLoading && !!user, // Add the same condition as filleuls query
-    staleTime: 5 * 60 * 1000, // Reduce to 5 min for testing
-    gcTime: 30 * 60 * 1000, // Reduce cache time
+    enabled: !authLoading && !!user,
+    staleTime: 0, // Always fetch fresh data
+    gcTime: 0, // Don't cache data
+    refetchOnMount: 'always', // Always refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gains focus
     retry: 3,
     retryDelay: 1000,
   });
@@ -162,7 +171,7 @@ function MesFilleuls() {
         referredUsers: result.referredUsers || [],
         totalPages: result.totalPages || 1,
         totalCount: result.totalCount || 0,
-        filteredCount: result.filteredCount || result.totalCount || 0
+        filteredCount: result.totalCount || 0 // Use totalCount as filteredCount since API doesn't return separate filteredCount
       };
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -207,7 +216,172 @@ function MesFilleuls() {
   // Flatten the data for rendering
   const allFilleuls = data?.pages.flatMap(page => page.referredUsers) || [];
   // Get the total filtered count from the first page's data
-  const filteredCount = data?.pages?.[0]?.totalCount ?? 0;
+  const filteredCount = data?.pages?.[0]?.filteredCount ?? data?.pages?.[0]?.totalCount ?? 0;
+
+  // Enhanced Chart Component
+  const MonthlyChart = ({ monthlyData }: { monthlyData: any[] }) => {
+    if (!monthlyData || monthlyData.length === 0) return null;
+
+    // Get current date and filter months from January to current month
+    const currentDate = new Date();
+    const currentMonth = currentDate.getMonth() + 1; // getMonth() returns 0-11
+    const currentYear = currentDate.getFullYear();
+
+    // Filter and sort months from January to current month
+    const relevantMonths = monthlyData
+      .filter(month => {
+        const [year, monthNum] = month.month.split('-');
+        return parseInt(year) === currentYear && parseInt(monthNum) <= currentMonth;
+      })
+      .sort((a, b) => {
+        const [yearA, monthA] = a.month.split('-');
+        const [yearB, monthB] = b.month.split('-');
+        return parseInt(monthA) - parseInt(monthB);
+      });
+
+    const maxValue = Math.max(...relevantMonths.map(d => d.total), 1);
+    const chartHeight = 120;
+
+    return (
+      <div className="bg-white rounded-xl p-4 shadow-sm">
+        <button
+          onClick={() => setShowChart(!showChart)}
+          className="flex items-center justify-between w-full mb-4 text-left"
+        >
+          <h3 className="text-lg font-semibold text-gray-900">Évolution mensuelle</h3>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Jan - {currentDate.toLocaleDateString('fr-FR', { month: 'short' })}</span>
+            {showChart ? (
+              <FaChevronUp className="text-gray-500" size={14} />
+            ) : (
+              <FaChevronDown className="text-gray-500" size={14} />
+            )}
+          </div>
+        </button>
+
+        {showChart && (
+          <div className="space-y-4">
+            {/* Chart */}
+            <div className="relative">
+              <div className="flex items-end justify-between h-32 px-1 gap-1">
+                {relevantMonths.map((month, index) => {
+                  const totalHeight = maxValue > 0 ? (month.total / maxValue) * chartHeight : 0;
+                  const activeHeight = maxValue > 0 ? (month.totalActiveSubscribers / maxValue) * chartHeight : 0;
+                  const isSelected = selectedMonth?.month === month.month;
+
+                  return (
+                    <div
+                      key={month.month}
+                      className="flex flex-col items-center flex-1 cursor-pointer"
+                      onClick={() => setSelectedMonth(isSelected ? null : month)}
+                    >
+                      <div className="flex flex-col items-center mb-2 relative">
+                        {/* Total bar */}
+                        <div
+                          className={`bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-md transition-all duration-300 shadow-sm ${relevantMonths.length <= 6 ? 'w-10' : relevantMonths.length <= 9 ? 'w-8' : 'w-6'
+                            } ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+                          style={{ height: `${Math.max(totalHeight, 8)}px` }}
+                        />
+                        {/* Active subscribers bar overlay */}
+                        <div
+                          className={`bg-gradient-to-t from-green-600 to-green-400 rounded-t-md absolute bottom-0 transition-all duration-300 shadow-sm ${relevantMonths.length <= 6 ? 'w-10' : relevantMonths.length <= 9 ? 'w-8' : 'w-6'
+                            }`}
+                          style={{ height: `${Math.max(activeHeight, 4)}px` }}
+                        />
+
+                        {/* Values on top of bars - show only if selected or on larger screens */}
+                        <div className={`absolute -top-10 text-xs font-medium text-gray-700 text-center transition-opacity duration-200 ${isSelected || relevantMonths.length <= 6 ? 'opacity-100' : 'opacity-0 md:opacity-100'
+                          }`}>
+                          <div className="text-gray-800 font-semibold">{month.total}</div>
+                          {month.totalActiveSubscribers > 0 && (
+                            <div className="text-green-600 text-xs font-medium">{month.totalActiveSubscribers}</div>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className={`text-xs text-gray-500 text-center ${relevantMonths.length > 8 ? 'transform -rotate-45 mt-2' : ''
+                        }`}>
+                        {relevantMonths.length <= 6 ? month.monthName.slice(0, 3) : month.monthName.slice(0, 3)}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Selected Month Details */}
+              {selectedMonth && (
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <h4 className="font-medium text-blue-900 mb-2">{selectedMonth.monthName} 2025</h4>
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-gray-600">Total filleuls:</span>
+                      <span className="font-medium ml-2">{selectedMonth.total}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Abonnés actifs:</span>
+                      <span className="font-medium ml-2 text-green-600">{selectedMonth.totalActiveSubscribers}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Niveau 1:</span>
+                      <span className="font-medium ml-2">{selectedMonth.level1}</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-600">Niveau 2:</span>
+                      <span className="font-medium ml-2">{selectedMonth.level2}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Legend */}
+              <div className="flex items-center justify-center gap-4 mt-4 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-gray-300 rounded-sm"></div>
+                  <span className="text-gray-600">Total filleuls</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <div className="w-3 h-3 bg-green-500 rounded-sm"></div>
+                  <span className="text-gray-600">Abonnés actifs</span>
+                </div>
+              </div>
+
+              <div className="text-xs text-gray-500 text-center mt-2 md:hidden">
+                Touchez une barre pour voir les détails
+              </div>
+            </div>
+
+            {/* Summary Stats */}
+            <div className="grid grid-cols-4 gap-3 pt-4 border-t border-gray-100">
+              <div className="text-center">
+                <div className="text-sm font-medium text-green-600">
+                  {relevantMonths.reduce((sum, m) => sum + m.level1, 0)}
+                </div>
+                <div className="text-xs text-gray-500">Niveau 1</div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-medium text-blue-600">
+                  {relevantMonths.reduce((sum, m) => sum + m.level2, 0)}
+                </div>
+                <div className="text-xs text-gray-500">Niveau 2</div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-medium text-purple-600">
+                  {relevantMonths.reduce((sum, m) => sum + m.level3, 0)}
+                </div>
+                <div className="text-xs text-gray-500">Niveau 3</div>
+              </div>
+              <div className="text-center">
+                <div className="text-sm font-medium text-orange-600">
+                  {relevantMonths.reduce((sum, m) => sum + m.totalActiveSubscribers, 0)}
+                </div>
+                <div className="text-xs text-gray-500">Abonnés</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   // Function to get display name for filter status
   const getFilterDisplayName = (currentSubType: typeof subTypeFilterInput) => {
@@ -252,14 +426,6 @@ function MesFilleuls() {
         <div className="flex items-center p-4">
           <BackButton />
           <h1 className="text-xl font-semibold text-gray-900 ml-3">Mes filleuls</h1>
-          {/* Debug button - remove in production */}
-          <button
-            onClick={() => refetchStats()}
-            className="ml-auto text-xs bg-gray-200 px-2 py-1 rounded"
-            title="Refresh stats"
-          >
-            🔄
-          </button>
         </div>
       </div>
 
@@ -267,7 +433,14 @@ function MesFilleuls() {
         {/* Search Bar */}
         <div className="relative">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="h-4 w-4 text-gray-400" />
+            {filleulsLoading && searchInput ? (
+              <svg className="animate-spin h-4 w-4 text-gray-400" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+              </svg>
+            ) : (
+              <FaSearch className="h-4 w-4 text-gray-400" />
+            )}
           </div>
           <input
             type="text"
@@ -285,58 +458,156 @@ function MesFilleuls() {
             </button>
           )}
         </div>
-        {/* Stats Overview */}
+        {/* Enhanced Stats Overview */}
         <div className="bg-white rounded-xl p-4 shadow-sm">
           {statsError ? (
             <div className="text-center text-red-600 text-sm">
               Erreur de chargement des statistiques
             </div>
-          ) : (
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">
-                  {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-8 w-12 mx-auto rounded"></div>
-                  ) : (
-                    stats?.direct?.toLocaleString() ?? '0'
-                  )}
+          ) : statsLoading ? (
+            <div className="space-y-4">
+              {/* Main Stats Skeleton */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <Skeleton width="w-16" height="h-8" rounded="rounded" className="mx-auto mb-2" />
+                  <div className="text-sm text-gray-600">Filleuls directs</div>
+                  <Skeleton width="w-20" height="h-3" rounded="rounded" className="mx-auto mt-1" />
                 </div>
-                <div className="text-sm text-gray-600">Filleuls directs</div>
+                <div className="text-center">
+                  <Skeleton width="w-16" height="h-8" rounded="rounded" className="mx-auto mb-2" />
+                  <div className="text-sm text-gray-600">Filleuls indirects</div>
+                  <Skeleton width="w-20" height="h-3" rounded="rounded" className="mx-auto mt-1" />
+                </div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
-                  {statsLoading ? (
-                    <div className="animate-pulse bg-gray-200 h-8 w-12 mx-auto rounded"></div>
-                  ) : (
-                    stats?.indirect?.toLocaleString() ?? '0'
-                  )}
+
+              {/* Additional Stats Row Skeleton */}
+              <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <FaUsers className="text-gray-300 mr-1" size={12} />
+                  </div>
+                  <Skeleton width="w-12" height="h-6" rounded="rounded" className="mx-auto mb-1" />
+                  <div className="text-xs text-gray-500">Total</div>
                 </div>
-                <div className="text-sm text-gray-600">Filleuls indirects</div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <FaUserCheck className="text-gray-300 mr-1" size={12} />
+                  </div>
+                  <Skeleton width="w-12" height="h-6" rounded="rounded" className="mx-auto mb-1" />
+                  <div className="text-xs text-gray-500">Abonnés</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <FaChartLine className="text-gray-300 mr-1" size={12} />
+                  </div>
+                  <Skeleton width="w-10" height="h-6" rounded="rounded" className="mx-auto mb-1" />
+                  <div className="text-xs text-gray-500">Taux</div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Main Stats */}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-green-600">
+                    {stats?.direct?.toLocaleString() ?? '0'}
+                  </div>
+                  <div className="text-sm text-gray-600">Filleuls directs</div>
+                  <div className="text-xs text-green-600 font-medium">
+                    {`${stats?.level1ActiveSubscribers ?? 0} abonnés`}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {stats?.indirect?.toLocaleString() ?? '0'}
+                  </div>
+                  <div className="text-sm text-gray-600">Filleuls indirects</div>
+                  <div className="text-xs text-blue-600 font-medium">
+                    {`${(stats?.level2ActiveSubscribers ?? 0) + (stats?.level3ActiveSubscribers ?? 0)} abonnés`}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Stats Row */}
+              <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <FaUsers className="text-gray-500 mr-1" size={12} />
+                  </div>
+                  <div className="text-lg font-semibold text-gray-800">
+                    {stats?.total?.toLocaleString() ?? '0'}
+                  </div>
+                  <div className="text-xs text-gray-500">Total</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <FaUserCheck className="text-green-500 mr-1" size={12} />
+                  </div>
+                  <div className="text-lg font-semibold text-green-600">
+                    {stats?.totalActiveSubscribers?.toLocaleString() ?? '0'}
+                  </div>
+                  <div className="text-xs text-gray-500">Abonnés</div>
+                </div>
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-1">
+                    <FaChartLine className="text-purple-500 mr-1" size={12} />
+                  </div>
+                  <div className="text-lg font-semibold text-purple-600">
+                    {`${stats?.totalActiveSubscribers && stats?.total ? Math.round((stats.totalActiveSubscribers / stats.total) * 100) : 0}%`}
+                  </div>
+                  <div className="text-xs text-gray-500">Taux</div>
+                </div>
               </div>
             </div>
           )}
         </div>
 
+        {/* Monthly Chart */}
+        {statsLoading ? (
+          <div className="bg-white rounded-xl p-4 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <Skeleton width="w-32" height="h-6" rounded="rounded" />
+              <Skeleton width="w-20" height="h-4" rounded="rounded" />
+            </div>
+            <Skeleton width="w-full" height="h-32" rounded="rounded" />
+          </div>
+        ) : (
+          stats?.monthlyData && stats.monthlyData.length > 0 && (
+            <MonthlyChart monthlyData={stats.monthlyData} />
+          )
+        )}
+
         {/* Tabs and Filter */}
         <div className="flex items-center justify-between">
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'direct'
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'direct'
                 ? 'bg-white text-green-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
                 }`}
               onClick={() => setSelectedTab('direct')}
             >
-              Direct ({statsLoading || authLoading ? '...' : stats?.direct ?? 0})
+              <div className="flex flex-col items-center">
+                <span>Direct</span>
+                <span className="text-xs">
+                  {statsLoading || authLoading ? '...' : `${stats?.direct ?? 0} (${stats?.level1ActiveSubscribers ?? 0})`}
+                </span>
+              </div>
             </button>
             <button
-              className={`px-4 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'indirect'
+              className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'indirect'
                 ? 'bg-white text-blue-600 shadow-sm'
                 : 'text-gray-600 hover:text-gray-900'
                 }`}
               onClick={() => setSelectedTab('indirect')}
             >
-              Indirect ({statsLoading || authLoading ? '...' : stats?.indirect ?? 0})
+              <div className="flex flex-col items-center">
+                <span>Indirect</span>
+                <span className="text-xs">
+                  {statsLoading || authLoading ? '...' : `${stats?.indirect ?? 0} (${((stats?.level2ActiveSubscribers ?? 0) + (stats?.level3ActiveSubscribers ?? 0))})`}
+                </span>
+              </div>
             </button>
           </div>
 
@@ -412,7 +683,7 @@ function MesFilleuls() {
           </div>
         )}
         {/* Results */}
-        {(filleulsLoading && !isFetchingNextPage) ? (
+        {(filleulsLoading && !isFetchingNextPage && allFilleuls.length === 0) ? (
           <div className="space-y-3">
             {[...Array(5)].map((_, i) => (
               <div key={i} className="bg-white rounded-xl p-4 flex items-center gap-3">
@@ -477,7 +748,7 @@ function MesFilleuls() {
                       </div>
 
                       <a
-                        href={`https://wa.me/${filleul.phoneNumber?.replace(/[^\d]/g, '')}/?text=${encodeURIComponent(RelanceMessage)}`}
+                        href={`https://wa.me/${String(filleul.phoneNumber || '').replace(/[^\d]/g, '')}/?text=${encodeURIComponent(RelanceMessage)}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"

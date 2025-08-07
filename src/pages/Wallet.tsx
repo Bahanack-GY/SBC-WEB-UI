@@ -17,15 +17,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { correspondents, countryOptions } from './ModifierLeProfil'; // Assuming these are exported from ModifierLeProfil.tsx
 import TourButton from '../components/common/TourButton';
 
-// Define the TransactionStatus as a string union type to match both backend and frontend usages
-export type TransactionStatus =
-  | 'pending'
-  | 'completed'
-  | 'failed'
-  | 'cancelled'
-  | 'refunded'
-  | 'processing'
-  | 'pending_otp_verification';
+// Use Transaction['status'] type from api.ts instead of defining a separate type
 
 // Chart data type
 interface ChartDataPoint {
@@ -100,7 +92,8 @@ function Wallet() {
       return (Array.isArray(result) ? result : []).map((tx: Record<string, unknown>) => ({
         ...tx,
         id: (tx._id as string) || (tx.transactionId as string) || (tx.id as string) || '',
-        status: (tx.status as TransactionStatus) || 'pending',
+        transactionId: (tx.transactionId as string) || (tx._id as string) || (tx.id as string) || '', // Preserve transactionId for API calls
+        status: (tx.status as Transaction['status']) || 'pending',
         type: (tx.type as Transaction['type']) || 'deposit',
         amount: (typeof tx.amount === 'number' ? tx.amount : Number(tx.amount)) || 0,
         createdAt: (tx.createdAt as string) || '',
@@ -258,15 +251,15 @@ function Wallet() {
       try {
         // Determine currency based on user's country
         const userCountryName = user?.country; // Could be either country name like 'Cameroun' or country code like 'TG'
-        
+
         // First try to find by country name (value field)
         let userCountryDetails = countryOptions.find((c: { value: string; code: string; }) => c.value === userCountryName);
-        
+
         // If not found, try to find by country code (code field) - in case user.country stores the code directly
         if (!userCountryDetails) {
           userCountryDetails = countryOptions.find((c: { value: string; code: string; }) => c.code === userCountryName);
         }
-        
+
         const userCountryCode = userCountryDetails?.code; // This would be 'CM', 'BJ', 'TG' etc.
 
         let currency = 'XAF'; // Default for Central African CFA franc
@@ -304,40 +297,85 @@ function Wallet() {
 
           // Handle success based on status from API response
           if (data.status === 'pending_otp_verification' && data.transactionId) {
-            setModalContent({ type: 'success', message: data.message || 'Demande de retrait initiée. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.' });
-            setShowModal(true);
-            navigate('/otp', {
-              state: {
-                fromWithdrawal: true,
-                withdrawalId: data.transactionId,
-                withdrawalAmount: Number(withdrawAmount),
-                withdrawalCurrency: currency,
-              }
-            });
-            setWithdrawAmount(''); // Clear the input after initiating/re-sending OTP
-            setWithdrawalFee(0); // Clear fee calculation
-            setTotalDeduction(0); // Clear total deduction
-            setShowWithdrawForm(false); // Hide the form
-            refreshUser(); // Refresh user context if needed for balance update or other state
+            // Check if this is a new transaction or existing one
+            if (data.message && data.message.includes('ongoing withdrawal request')) {
+              // This is an existing pending transaction - show French message without navigating
+              setModalContent({
+                type: 'error',
+                message: `Vous avez une demande de retrait en attente (ID: ${data.transactionId}) qui nécessite une vérification OTP. Un nouveau code OTP a été envoyé à votre numéro enregistré. Vous pouvez valider cette transaction ou l'annuler dans la liste des transactions.`
+              });
+              setShowModal(true);
+              setWithdrawAmount(''); // Clear the input
+              setWithdrawalFee(0); // Clear fee calculation
+              setTotalDeduction(0); // Clear total deduction
+              setShowWithdrawForm(false); // Hide the form
+              refreshUser(); // Refresh user context
+            } else {
+              // This is a new transaction - proceed normally
+              setModalContent({
+                type: 'success',
+                message: data.message || 'Demande de retrait initiée. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.',
+                onConfirm: () => {
+                  navigate('/otp', {
+                    state: {
+                      fromWithdrawal: true,
+                      withdrawalId: data.transactionId,
+                      withdrawalAmount: Number(withdrawAmount),
+                      withdrawalCurrency: currency,
+                    }
+                  });
+                }
+              });
+              setShowModal(true);
+              setWithdrawAmount(''); // Clear the input after initiating/re-sending OTP
+              setWithdrawalFee(0); // Clear fee calculation
+              setTotalDeduction(0); // Clear total deduction
+              setShowWithdrawForm(false); // Hide the form
+              refreshUser(); // Refresh user context if needed for balance update or other state
+            }
           } else if (data.status === 'processing') {
-            // New: Navigate directly to TransactionConfirmation page for PROCESSING status
-            setModalContent({ type: 'success', message: data.message || 'Retrait initié et en cours de traitement. Votre solde sera mis à jour une fois le transfert confirmé.' });
-            setShowModal(true);
-            navigate('/transaction-confirmation', {
-              state: {
-                transactionId: data.transactionId,
-                withdrawalAmount: Number(withdrawAmount),
-                withdrawalCurrency: currency,
-              }
-            });
-            setWithdrawAmount('');
-            setWithdrawalFee(0);
-            setTotalDeduction(0);
-            setShowWithdrawForm(false);
-            refreshUser(); // Refresh user context to reflect potential balance changes
+            // Check if this is an existing ongoing transaction
+            if (data.message && data.message.includes('ongoing')) {
+              // This is an existing processing transaction - show message without navigation
+              setModalContent({
+                type: 'error',
+                message: `Vous avez une demande de retrait en cours (ID: ${data.transactionId}) qui est actuellement en traitement. Veuillez la compléter ou l'annuler avant d'en initier une nouvelle.`
+              });
+              setShowModal(true);
+              setWithdrawAmount(''); // Clear the input
+              setWithdrawalFee(0); // Clear fee calculation
+              setTotalDeduction(0); // Clear total deduction
+              setShowWithdrawForm(false); // Hide the form
+              refreshUser(); // Refresh user context
+            } else {
+              // This is a new transaction with processing status - navigate to OTP page
+              setModalContent({
+                type: 'success',
+                message: data.message || 'Retrait initié et en cours de traitement. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.',
+                onConfirm: () => {
+                  navigate('/otp', {
+                    state: {
+                      fromWithdrawal: true,
+                      withdrawalId: data.transactionId,
+                      withdrawalAmount: Number(withdrawAmount),
+                      withdrawalCurrency: currency,
+                    }
+                  });
+                }
+              });
+              setShowModal(true);
+              setWithdrawAmount('');
+              setWithdrawalFee(0);
+              setTotalDeduction(0);
+              setShowWithdrawForm(false);
+              refreshUser(); // Refresh user context to reflect potential balance changes
+            }
           } else if (data.status === 'pending') {
-            // This covers a soft lock scenario where the status is 'pending' and no OTP is re-sent or needed at this point
-            setModalContent({ type: 'error', message: data.message || 'Vous avez une demande de retrait en cours. Veuillez la compléter ou l\'annuler avant d\'en initier une nouvelle.' });
+            // This is an existing pending transaction - show message without navigation
+            setModalContent({
+              type: 'error',
+              message: `Vous avez une demande de retrait en attente (ID: ${data.transactionId}) qui est en cours de traitement. Veuillez la compléter ou l'annuler dans la liste des transactions avant d'en initier une nouvelle.`
+            });
             setShowModal(true);
             setWithdrawAmount('');
             setWithdrawalFee(0);
@@ -412,6 +450,38 @@ function Wallet() {
     navigate('/deposit');
   };
 
+  const handleCancelTransaction = async (transactionId: string) => {
+    try {
+      const response = await sbcApiService.cancelWithdrawal(transactionId);
+      const data = handleApiResponse(response);
+
+      if (data && response.isOverallSuccess) {
+        setModalContent({
+          type: 'success',
+          message: 'Transaction annulée avec succès.'
+        });
+        setShowModal(true);
+        // Refresh transactions and user data
+        refreshUser();
+        window.location.reload(); // Simple refresh to update transaction lists
+      } else {
+        setModalContent({
+          type: 'error',
+          message: data?.message || 'Erreur lors de l\'annulation de la transaction.'
+        });
+        setShowModal(true);
+      }
+    } catch (err) {
+      console.error('Transaction cancellation error:', err);
+      let errorMessage = 'Erreur lors de l\'annulation de la transaction.';
+      if (err instanceof Error) {
+        errorMessage = err.message;
+      }
+      setModalContent({ type: 'error', message: errorMessage });
+      setShowModal(true);
+    }
+  };
+
   const formatTransactionIcon = (transaction: Transaction) => {
     switch (transaction.type) {
       case 'deposit': return '💰';
@@ -465,7 +535,7 @@ function Wallet() {
         setAllTransactions(prev => [...prev, ...fetchedTxs.map((tx: Record<string, unknown>) => ({
           ...tx,
           id: (tx._id as string) || (tx.transactionId as string) || (tx.id as string) || '',
-          status: (tx.status as TransactionStatus) || 'pending',
+          status: (tx.status as Transaction['status']) || 'pending',
           type: (tx.type as Transaction['type']) || 'deposit',
           amount: (typeof tx.amount === 'number' ? tx.amount : Number(tx.amount)) || 0,
           createdAt: (tx.createdAt as string) || '',
@@ -743,10 +813,12 @@ function Wallet() {
                 transactions.map((tx: Transaction) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 cursor-pointer hover:bg-white/10 rounded-lg transition-colors"
-                    onClick={() => openModal(tx)}
+                    className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 hover:bg-white/10 rounded-lg transition-colors"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
+                    <div
+                      className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                      onClick={() => openModal(tx)}
+                    >
                       <div className={getStatusIconWrapperClasses(String(tx.status))}>
                         <span className="text-2xl">{formatTransactionIcon(tx)}</span>
                       </div>
@@ -758,8 +830,27 @@ function Wallet() {
                         <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
                       </div>
                     </div>
-                    <div className={`font-bold text-sm ${tx.type === 'withdrawal' || tx.type === 'payment' ? 'text-red-400' : 'text-green-400'} whitespace-nowrap ml-2 max-w-[110px] text-right truncate`}>
-                      {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{tx.amount.toLocaleString('fr-FR')} F
+                    <div className="flex items-center gap-2">
+                      <div className={`font-bold text-sm ${tx.type === 'withdrawal' || tx.type === 'payment' ? 'text-red-400' : 'text-green-400'} whitespace-nowrap max-w-[110px] text-right truncate`}>
+                        {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{tx.amount.toLocaleString('fr-FR')} F
+                      </div>
+                      {tx.status === 'pending_otp_verification' && tx.type === 'withdrawal' && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setModalContent({
+                              type: 'confirm',
+                              message: 'Êtes-vous sûr de vouloir annuler cette transaction de retrait ?',
+                              onConfirm: () => handleCancelTransaction(tx.transactionId || tx.id)
+                            });
+                            setShowModal(true);
+                          }}
+                          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                          title="Annuler la transaction"
+                        >
+                          Annuler
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))
@@ -835,6 +926,24 @@ function Wallet() {
                       >
                         <FiShare2 className="inline mr-2" />Partager
                       </button>
+                      {selectedTx.status === 'pending_otp_verification' && selectedTx.type === 'withdrawal' && (
+                        <button
+                          className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                          onClick={() => {
+                            setModalContent({
+                              type: 'confirm',
+                              message: 'Êtes-vous sûr de vouloir annuler cette transaction de retrait ?',
+                              onConfirm: () => {
+                                handleCancelTransaction(selectedTx.transactionId || selectedTx.id);
+                                closeModal();
+                              }
+                            });
+                            setShowModal(true);
+                          }}
+                        >
+                          Annuler
+                        </button>
+                      )}
                       <button
                         className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
                         onClick={closeModal}
@@ -881,12 +990,14 @@ function Wallet() {
                         allTransactions.map((tx: Transaction) => (
                           <div
                             key={tx.id}
-                            className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 cursor-pointer hover:bg-white/10 rounded-lg transition-colors"
-                            onClick={() => {
-                              openModal(tx);
-                            }}
+                            className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 hover:bg-white/10 rounded-lg transition-colors"
                           >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <div
+                              className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
+                              onClick={() => {
+                                openModal(tx);
+                              }}
+                            >
                               <div className={getStatusIconWrapperClasses(String(tx.status))}>
                                 <span className="text-2xl">{formatTransactionIcon(tx)}</span>
                               </div>
@@ -898,8 +1009,27 @@ function Wallet() {
                                 <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
                               </div>
                             </div>
-                            <div className={`font-bold text-sm ${tx.type === 'withdrawal' || tx.type === 'payment' ? 'text-red-400' : 'text-green-400'} whitespace-nowrap ml-2 max-w-[110px] text-right truncate`}>
-                              {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{tx.amount.toLocaleString('fr-FR')} F
+                            <div className="flex items-center gap-2">
+                              <div className={`font-bold text-sm ${tx.type === 'withdrawal' || tx.type === 'payment' ? 'text-red-400' : 'text-green-400'} whitespace-nowrap max-w-[110px] text-right truncate`}>
+                                {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{tx.amount.toLocaleString('fr-FR')} F
+                              </div>
+                              {tx.status === 'pending_otp_verification' && tx.type === 'withdrawal' && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setModalContent({
+                                      type: 'confirm',
+                                      message: 'Êtes-vous sûr de vouloir annuler cette transaction de retrait ?',
+                                      onConfirm: () => handleCancelTransaction(tx.transactionId || tx.id)
+                                    });
+                                    setShowModal(true);
+                                  }}
+                                  className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs font-medium transition-colors"
+                                  title="Annuler la transaction"
+                                >
+                                  Annuler
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))
@@ -971,7 +1101,10 @@ function Wallet() {
                     <button
                       type="button"
                       className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
-                      onClick={() => setShowModal(false)}
+                      onClick={() => {
+                        modalContent.onConfirm?.();
+                        setShowModal(false);
+                      }}
                     >
                       Fermer
                     </button>
