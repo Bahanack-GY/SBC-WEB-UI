@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FiUser, FiMapPin, FiHeart, FiX } from 'react-icons/fi';
+import { useState, useEffect, useCallback } from 'react';
+import { FiUser, FiMapPin, FiHeart, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
@@ -8,6 +8,8 @@ import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import { ApiResponse } from '../services/ApiResponse';
 import { useQuery } from '@tanstack/react-query';
 import { clearSignupCache } from '../utils/signupHelpers';
+import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
+import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
 
 interface SignupData {
   nom: string;
@@ -177,6 +179,24 @@ function Signup() {
   const [affiliateName, setAffiliateName] = useState<string | null>(null);
   const [affiliateLoading, setAffiliateLoading] = useState(false);
   const [isAffiliationCodeDisabled, setIsAffiliationCodeDisabled] = useState(false);
+  
+  // Recovery-related state
+  const [pendingRecovery, setPendingRecovery] = useState<any>(null);
+  const [showRecoveryPreview, setShowRecoveryPreview] = useState(false);
+  const [showRecoveryCompletedNotification, setShowRecoveryCompletedNotification] = useState(false);
+  const [recoveryCompletedData, setRecoveryCompletedData] = useState<any>(null);
+  const [recoveryStatus, setRecoveryStatus] = useState<{
+    email?: 'checking' | 'recoverable' | 'none';
+    phone?: 'checking' | 'recoverable' | 'none';
+  }>({});
+  const [conflictStatus, setConflictStatus] = useState<{
+    email?: string;
+    phone?: string;
+    conflictType?: string;
+    message?: string;
+  }>({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
   const { register } = useAuth();
@@ -209,25 +229,90 @@ function Signup() {
 
   useEffect(() => {
     try {
+      // Pre-fill from URL parameters (from recovery redirect)
+      const urlParams = new URLSearchParams(window.location.search);
+      const emailFromUrl = urlParams.get('email');
+      const phoneFromUrl = urlParams.get('phone');
+      const countryFromUrl = urlParams.get('country');
+      
       const savedData = localStorage.getItem(STORAGE_KEY_DATA);
       const savedStep = localStorage.getItem(STORAGE_KEY_STEP);
       console.log('Attempting to load from localStorage...');
       console.log('Saved data:', savedData);
       console.log('Saved step:', savedStep);
+      
+      let dataToSet = { ...initialData };
 
       if (savedData) {
         const parsedData: SignupData = JSON.parse(savedData);
         console.log('Loaded and parsed data:', parsedData);
-        setData(prev => ({ ...initialData, ...prev, ...parsedData }));
-        if (parsedData.whatsapp) {
-          const matchedCode = countryCodes.find(c => parsedData.whatsapp.startsWith(c.code));
+        dataToSet = { ...dataToSet, ...parsedData };
+      }
+      
+      // URL parameters override saved data
+      const passwordFromUrl = urlParams.get('password');
+      if (emailFromUrl || phoneFromUrl || countryFromUrl || passwordFromUrl) {
+        dataToSet = {
+          ...dataToSet,
+          email: emailFromUrl || dataToSet.email,
+          pays: countryFromUrl || dataToSet.pays,
+          password: passwordFromUrl || dataToSet.password,
+          confirmPassword: passwordFromUrl || dataToSet.confirmPassword
+        };
+        
+        if (phoneFromUrl) {
+          // Extract country code from phone number - handle different formats
+          console.log('Signup: Parsing phone number from URL:', phoneFromUrl);
+          
+          // Normalize phone number by removing spaces, hyphens, and ensuring it starts with +
+          let normalizedPhone = phoneFromUrl.replace(/[\s\-()]/g, '');
+          if (!normalizedPhone.startsWith('+')) {
+            normalizedPhone = '+' + normalizedPhone;
+          }
+          
+          console.log('Signup: Normalized phone:', normalizedPhone);
+          
+          // Find matching country code
+          const matchedCode = countryCodes.find(c => normalizedPhone.startsWith(c.code));
           if (matchedCode) {
+            console.log('Signup: Found matching country code:', matchedCode);
             setSelectedCode(matchedCode);
-            setData(prev => ({ ...prev, whatsapp: parsedData.whatsapp.replace(matchedCode.code, '') }));
+            // Remove the country code (including +) from the phone number
+            const phoneWithoutCode = normalizedPhone.replace(matchedCode.code, '');
+            dataToSet.whatsapp = phoneWithoutCode;
+            console.log('Signup: Phone without code:', phoneWithoutCode);
           } else {
-            setSelectedCode(countryCodes[0]);
+            console.log('Signup: No matching country code found, using full phone number');
+            dataToSet.whatsapp = phoneFromUrl;
           }
         }
+      }
+
+      setData(dataToSet);
+      
+      // Handle phone number parsing for saved data (if not from URL)
+      if (dataToSet.whatsapp && !phoneFromUrl) {
+        console.log('Signup: Parsing saved phone number:', dataToSet.whatsapp);
+        
+        // Normalize saved phone number
+        let normalizedSavedPhone = dataToSet.whatsapp.replace(/[\s\-()]/g, '');
+        if (!normalizedSavedPhone.startsWith('+')) {
+          normalizedSavedPhone = '+' + normalizedSavedPhone;
+        }
+        
+        const matchedCode = countryCodes.find(c => normalizedSavedPhone.startsWith(c.code));
+        if (matchedCode) {
+          console.log('Signup: Found matching country code for saved phone:', matchedCode);
+          setSelectedCode(matchedCode);
+          const phoneWithoutCode = normalizedSavedPhone.replace(matchedCode.code, '');
+          setData(prev => ({ ...prev, whatsapp: phoneWithoutCode }));
+        } else {
+          console.log('Signup: No matching country code for saved phone, using default');
+          setSelectedCode(countryCodes[0]);
+        }
+      } else if (!phoneFromUrl) {
+        // Set default country code if no phone number
+        setSelectedCode(countryCodes[0]);
       }
 
       if (savedStep) {
@@ -313,6 +398,150 @@ function Signup() {
     };
   }, [data.parrain, isAffiliationCodeDisabled]);
 
+  // Check for pending recoveries when email/phone changes
+  const checkPendingRecoveries = useCallback(
+    debounce(async (email: string, phoneNumber?: string) => {
+      if (email || phoneNumber) {
+        // Set checking status
+        setRecoveryStatus(prev => ({
+          ...prev,
+          email: email ? 'checking' : prev.email,
+          phone: phoneNumber ? 'checking' : prev.phone
+        }));
+
+        try {
+          const fullPhoneNumber = phoneNumber ? `${selectedCode.code}${phoneNumber}` : undefined;
+          console.log('Signup: Checking recovery for:', { email, fullPhoneNumber });
+
+          const recoveryResponse = await safeRecoveryApiCall(
+            () => sbcApiService.checkRecoveryRegistration(email, fullPhoneNumber)
+          );
+
+          console.log('Signup: Raw recovery response:', recoveryResponse);
+
+          if (recoveryResponse) {
+            console.log('Signup: Raw recovery response:', recoveryResponse);
+
+            // First check if it's a 409 Conflict error
+            const conflictError = sbcApiService.parseConflictError(recoveryResponse);
+            console.log('Signup: Conflict error result:', conflictError);
+
+            if (conflictError) {
+              console.log('Signup: Conflict error detected:', conflictError);
+
+              // Handle conflict error - set conflict status for display below fields
+              const newConflictStatus = {
+                conflictType: conflictError.conflictType,
+                message: conflictError.message,
+                email: conflictError.conflictType === 'EMAIL_TAKEN' || conflictError.conflictType === 'BOTH_TAKEN' ? 'conflict' : undefined,
+                phone: conflictError.conflictType === 'PHONE_TAKEN' || conflictError.conflictType === 'BOTH_TAKEN' ? 'conflict' : undefined
+              };
+
+              console.log('Signup: Setting conflict status:', newConflictStatus);
+              setConflictStatus(newConflictStatus);
+
+              // Set none status for recovery
+              setRecoveryStatus(prev => ({
+                ...prev,
+                email: email ? 'none' : prev.email,
+                phone: phoneNumber ? 'none' : prev.phone
+              }));
+              setPendingRecovery(null);
+              return;
+            }
+
+            // If no conflict error, proceed with normal recovery check
+            const recoveryData = handleApiResponse(recoveryResponse);
+            console.log('Signup: Processed recovery data:', recoveryData);
+
+            if (recoveryData && recoveryData.hasPendingRecoveries) {
+              console.log('Signup: Pending recoveries found, setting recovery status');
+              setPendingRecovery(recoveryData);
+              // Clear any previous conflict status
+              setConflictStatus({});
+              // Set recoverable status
+              setRecoveryStatus(prev => ({
+                ...prev,
+                email: email ? 'recoverable' : prev.email,
+                phone: phoneNumber ? 'recoverable' : prev.phone
+              }));
+            } else {
+              console.log('Signup: No pending recoveries found in data:', recoveryData);
+              setPendingRecovery(null);
+              // Clear any previous conflict status
+              setConflictStatus({});
+              // Set none status
+              setRecoveryStatus(prev => ({
+                ...prev,
+                email: email ? 'none' : prev.email,
+                phone: phoneNumber ? 'none' : prev.phone
+              }));
+            }
+          } else {
+            console.log('Signup: No recovery response received');
+            setPendingRecovery(null);
+            // Clear any previous conflict status
+            setConflictStatus({});
+            // Set none status
+            setRecoveryStatus(prev => ({
+              ...prev,
+              email: email ? 'none' : prev.email,
+              phone: phoneNumber ? 'none' : prev.phone
+            }));
+          }
+        } catch (error) {
+          console.error('Recovery check error:', error);
+          // Set none status on error
+          setPendingRecovery(null);
+          // Clear any previous conflict status
+          setConflictStatus({});
+          setRecoveryStatus(prev => ({
+            ...prev,
+            email: email ? 'none' : prev.email,
+            phone: phoneNumber ? 'none' : prev.phone
+          }));
+        }
+      } else {
+        // Reset status when fields are empty
+        setRecoveryStatus({});
+        setPendingRecovery(null);
+        // Clear any conflict status
+        setConflictStatus({});
+      }
+    }, 800), // Increased delay to avoid too many API calls
+    [selectedCode.code]
+  );
+
+  useEffect(() => {
+    if (data.email || data.whatsapp) {
+      checkPendingRecoveries(data.email, data.whatsapp);
+    } else {
+      setPendingRecovery(null);
+      setShowRecoveryPreview(false);
+    }
+  }, [data.email, data.whatsapp, checkPendingRecoveries]);
+
+  // Check recovery completion after registration
+  const checkRecoveryCompletion = async (email: string, phoneNumber?: string) => {
+    try {
+      const fullPhoneNumber = phoneNumber ? `${selectedCode.code}${phoneNumber}` : undefined;
+      const recoveryResponse = await safeRecoveryApiCall(
+        () => sbcApiService.getRecoveryNotification(email, fullPhoneNumber)
+      );
+
+      if (recoveryResponse) {
+        const recoveryData = handleApiResponse(recoveryResponse);
+        if (recoveryData && recoveryData.hasRecoveries) {
+          setRecoveryCompletedData(recoveryData);
+          setShowRecoveryCompletedNotification(true);
+        }
+      }
+    } catch (error) {
+      console.error('Recovery completion check error:', error);
+      // Silently fail - don't show notification if there's an error
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
@@ -356,6 +585,54 @@ function Signup() {
         : [...prev.interets, baseInterest]
     }));
     setErrors(prev => ({ ...prev, interets: undefined }));
+  };
+
+  // Helper function to render recovery status message
+  const renderRecoveryStatusMessage = (type: 'email' | 'phone') => {
+    const status = recoveryStatus[type];
+    console.log(`Signup: renderRecoveryStatusMessage for ${type}:`, { status, pendingRecovery });
+
+    if (!status) return null;
+
+    switch (status) {
+      case 'checking':
+        return (
+          <div className="text-blue-500 text-xs mt-1 flex items-center">
+            <span className="animate-spin mr-1">⟲</span>
+            Vérification de récupération...
+          </div>
+        );
+      case 'recoverable':
+        // Simple, concise message with transaction info
+        const transactionCount = pendingRecovery?.recoveryDetails?.totalTransactions || 0;
+        const totalAmount = pendingRecovery?.recoveryDetails?.totalAmount || 0;
+
+        return (
+          <div className="text-green-600 text-xs mt-1 flex items-center">
+            <span className="mr-1">✓</span>
+            Compte récupérable détecté ({transactionCount} transaction{transactionCount > 1 ? 's' : ''}, {totalAmount} XAF)
+          </div>
+        );
+      case 'none':
+        return null; // Don't show anything for no recovery
+      default:
+        return null;
+    }
+  };
+
+  // Helper function to render conflict status message
+  const renderConflictStatusMessage = (type: 'email' | 'phone') => {
+    const hasConflict = conflictStatus[type] === 'conflict';
+    console.log(`Signup: renderConflictStatusMessage for ${type}:`, { hasConflict, conflictStatus });
+
+    if (!hasConflict) return null;
+
+    return (
+      <div className="text-red-500 text-xs mt-1 flex items-center">
+        <span className="mr-1">⚠️</span>
+        {conflictStatus.message}
+      </div>
+    );
   };
 
   const validateStep = async (): Promise<boolean> => {
@@ -489,6 +766,11 @@ function Signup() {
 
         const result = await register(userData);
 
+        // Check for recovery completion after successful registration
+        setTimeout(async () => {
+          await checkRecoveryCompletion(data.email, data.whatsapp);
+        }, 2000); // Wait 2 seconds for backend recovery processing
+
         // Clear all signup cache including URL parameters
         clearSignupCache();
 
@@ -516,6 +798,7 @@ function Signup() {
         <div className="mb-4">{icons[step]}</div>
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Créer un compte</h2>
         <p className="text-center text-gray-500 mb-6">Créez un compte pour développer votre réseau et augmenter vos revenus</p>
+        
         <form className="flex flex-col gap-4">
           {step === 0 && (
             <>
@@ -529,15 +812,49 @@ function Signup() {
                 <input name="email" value={data.email} onChange={handleChange} placeholder="Ex: Jeanpierre@gmail.com" className={`w-full border ${errors.email || errors.emailExists ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
                 {errors.emailExists && <div className="text-red-500 text-xs">{errors.emailExists}</div>}
+                {renderRecoveryStatusMessage('email')}
+                {renderConflictStatusMessage('email')}
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">🔒 Mot de passe</label>
-                <input name="password" type="password" value={data.password} onChange={handleChange} placeholder="Mot de passe" className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
+                <div className="relative">
+                  <input 
+                    name="password" 
+                    type={showPassword ? 'text' : 'password'} 
+                    value={data.password} 
+                    onChange={handleChange} 
+                    placeholder="Mot de passe" 
+                    className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`} 
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
+                </div>
                 {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">🔐 Confirmer le mot de passe</label>
-                <input name="confirmPassword" type="password" value={data.confirmPassword} onChange={handleChange} placeholder="Confirmer mot de passe" className={`w-full border ${errors.confirmPassword ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
+                <div className="relative">
+                  <input 
+                    name="confirmPassword" 
+                    type={showConfirmPassword ? 'text' : 'password'} 
+                    value={data.confirmPassword} 
+                    onChange={handleChange} 
+                    placeholder="Confirmer mot de passe" 
+                    className={`w-full border ${errors.confirmPassword ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`} 
+                  />
+                  <button
+                    type="button"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                  </button>
+                </div>
                 {errors.confirmPassword && <div className="text-red-500 text-xs">{errors.confirmPassword}</div>}
               </div>
               <div>
@@ -564,6 +881,8 @@ function Signup() {
                 </div>
                 {errors.whatsapp && <div className="text-red-500 text-xs">{errors.whatsapp}</div>}
                 {errors.whatsappExists && <div className="text-red-500 text-xs">{errors.whatsappExists}</div>}
+                {renderRecoveryStatusMessage('phone')}
+                {renderConflictStatusMessage('phone')}
               </div>
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
             </>
@@ -729,7 +1048,7 @@ function Signup() {
                 disabled={loading || !data.cgu || affiliateLoading}
                 className="bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
-                {loading ? 'Inscription...' : "S'inscrire"}
+                {loading ? 'Inscription...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
               </button>
             )}
           </div>
@@ -758,6 +1077,18 @@ function Signup() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Recovery Completed Notification */}
+      {recoveryCompletedData && (
+        <RecoveryCompletedNotification 
+          isOpen={showRecoveryCompletedNotification}
+          onClose={() => {
+            setShowRecoveryCompletedNotification(false);
+            setRecoveryCompletedData(null);
+          }}
+          recoveryData={recoveryCompletedData}
+        />
       )}
     </div>
   );

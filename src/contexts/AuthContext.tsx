@@ -15,13 +15,17 @@ interface User {
   referralCode?: string;
   momoNumber?: string;
   momoOperator?: string;
+  balance?: number;
+  usdBalance?: number;
+  cryptoWalletAddress?: string;
+  cryptoWalletCurrency?: string;
   [key: string]: any;
 }
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (email: string, password: string) => Promise<{ requiresOtp: boolean; userId?: string; email?: string }>;
+  login: (identifier: string, password: string) => Promise<{ requiresOtp: boolean; userId?: string; email?: string; hasNegativeBalance?: boolean; recoveryMessage?: string }>;
   register: (userData: any) => Promise<{ userId: string }>;
   logout: () => Promise<void>;
   verifyOtp: (userId: string, otp: string) => Promise<void>;
@@ -68,10 +72,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ requiresOtp: boolean; userId?: string; email?: string }> => {
+  const login = async (identifier: string, password: string): Promise<{ requiresOtp: boolean; userId?: string; email?: string; hasNegativeBalance?: boolean; recoveryMessage?: string }> => {
     try {
-      console.log('AuthContext: Starting login for', email);
-      const response = await sbcApiService.loginUser(email, password);
+      console.log('AuthContext: Starting login for', identifier);
+      const response = await sbcApiService.loginUser(identifier, password);
       console.log('AuthContext: Raw login response:', response);
 
       const data = handleApiResponse(response);
@@ -88,7 +92,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (needsOtp) {
         // OTP verification required - don't set token or user yet
         const userId = data.userId || data.id || data.user?.id;
-        const userEmail = data.email || email;
+        const userEmail = data.email || identifier;
 
         // Store userId temporarily for OTP verification (as per documentation)
         sessionStorage.setItem('tempUserId', userId);
@@ -110,6 +114,47 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       if (data.user) {
         setUser(data.user);
+        
+        // Check for negative balance and recovery options
+        if (data.user.balance && data.user.balance < 0) {
+          try {
+            console.log('AuthContext: Checking recovery for negative balance user');
+            const recoveryResponse = await sbcApiService.checkRecoveryLogin(identifier);
+            
+            if (recoveryResponse) {
+              const recoveryData = handleApiResponse(recoveryResponse);
+              
+              if (recoveryData?.data?.hasRecoverableTransactions) {
+                const recoveryInfo = recoveryData.data;
+                const recoveryMessage = `Votre compte a un solde négatif car vous avez probablement des filleuls qui ont payé mais leurs comptes n'ont pas encore été restaurés. Veuillez leur demander de s'inscrire avec l'email ou le numéro de téléphone qu'ils ont utilisé précédemment. Ils n'auront pas à payer à nouveau si le compte peut vraiment être récupéré. ${recoveryInfo.totalTransactions || 0} transactions récupérables trouvées d'une valeur de ${recoveryInfo.totalAmount || 0} XAF.`;
+                
+                return { 
+                  requiresOtp: false, 
+                  hasNegativeBalance: true, 
+                  recoveryMessage 
+                };
+              }
+            }
+            
+            // If no recoverable transactions found but balance is still negative, show generic message
+            const genericMessage = `Votre compte a un solde négatif. Cela peut être dû à des transactions de vos filleuls qui n'ont pas encore été restaurées. Veuillez contacter le support si vous pensez qu'il s'agit d'une erreur.`;
+            return { 
+              requiresOtp: false, 
+              hasNegativeBalance: true, 
+              recoveryMessage: genericMessage 
+            };
+          } catch (recoveryError) {
+            console.warn('AuthContext: Recovery check failed (endpoints may not be available):', recoveryError);
+            
+            // Fallback message when recovery endpoints are not available
+            const fallbackMessage = `Votre compte a un solde négatif. Si vous avez des filleuls qui ont effectué des paiements récemment, demandez-leur de s'inscrire avec le même email ou numéro de téléphone qu'ils ont utilisé précédemment pour restaurer leurs comptes.`;
+            return { 
+              requiresOtp: false, 
+              hasNegativeBalance: true, 
+              recoveryMessage: fallbackMessage 
+            };
+          }
+        }
       } else if (data.token) {
         // If user data not returned but token exists, fetch it
         await refreshUser();
@@ -149,6 +194,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Always clear local state
       removeToken();
       setUser(null);
+
+      // Clear sessionStorage to reset modal display logic for next login
+      console.log('AuthContext: Clearing sessionStorage on logout');
+      sessionStorage.clear();
     }
   };
 
@@ -164,6 +213,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         localStorage.setItem('userEmail', data.user?.email || '');
         localStorage.setItem('userName', data.user?.name || `${data.user?.firstName || ''} ${data.user?.lastName || ''}`.trim());
         localStorage.setItem('balance', data.user?.balance?.toString() || '0');
+        localStorage.setItem('usdBalance', data.user?.usdBalance?.toString() || '0');
 
         // Store user profile data
         if (data.user?.avatar) {

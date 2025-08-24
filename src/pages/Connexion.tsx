@@ -2,32 +2,85 @@ import { useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse } from '../utils/apiHelpers';
+import { isEmail, isPhoneNumber, safeRecoveryApiCall, extractCountryCode } from '../utils/recoveryHelpers';
+import RecoveryModal from '../components/RecoveryModal';
+import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import logo from '../assets/img/logo-sbc.png';
 import { clearSignupCacheWithFeedback } from '../utils/signupHelpers';
 
 function Connexion() {
   const [showPassword, setShowPassword] = useState(false);
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState(''); // Changed from email to identifier
   const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState({ email: '', password: '' });
+  const [errors, setErrors] = useState({ identifier: '', password: '' });
   const [loading, setLoading] = useState(false);
+  const [showRecoveryModal, setShowRecoveryModal] = useState(false);
+  const [recoveryInfo, setRecoveryInfo] = useState<any>(null);
+  const [showNegativeBalanceNotification, setShowNegativeBalanceNotification] = useState(false);
+  const [negativeBalanceMessage, setNegativeBalanceMessage] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const validate = () => {
     let valid = true;
-    const newErrors = { email: '', password: '' };
-    // Email regex (simple)
-    if (!email.match(/^\S+@\S+\.\S+$/)) {
-      newErrors.email = 'Veuillez entrer un email valide.';
+    const newErrors = { identifier: '', password: '' };
+    
+    // Validate identifier (email or phone)
+    if (!identifier) {
+      newErrors.identifier = 'Veuillez entrer votre email ou numéro de téléphone.';
+      valid = false;
+    } else if (!isEmail(identifier) && !isPhoneNumber(identifier)) {
+      newErrors.identifier = 'Veuillez entrer un email ou numéro de téléphone valide.';
       valid = false;
     }
+    
     if (password.length < 6) {
       newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères.';
       valid = false;
     }
+    
     setErrors(newErrors);
     return valid;
+  };
+
+  // Check for recoverable transactions on failed login or from API response
+  const checkRecoverableTransactions = async (identifier: string, checkRecoveryHint?: { phoneNumber?: string; email?: string }) => {
+    try {
+      // If we have a hint from the API response, use it directly
+      if (checkRecoveryHint) {
+        const recoveryInfo = {
+          totalTransactions: 0,
+          totalAmount: 0,
+          message: "Vos informations de compte ont été perdues, mais vos transactions peuvent être récupérées !",
+          suggestedIdentifiers: {
+            email: checkRecoveryHint.email,
+            phoneNumber: checkRecoveryHint.phoneNumber,
+            countryCode: checkRecoveryHint.phoneNumber ? extractCountryCode(checkRecoveryHint.phoneNumber) || 'CM' : 'CM'
+          }
+        };
+        setRecoveryInfo(recoveryInfo);
+        setShowRecoveryModal(true);
+        return;
+      }
+
+      // Otherwise, try the recovery API
+      const recoveryResponse = await safeRecoveryApiCall(
+        () => sbcApiService.checkRecoveryLogin(identifier)
+      );
+
+      if (recoveryResponse) {
+        const recoveryData = handleApiResponse(recoveryResponse);
+        if (recoveryData && recoveryData.data) {
+          setRecoveryInfo(recoveryData.data);
+          setShowRecoveryModal(true);
+        }
+      }
+    } catch (error) {
+      console.error('Recovery check error:', error);
+      // Silently fail - don't show recovery modal if there's an error
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -35,12 +88,22 @@ function Connexion() {
     if (validate()) {
       setLoading(true);
       try {
-        console.log('Connexion: Starting login process for', email);
-        const result = await login(email, password);
+        console.log('Connexion: Starting login process for', identifier);
+
+        // Process the login through auth context (single API call)
+        const result = await login(identifier, password);
         console.log('Connexion: Login result:', result);
 
         // Clear any cached signup data since user is now logging in
         clearSignupCacheWithFeedback();
+
+        // Check for negative balance after successful login
+        if (result.hasNegativeBalance && result.recoveryMessage) {
+          console.log('Connexion: Negative balance detected, showing recovery message');
+          setNegativeBalanceMessage(result.recoveryMessage);
+          setShowNegativeBalanceNotification(true);
+          // Still continue with normal flow after showing notification
+        }
 
         if (result.requiresOtp) {
           console.log('Connexion: OTP required, redirecting to OTP page');
@@ -48,7 +111,7 @@ function Connexion() {
           navigate('/otp', {
             state: {
               userId: result.userId,
-              email: result.email || email,
+              email: result.email || identifier,
               fromLogin: true
             }
           });
@@ -58,17 +121,21 @@ function Connexion() {
           navigate('/');
         }
       } catch (error: unknown) {
-        if (error instanceof Error && error.message.includes('401')) {
+        console.error('Connexion: Login error:', error);
+        
+        // Fall back to general recovery check for 401/404 errors
+        if (error instanceof Error && (error.message.includes('401') || error.message.includes('404'))) {
+          await checkRecoverableTransactions(identifier);
           setErrors({
-            email: '',
+            identifier: '',
             password: 'Email ou mot de passe incorrect'
           });
+        } else {
+          setErrors({
+            identifier: '',
+            password: error instanceof Error ? error.message : 'Login failed'
+          });
         }
-        console.error('Connexion: Login error:', error);
-        setErrors({
-          email: '',
-          password: error instanceof Error ? error.message : 'Login failed'
-        });
       } finally {
         setLoading(false);
       }
@@ -83,15 +150,18 @@ function Connexion() {
         <p className="text-gray-500 mb-8">Entrez votre email et votre mot de passe pour vous connecter</p>
         <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
           <div>
-            <label className="block text-gray-700 font-medium mb-2">Email</label>
+            <label className="block text-gray-700 font-medium mb-2">Email ou Numéro de téléphone</label>
             <input
-              type="email"
-              placeholder="Ex : Jeanpierre@gmail.com"
-              className={`w-full border ${errors.email ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400`}
-              value={email}
-              onChange={e => setEmail(e.target.value)}
+              type="text"
+              placeholder="Ex : jeanpierre@gmail.com ou 237670123456"
+              className={`w-full border ${errors.identifier ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400`}
+              value={identifier}
+              onChange={e => setIdentifier(e.target.value)}
             />
-            {errors.email && <div className="text-red-500 text-xs mt-1">{errors.email}</div>}
+            {errors.identifier && <div className="text-red-500 text-xs mt-1">{errors.identifier}</div>}
+            <small className="text-gray-500 text-xs mt-1">
+              Vous pouvez utiliser votre email (user@example.com) ou numéro de téléphone (237670123456)
+            </small>
           </div>
           <div>
             <label className="block text-gray-700 font-medium mb-2">Mot de passe</label>
@@ -136,6 +206,27 @@ function Connexion() {
           </button>
         </div>
       </div>
+
+      {/* Recovery Modal */}
+      {recoveryInfo && (
+        <RecoveryModal 
+          isOpen={showRecoveryModal}
+          onClose={() => {
+            setShowRecoveryModal(false);
+            setRecoveryInfo(null);
+          }}
+          recoveryInfo={recoveryInfo}
+          enteredPassword={password}
+        />
+      )}
+
+      {/* Negative Balance Notification */}
+      <NegativeBalanceNotification
+        isOpen={showNegativeBalanceNotification}
+        onClose={() => setShowNegativeBalanceNotification(false)}
+        userReferralCode={''} // Will be handled by the component
+        negativeBalance={0} // Will be handled by the component
+      />
     </div>
   );
 }

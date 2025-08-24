@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import iconOne from "../assets/icon/Growth.png";
 import iconTwo from "../assets/icon/analyse.png";
@@ -11,11 +11,18 @@ import type { SubscriptionPlan, Subscription } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useApiCache } from '../hooks/useApiCache';
 import TourButton from '../components/common/TourButton';
+import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
+import { useAuth } from '../contexts/AuthContext';
 // import { useNavigate } from 'react-router-dom';
 
 function Abonnement() {
 
     const [purchasing, setPurchasing] = useState<string | null>(null);
+    const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
+    const { user } = useAuth();
+
+    // Get user balance for negative balance modal (already available from AuthContext)
+    const balance = user?.balance || 0;
 
     // Use cached API calls to prevent duplicate requests
     const {
@@ -64,6 +71,26 @@ function Abonnement() {
         refetchPlans();
         refetchSubscription();
     };
+
+    // Check for negative balance and show notification
+    useEffect(() => {
+        console.log('🔍 Abonnement: Checking for negative balance modal trigger', {
+            balance,
+            userId: user?.id,
+            userBalance: user?.balance
+        });
+
+        if (balance < 0) {
+            console.log('✅ Abonnement: Negative balance detected, showing modal immediately');
+
+            // Show modal every time user logs in or signs up (no restrictions)
+            setShowNegativeBalanceModal(true);
+
+            console.log('🎯 Abonnement: Negative balance notification modal displayed');
+        } else {
+            console.log('❌ Abonnement: Balance is not negative', { balance });
+        }
+    }, [balance, user?.id, user?.balance]);
 
     const handlePurchase = async (planType: string) => {
         try {
@@ -301,6 +328,14 @@ function Abonnement() {
                     </div>
                 )}
                 <TourButton />
+
+                {/* Negative Balance Notification Modal */}
+                <NegativeBalanceNotification
+                    isOpen={showNegativeBalanceModal}
+                    onClose={() => setShowNegativeBalanceModal(false)}
+                    userReferralCode={user?.referralCode || ''}
+                    negativeBalance={Math.abs(balance)}
+                />
             </div>
         </ProtectedRoute>
     );

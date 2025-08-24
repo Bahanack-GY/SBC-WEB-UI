@@ -2,6 +2,7 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
+import './styles/recovery.css'
 import Money from './pages/Money'
 import AdsPack from './pages/AdsPack'
 import Marketplace from './pages/Marketplace'
@@ -30,6 +31,7 @@ import VerifyEmailOtp from './pages/VerifyEmailOtp'
 import ChangeEmail from './pages/ChangeEmail'
 import ChangePhoneNumber from './pages/ChangePhoneNumber'
 import PartnerSpace from './pages/PartnerSpace'
+import WithdrawalOtpVerification from './pages/WithdrawalOtpVerification'
 import { useQuery } from '@tanstack/react-query'
 import { handleApiResponse } from './utils/apiHelpers'
 import { sbcApiService } from './services/SBCApiService'
@@ -135,7 +137,7 @@ function AppContent() {
   // Logout button for unsubscribed users
   const showLogout = isAuthenticated && !isSubscribed;
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe';
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification';
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -175,6 +177,7 @@ function AppContent() {
         <Route path="/modifier-email" element={<ChangeEmail />} />
         <Route path="/change-phone" element={<ChangePhoneNumber />} />
         <Route path="/partenaire" element={<PartnerSpace />} />
+        <Route path="/withdrawal-otp-verification" element={<WithdrawalOtpVerification />} />
       </Routes>
       {!hideNav && <NavigationBar />}
     </div>

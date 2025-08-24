@@ -1,0 +1,365 @@
+/* Recovery System Styles */
+
+/* Recovery Modal Styles */
+.recovery-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.recovery-modal-header {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  border-radius: 12px 12px 0 0;
+}
+
+.recovery-info {
+  text-align: center;
+  padding: 20px;
+}
+
+.main-message {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  color: #374151;
+}
+
+.recovery-stats {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+  padding: 15px;
+  background: rgba(249, 250, 251, 1);
+  border-radius: 8px;
+  border: 1px solid rgba(229, 231, 235, 1);
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: bold;
+  margin-top: 5px;
+}
+
+.suggested-credentials {
+  text-align: left;
+  background: rgba(239, 246, 255, 1);
+  padding: 16px;
+  border-radius: 8px;
+  margin-top: 20px;
+  border: 1px solid rgba(219, 234, 254, 1);
+}
+
+.suggested-credentials h4 {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+/* Recovery Preview Banner */
+.recovery-preview-banner {
+  margin-bottom: 24px;
+}
+
+.recovery-preview-banner .banner-icon {
+  font-size: 32px;
+  margin-right: 16px;
+  flex-shrink: 0;
+}
+
+.recovery-preview-banner .banner-content h3 {
+  margin: 0 0 10px 0;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.recovery-preview-banner .banner-content p {
+  margin: 0 0 15px 0;
+  opacity: 0.95;
+}
+
+.recovery-details {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.recovery-details li {
+  padding: 5px 0;
+  padding-left: 20px;
+  position: relative;
+  font-size: 14px;
+}
+
+.recovery-details li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  color: #fff;
+  font-weight: bold;
+}
+
+/* Recovery Completed Modal */
+.recovery-completed-modal {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  max-width: 600px;
+}
+
+.modal-header.success {
+  background: linear-gradient(45deg, #10b981, #059669);
+  color: white;
+  text-align: center;
+  padding: 30px;
+  border-radius: 12px 12px 0 0;
+}
+
+.success-icon {
+  font-size: 48px;
+  margin-bottom: 15px;
+}
+
+.recovery-summary {
+  padding: 20px;
+}
+
+.summary-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+
+.stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 15px;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #10b981;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 5px;
+  text-align: center;
+}
+
+.recovery-details {
+  background: rgba(236, 253, 245, 1);
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid rgba(167, 243, 208, 1);
+}
+
+.recovery-details h4 {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 12px;
+}
+
+/* Button Styles */
+.btn-secondary {
+  background-color: #e5e7eb;
+  color: #374151;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #d1d5db;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+  font-weight: 500;
+  padding: 12px 24px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary.success {
+  background: linear-gradient(45deg, #10b981, #059669);
+}
+
+.btn-primary.success:hover {
+  background: linear-gradient(45deg, #059669, #047857);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
+/* Modal Footer */
+.modal-footer {
+  background: #f9fafb;
+  padding: 20px 24px;
+  border-top: 1px solid #e5e7eb;
+  border-radius: 0 0 12px 12px;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .recovery-stats {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .summary-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .recovery-preview-banner .banner-icon {
+    font-size: 24px;
+    margin-right: 10px;
+  }
+  
+  .recovery-preview-banner .banner-content h3 {
+    font-size: 18px;
+  }
+  
+  .modal-footer {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Animation Classes */
+.recovery-fade-in {
+  animation: recoveryFadeIn 0.3s ease-out;
+}
+
+@keyframes recoveryFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.recovery-scale-in {
+  animation: recoveryScaleIn 0.4s ease-out;
+}
+
+@keyframes recoveryScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Loading States */
+.recovery-loading {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.recovery-loading::after {
+  content: "";
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: recoverySpinner 1s linear infinite;
+}
+
+@keyframes recoverySpinner {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Focus and Accessibility */
+.btn-primary:focus,
+.btn-secondary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+/* Dark mode support (if needed) */
+@media (prefers-color-scheme: dark) {
+  .recovery-modal,
+  .recovery-completed-modal {
+    background: #1f2937;
+    color: #f9fafb;
+  }
+  
+  .suggested-credentials {
+    background: rgba(30, 58, 138, 0.1);
+    border-color: rgba(59, 130, 246, 0.3);
+  }
+  
+  .recovery-details {
+    background: rgba(5, 150, 105, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+  }
+  
+  .stat-card {
+    background: #374151;
+    border-color: #4b5563;
+  }
+  
+  .modal-footer {
+    background: #374151;
+    border-color: #4b5563;
+  }
+}

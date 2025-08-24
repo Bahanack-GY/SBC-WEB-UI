@@ -16,6 +16,7 @@ import { useApiCache } from '../hooks/useApiCache';
 import { useAuth } from '../contexts/AuthContext';
 import { correspondents, countryOptions } from './ModifierLeProfil'; // Assuming these are exported from ModifierLeProfil.tsx
 import TourButton from '../components/common/TourButton';
+import CurrencyConverterComponent from '../components/CurrencyConverterComponent';
 
 // Use Transaction['status'] type from api.ts instead of defining a separate type
 
@@ -83,7 +84,8 @@ function Wallet() {
   const {
     data: transactionsData,
     loading: transactionsLoading,
-    error: transactionsError
+    error: transactionsError,
+    invalidate: invalidateTransactions
   } = useApiCache(
     'transaction-history',
     async () => {
@@ -107,15 +109,14 @@ function Wallet() {
     { staleTime: 15000 } // 15 seconds
   );
 
-  console.log("transactionsData", transactionsData);
-
   // This line defines 'transactions' for use in your JSX
   const transactions = transactionsData;
 
   const {
     data: stats,
     loading: statsLoading,
-    error: statsError
+    error: statsError,
+    invalidate: invalidateStats
   } = useApiCache(
     'transaction-stats',
     async () => {
@@ -126,9 +127,6 @@ function Wallet() {
     },
     { staleTime: 30000 } // 30 seconds
   );
-
-
-  console.log("stats", stats);
   // Generate chart data from stats
   useEffect(() => {
     if (!stats) {
@@ -179,31 +177,46 @@ function Wallet() {
   const error = transactionsError || statsError; // Don't include wallet error as it's optional
   // Use balance from user context
   const balance = user?.balance || 0;
+  const usdBalance = user?.usdBalance || 0;
 
   const fetchWalletData = () => {
-    // This function can be used to manually refresh data if needed
-    window.location.reload();
+    // Refresh data by invalidating caches instead of full page reload
+    invalidateTransactions();
+    invalidateStats();
+    refreshUser();
   };
 
   const [chartType, setChartType] = useState('Reçu');
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [showWithdrawForm, setShowWithdrawForm] = useState(false);
+  const [selectedBalanceType, setSelectedBalanceType] = useState<'FCFA' | 'USD'>('FCFA');
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawalFee, setWithdrawalFee] = useState(0);
   const [totalDeduction, setTotalDeduction] = useState(0);
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
+  const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
 
   // Calculate withdrawal fee and total deduction in real-time
   useEffect(() => {
     const amount = Number(withdrawAmount) || 0;
-    const fee = amount * 0.025; // 2.5% fee
-    const total = amount + fee;
+    let fee = 0;
+    let total = 0;
+    
+    if (selectedBalanceType === 'FCFA') {
+      fee = amount * 0.025; // 2.5% fee for FCFA/Mobile Money
+      total = amount + fee;
+    } else {
+      // For USD crypto withdrawals, no frontend fee calculation
+      // The backend handles all fees transparently
+      fee = 0; 
+      total = amount; // Just the USD amount
+    }
 
     setWithdrawalFee(fee);
     setTotalDeduction(total);
-  }, [withdrawAmount]);
+  }, [withdrawAmount, selectedBalanceType]);
 
   const openModal = (tx: Transaction) => {
     setSelectedTx(tx);
@@ -232,18 +245,29 @@ function Wallet() {
         setWithdrawAmount('');
         setWithdrawalFee(0);
         setTotalDeduction(0);
+        setSelectedBalanceType('FCFA');
       }
       return !v;
     });
   };
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (withdrawAmount && Number(withdrawAmount) > 0) {
-      // Check if user has sufficient balance including the fee
-      if (balance < totalDeduction) {
+    if (withdrawAmount && Number(withdrawAmount) > 0 && !isNaN(Number(withdrawAmount))) {
+      // Check if user has sufficient balance
+      const currentBalance = selectedBalanceType === 'FCFA' ? balance : usdBalance;
+      const requiredAmount = selectedBalanceType === 'FCFA' ? totalDeduction : Number(withdrawAmount);
+      
+      if (currentBalance < requiredAmount) {
+        const balanceText = selectedBalanceType === 'FCFA' 
+          ? `${currentBalance.toLocaleString('fr-FR')} F`
+          : `$${currentBalance.toFixed(2)}`;
+        const requiredText = selectedBalanceType === 'FCFA'
+          ? `${requiredAmount.toLocaleString('fr-FR')} F (montant + frais de 2.5%)`
+          : `$${requiredAmount.toFixed(2)}`;
+          
         setModalContent({
           type: 'error',
-          message: `Solde insuffisant. Vous avez ${balance.toLocaleString('fr-FR')} F mais il faut ${totalDeduction.toLocaleString('fr-FR')} F (montant + frais de 2.5%).`
+          message: `Solde ${selectedBalanceType} insuffisant. Vous avez ${balanceText} mais il faut ${requiredText}.`
         });
         setShowModal(true);
         return;
@@ -269,8 +293,50 @@ function Wallet() {
           console.warn(`Could not determine specific currency for country: ${userCountryName} (code: ${userCountryCode}). Defaulting to XAF.`);
         }
 
-        // Note: The backend should also validate and apply the 2.5% fee
-        const response = await sbcApiService.initiateWithdrawal(Number(withdrawAmount));
+        // NEW UNIFIED WITHDRAWAL SYSTEM
+        console.log(`Initiating ${selectedBalanceType} withdrawal:`, Number(withdrawAmount));
+        
+        // For USD withdrawals, check if crypto wallet is set up
+        if (selectedBalanceType === 'USD') {
+          if (!user?.cryptoWalletAddress || !user?.cryptoWalletCurrency) {
+            setModalContent({
+              type: 'confirm',
+              message: "Pour effectuer un retrait en USD (crypto), vous devez d'abord configurer votre portefeuille crypto dans votre profil. Voulez-vous aller à la page de modification du profil maintenant ?",
+              onConfirm: () => navigate('/modifier-le-profil')
+            });
+            setShowModal(true);
+            return;
+          }
+          
+          // Check crypto withdrawal limits
+          try {
+            const limitsResponse = await sbcApiService.checkCryptoWithdrawalLimitsV2(Number(withdrawAmount), 'USD');
+            const limitsData = handleApiResponse(limitsResponse);
+            
+            if (!limitsData?.allowed) {
+              setModalContent({
+                type: 'error',
+                message: `Retrait USD non autorisé: ${limitsData?.reason || 'Limite atteinte'}`
+              });
+              setShowModal(true);
+              return;
+            }
+          } catch (err) {
+            console.warn('Could not check crypto limits, proceeding with withdrawal');
+          }
+        }
+        
+        // Use new unified withdrawal endpoint
+        const withdrawalAmount = Math.round(Number(withdrawAmount));
+        if (withdrawalAmount <= 0) {
+          throw new Error('Montant invalide: doit être supérieur à 0');
+        }
+        
+        console.log('Using new unified withdrawal endpoint');
+        const response = await sbcApiService.initiateUnifiedWithdrawal(
+          withdrawalAmount, 
+          selectedBalanceType === 'FCFA' ? 'mobile_money' : 'crypto'
+        );
         const data = handleApiResponse(response); // This assumes handleApiResponse throws on !success
 
         console.log("data", data);
@@ -279,7 +345,24 @@ function Wallet() {
         console.log("response.isOverallSuccess:", response.isOverallSuccess);
 
         if (data && response.isOverallSuccess) {
-          // Check for Mobile Money details error even in successful responses
+          // Handle different flows for crypto vs mobile money
+          if (selectedBalanceType === 'USD') {
+            // Crypto withdrawal - usually auto-processed
+            setModalContent({
+              type: 'success',
+              message: `Retrait crypto initié avec succès! Montant: $${withdrawAmount} vers ${user?.cryptoWalletCurrency} (${user?.cryptoWalletAddress?.substring(0, 10)}...)`
+            });
+            setShowModal(true);
+            setWithdrawAmount('');
+            setWithdrawalFee(0);
+            setTotalDeduction(0);
+            setSelectedBalanceType('FCFA');
+            setShowWithdrawForm(false);
+            refreshUser();
+            return;
+          }
+          
+          // For XAF/Mobile Money withdrawals, check for setup errors
           if (data.message && (
             data.message.includes("Mobile Money details") ||
             data.message.includes("registered Mobile Money") ||
@@ -288,7 +371,7 @@ function Wallet() {
           )) {
             setModalContent({
               type: 'confirm',
-              message: "Pour effectuer un retrait, vous devez d'abord ajouter votre numéro Mobile Money et choisir votre opérateur (MTN, Orange, etc.) dans votre profil. Voulez-vous aller à la page de modification du profil maintenant ?",
+              message: "Pour effectuer un retrait Mobile Money, vous devez d'abord ajouter votre numéro Mobile Money et choisir votre opérateur (MTN, Orange, etc.) dans votre profil. Voulez-vous aller à la page de modification du profil maintenant ?",
               onConfirm: () => navigate('/modifier-le-profil')
             });
             setShowModal(true);
@@ -461,9 +544,14 @@ function Wallet() {
           message: 'Transaction annulée avec succès.'
         });
         setShowModal(true);
-        // Refresh transactions and user data
+        // Refresh transactions and user data without full page reload
         refreshUser();
-        window.location.reload(); // Simple refresh to update transaction lists
+        invalidateTransactions();
+        invalidateStats();
+        // Reset the all transactions modal data to force refresh
+        setAllTransactions([]);
+        setAllTransactionsPage(1);
+        setAllTransactionsHasMore(true);
       } else {
         setModalContent({
           type: 'error',
@@ -646,8 +734,17 @@ function Wallet() {
           <>
             {/* Balance Card */}
             <div className="rounded-2xl bg-gradient-to-r from-blue-500 to-green-600 p-5 mb-6 shadow-lg">
-              <div className="text-sm opacity-80">Solde total</div>
-              <div className="text-3xl font-bold mb-2">{balance.toLocaleString('fr-FR')} F</div>
+              <div className="text-sm opacity-80">Vos soldes</div>
+              <div className="flex flex-col gap-2 mb-3">
+                <div className="flex justify-between items-center">
+                  <div className="text-2xl font-bold">{balance.toLocaleString('fr-FR')} F</div>
+                  <div className="text-xs opacity-80">FCFA</div>
+                </div>
+                <div className="flex justify-between items-center">
+                  <div className="text-xl font-bold">${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div className="text-xs opacity-80">USD</div>
+                </div>
+              </div>
               <div className="flex justify-between text-sm mt-2">
                 <div>
                   <div className="opacity-80">Bénéfice</div>
@@ -660,25 +757,85 @@ function Wallet() {
               </div>
             </div>
             {/* Action Buttons */}
-            <div className="flex gap-3 mb-6">
+            <div className="flex gap-2 mb-6">
               <button
                 onClick={handleDeposit}
                 className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 shadow hover:bg-blue-800 transition-colors"
               >
-                <FaArrowUp size={24} className="mb-1" />
+                <FaArrowUp size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Dépôt</span>
               </button>
               <button
                 onClick={handleWithdraw}
                 className="flex-1 flex flex-col items-center justify-center bg-[#94B027] rounded-2xl py-4 shadow hover:bg-green-700 transition-colors"
               >
-                <FaMoneyBillWave size={24} className="mb-1" />
+                <FaMoneyBillWave size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Retrait</span>
+              </button>
+              <button
+                onClick={() => setShowCurrencyConverter(true)}
+                className="flex-1 flex flex-col items-center justify-center bg-orange-500 rounded-2xl py-4 shadow hover:bg-orange-600 transition-colors text-white"
+              >
+                <svg className="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                </svg>
+                <span className="text-xs font-semibold">Convertir</span>
               </button>
             </div>
             {showWithdrawForm && (
               <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col gap-3 bg-gray-50 rounded-2xl p-4 shadow">
-                <label className="text-gray-800 font-semibold">Montant à retirer</label>
+                <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="text-xs text-blue-600 font-medium mb-1">Retrait Mobile Money</div>
+                  <div className="text-sm text-blue-700">
+                    Choisissez votre solde. Les USD seront automatiquement convertis en FCFA pour le Mobile Money.
+                  </div>
+                </div>
+                
+                {/* Balance Selection */}
+                <div className="mb-4">
+                  <label className="text-gray-800 font-semibold mb-2 block">Solde à utiliser:</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedBalanceType('FCFA');
+                        setWithdrawAmount('');
+                      }}
+                      className={`p-3 rounded-lg border transition-all text-left ${
+                        selectedBalanceType === 'FCFA'
+                          ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-500'
+                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="text-xs font-medium text-blue-600">Solde Principal</div>
+                      <div className="text-lg font-bold text-blue-800">{balance.toLocaleString('fr-FR')} F</div>
+                      <div className="text-xs text-blue-500 mt-1">
+                        {selectedBalanceType === 'FCFA' ? '✓ Sélectionné' : 'FCFA'}
+                      </div>
+                    </button>
+                    
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedBalanceType('USD');
+                        setWithdrawAmount('');
+                      }}
+                      className={`p-3 rounded-lg border transition-all text-left ${
+                        selectedBalanceType === 'USD'
+                          ? 'bg-green-50 border-green-200 ring-2 ring-green-500'
+                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                      }`}
+                    >
+                      <div className="text-xs font-medium text-green-600">Solde USD</div>
+                      <div className="text-lg font-bold text-green-800">${usdBalance.toFixed(2)}</div>
+                      <div className="text-xs text-green-500 mt-1">
+                        {selectedBalanceType === 'USD' ? '✓ Sélectionné' : 'USD'}
+                      </div>
+                    </button>
+                  </div>
+                </div>
+                
+                <label className="text-gray-800 font-semibold">Montant à retirer ({selectedBalanceType})</label>
                 <div className="flex justify-between gap-2">
                   <input
                     type="number"
@@ -686,7 +843,9 @@ function Wallet() {
                     value={withdrawAmount}
                     onChange={e => setWithdrawAmount(e.target.value)}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold"
-                    placeholder="Montant en F"
+                    placeholder={`Montant en ${selectedBalanceType}`}
+                    step={selectedBalanceType === 'USD' ? '0.01' : '1'}
+                    max={selectedBalanceType === 'FCFA' ? balance : usdBalance}
                     required
                   />
                   <button type="submit" className="bg-[#115CF6] text-white rounded-full p-3 font-bold shadow hover:bg-blue-800 transition-colors"><FaMoneyBill1 size={24} /></button>
@@ -697,21 +856,46 @@ function Wallet() {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-gray-700">Montant à retirer:</span>
-                      <span className="font-semibold text-gray-900">{Number(withdrawAmount).toLocaleString('fr-FR')} F</span>
+                      <span className="font-semibold text-gray-900">
+                        {selectedBalanceType === 'FCFA' 
+                          ? `${Number(withdrawAmount).toLocaleString('fr-FR')} F`
+                          : `$${Number(withdrawAmount).toFixed(2)}`
+                        }
+                      </span>
                     </div>
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-gray-700">Frais (2.5%):</span>
-                      <span className="font-semibold text-orange-600">{withdrawalFee.toLocaleString('fr-FR')} F</span>
-                    </div>
+                    {selectedBalanceType === 'FCFA' && (
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-700">Frais (2.5%):</span>
+                        <span className="font-semibold text-orange-600">{withdrawalFee.toLocaleString('fr-FR')} F</span>
+                      </div>
+                    )}
+                    {selectedBalanceType === 'USD' && (
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-700">Méthode de retrait:</span>
+                        <span className="font-semibold text-blue-600">
+                          🪙 Crypto ({user?.cryptoWalletCurrency || 'Non configuré'})
+                        </span>
+                      </div>
+                    )}
                     <div className="border-t border-blue-200 pt-2 mt-2">
                       <div className="flex justify-between items-center">
-                        <span className="font-semibold text-gray-800">Total déduit:</span>
-                        <span className="font-bold text-red-600">{totalDeduction.toLocaleString('fr-FR')} F</span>
+                        <span className="font-semibold text-gray-800">Total déduit du solde {selectedBalanceType}:</span>
+                        <span className="font-bold text-red-600">
+                          {selectedBalanceType === 'FCFA' 
+                            ? `${totalDeduction.toLocaleString('fr-FR')} F`
+                            : `$${totalDeduction.toFixed(2)}`
+                          }
+                        </span>
                       </div>
                     </div>
-                    {balance < totalDeduction && (
+                    {((selectedBalanceType === 'FCFA' && balance < totalDeduction) || 
+                      (selectedBalanceType === 'USD' && usdBalance < totalDeduction)) && (
                       <div className="mt-2 text-red-600 text-xs font-medium">
-                        ⚠️ Solde insuffisant. Solde actuel: {balance.toLocaleString('fr-FR')} F
+                        ⚠️ Solde {selectedBalanceType} insuffisant. Solde actuel: 
+                        {selectedBalanceType === 'FCFA' 
+                          ? `${balance.toLocaleString('fr-FR')} F`
+                          : `$${usdBalance.toFixed(2)}`
+                        }
                       </div>
                     )}
                   </div>
@@ -1115,6 +1299,16 @@ function Wallet() {
           </>
         )}
         <TourButton />
+
+        {/* Currency Converter Modal */}
+        <CurrencyConverterComponent
+          isOpen={showCurrencyConverter}
+          onClose={() => setShowCurrencyConverter(false)}
+          onConversionComplete={() => {
+            // Just refresh user data, no page reload
+            refreshUser();
+          }}
+        />
       </div>
     </ProtectedRoute>
   )

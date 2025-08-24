@@ -18,6 +18,8 @@ export interface User {
   referralCode?: string;
   momoNumber?: string;
   momoOperator?: string;
+  cryptoWalletAddress?: string;
+  cryptoWalletCurrency?: string;
   city?: string;
   region?: string;
   country?: string;
@@ -30,6 +32,7 @@ export interface User {
   createdAt?: string;
   updatedAt?: string;
   balance?: number;
+  usdBalance?: number;
   activeSubscriptions?: string[];
   notificationPreference?: 'email' | 'whatsapp';
 }
@@ -91,11 +94,18 @@ export interface Transaction {
   userId: string;
   type: 'deposit' | 'withdrawal' | 'payment' | 'refund';
   amount: number;
-  currency: string;
+  currency: 'XAF' | 'USD' | string;
   status: 'pending' | 'completed' | 'failed' | 'cancelled' | 'refunded' | 'processing' | 'pending_otp_verification';
   description?: string;
   reference?: string;
-  paymentMethod?: string;
+  paymentMethod?: 'MOMO' | 'CRYPTO' | string;
+  method?: 'MOMO' | 'CRYPTO';
+  cryptoDetails?: {
+    walletAddress: string;
+    cryptoCurrency: string;
+    transactionHash?: string;
+    networkFee?: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

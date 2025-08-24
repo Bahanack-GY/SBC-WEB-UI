@@ -7,6 +7,22 @@ import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 
+// Supported crypto currencies for withdrawal
+export const supportedCryptoCurrencies = [
+  { code: 'BTC', name: 'Bitcoin' },
+  { code: 'ETH', name: 'Ethereum' },
+  { code: 'USDT', name: 'Tether (USDT)' },
+  { code: 'USDC', name: 'USD Coin' },
+  { code: 'LTC', name: 'Litecoin' },
+  { code: 'XRP', name: 'XRP' },
+  { code: 'ADA', name: 'Cardano' },
+  { code: 'DOT', name: 'Polkadot' },
+  { code: 'SOL', name: 'Solana' },
+  { code: 'MATIC', name: 'Polygon' },
+  { code: 'TRX', name: 'TRON' },
+  { code: 'BCH', name: 'Bitcoin Cash' },
+];
+
 export const countryOptions = [
   { value: 'Cameroun', label: '🇨🇲 Cameroun', code: 'CM' },
   { value: 'Bénin', label: '🇧🇯 Bénin', code: 'BJ' },
@@ -214,6 +230,8 @@ function ModifierLeProfil() {
     sex: '',
     momoNumber: '',
     momoOperator: '',
+    cryptoWalletAddress: '',
+    cryptoWalletCurrency: '',
     referralCode: '',
     notificationPreference: 'email' as 'email' | 'whatsapp',
   });
@@ -270,6 +288,8 @@ function ModifierLeProfil() {
           sex: user.sex || '',
           momoNumber: user.momoNumber || '',
           momoOperator: momoOperatorToSet,
+          cryptoWalletAddress: user.cryptoWalletAddress || '',
+          cryptoWalletCurrency: user.cryptoWalletCurrency || '',
           referralCode: user.referralCode || '',
           notificationPreference: user.notificationPreference || 'email',
         };
@@ -373,7 +393,23 @@ function ModifierLeProfil() {
         referralCode: formData.referralCode,
         notificationPreference: formData.notificationPreference,
       };
+      
+      // Update regular profile
       await sbcApiService.updateUserProfile(updates);
+      
+      // Update crypto wallet separately if provided
+      if (formData.cryptoWalletAddress && formData.cryptoWalletCurrency) {
+        try {
+          await sbcApiService.updateCryptoWallet({
+            cryptoWalletAddress: formData.cryptoWalletAddress,
+            cryptoWalletCurrency: formData.cryptoWalletCurrency
+          });
+        } catch (cryptoError) {
+          console.warn('Crypto wallet update failed:', cryptoError);
+          // Don't fail the entire update if crypto wallet update fails
+        }
+      }
+      
       await refreshUser(); // Refresh user in context
       setFeedback({ type: 'success', message: 'Profil sauvegardé avec succès!' });
     } catch (error) {
@@ -534,6 +570,67 @@ function ModifierLeProfil() {
                 ))}
               </select>
             </div>
+            
+            {/* NEW: Crypto Wallet Section */}
+            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+              <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
+                🪙 Portefeuille Crypto
+                <span className="text-xs font-normal text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
+                  Pour retraits USD
+                </span>
+              </h3>
+              <div className="text-sm text-purple-700 mb-4">
+                💡 Configurez votre portefeuille crypto pour effectuer des retraits en USD. Ces informations sont utilisées automatiquement lors des retraits crypto.
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-gray-700 mb-1">🪙 Cryptomonnaie préférée</label>
+                  <select 
+                    name="cryptoWalletCurrency" 
+                    value={formData.cryptoWalletCurrency} 
+                    onChange={handleChange} 
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                  >
+                    <option value="">Sélectionner une cryptomonnaie</option>
+                    {supportedCryptoCurrencies.map((crypto) => (
+                      <option key={crypto.code} value={crypto.code}>
+                        {crypto.name} ({crypto.code})
+                      </option>
+                    ))}
+                  </select>
+                  <div className="text-xs text-gray-500 mt-1">
+                    🔹 Choisissez la cryptomonnaie dans laquelle vous souhaitez recevoir vos retraits USD
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-700 mb-1">📋 Adresse du portefeuille</label>
+                  <input 
+                    name="cryptoWalletAddress" 
+                    value={formData.cryptoWalletAddress} 
+                    onChange={handleChange} 
+                    className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none font-mono text-sm" 
+                    placeholder={formData.cryptoWalletCurrency ? `Adresse ${formData.cryptoWalletCurrency}` : "Sélectionnez d'abord une cryptomonnaie"}
+                    disabled={!formData.cryptoWalletCurrency}
+                  />
+                  <div className="text-xs text-gray-500 mt-1">
+                    ⚠️ Vérifiez bien votre adresse. Les transactions crypto sont irréversibles.
+                  </div>
+                </div>
+                
+                {formData.cryptoWalletAddress && formData.cryptoWalletCurrency && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <div className="text-sm text-green-800 font-medium mb-1">✅ Configuration actuelle:</div>
+                    <div className="text-xs text-green-700">
+                      <div><strong>Crypto:</strong> {supportedCryptoCurrencies.find(c => c.code === formData.cryptoWalletCurrency)?.name}</div>
+                      <div><strong>Adresse:</strong> {formData.cryptoWalletAddress.substring(0, 10)}...{formData.cryptoWalletAddress.substring(formData.cryptoWalletAddress.length - 6)}</div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+            
             <div>
               <label className="block text-gray-700 mb-1">❤️ Centres d'intérêt</label>
               <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-xl">

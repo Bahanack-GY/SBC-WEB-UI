@@ -11,11 +11,26 @@ export class SBCApiService extends ApiService {
   // ==================== USER AUTHENTICATION & MANAGEMENT ====================
 
   /**
-   * Login user
+   * Login user - supports both email and phone number
    */
-  async loginUser(email: string, password: string): Promise<ApiResponse> {
+  async loginUser(identifier: string, password: string): Promise<ApiResponse> {
+    // Determine if identifier is email or phone number
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const isPhone = /^\+?[\d\s-()]+$/.test(identifier) && identifier.replace(/\D/g, '').length >= 8;
+    
+    const body: { email?: string; phoneNumber?: string; password: string } = { password };
+    
+    if (isEmail) {
+      body.email = identifier;
+    } else if (isPhone) {
+      body.phoneNumber = identifier;
+    } else {
+      // Default to email for backward compatibility
+      body.email = identifier;
+    }
+
     return await this.post('/users/login', {
-      body: { email, password },
+      body,
       requiresAuth: false
     });
   }
@@ -634,21 +649,32 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Initiate withdrawal (User-initiated as per withdrawal.md)
-   * Expects amount and currency.
+   * NEW UNIFIED WITHDRAWAL ENDPOINT
+   * Initiate withdrawal with explicit withdrawal type (mobile_money or crypto)
+   * Supports both mobile money and crypto withdrawals with OTP verification
    */
-  async initiateWithdrawal(amount: number): Promise<ApiResponse> {
-    return await this.post('/transactions/withdrawal/initiate', { // Correct endpoint
-      body: { amount } // Correct payload format
+  async initiateUnifiedWithdrawal(amount: number, withdrawalType: 'mobile_money' | 'crypto'): Promise<ApiResponse> {
+    return await this.post('/transactions/withdrawal/initiate', {
+      body: { amount, withdrawalType }
     });
   }
 
   /**
-   * Verify withdrawal OTP (User-initiated as per withdrawal.md)
+   * LEGACY: Initiate withdrawal (User-initiated as per withdrawal.md)
+   * @deprecated Use initiateUnifiedWithdrawal instead
+   */
+  async initiateWithdrawal(amount: number): Promise<ApiResponse> {
+    return await this.post('/transactions/withdrawal/initiate', {
+      body: { amount }
+    });
+  }
+
+  /**
+   * Verify withdrawal OTP (supports both mobile money and crypto withdrawals)
    */
   async verifyWithdrawal({ transactionId, verificationCode }: { transactionId: string, verificationCode: string }): Promise<ApiResponse> {
-    return await this.post('/transactions/withdrawal/verify', { // Correct endpoint
-      body: { transactionId, verificationCode } // Correct payload format
+    return await this.post('/transactions/withdrawal/verify', {
+      body: { transactionId, verificationCode }
     });
   }
 
@@ -945,14 +971,183 @@ export class SBCApiService extends ApiService {
     return `https://storage.googleapis.com/sbc-file-storage/${fileId}`;
   }
 
-  // ==================== CURRENCY CONVERSION ====================
+  // ==================== CURRENCY CONVERSION & USD BALANCE MANAGEMENT ====================
 
   /**
-   * Convert currency
+   * Convert USD to FCFA using public user endpoint
+   * Rate: 1 USD = 590 XAF (better rate for users)
+   * Requires user authentication
+   */
+  async convertUsdToXaf(usdAmount: number): Promise<ApiResponse> {
+    return await this.post('/users/convert-usd-to-xaf', {
+      body: { usdAmount }
+    });
+  }
+
+  /**
+   * Convert FCFA to USD using public user endpoint
+   * Rate: 660 XAF = 1 USD (less favorable to discourage conversions)
+   * Requires user authentication
+   */
+  async convertXafToUsd(xafAmount: number): Promise<ApiResponse> {
+    return await this.post('/users/convert-xaf-to-usd', {
+      body: { xafAmount }
+    });
+  }
+
+  /**
+   * Get conversion preview with corrected fixed rates
+   * USD to XAF: 1 USD = 590 XAF (better rate for users)
+   * XAF to USD: 660 XAF = 1 USD (less favorable to discourage conversions)
+   */
+  async getConversionPreview(amount: number, fromCurrency: 'USD' | 'XAF', toCurrency: 'USD' | 'XAF'): Promise<{ convertedAmount: number; rate: number }> {
+    const USD_TO_XAF_RATE = 590; // 1 USD = 590 XAF (favorable for users)
+    const XAF_TO_USD_RATE = 660; // 660 XAF = 1 USD (less favorable)
+    
+    let convertedAmount: number;
+    let rate: number;
+    
+    if (fromCurrency === 'USD' && toCurrency === 'XAF') {
+      convertedAmount = Math.round(amount * USD_TO_XAF_RATE);
+      rate = USD_TO_XAF_RATE;
+    } else if (fromCurrency === 'XAF' && toCurrency === 'USD') {
+      convertedAmount = Math.round((amount / XAF_TO_USD_RATE) * 100) / 100; // Round to 2 decimals
+      rate = 1 / XAF_TO_USD_RATE;
+    } else {
+      throw new Error('Invalid currency pair');
+    }
+    
+    return { convertedAmount, rate };
+  }
+
+  /**
+   * Convert currency between user's FCFA and USD balances
+   * This performs actual balance conversion using the correct internal endpoints
+   */
+  async convertUserBalance(amount: number, fromCurrency: 'FCFA' | 'USD', toCurrency: 'FCFA' | 'USD'): Promise<ApiResponse> {
+    if (fromCurrency === 'USD' && toCurrency === 'FCFA') {
+      return await this.convertUsdToXaf(amount);
+    } else if (fromCurrency === 'FCFA' && toCurrency === 'USD') {
+      return await this.convertXafToUsd(amount);
+    } else {
+      throw new Error('Invalid currency conversion pair');
+    }
+  }
+
+  /**
+   * Update user's USD balance (internal operation)
+   * Positive amount to add, negative to subtract
+   */
+  async updateUsdBalance(amount: number): Promise<ApiResponse> {
+    return await this.post('/users/me/usd-balance', {
+      body: { amount }
+    });
+  }
+
+  /**
+   * Get user's current USD balance
+   */
+  async getUsdBalance(): Promise<ApiResponse> {
+    return await this.get('/users/me/usd-balance');
+  }
+
+  /**
+   * Legacy method for compatibility - deprecated
    */
   async convertCurrency(amount: number, fromCurrency: string, toCurrency: string): Promise<ApiResponse> {
-    return await this.post('/wallet/convert-currency', {
-      body: { amount, fromCurrency, toCurrency }
+    console.warn('convertCurrency is deprecated. Use convertUserBalance instead.');
+    const fromCurr = fromCurrency === 'XAF' ? 'FCFA' : 'USD';
+    const toCurr = toCurrency === 'XAF' ? 'FCFA' : 'USD';
+    return await this.convertUserBalance(amount, fromCurr as 'FCFA' | 'USD', toCurr as 'FCFA' | 'USD');
+  }
+
+  // ==================== CRYPTO WALLET MANAGEMENT ====================
+
+  /**
+   * Get user's crypto wallet information
+   */
+  async getCryptoWallet(): Promise<ApiResponse> {
+    return await this.get('/users/crypto/wallet');
+  }
+
+  /**
+   * Update user's crypto wallet information
+   */
+  async updateCryptoWallet(walletData: {
+    cryptoWalletAddress: string;
+    cryptoWalletCurrency: string;
+  }): Promise<ApiResponse> {
+    return await this.put('/users/crypto/wallet', {
+      body: walletData
+    });
+  }
+
+  /**
+   * Check crypto withdrawal limits (updated to include currency)
+   */
+  async checkCryptoWithdrawalLimitsV2(amount: number, currency: string): Promise<ApiResponse> {
+    return await this.post('/users/crypto/check-limits', {
+      body: { amount, currency }
+    });
+  }
+
+  // ==================== CRYPTO WITHDRAWAL FUNCTIONALITY ====================
+
+  /**
+   * Check crypto withdrawal limits (legacy version)
+   * @deprecated Use checkCryptoWithdrawalLimitsV2 instead
+   * Minimum: $15 USD, Maximum: 3 successful withdrawals per 24 hours (all types)
+   */
+  async checkCryptoWithdrawalLimits(usdAmount: number): Promise<ApiResponse> {
+    return await this.post('/users/crypto/check-limits', {
+      body: { usdAmount }
+    });
+  }
+
+  /**
+   * Get supported cryptocurrencies for withdrawal
+   */
+  async getSupportedCryptocurrencies(): Promise<ApiResponse> {
+    return await this.get('/payments/crypto/currencies');
+  }
+
+  /**
+   * Get crypto payout estimate
+   */
+  async getCryptoPayoutEstimate(amount: number, currency: string): Promise<ApiResponse> {
+    return await this.get('/payments/crypto/estimate', {
+      queryParameters: { amount: amount.toString(), currency }
+    });
+  }
+
+  /**
+   * Request crypto payout
+   * Uses user authentication, no userId needed in request body
+   */
+  async requestCryptoPayout(payoutData: {
+    amount: number;
+    cryptoCurrency: string;
+    cryptoAddress: string;
+    description?: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/payments/crypto/payout', {
+      body: payoutData
+    });
+  }
+
+  /**
+   * Test NOWPayments connection (for debugging)
+   */
+  async testCryptoConnection(): Promise<ApiResponse> {
+    return await this.get('/payments/crypto/debug');
+  }
+
+  /**
+   * Check withdrawal limits
+   */
+  async checkWithdrawalLimits(amount: number): Promise<ApiResponse> {
+    return await this.post('/users/withdrawal-limits/check', {
+      body: { amount }
     });
   }
 
@@ -1018,6 +1213,119 @@ export class SBCApiService extends ApiService {
    */
   async getFormations(): Promise<ApiResponse> {
     return this.get('/settings/formations');
+  }
+
+  // ==================== TRANSACTION RECOVERY SYSTEM ====================
+
+  /**
+   * Check for recoverable transactions during failed login
+   * @param identifier - email or phone number
+   */
+  async checkRecoveryLogin(identifier: string): Promise<ApiResponse> {
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
+    const isPhone = /^\+?[\d\s-()]+$/.test(identifier) && identifier.replace(/\D/g, '').length >= 8;
+    
+    const body: { email?: string; phoneNumber?: string } = {};
+    
+    if (isEmail) {
+      body.email = identifier;
+    } else if (isPhone) {
+      body.phoneNumber = identifier;
+    } else {
+      // Default to email for backward compatibility
+      body.email = identifier;
+    }
+
+    return await this.post('/recovery/check-login', {
+      body,
+      requiresAuth: false
+    });
+  }
+
+  /**
+   * Check for pending recoveries during registration
+   * @param email - user email
+   * @param phoneNumber - user phone number (optional)
+   */
+  async checkRecoveryRegistration(email: string, phoneNumber?: string): Promise<ApiResponse> {
+    const body: { email?: string; phoneNumber?: string } = {};
+
+    if (email) body.email = email;
+    if (phoneNumber) body.phoneNumber = phoneNumber;
+
+    return await this.post('/recovery/check-registration', {
+      body,
+      requiresAuth: false
+    });
+  }
+
+  /**
+   * Handle 409 Conflict error from recovery registration endpoint
+   * @param errorResponse - The API response containing conflict details
+   * @returns Parsed conflict error information
+   */
+  parseConflictError(errorResponse: ApiResponse): { errorType: string; conflictType: string; canProceedWithRegistration: boolean; message: string } | null {
+    console.log('parseConflictError: Checking response:', {
+      statusCode: errorResponse.statusCode,
+      body: errorResponse.body,
+      hasBody: !!errorResponse.body
+    });
+
+    if (errorResponse.statusCode === 409 && errorResponse.body) {
+      const errorData = errorResponse.body;
+      console.log('parseConflictError: Error data:', errorData);
+
+      // Handle the specific error structure mentioned in the task
+      if (errorData.errorType === 'USER_ALREADY_EXISTS') {
+        const result = {
+          errorType: errorData.errorType,
+          conflictType: errorData.conflictType || 'UNKNOWN',
+          canProceedWithRegistration: errorData.canProceedWithRegistration ?? false,
+          message: this.getConflictErrorMessage(errorData.conflictType || 'UNKNOWN')
+        };
+        console.log('parseConflictError: Returning conflict data:', result);
+        return result;
+      } else {
+        console.log('parseConflictError: No USER_ALREADY_EXISTS errorType found');
+      }
+    } else {
+      console.log('parseConflictError: Not a 409 error or no body');
+    }
+    return null;
+  }
+
+  /**
+   * Get user-friendly error message based on conflict type
+   * @param conflictType - The type of conflict (e.g., 'PHONE_TAKEN')
+   * @returns Localized error message
+   */
+  private getConflictErrorMessage(conflictType: string): string {
+    const messages: Record<string, string> = {
+      'PHONE_TAKEN': 'Ce numéro de téléphone est déjà associé à un compte existant.',
+      'EMAIL_TAKEN': 'Cette adresse email est déjà utilisée par un autre compte.',
+      'BOTH_TAKEN': 'L\'email et le numéro de téléphone sont déjà associés à un compte existant.',
+      'ACCOUNT_EXISTS': 'Un compte avec ces informations existe déjà.',
+      'UNKNOWN': 'Un conflit a été détecté lors de la vérification. Veuillez réessayer.'
+    };
+
+    return messages[conflictType] || messages['UNKNOWN'];
+  }
+
+  /**
+   * Get recovery completion notification
+   * @param email - user email
+   * @param phoneNumber - user phone number (optional)
+   */
+  async getRecoveryNotification(email: string, phoneNumber?: string): Promise<ApiResponse> {
+    const body: { email?: string; phoneNumber?: string } = {};
+    
+    if (email) body.email = email;
+    if (phoneNumber) body.phoneNumber = phoneNumber;
+
+    return await this.post('/recovery/notification', {
+      body,
+      requiresAuth: false
+    });
   }
 }
 
