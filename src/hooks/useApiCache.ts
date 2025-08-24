@@ -85,11 +85,20 @@ export const invalidateApiCache = (key?: string | string[]) => {
   }
 };
 
+interface UseApiCacheResult<T> {
+  data: T | undefined;
+  loading: boolean;
+  error: string;
+  refetch: () => Promise<T | undefined>;
+  clearCache: () => void;
+  invalidate: () => void;
+}
+
 export function useApiCache<T>(
   key: string,
   fetcher: () => Promise<T>,
   options: ApiCacheOptions = {}
-) {
+): UseApiCacheResult<T> {
   const { staleTime = 30 * 1000 } = options; // 5 min cache, 30s stale
   console.log('staleTime', staleTime);
   const [data, setData] = useState<T | undefined>(undefined);
@@ -173,12 +182,18 @@ export function useApiCache<T>(
   const refetch = () => fetchData(true);
   const clearCache = () => globalCache.delete(key);
 
+  const invalidate = () => {
+    invalidateApiCache(key);
+    return fetchData();
+  };
+
   return {
     data,
     loading,
     error,
     refetch,
-    clearCache
+    clearCache,
+    invalidate
   };
 }
 

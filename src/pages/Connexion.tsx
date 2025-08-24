@@ -19,7 +19,6 @@ function Connexion() {
   const [showRecoveryModal, setShowRecoveryModal] = useState(false);
   const [recoveryInfo, setRecoveryInfo] = useState<any>(null);
   const [showNegativeBalanceNotification, setShowNegativeBalanceNotification] = useState(false);
-  const [negativeBalanceMessage, setNegativeBalanceMessage] = useState('');
   const navigate = useNavigate();
   const { login } = useAuth();
 
@@ -100,7 +99,6 @@ function Connexion() {
         // Check for negative balance after successful login
         if (result.hasNegativeBalance && result.recoveryMessage) {
           console.log('Connexion: Negative balance detected, showing recovery message');
-          setNegativeBalanceMessage(result.recoveryMessage);
           setShowNegativeBalanceNotification(true);
           // Still continue with normal flow after showing notification
         }

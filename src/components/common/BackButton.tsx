@@ -1,12 +1,26 @@
 import { MdArrowBack } from "react-icons/md";
-function handleBack() {
-    window.history.back();
+
+interface BackButtonProps {
+    onClick?: () => void;
 }
 
-function BackButton() {
+function BackButton({ onClick }: BackButtonProps) {
+    const handleClick = () => {
+        if (onClick) {
+            onClick();
+        } else {
+            window.history.back();
+        }
+    };
+
     return (
-        <div >
-           <button onClick={handleBack} className="bg-[#94B027] p-2 rounded-xl text-white"><MdArrowBack size={25}/></button>
+        <div>
+            <button 
+                onClick={handleClick} 
+                className="bg-[#94B027] p-2 rounded-xl text-white"
+            >
+                <MdArrowBack size={25}/>
+            </button>
         </div>
     )
 }

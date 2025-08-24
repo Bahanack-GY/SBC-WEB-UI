@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
-import { FaWallet, FaBitcoin, FaMobileAlt, FaTimes, FaCheck, FaSpinner } from 'react-icons/fa';
+import { FaBitcoin, FaMobileAlt, FaTimes, FaCheck, FaSpinner } from 'react-icons/fa';
 
 interface WithdrawalType {
   id: 'mobile_money' | 'crypto';
@@ -54,8 +54,7 @@ const WITHDRAWAL_TYPES: WithdrawalType[] = [
 
 const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   isOpen,
-  onClose,
-  onWithdrawalComplete
+  onClose
 }) => {
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
@@ -90,7 +89,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
       setError('');
       setSuccess('');
       setTransactionId('');
-      setOtpCode('');
       
       // Load saved user data
       if (user) {

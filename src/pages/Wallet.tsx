@@ -85,8 +85,8 @@ function Wallet() {
     data: transactionsData,
     loading: transactionsLoading,
     error: transactionsError,
-    invalidate: invalidateTransactions
-  } = useApiCache(
+    refetch: invalidateTransactions
+  } = useApiCache<Transaction[]>(
     'transaction-history',
     async () => {
       const response = await sbcApiService.getTransactionHistory({ limit: 10 });
@@ -94,7 +94,7 @@ function Wallet() {
       return (Array.isArray(result) ? result : []).map((tx: Record<string, unknown>) => ({
         ...tx,
         id: (tx._id as string) || (tx.transactionId as string) || (tx.id as string) || '',
-        transactionId: (tx.transactionId as string) || (tx._id as string) || (tx.id as string) || '', // Preserve transactionId for API calls
+        transactionId: (tx.transactionId as string) || (tx._id as string) || (tx.id as string) || '',
         status: (tx.status as Transaction['status']) || 'pending',
         type: (tx.type as Transaction['type']) || 'deposit',
         amount: (typeof tx.amount === 'number' ? tx.amount : Number(tx.amount)) || 0,
@@ -116,13 +116,12 @@ function Wallet() {
     data: stats,
     loading: statsLoading,
     error: statsError,
-    invalidate: invalidateStats
-  } = useApiCache(
+    refetch: invalidateStats
+  } = useApiCache<Record<string, any>>(
     'transaction-stats',
     async () => {
       const response = await sbcApiService.getTransactionStats();
       const result = handleApiResponse(response) || response;
-      // result is already the stats object
       return result || {};
     },
     { staleTime: 30000 } // 30 seconds

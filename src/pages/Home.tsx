@@ -36,10 +36,7 @@ interface ReferralStats {
   [key: string]: unknown;
 }
 
-interface SubscriptionData {
-  status: 'active' | 'expired' | 'cancelled';
-  [key: string]: unknown;
-}
+
 
 interface SettingsData {
   presentationPdf?: {
@@ -97,8 +94,6 @@ function Home() {
 
   // Note: Subscription data is now handled by Abonnement page to avoid duplicate API calls
   // The subscription status is derived from user.activeSubscriptions if available
-  const subscriptionData = null;
-  const subscriptionLoading = false;
 
   const { data: formations, isLoading: formationsLoading, error: formationsError } = useQuery<Formation[]>({
     queryKey: queryKeys.formations,
@@ -141,7 +136,7 @@ function Home() {
     }
   }, [user]);
 
-  const loading = statsLoading || referralLoading || subscriptionLoading || formationsLoading || settingsLoading;
+  const loading = statsLoading || referralLoading || formationsLoading || settingsLoading;
   const error = statsError || referralError || formationsError || settingsError;
 
   const balance = statsData?.balance || user?.balance || 0;
