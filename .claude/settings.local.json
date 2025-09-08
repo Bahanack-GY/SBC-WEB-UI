@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx eslint:*)"
+      "Bash(npx eslint:*)",
+      "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI/**)",
+      "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI/**)",
+      "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI/**)",
+      "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI\\src/**)",
+      "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI\\src/**)"
     ],
     "deny": [],
     "ask": []

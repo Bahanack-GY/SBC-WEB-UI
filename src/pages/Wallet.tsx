@@ -14,7 +14,7 @@ import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useNavigate } from 'react-router-dom';
 import { useApiCache } from '../hooks/useApiCache';
 import { useAuth } from '../contexts/AuthContext';
-import { correspondents, countryOptions } from './ModifierLeProfil'; // Assuming these are exported from ModifierLeProfil.tsx
+import { momoCorrespondents, countryOptions } from '../utils/countriesData';
 import TourButton from '../components/common/TourButton';
 import CurrencyConverterComponent from '../components/CurrencyConverterComponent';
 
@@ -27,6 +27,15 @@ interface ChartDataPoint {
   'Retrait': number;
   'Dépôt_count': number;
   'Retrait_count': number;
+  // Individual currency data for detailed tooltips
+  depositXAF?: number;
+  depositUSD?: number;
+  withdrawalXAF?: number;
+  withdrawalUSD?: number;
+  depositCountXAF?: number;
+  depositCountUSD?: number;
+  withdrawalCountXAF?: number;
+  withdrawalCountUSD?: number;
 }
 
 // Helper to get day name from date (for chart)
@@ -42,6 +51,25 @@ const getMonthName = (dateString: string) => {
   const date = new Date(parseInt(year), parseInt(month) - 1, 1);
   const options: Intl.DateTimeFormatOptions = { month: 'short' };
   return date.toLocaleDateString('fr-FR', options) + ' ' + year.slice(2);
+};
+
+// Helper function to format currency amounts
+const formatCurrency = (amount: number, currency: string): string => {
+  if (currency === 'USD') {
+    return `$${amount.toFixed(2)}`;
+  } else {
+    // Default to XAF/FCFA formatting
+    return `${amount.toLocaleString('fr-FR')} F`;
+  }
+};
+
+// Helper function to get currency symbol class for styling
+const getCurrencyColorClass = (currency: string, isPositive: boolean): string => {
+  const baseClass = isPositive ? 'text-green-400' : 'text-red-400';
+  if (currency === 'USD') {
+    return isPositive ? 'text-green-500' : 'text-red-500'; // Slightly different shade for USD
+  }
+  return baseClass;
 };
 
 // New: Function to get icon wrapper class based on status
@@ -158,14 +186,40 @@ function Wallet() {
       .sort() // Ensure chronological order
       .map(key => {
         const value = dataToProcess[key] as Record<string, unknown>;
-        const deposit = value?.deposit as { totalAmount?: number; count?: number } | undefined;
-        const withdrawal = value?.withdrawal as { totalAmount?: number; count?: number } | undefined;
+        const deposit = value?.deposit as { totalAmount?: number; count?: number; currencies?: Record<string, any> } | undefined;
+        const withdrawal = value?.withdrawal as { totalAmount?: number; count?: number; currencies?: Record<string, any> } | undefined;
+        
+        // Calculate combined amounts in FCFA equivalent for chart display
+        // USD is converted to XAF using approximate rate of 1:590
+        const depositXAF = Number(deposit?.currencies?.XAF?.totalAmount || 0);
+        const depositUSD = Number(deposit?.currencies?.USD?.totalAmount || 0);
+        const depositTotal = depositXAF + (depositUSD * 590); // Convert USD to XAF for chart
+        
+        const withdrawalXAF = Number(withdrawal?.currencies?.XAF?.totalAmount || 0);
+        const withdrawalUSD = Number(withdrawal?.currencies?.USD?.totalAmount || 0);
+        const withdrawalTotal = withdrawalXAF + (withdrawalUSD * 590); // Convert USD to XAF for chart
+        
+        // Combined counts
+        const depositCountXAF = Number(deposit?.currencies?.XAF?.count || 0);
+        const depositCountUSD = Number(deposit?.currencies?.USD?.count || 0);
+        const withdrawalCountXAF = Number(withdrawal?.currencies?.XAF?.count || 0);
+        const withdrawalCountUSD = Number(withdrawal?.currencies?.USD?.count || 0);
+        
         return {
           name: formatLabel(key),
-          'Dépôt': Number(deposit?.totalAmount || 0),
-          'Retrait': Number(withdrawal?.totalAmount || 0),
-          'Dépôt_count': Number(deposit?.count || 0),
-          'Retrait_count': Number(withdrawal?.count || 0),
+          'Dépôt': depositTotal,
+          'Retrait': withdrawalTotal,
+          'Dépôt_count': depositCountXAF + depositCountUSD,
+          'Retrait_count': withdrawalCountXAF + withdrawalCountUSD,
+          // Store individual currency data for tooltip
+          'depositXAF': depositXAF,
+          'depositUSD': depositUSD,
+          'withdrawalXAF': withdrawalXAF,
+          'withdrawalUSD': withdrawalUSD,
+          'depositCountXAF': depositCountXAF,
+          'depositCountUSD': depositCountUSD,
+          'withdrawalCountXAF': withdrawalCountXAF,
+          'withdrawalCountUSD': withdrawalCountUSD,
         };
       });
 
@@ -286,8 +340,8 @@ function Wallet() {
         const userCountryCode = userCountryDetails?.code; // This would be 'CM', 'BJ', 'TG' etc.
 
         let currency = 'XAF'; // Default for Central African CFA franc
-        if (userCountryCode && correspondents[userCountryCode] && correspondents[userCountryCode].currencies.length > 0) {
-          currency = correspondents[userCountryCode].currencies[0];
+        if (userCountryCode && momoCorrespondents[userCountryCode] && momoCorrespondents[userCountryCode].currencies.length > 0) {
+          currency = momoCorrespondents[userCountryCode].currencies[0];
         } else {
           console.warn(`Could not determine specific currency for country: ${userCountryName} (code: ${userCountryCode}). Defaulting to XAF.`);
         }
@@ -746,12 +800,34 @@ function Wallet() {
               </div>
               <div className="flex justify-between text-sm mt-2">
                 <div>
-                  <div className="opacity-80">Bénéfice</div>
-                  <div className="font-bold">{(Number(stats?.overall?.deposit?.completed?.totalAmount) || 0).toLocaleString('fr-FR')} F</div>
+                  <div className="opacity-80">Bénéfices</div>
+                  <div className="space-y-1">
+                    {/* FCFA Deposits */}
+                    <div className="font-bold text-xs">
+                      {(Number(stats?.overall?.deposit?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
+                    </div>
+                    {/* USD Deposits */}
+                    {stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount > 0 && (
+                      <div className="font-bold text-xs text-green-400">
+                        ${(Number(stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
                 </div>
                 <div>
                   <div className="opacity-80">Retraits</div>
-                  <div className="font-bold">{(Number(stats?.overall?.withdrawal?.completed?.totalAmount) || 0).toLocaleString('fr-FR')} F</div>
+                  <div className="space-y-1">
+                    {/* FCFA Withdrawals */}
+                    <div className="font-bold text-xs">
+                      {(Number(stats?.overall?.withdrawal?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
+                    </div>
+                    {/* USD Withdrawals */}
+                    {stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount > 0 && (
+                      <div className="font-bold text-xs text-red-400">
+                        ${(Number(stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
@@ -969,11 +1045,43 @@ function Wallet() {
                           return (
                             <div className="rounded-lg bg-gray-800 p-3 text-white shadow-lg text-sm">
                               <p className="font-bold mb-1">{label}</p>
-                              <p className="text-blue-400">
-                                Dépôt: {(dataPoint?.['Dépôt'] || 0).toLocaleString('fr-FR')} F (Nb: {dataPoint?.Dépôt_count || 0})
-                              </p>
-                              <p className="text-yellow-400">
-                                Retrait: {(dataPoint?.['Retrait'] || 0).toLocaleString('fr-FR')} F (Nb: {dataPoint?.Retrait_count || 0})
+                              <div className="space-y-2">
+                                <div>
+                                  <p className="text-blue-400 font-semibold mb-1">Dépôts:</p>
+                                  {dataPoint && (dataPoint.depositXAF || 0) > 0 && (
+                                    <p className="text-blue-300 text-xs ml-2">
+                                      FCFA: {(dataPoint.depositXAF || 0).toLocaleString('fr-FR')} F ({dataPoint.depositCountXAF || 0} tx)
+                                    </p>
+                                  )}
+                                  {dataPoint && (dataPoint.depositUSD || 0) > 0 && (
+                                    <p className="text-green-300 text-xs ml-2">
+                                      USD: ${(dataPoint.depositUSD || 0).toFixed(2)} ({dataPoint.depositCountUSD || 0} tx)
+                                    </p>
+                                  )}
+                                  <p className="text-blue-200 text-xs ml-2 font-medium">
+                                    Total: {(dataPoint?.['Dépôt'] || 0).toLocaleString('fr-FR')} F ({dataPoint?.Dépôt_count || 0} tx)
+                                  </p>
+                                </div>
+                                
+                                <div>
+                                  <p className="text-yellow-400 font-semibold mb-1">Retraits:</p>
+                                  {dataPoint && (dataPoint.withdrawalXAF || 0) > 0 && (
+                                    <p className="text-yellow-300 text-xs ml-2">
+                                      FCFA: {(dataPoint.withdrawalXAF || 0).toLocaleString('fr-FR')} F ({dataPoint.withdrawalCountXAF || 0} tx)
+                                    </p>
+                                  )}
+                                  {dataPoint && (dataPoint.withdrawalUSD || 0) > 0 && (
+                                    <p className="text-red-300 text-xs ml-2">
+                                      USD: ${(dataPoint.withdrawalUSD || 0).toFixed(2)} ({dataPoint.withdrawalCountUSD || 0} tx)
+                                    </p>
+                                  )}
+                                  <p className="text-yellow-200 text-xs ml-2 font-medium">
+                                    Total: {(dataPoint?.['Retrait'] || 0).toLocaleString('fr-FR')} F ({dataPoint?.Retrait_count || 0} tx)
+                                  </p>
+                                </div>
+                              </div>
+                              <p className="text-xs text-gray-400 mt-2 border-t border-gray-600 pt-2">
+                                💡 USD converti à 1:590 FCFA pour le graphique
                               </p>
                             </div>
                           );
@@ -983,6 +1091,9 @@ function Wallet() {
                     />
                   </BarChart>
                 </ResponsiveContainer>
+              </div>
+              <div className="mt-2 text-xs text-gray-500 text-center">
+                💡 Montants USD convertis en FCFA (1:590) pour l'affichage du graphique
               </div>
             </div>
             {/* Recent Transactions */}
@@ -1014,8 +1125,15 @@ function Wallet() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`font-bold text-sm ${tx.type === 'withdrawal' || tx.type === 'payment' ? 'text-red-400' : 'text-green-400'} whitespace-nowrap max-w-[110px] text-right truncate`}>
-                        {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{tx.amount.toLocaleString('fr-FR')} F
+                      <div className="flex flex-col items-end gap-1">
+                        <div className={`font-bold text-sm ${getCurrencyColorClass(tx.currency || 'XAF', tx.type !== 'withdrawal' && tx.type !== 'payment')} whitespace-nowrap text-right truncate`}>
+                          {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{formatCurrency(tx.amount, tx.currency || 'XAF')}
+                        </div>
+                        {tx.currency === 'USD' && (
+                          <span className="px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                            USD
+                          </span>
+                        )}
                       </div>
                       {tx.status === 'pending_otp_verification' && tx.type === 'withdrawal' && (
                         <button
@@ -1086,10 +1204,21 @@ function Wallet() {
                               String(selectedTx.status) === 'pending_otp_verification' ? 'En attente OTP' :
                                 String(selectedTx.status) === 'failed' ? 'Échoué' : selectedTx.status}
                       </div>
-                      <div className="text-xs text-gray-400 mb-1">Montant</div>
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-xs text-gray-400">Montant</div>
+                        {selectedTx.currency && (
+                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                            selectedTx.currency === 'USD' 
+                              ? 'bg-green-100 text-green-700' 
+                              : 'bg-blue-100 text-blue-700'
+                          }`}>
+                            {selectedTx.currency === 'USD' ? 'USD' : 'FCFA'}
+                          </span>
+                        )}
+                      </div>
                       <div className={`font-bold text-lg mb-2 ${String(selectedTx.type) === 'withdrawal' || String(selectedTx.type) === 'payment' ? 'text-red-500' : 'text-green-600'
                         }`}>
-                        {String(selectedTx.type) === 'withdrawal' || String(selectedTx.type) === 'payment' ? '-' : '+'}{selectedTx.amount.toLocaleString('fr-FR')} F
+                        {String(selectedTx.type) === 'withdrawal' || String(selectedTx.type) === 'payment' ? '-' : '+'}{formatCurrency(selectedTx.amount, selectedTx.currency || 'XAF')}
                       </div>
                       <div className="text-xs text-gray-400 mb-1">Description</div>
                       <div className="mb-2">{selectedTx.description || formatTransactionName(selectedTx as Transaction)}</div>
@@ -1193,8 +1322,15 @@ function Wallet() {
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <div className={`font-bold text-sm ${tx.type === 'withdrawal' || tx.type === 'payment' ? 'text-red-400' : 'text-green-400'} whitespace-nowrap max-w-[110px] text-right truncate`}>
-                                {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{tx.amount.toLocaleString('fr-FR')} F
+                              <div className="flex flex-col items-end gap-1">
+                                <div className={`font-bold text-sm ${getCurrencyColorClass(tx.currency || 'XAF', tx.type !== 'withdrawal' && tx.type !== 'payment')} whitespace-nowrap text-right truncate`}>
+                                  {tx.type === 'withdrawal' || tx.type === 'payment' ? '-' : '+'}{formatCurrency(tx.amount, tx.currency || 'XAF')}
+                                </div>
+                                {tx.currency === 'USD' && (
+                                  <span className="px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                                    USD
+                                  </span>
+                                )}
                               </div>
                               {tx.status === 'pending_otp_verification' && tx.type === 'withdrawal' && (
                                 <button

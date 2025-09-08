@@ -10,6 +10,7 @@ import { useQuery } from '@tanstack/react-query';
 import { clearSignupCache } from '../utils/signupHelpers';
 import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
 import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
+import { countryOptions, africanCountryCodes } from '../utils/countriesData';
 
 interface SignupData {
   nom: string;
@@ -81,22 +82,6 @@ const initialData: SignupData = {
 
 const icons = [<FiUser size={48} className="text-[#115CF6] mx-auto" />, <FiMapPin size={48} className="text-[#115CF6] mx-auto" />, <FiHeart size={48} className="text-[#115CF6] mx-auto" />];
 
-const countryOptions = [
-  { value: 'Cameroun', label: '🇨🇲 Cameroun', code: 'CM' },
-  { value: 'Bénin', label: '🇧🇯 Bénin', code: 'BJ' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 Congo-Brazzaville', code: 'CG' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 Congo-Kinshasa', code: 'CD' },
-  { value: 'Ghana', label: '🇬🇭 Ghana', code: 'GH' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: 'CI' },
-  { value: 'Sénégal', label: '🇸🇳 Sénégal', code: 'SN' },
-  { value: 'Togo', label: '🇹🇬 Togo', code: 'TG' },
-  { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: 'BF' },
-  { value: 'Mali', label: '🇲🇱 Mali', code: 'ML' },
-  { value: 'Niger', label: '🇳🇪 Niger', code: 'NE' },
-  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN' },
-  { value: 'Gabon', label: '🇬🇦 Gabon', code: 'GA' },
-  { value: 'Kenya', label: '🇰🇪 Kenya', code: 'KE' },
-];
 
 const professionOptions = [
   'Étudiant(e)', 'Sans emploi',
@@ -147,22 +132,6 @@ const getInterestBaseValue = (displayValue: string): string => {
   return index !== -1 ? baseInteretOptions[index] : displayValue.replace(/^[^\w\s]+\s*/, ''); // Remove emoji prefix
 };
 
-const countryCodes = [
-  { value: 'Cameroun', label: '🇨🇲 +237', code: '+237' },
-  { value: 'Bénin', label: '🇧🇯 +229', code: '+229' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 +242', code: '+242' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 +243', code: '+243' },
-  { value: 'Ghana', label: '🇬🇭 +233', code: '+233' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 +225', code: '+225' },
-  { value: 'Sénégal', label: '🇸🇳 +221', code: '+221' },
-  { value: 'Togo', label: '🇹🇬 +228', code: '+228' },
-  { value: 'Burkina Faso', label: '🇧🇫 +226', code: '+226' },
-  { value: 'Mali', label: '🇲🇱 +223', code: '+223' },
-  { value: 'Niger', label: '🇳🇪 +227', code: '+227' },
-  { value: 'Guinée', label: '🇬🇳 +224', code: '+224' },
-  { value: 'Gabon', label: '🇬🇦 +241', code: '+241' },
-  { value: 'Kenya', label: '🇰🇪 +254', code: '+254' },
-];
 
 const DEBOUNCE_DELAY = 3000;
 const STORAGE_KEY_DATA = 'signupFormData';
@@ -173,7 +142,7 @@ function Signup() {
   const [data, setData] = useState<SignupData>(initialData);
   const [errors, setErrors] = useState<SignupErrors>({});
   const [showModal, setShowModal] = useState(false);
-  const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
+  const [selectedCode, setSelectedCode] = useState(africanCountryCodes[0]);
   const [loading, setLoading] = useState(false);
   const [checkingExistence, setCheckingExistence] = useState(false);
   const [affiliateName, setAffiliateName] = useState<string | null>(null);
@@ -273,7 +242,7 @@ function Signup() {
           console.log('Signup: Normalized phone:', normalizedPhone);
           
           // Find matching country code
-          const matchedCode = countryCodes.find(c => normalizedPhone.startsWith(c.code));
+          const matchedCode = africanCountryCodes.find(c => normalizedPhone.startsWith(c.code));
           if (matchedCode) {
             console.log('Signup: Found matching country code:', matchedCode);
             setSelectedCode(matchedCode);
@@ -300,7 +269,7 @@ function Signup() {
           normalizedSavedPhone = '+' + normalizedSavedPhone;
         }
         
-        const matchedCode = countryCodes.find(c => normalizedSavedPhone.startsWith(c.code));
+        const matchedCode = africanCountryCodes.find(c => normalizedSavedPhone.startsWith(c.code));
         if (matchedCode) {
           console.log('Signup: Found matching country code for saved phone:', matchedCode);
           setSelectedCode(matchedCode);
@@ -308,11 +277,11 @@ function Signup() {
           setData(prev => ({ ...prev, whatsapp: phoneWithoutCode }));
         } else {
           console.log('Signup: No matching country code for saved phone, using default');
-          setSelectedCode(countryCodes[0]);
+          setSelectedCode(africanCountryCodes[0]);
         }
       } else if (!phoneFromUrl) {
         // Set default country code if no phone number
-        setSelectedCode(countryCodes[0]);
+        setSelectedCode(africanCountryCodes[0]);
       }
 
       if (savedStep) {
@@ -549,7 +518,7 @@ function Signup() {
       return;
     }
     if (name === 'countryCodeSelect') {
-      const code = countryCodes.find(c => c.value === value) || countryCodes[0];
+      const code = africanCountryCodes.find(c => c.value === value) || africanCountryCodes[0];
       setSelectedCode(code);
       const whatsappNumber = data.whatsapp;
       setData(prev => ({ ...prev, whatsapp: whatsappNumber }));
@@ -866,7 +835,7 @@ function Signup() {
                     value={selectedCode.value}
                     onChange={handleChange}
                   >
-                    {countryCodes.map((c) => (
+                    {africanCountryCodes.map((c) => (
                       <option key={c.value} value={c.value}>{c.label}</option>
                     ))}
                   </select>

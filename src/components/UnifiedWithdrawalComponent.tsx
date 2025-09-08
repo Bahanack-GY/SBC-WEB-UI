@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
 import { FaBitcoin, FaMobileAlt, FaTimes, FaCheck, FaSpinner } from 'react-icons/fa';
+import { countrySupportsMomo, getCountryByCode } from '../utils/countriesData';
 
 interface WithdrawalType {
   id: 'mobile_money' | 'crypto';
@@ -21,22 +22,11 @@ interface UnifiedWithdrawalComponentProps {
   onWithdrawalComplete: () => void;
 }
 
-const WITHDRAWAL_TYPES: WithdrawalType[] = [
-  {
-    id: 'mobile_money',
-    name: 'Mobile Money',
-    icon: <FaMobileAlt size={24} />,
-    description: 'Withdraw to your mobile money account',
-    minAmount: 500,
-    currency: 'XAF',
-    requirements: [
-      'Minimum: 500 XAF',
-      'Must be multiple of 5',
-      'Uses saved mobile money details',
-      'Available in 14+ African countries'
-    ]
-  },
-  {
+const getWithdrawalTypes = (userCountrySupportsMomo: boolean): WithdrawalType[] => {
+  const types: WithdrawalType[] = [];
+  
+  // Always add crypto option (available for all countries)
+  types.push({
     id: 'crypto',
     name: 'Cryptocurrency',
     icon: <FaBitcoin size={24} />,
@@ -47,10 +37,30 @@ const WITHDRAWAL_TYPES: WithdrawalType[] = [
       'Minimum: $15 USD',
       'No multiple requirement',
       'Uses saved crypto wallet details',
-      'Supports major cryptocurrencies'
+      'Available in all African countries'
     ]
+  });
+  
+  // Only add mobile money option if country supports it
+  if (userCountrySupportsMomo) {
+    types.push({
+      id: 'mobile_money',
+      name: 'Mobile Money',
+      icon: <FaMobileAlt size={24} />,
+      description: 'Withdraw to your mobile money account',
+      minAmount: 500,
+      currency: 'XAF',
+      requirements: [
+        'Minimum: 500 XAF',
+        'Must be multiple of 5',
+        'Uses saved mobile money details',
+        'Available in your country'
+      ]
+    });
   }
-];
+  
+  return types;
+};
 
 const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   isOpen,
@@ -79,6 +89,17 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
 
   const balance = user?.balance || 0;
   const usdBalance = user?.usdBalance || 0;
+  
+  // Check if user's country supports mobile money
+  const userCountrySupportsMomo = useMemo(() => {
+    if (!user?.country) return false;
+    return countrySupportsMomo(user.country);
+  }, [user?.country]);
+  
+  // Get available withdrawal types based on user's country
+  const availableWithdrawalTypes = useMemo(() => {
+    return getWithdrawalTypes(userCountrySupportsMomo);
+  }, [userCountrySupportsMomo]);
 
   useEffect(() => {
     if (isOpen) {
@@ -101,6 +122,12 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   }, [isOpen, user]);
 
   const handleTypeSelect = (type: 'mobile_money' | 'crypto') => {
+    // Extra check: prevent mobile money selection if country doesn't support it
+    if (type === 'mobile_money' && !userCountrySupportsMomo) {
+      setError('Mobile Money is not available in your country. Please use cryptocurrency withdrawal.');
+      return;
+    }
+    
     setSelectedType(type);
     setError('');
     
@@ -151,7 +178,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   const validateAmount = (): boolean => {
     if (!selectedType || !amount) return false;
 
-    const withdrawalType = WITHDRAWAL_TYPES.find(t => t.id === selectedType)!;
+    const withdrawalType = availableWithdrawalTypes.find(t => t.id === selectedType)!;
     const numAmount = parseFloat(amount);
 
     if (isNaN(numAmount) || numAmount <= 0) {
@@ -202,7 +229,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
       if (data && data.transactionId) {
         // Check if OTP verification is required
         if (data.status === 'pending_otp_verification') {
-          const withdrawalType = WITHDRAWAL_TYPES.find(t => t.id === selectedType)!;
+          const withdrawalType = availableWithdrawalTypes.find(t => t.id === selectedType)!;
           console.log('🚀 NAVIGATING TO OTP - Currency:', withdrawalType.currency);
           navigate('/otp', {
             state: {
@@ -245,7 +272,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
 
   if (!isOpen) return null;
 
-  const selectedTypeInfo = selectedType ? WITHDRAWAL_TYPES.find(t => t.id === selectedType)! : null;
+  const selectedTypeInfo = selectedType ? availableWithdrawalTypes.find(t => t.id === selectedType)! : null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
@@ -274,7 +301,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 Choose your preferred withdrawal method:
               </p>
 
-              {WITHDRAWAL_TYPES.map((type) => (
+              {availableWithdrawalTypes.map((type) => (
                 <button
                   key={type.id}
                   onClick={() => handleTypeSelect(type.id)}
@@ -294,6 +321,25 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                   </div>
                 </button>
               ))}
+              
+              {/* Show message if mobile money is not available */}
+              {!userCountrySupportsMomo && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                  <div className="flex items-start gap-3">
+                    <div className="text-yellow-600 text-xl">📱</div>
+                    <div>
+                      <div className="font-medium text-yellow-800 mb-1">Mobile Money non disponible</div>
+                      <div className="text-sm text-yellow-700 mb-2">
+                        Mobile Money n'est pas encore pris en charge pour votre pays. 
+                        {user?.country ? ` (${getCountryByCode(user.country)?.value || user.country})` : ''}
+                      </div>
+                      <div className="text-sm text-yellow-600">
+                        ✅ <strong>Alternative :</strong> Utilisez les retraits crypto qui sont disponibles dans tous les pays africains.
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Balance Display */}
               <div className="mt-6 p-4 bg-gray-50 rounded-xl">

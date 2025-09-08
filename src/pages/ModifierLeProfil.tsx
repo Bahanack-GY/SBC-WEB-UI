@@ -6,6 +6,13 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import { 
+  countryOptions, 
+  africanCountryCodes, 
+  momoCorrespondents, 
+  getMomoOperatorDisplayName,
+  countrySupportsMomo 
+} from '../utils/countriesData';
 
 // Supported crypto currencies for withdrawal
 export const supportedCryptoCurrencies = [
@@ -23,22 +30,6 @@ export const supportedCryptoCurrencies = [
   { code: 'BCH', name: 'Bitcoin Cash' },
 ];
 
-export const countryOptions = [
-  { value: 'Cameroun', label: '🇨🇲 Cameroun', code: 'CM' },
-  { value: 'Bénin', label: '🇧🇯 Bénin', code: 'BJ' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 Congo-Brazzaville', code: 'CG' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 Congo-Kinshasa', code: 'CD' },
-  { value: 'Ghana', label: '🇬🇭 Ghana', code: 'GH' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: 'CI' },
-  { value: 'Sénégal', label: '🇸🇳 Sénégal', code: 'SN' },
-  { value: 'Togo', label: '🇹🇬 Togo', code: 'TG' },
-  { value: 'Burkina Faso', label: '🇧🇫 Burkina Faso', code: 'BF' },
-  { value: 'Mali', label: '🇲🇱 Mali', code: 'ML' },
-  { value: 'Niger', label: '🇳🇪 Niger', code: 'NE' },
-  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN' },
-  { value: 'Gabon', label: '🇬🇦 Gabon', code: 'GA' },
-  { value: 'Kenya', label: '🇰🇪 Kenya', code: 'KE' },
-];
 export const professionOptions = [
   'Étudiant(e)', 'Sans emploi',
   'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
@@ -94,127 +85,10 @@ export const getInterestBaseValue = (displayValue: string): string => {
   return index !== -1 ? baseInterestOptions[index] : displayValue.replace(/^[^\w\s]+\s*/, ''); // Remove emoji prefix
 };
 
-// New: countryCodes array from Signup.tsx
-const countryCodes = [
-  { value: 'Cameroun', label: '🇨🇲 +237', code: '237' },
-  { value: 'Bénin', label: '🇧🇯 +229', code: '229' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 +242', code: '242' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 +243', code: '243' },
-  { value: 'Ghana', label: '🇬🇭 +233', code: '233' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 +225', code: '225' },
-  { value: 'Sénégal', label: '🇸🇳 +221', code: '221' },
-  { value: 'Togo', label: '🇹🇬 +228', code: '228' },
-  { value: 'Burkina Faso', label: '🇧🇫 +226', code: '226' },
-  { value: 'Mali', label: '🇲🇱 +223', code: '223' },
-  { value: 'Niger', label: '🇳🇪 +227', code: '227' },
-  { value: 'Guinée', label: '🇬🇳 +224', code: '224' },
-  { value: 'Gabon', label: '🇬🇦 +241', code: '241' },
-  { value: 'Kenya', label: '🇰🇪 +254', code: '254' },
-];
 
 // New: Define interfaces for the correspondents object structure
-interface CorrespondentData {
-  operators: string[];
-  currencies: string[];
-}
 
-interface CorrespondentsMap {
-  [key: string]: CorrespondentData;
-}
 
-// New: correspondents data with type assertion
-export const correspondents: CorrespondentsMap = {
-  'BJ': {
-    'operators': ['MTN_MOMO_BEN', 'MOOV_BEN'], // Benin
-    'currencies': ['XOF']
-  },
-  'CM': {
-    'operators': ['MTN_MOMO_CMR', 'ORANGE_CMR'], // Cameroon
-    'currencies': ['XAF']
-  },
-  'BF': {
-    'operators': ['MOOV_BFA', 'ORANGE_BFA'], // Burkina Faso
-    'currencies': ['XOF']
-  },
-  'CD': {
-    'operators': ['VODACOM_MPESA_COD', 'AIRTEL_COD', 'ORANGE_COD'], // DRC
-    'currencies': ['CDF']
-  },
-  'KE': {
-    'operators': ['MPESA_KEN'], // Kenya
-    'currencies': ['KES']
-  },
-  'NG': {
-    'operators': ['MTN_MOMO_NGA', 'AIRTEL_NGA'], // Nigeria
-    'currencies': ['NGN']
-  },
-  'SN': {
-    'operators': ['FREE_SEN', 'ORANGE_SEN'], // Senegal
-    'currencies': ['XOF']
-  },
-  'CG': {
-    'operators': ['AIRTEL_COG', 'MTN_MOMO_COG'], // Republic of the Congo
-    'currencies': ['XAF']
-  },
-  'GA': {
-    'operators': ['AIRTEL_GAB'], // Gabon
-    'currencies': ['XAF']
-  },
-  'CI': {
-    'operators': ['MTN_MOMO_CIV', 'ORANGE_CIV'], // Côte d'Ivoire
-    'currencies': ['XOF']
-  },
-  'ML': {
-    'operators': ['ORANGE_MLI', 'MOOV_MLI'], // Mali
-    'currencies': ['XOF']
-  },
-  'NE': {
-    'operators': ['ORANGE_NER', 'MOOV_NER'], // Niger
-    'currencies': ['XOF']
-  },
-  'GH': {
-    'operators': ['MTN_MOMO_GHA', 'VODAFONE_GHA'], // Ghana
-    'currencies': ['GHS']
-  },
-  'TG': {
-    'operators': ['TOGOCOM_TG', 'MOOV_TG'], // Togo
-    'currencies': ['XOF']
-  },
-};
-
-// New: Helper function to map operator values to display labels
-const getMomoOperatorDisplayName = (operatorValue: string) => {
-  switch (operatorValue) {
-    case 'MTN_MOMO_BEN': return 'MTN MoMo Bénin';
-    case 'MOOV_BEN': return 'Moov Bénin';
-    case 'MTN_MOMO_CMR': return 'MTN MoMo Cameroun';
-    case 'ORANGE_CMR': return 'Orange Money Cameroun';
-    case 'MOOV_BFA': return 'Moov Burkina Faso';
-    case 'ORANGE_BFA': return 'Orange Burkina Faso';
-    case 'VODACOM_MPESA_COD': return 'Vodacom M-Pesa RDC';
-    case 'AIRTEL_COD': return 'Airtel RDC';
-    case 'ORANGE_COD': return 'Orange RDC';
-    case 'MPESA_KEN': return 'M-Pesa Kenya';
-    case 'MTN_MOMO_NGA': return 'MTN MoMo Nigeria';
-    case 'AIRTEL_NGA': return 'Airtel Nigeria';
-    case 'FREE_SEN': return 'Free Money Sénégal';
-    case 'ORANGE_SEN': return 'Orange Money Sénégal';
-    case 'AIRTEL_COG': return 'Airtel Congo';
-    case 'MTN_MOMO_COG': return 'MTN MoMo Congo';
-    case 'AIRTEL_GAB': return 'Airtel Gabon';
-    case 'MTN_MOMO_CIV': return 'MTN MoMo Côte d\'Ivoire';
-    case 'ORANGE_CIV': return 'Orange Money Côte d\'Ivoire';
-    case 'ORANGE_MLI': return 'Orange Money Mali';
-    case 'MOOV_MLI': return 'Moov Mali';
-    case 'ORANGE_NER': return 'Orange Money Niger';
-    case 'MOOV_NER': return 'Moov Niger';
-    case 'MTN_MOMO_GHA': return 'MTN MoMo Ghana';
-    case 'VODAFONE_GHA': return 'Vodafone Ghana';
-    case 'TOGOCOM_TG': return 'Togocom';
-    case 'MOOV_TG': return 'Moov Togo';
-    default: return operatorValue.replace(/_/g, ' '); // Fallback for new operators
-  }
-};
 
 function ModifierLeProfil() {
   const { user, refreshUser, loading: authLoading } = useAuth();
@@ -236,7 +110,7 @@ function ModifierLeProfil() {
     notificationPreference: 'email' as 'email' | 'whatsapp',
   });
   // New state for the selected phone country code
-  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(countryCodes[0]);
+  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(africanCountryCodes[0]);
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -254,8 +128,8 @@ function ModifierLeProfil() {
 
         // Determine the country code from the country name
         const currentCountryCode = countryOptions.find((c: { value: string; }) => c.value === countryName)?.code;
-        const validOperatorsForCurrentCountry = currentCountryCode && correspondents[currentCountryCode]
-          ? correspondents[currentCountryCode].operators
+        const validOperatorsForCurrentCountry = currentCountryCode && momoCorrespondents[currentCountryCode]
+          ? momoCorrespondents[currentCountryCode].operators
           : [];
 
         // Only set momoOperator if it's valid for the current country
@@ -265,11 +139,11 @@ function ModifierLeProfil() {
 
         // New: Parse existing phone number to set selectedPhoneCountryCode and local phoneNumber
         let localPhoneNumber = user.phoneNumber || '';
-        let matchedCode = countryCodes[0]; // Default to the first code if no match
-        for (const c of countryCodes) {
-          if (user.phoneNumber && user.phoneNumber.startsWith(c.code)) {
+        let matchedCode = africanCountryCodes[0]; // Default to the first code if no match
+        for (const c of africanCountryCodes) {
+          if (user.phoneNumber && user.phoneNumber.startsWith(c.code.replace('+', ''))) {
             matchedCode = c;
-            localPhoneNumber = user.phoneNumber.substring(c.code.length);
+            localPhoneNumber = user.phoneNumber.substring(c.code.replace('+', '').length);
             break;
           }
         }
@@ -305,7 +179,7 @@ function ModifierLeProfil() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'countryCodeSelect') { // Handle country code select for phone number
-      const code = countryCodes.find(c => c.value === value);
+      const code = africanCountryCodes.find(c => c.value === value);
       if (code) {
         setSelectedPhoneCountryCode(code);
       }
@@ -378,7 +252,7 @@ function ModifierLeProfil() {
     setFeedback(null);
     try {
       const countryCode = countryOptions.find(c => c.value === formData.country)?.code || formData.country;
-      const fullPhoneNumber = `${selectedPhoneCountryCode.code}${formData.phoneNumber}`; // Reconstruct full phone number
+      const fullPhoneNumber = `${selectedPhoneCountryCode.code.replace('+', '')}${formData.phoneNumber}`; // Reconstruct full phone number
       const updates = {
         name: formData.name,
         phoneNumber: fullPhoneNumber, // Use the reconstructed full phone number
@@ -424,10 +298,10 @@ function ModifierLeProfil() {
   // New: Dynamically compute available MoMo operators based on selected country
   const availableMomoOperators = useMemo(() => {
     const selectedCountryCode = countryOptions.find((c: { value: string; code: string; }) => c.value === formData.country)?.code;
-    if (selectedCountryCode && correspondents[selectedCountryCode]) {
+    if (selectedCountryCode && momoCorrespondents[selectedCountryCode]) {
       return [
         { value: '', label: 'Sélectionner un opérateur MoMo' }, // Default option
-        ...correspondents[selectedCountryCode].operators.map(opValue => ({
+        ...momoCorrespondents[selectedCountryCode].operators.map(opValue => ({
           value: opValue,
           label: getMomoOperatorDisplayName(opValue)
         }))
@@ -490,7 +364,7 @@ function ModifierLeProfil() {
                   value={selectedPhoneCountryCode.value}
                   onChange={handleChange}
                 >
-                  {countryCodes.map((c) => (
+                  {africanCountryCodes.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
@@ -544,43 +418,86 @@ function ModifierLeProfil() {
                 {professionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
-            <div>
-              <label className="block text-gray-700 mb-1">💳 Numéro MoMo</label>
-              <div className="relative flex items-center">
-                <span className="absolute left-3 text-gray-500 font-medium z-10">
-                  {countryCodes.find(c => c.value === formData.country)?.code || '+237'}
-                </span>
-                <input 
-                  name="momoNumber" 
-                  value={formData.momoNumber} 
-                  onChange={handleChange} 
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2 pl-16 focus:outline-none" 
-                  placeholder="675080477" 
-                />
-              </div>
-              <div className="text-xs text-gray-500 mt-1">
-                💡 Le code pays est automatiquement ajouté selon votre pays sélectionné
-              </div>
-            </div>
-            <div>
-              <label className="block text-gray-700 mb-1">📱 Opérateur MoMo</label>
-              <select name="momoOperator" value={formData.momoOperator} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
-                {availableMomoOperators.map((option) => (
-                  <option key={option.value} value={option.value}>{option.label}</option>
-                ))}
-              </select>
+            {/* Mobile Money Section with Country Restrictions */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+              <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
+                💳 Mobile Money
+                {formData.country && !countrySupportsMomo(countryOptions.find(c => c.value === formData.country)?.code || '') && (
+                  <span className="text-xs font-normal text-red-600 bg-red-100 px-2 py-1 rounded-full">
+                    Non disponible
+                  </span>
+                )}
+              </h3>
+              
+              {formData.country && countrySupportsMomo(countryOptions.find(c => c.value === formData.country)?.code || '') ? (
+                // Show MoMo fields for supported countries
+                <div className="space-y-4">
+                  <div className="text-sm text-yellow-700 mb-4">
+                    💡 Mobile Money disponible pour votre pays : {formData.country}
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-700 mb-1">💳 Numéro MoMo</label>
+                    <div className="relative flex items-center">
+                      <span className="absolute left-3 text-gray-500 font-medium z-10">
+                        {countryOptions.find(c => c.value === formData.country)?.phoneCode || '+237'}
+                      </span>
+                      <input 
+                        name="momoNumber" 
+                        value={formData.momoNumber} 
+                        onChange={handleChange} 
+                        className="w-full border border-gray-300 rounded-xl px-4 py-2 pl-16 focus:outline-none" 
+                        placeholder="675080477" 
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      💡 Le code pays est automatiquement ajouté selon votre pays sélectionné
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-700 mb-1">📱 Opérateur MoMo</label>
+                    <select name="momoOperator" value={formData.momoOperator} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+                      {availableMomoOperators.map((option) => (
+                        <option key={option.value} value={option.value}>{option.label}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              ) : (
+                // Show message for unsupported countries
+                <div className="text-center py-6">
+                  <div className="text-6xl mb-4">🚫</div>
+                  <div className="text-lg font-medium text-gray-800 mb-2">
+                    Mobile Money non disponible
+                  </div>
+                  <div className="text-sm text-gray-600 mb-4">
+                    {formData.country ? (
+                      `Mobile Money n'est pas encore pris en charge pour ${formData.country}.`
+                    ) : (
+                      'Sélectionnez d\'abord votre pays pour voir les options disponibles.'
+                    )}
+                  </div>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <div className="text-sm text-blue-800 font-medium mb-1">✅ Alternative disponible :</div>
+                    <div className="text-sm text-blue-700">
+                      Vous pouvez toujours utiliser les <strong>retraits crypto</strong> pour convertir votre solde USD en cryptomonnaies.
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             
-            {/* NEW: Crypto Wallet Section */}
+            {/* Crypto Wallet Section - Available for ALL countries */}
             <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
               <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
                 🪙 Portefeuille Crypto
-                <span className="text-xs font-normal text-purple-600 bg-purple-100 px-2 py-1 rounded-full">
-                  Pour retraits USD
+                <span className="text-xs font-normal text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                  ✅ Disponible partout
                 </span>
               </h3>
               <div className="text-sm text-purple-700 mb-4">
-                💡 Configurez votre portefeuille crypto pour effectuer des retraits en USD. Ces informations sont utilisées automatiquement lors des retraits crypto.
+                💡 Les retraits crypto sont disponibles pour <strong>tous les pays africains</strong>. Configurez votre portefeuille pour effectuer des retraits en USD.
               </div>
               
               <div className="space-y-4">
