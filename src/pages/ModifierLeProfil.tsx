@@ -17,17 +17,12 @@ import {
 // Supported crypto currencies for withdrawal
 export const supportedCryptoCurrencies = [
   { code: 'BTC', name: 'Bitcoin' },
-  { code: 'ETH', name: 'Ethereum' },
-  { code: 'USDT', name: 'Tether (USDT)' },
-  { code: 'USDC', name: 'USD Coin' },
   { code: 'LTC', name: 'Litecoin' },
-  { code: 'XRP', name: 'XRP' },
-  { code: 'ADA', name: 'Cardano' },
-  { code: 'DOT', name: 'Polkadot' },
-  { code: 'SOL', name: 'Solana' },
-  { code: 'MATIC', name: 'Polygon' },
+  { code: 'XRP', name: 'Ripple' },
   { code: 'TRX', name: 'TRON' },
-  { code: 'BCH', name: 'Bitcoin Cash' },
+  { code: 'USDTSOL', name: 'USDT (Solana)' },
+  { code: 'USDTBSC', name: 'USDT (BSC-BEP20)' },
+  { code: 'BNBBSC', name: 'BNB (BSC-BEP20)' },
 ];
 
 export const professionOptions = [

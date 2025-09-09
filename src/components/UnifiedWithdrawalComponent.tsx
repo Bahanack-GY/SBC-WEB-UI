@@ -81,7 +81,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   
   // Crypto states  
   const [cryptoAddress, setCryptoAddress] = useState('');
-  const [cryptoCurrency, setCryptoCurrency] = useState('USDT');
+  const [cryptoCurrency, setCryptoCurrency] = useState('BTC');
   
   // OTP states
   const [transactionId, setTransactionId] = useState('');
@@ -116,7 +116,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         setMomoNumber(user.momoNumber || '');
         setMomoOperator(user.momoOperator || '');
         setCryptoAddress(user.cryptoWalletAddress || '');
-        setCryptoCurrency(user.cryptoWalletCurrency || 'USDT');
+        setCryptoCurrency(user.cryptoWalletCurrency || 'BTC');
       }
     }
   }, [isOpen, user]);
@@ -432,10 +432,13 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                       onChange={(e) => setCryptoCurrency(e.target.value)}
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="USDT">USDT (Tether)</option>
-                      <option value="USDC">USDC (USD Coin)</option>
                       <option value="BTC">Bitcoin</option>
-                      <option value="ETH">Ethereum</option>
+                      <option value="LTC">Litecoin</option>
+                      <option value="XRP">Ripple</option>
+                      <option value="TRX">TRON</option>
+                      <option value="USDTSOL">USDT (Solana)</option>
+                      <option value="USDTBSC">USDT (BSC-BEP20)</option>
+                      <option value="BNBBSC">BNB (BSC-BEP20)</option>
                     </select>
                   </div>
                 </>

@@ -58,7 +58,7 @@ const CryptoWithdrawalComponent: React.FC<CryptoWithdrawalProps> = ({
       } catch (err) {
         console.error('Failed to load supported cryptocurrencies:', err);
         // Fallback to common cryptos
-        setSupportedCryptos(['BTC', 'ETH', 'USDT', 'USDC', 'LTC', 'XRP']);
+        setSupportedCryptos(['BTC', 'LTC', 'XRP', 'TRX', 'USDTSOL', 'USDTBSC', 'BNBBSC']);
       }
     };
 
