@@ -975,7 +975,7 @@ export class SBCApiService extends ApiService {
 
   /**
    * Convert USD to FCFA using public user endpoint
-   * Rate: 1 USD = 590 XAF (better rate for users)
+   * Rate: 1 USD = 500 XAF (better rate for users)
    * Requires user authentication
    */
   async convertUsdToXaf(usdAmount: number): Promise<ApiResponse> {
@@ -997,11 +997,11 @@ export class SBCApiService extends ApiService {
 
   /**
    * Get conversion preview with corrected fixed rates
-   * USD to XAF: 1 USD = 590 XAF (better rate for users)
+   * USD to XAF: 1 USD = 500 XAF (better rate for users)
    * XAF to USD: 660 XAF = 1 USD (less favorable to discourage conversions)
    */
   async getConversionPreview(amount: number, fromCurrency: 'USD' | 'XAF', toCurrency: 'USD' | 'XAF'): Promise<{ convertedAmount: number; rate: number }> {
-    const USD_TO_XAF_RATE = 590; // 1 USD = 590 XAF (favorable for users)
+    const USD_TO_XAF_RATE = 500; // 1 USD = 500 XAF (favorable for users)
     const XAF_TO_USD_RATE = 660; // 660 XAF = 1 USD (less favorable)
     
     let convertedAmount: number;

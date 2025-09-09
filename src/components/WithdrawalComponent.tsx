@@ -116,13 +116,13 @@ const WithdrawalComponent: React.FC = () => {
     let effectiveAmount = withdrawalAmount;
     if (selectedBalance === 'USD' && detectedCountry) {
       // Convert USD to local currency for minimum check
-      // USD to XAF rate is 590 (from balanceHelpers)
-      effectiveAmount = withdrawalAmount * 590; // Assuming most countries use XAF-equivalent rates
+      // USD to XAF rate is 500 (from balanceHelpers)
+      effectiveAmount = withdrawalAmount * 500; // Assuming most countries use XAF-equivalent rates
     }
     
     if (effectiveAmount < detectedCountry.minAmount) {
       const minInSelectedCurrency = selectedBalance === 'USD' 
-        ? (detectedCountry.minAmount / 590).toFixed(2)
+        ? (detectedCountry.minAmount / 500).toFixed(2)
         : detectedCountry.minAmount;
       setError(`Montant minimum pour ${detectedCountry.country}: ${minInSelectedCurrency} ${selectedBalance}`);
       return;
@@ -396,7 +396,7 @@ const WithdrawalComponent: React.FC = () => {
                 <div>Minimum: {detectedCountry.minAmount} {detectedCountry.currency}, multiple de 5</div>
               )}
               {detectedCountry && selectedBalance === 'USD' && (
-                <div>Minimum: ${(detectedCountry.minAmount / 590).toFixed(2)} USD (≈{detectedCountry.minAmount} {detectedCountry.currency})</div>
+                <div>Minimum: ${(detectedCountry.minAmount / 500).toFixed(2)} USD (≈{detectedCountry.minAmount} {detectedCountry.currency})</div>
               )}
             </div>
           </div>

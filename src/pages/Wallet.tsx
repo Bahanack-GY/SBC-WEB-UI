@@ -190,14 +190,14 @@ function Wallet() {
         const withdrawal = value?.withdrawal as { totalAmount?: number; count?: number; currencies?: Record<string, any> } | undefined;
         
         // Calculate combined amounts in FCFA equivalent for chart display
-        // USD is converted to XAF using approximate rate of 1:590
+        // USD is converted to XAF using rate of 1:500
         const depositXAF = Number(deposit?.currencies?.XAF?.totalAmount || 0);
         const depositUSD = Number(deposit?.currencies?.USD?.totalAmount || 0);
-        const depositTotal = depositXAF + (depositUSD * 590); // Convert USD to XAF for chart
+        const depositTotal = depositXAF + (depositUSD * 500); // Convert USD to XAF for chart
         
         const withdrawalXAF = Number(withdrawal?.currencies?.XAF?.totalAmount || 0);
         const withdrawalUSD = Number(withdrawal?.currencies?.USD?.totalAmount || 0);
-        const withdrawalTotal = withdrawalXAF + (withdrawalUSD * 590); // Convert USD to XAF for chart
+        const withdrawalTotal = withdrawalXAF + (withdrawalUSD * 500); // Convert USD to XAF for chart
         
         // Combined counts
         const depositCountXAF = Number(deposit?.currencies?.XAF?.count || 0);
@@ -1081,7 +1081,7 @@ function Wallet() {
                                 </div>
                               </div>
                               <p className="text-xs text-gray-400 mt-2 border-t border-gray-600 pt-2">
-                                💡 USD converti à 1:590 FCFA pour le graphique
+                                💡 USD converti à 1:500 FCFA pour le graphique
                               </p>
                             </div>
                           );
@@ -1093,7 +1093,7 @@ function Wallet() {
                 </ResponsiveContainer>
               </div>
               <div className="mt-2 text-xs text-gray-500 text-center">
-                💡 Montants USD convertis en FCFA (1:590) pour l'affichage du graphique
+                💡 Montants USD convertis en FCFA (1:500) pour l'affichage du graphique
               </div>
             </div>
             {/* Recent Transactions */}

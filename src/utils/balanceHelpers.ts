@@ -7,12 +7,12 @@
 export const EXCHANGE_RATES = {
   // Conversion rates (corrected)
   CONVERSION: {
-    USD_TO_XAF: 590,  // 1 USD = 590 XAF (better rate for users converting USD to XAF)
+    USD_TO_XAF: 500,  // 1 USD = 500 XAF (better rate for users converting USD to XAF)
     XAF_TO_USD: 1/660  // 660 XAF = 1 USD (less favorable to discourage XAF to USD conversions)
   },
   // For display purposes
   DISPLAY: {
-    USD_TO_XAF_RATE: 590,  // When converting USD → XAF
+    USD_TO_XAF_RATE: 500,  // When converting USD → XAF
     XAF_TO_USD_RATE: 660   // When converting XAF → USD (660 XAF needed for 1 USD)
   }
 };
@@ -130,7 +130,7 @@ export function validateConversionAmount(
   if (fromCurrency === 'USD' && toCurrency === 'FCFA') {
     minAmount = CONVERSION_MINIMUMS.USD_TO_XAF; // 1 USD minimum
   } else if (fromCurrency === 'FCFA' && toCurrency === 'USD') {
-    minAmount = CONVERSION_MINIMUMS.XAF_TO_USD; // 590 XAF minimum
+    minAmount = CONVERSION_MINIMUMS.XAF_TO_USD; // 660 XAF minimum
   } else {
     return {
       isValid: false,
@@ -230,7 +230,7 @@ export function formatConversionRate(_fromAmount: number, fromCurrency: 'FCFA' |
  */
 export function calculateConversionPreview(amount: number, fromCurrency: 'FCFA' | 'USD', toCurrency: 'FCFA' | 'USD'): { convertedAmount: number; rate: number } {
   if (fromCurrency === 'USD' && toCurrency === 'FCFA') {
-    // USD to XAF: 1 USD = 590 XAF (better rate for users)
+    // USD to XAF: 1 USD = 500 XAF (better rate for users)
     const convertedAmount = Math.round(amount * EXCHANGE_RATES.CONVERSION.USD_TO_XAF);
     return {
       convertedAmount,
