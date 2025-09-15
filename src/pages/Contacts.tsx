@@ -10,6 +10,7 @@ import type { User } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { countryOptions } from '../utils/countriesData';
 
 const professions = [
     'Étudiant(e)', 'Sans emploi',
@@ -61,28 +62,11 @@ const getInterestBaseValue = (displayValue: string): string => {
 
 const sexes = ["Homme", "Femme", "Autre"];
 
-const westAfricanCountries = [
-    { name: 'Bénin', flag: 'BJ' },
-    { name: 'Cameroun', flag: 'CM' },
-    { name: 'Burkina Faso', flag: 'BF' },
-    { name: 'Cap-Vert', flag: 'CV' },
-    { name: 'Côte d\'Ivoire', flag: 'CI' },
-    { name: 'Gambie', flag: 'GM' },
-    { name: 'Ghana', flag: 'GH' },
-    { name: 'Guinée', flag: 'GN' },
-    { name: 'Guinée-Bissau', flag: 'GW' },
-    { name: 'Libéria', flag: 'LR' },
-    { name: 'Mali', flag: 'ML' },
-    { name: 'Niger', flag: 'NE' },
-    { name: 'Nigéria', flag: 'NG' },
-    { name: 'Sénégal', flag: 'SN' },
-    { name: 'Sierra Leone', flag: 'SL' },
-    { name: 'Togo', flag: 'TG' },
-    { name: 'Congo-Brazzaville', flag: 'CG' },
-    { name: 'Gabon', flag: 'GA' },
-    { name: 'Congo-Kinshasa', flag: 'CD' },
-    { name: 'Kenya', flag: 'KE' },
-];
+// Using all African countries from the centralized data
+const africanCountries = countryOptions.map(country => ({
+    name: country.label,
+    flag: country.code
+}));
 
 interface Criteria {
     country: string;
@@ -515,7 +499,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 <h4 className="text-lg font-bold mb-4">Télécharger les contacts filtrés</h4>
                                 <div className="mb-4 text-sm text-gray-700">
                                     <span className="font-semibold">Résumé du filtre :</span><br />
-                                    Pays : {westAfricanCountries.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
+                                    Pays : {africanCountries.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
                                     {isRestrictedToBasicFilters ? (
                                         <p className="text-orange-600 font-medium">Les filtres avancés (âge, sexe, professions, intérêts) sont réservés aux abonnés CIBLÉ.</p>
                                     ) : (
@@ -596,7 +580,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                         className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2 bg-white"
                                     >
                                         <option value="">Sélectionner</option>
-                                        {westAfricanCountries.map(c => (
+                                        {africanCountries.map(c => (
                                             <option key={c.flag} value={c.flag}>
                                                 {c.name} ({c.flag})
                                             </option>

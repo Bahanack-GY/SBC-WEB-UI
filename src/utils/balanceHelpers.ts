@@ -23,9 +23,9 @@ export const CONVERSION_MINIMUMS = {
   XAF_TO_USD: 660   // Minimum 660 XAF (updated based on corrected rate)
 };
 
-// Crypto withdrawal minimums from API guide - $15 USD minimum
+// Crypto withdrawal minimums - $10 USD minimum
 export const CRYPTO_MINIMUMS = {
-  USD: 15 // Minimum $15 USD for all crypto withdrawals
+  USD: 10 // Minimum $10 USD for all crypto withdrawals
 };
 
 export interface BalanceConversionError {

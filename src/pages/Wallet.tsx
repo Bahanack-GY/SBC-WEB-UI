@@ -254,6 +254,7 @@ function Wallet() {
   // Calculate withdrawal fee and total deduction in real-time
   useEffect(() => {
     const amount = Number(withdrawAmount) || 0;
+    console.log('Fee calculation triggered with withdrawAmount:', withdrawAmount, 'parsed as:', amount);
     let fee = 0;
     let total = 0;
     
@@ -261,10 +262,9 @@ function Wallet() {
       fee = amount * 0.025; // 2.5% fee for FCFA/Mobile Money
       total = amount + fee;
     } else {
-      // For USD crypto withdrawals, no frontend fee calculation
-      // The backend handles all fees transparently
-      fee = 0; 
-      total = amount; // Just the USD amount
+      // For USD crypto withdrawals, apply 2.5% fee
+      fee = amount * 0.025; // 2.5% fee for crypto withdrawals
+      total = amount + fee;
     }
 
     setWithdrawalFee(fee);
@@ -308,7 +308,7 @@ function Wallet() {
     if (withdrawAmount && Number(withdrawAmount) > 0 && !isNaN(Number(withdrawAmount))) {
       // Check if user has sufficient balance
       const currentBalance = selectedBalanceType === 'FCFA' ? balance : usdBalance;
-      const requiredAmount = selectedBalanceType === 'FCFA' ? totalDeduction : Number(withdrawAmount);
+      const requiredAmount = totalDeduction; // Always use totalDeduction (amount + fee) for balance check
       
       if (currentBalance < requiredAmount) {
         const balanceText = selectedBalanceType === 'FCFA' 
@@ -398,21 +398,60 @@ function Wallet() {
         console.log("response.isOverallSuccess:", response.isOverallSuccess);
 
         if (data && response.isOverallSuccess) {
-          // Handle different flows for crypto vs mobile money
+          // Handle crypto withdrawals with same flow as mobile money
           if (selectedBalanceType === 'USD') {
-            // Crypto withdrawal - usually auto-processed
-            setModalContent({
-              type: 'success',
-              message: `Retrait crypto initié avec succès! Montant: $${withdrawAmount} vers ${user?.cryptoWalletCurrency} (${user?.cryptoWalletAddress?.substring(0, 10)}...)`
-            });
-            setShowModal(true);
-            setWithdrawAmount('');
-            setWithdrawalFee(0);
-            setTotalDeduction(0);
-            setSelectedBalanceType('FCFA');
-            setShowWithdrawForm(false);
-            refreshUser();
-            return;
+            // Check if crypto withdrawal requires OTP verification (same as momo)
+            if (data.status === 'pending_otp_verification' && data.transactionId) {
+              // Check if this is an existing pending transaction
+              if (data.message && data.message.includes('ongoing withdrawal request')) {
+                setModalContent({
+                  type: 'error',
+                  message: `Vous avez une demande de retrait crypto en attente (ID: ${data.transactionId}) qui nécessite une vérification OTP. Un nouveau code OTP a été envoyé à votre numéro enregistré. Vous pouvez valider cette transaction ou l'annuler dans la liste des transactions.`
+                });
+                setShowModal(true);
+                setWithdrawAmount('');
+                setWithdrawalFee(0);
+                setTotalDeduction(0);
+                setShowWithdrawForm(false);
+                refreshUser();
+              } else {
+                // New crypto transaction - use same OTP flow as momo
+                setModalContent({
+                  type: 'success',
+                  message: data.message || 'Demande de retrait crypto initiée. Un code OTP a été envoyé à votre numéro de téléphone. Veuillez le vérifier.',
+                  onConfirm: () => {
+                    navigate('/otp', {
+                      state: {
+                        fromWithdrawal: true,
+                        withdrawalId: data.transactionId,
+                        withdrawalAmount: Number(withdrawAmount),
+                        withdrawalCurrency: 'USD',
+                      }
+                    });
+                  }
+                });
+                setShowModal(true);
+                setWithdrawAmount('');
+                setWithdrawalFee(0);
+                setTotalDeduction(0);
+                setShowWithdrawForm(false);
+              }
+              return;
+            } else {
+              // Crypto withdrawal auto-processed (no OTP needed)
+              setModalContent({
+                type: 'success',
+                message: `Retrait crypto initié avec succès! Montant: $${withdrawAmount} vers ${user?.cryptoWalletCurrency} (${user?.cryptoWalletAddress?.substring(0, 10)}...)`
+              });
+              setShowModal(true);
+              setWithdrawAmount('');
+              setWithdrawalFee(0);
+              setTotalDeduction(0);
+              setSelectedBalanceType('FCFA');
+              setShowWithdrawForm(false);
+              refreshUser();
+              return;
+            }
           }
           
           // For XAF/Mobile Money withdrawals, check for setup errors
@@ -916,7 +955,10 @@ function Wallet() {
                     type="number"
                     min="1"
                     value={withdrawAmount}
-                    onChange={e => setWithdrawAmount(e.target.value)}
+                    onChange={e => {
+                      console.log('Input value changed to:', e.target.value);
+                      setWithdrawAmount(e.target.value);
+                    }}
                     className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold"
                     placeholder={`Montant en ${selectedBalanceType}`}
                     step={selectedBalanceType === 'USD' ? '0.01' : '1'}
@@ -945,12 +987,18 @@ function Wallet() {
                       </div>
                     )}
                     {selectedBalanceType === 'USD' && (
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-gray-700">Méthode de retrait:</span>
-                        <span className="font-semibold text-blue-600">
-                          🪙 Crypto ({user?.cryptoWalletCurrency || 'Non configuré'})
-                        </span>
-                      </div>
+                      <>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-gray-700">Méthode de retrait:</span>
+                          <span className="font-semibold text-blue-600">
+                            🪙 Crypto ({user?.cryptoWalletCurrency || 'Non configuré'})
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center mb-1">
+                          <span className="text-gray-700">Frais (2.5%):</span>
+                          <span className="font-semibold text-orange-600">${withdrawalFee.toFixed(2)}</span>
+                        </div>
+                      </>
                     )}
                     <div className="border-t border-blue-200 pt-2 mt-2">
                       <div className="flex justify-between items-center">

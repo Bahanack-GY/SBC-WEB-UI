@@ -400,7 +400,8 @@ const CryptoWithdrawalComponent: React.FC<CryptoWithdrawalProps> = ({
             <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
               <h5 className="font-semibold text-yellow-800 mb-2 text-sm">Important:</h5>
               <ul className="text-xs text-yellow-700 space-y-1">
-                <li>• Minimum de retrait: $15 USD</li>
+                <li>• Minimum de retrait: $10 USD</li>
+                <li>• Frais de retrait: 2.5% du montant</li>
                 <li>• Maximum 3 retraits réussis par 24h (tous types)</li>
                 <li>• Vérifiez l'adresse crypto avant de confirmer</li>
                 <li>• Les retraits crypto utilisent votre solde USD</li>

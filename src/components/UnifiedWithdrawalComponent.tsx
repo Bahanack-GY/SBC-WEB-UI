@@ -31,10 +31,10 @@ const getWithdrawalTypes = (userCountrySupportsMomo: boolean): WithdrawalType[] 
     name: 'Cryptocurrency',
     icon: <FaBitcoin size={24} />,
     description: 'Withdraw to your crypto wallet',
-    minAmount: 15,
+    minAmount: 10,
     currency: 'USD',
     requirements: [
-      'Minimum: $15 USD',
+      'Minimum: $10 USD',
       'No multiple requirement',
       'Uses saved crypto wallet details',
       'Available in all African countries'
