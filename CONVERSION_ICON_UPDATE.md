@@ -2,11 +2,31 @@
 
 ## ✅ Implementation Complete
 
-Successfully updated the transaction icon for conversion type transactions in the wallet page.
+Successfully updated the transaction icon for conversion type transactions in the wallet page and fixed TypeScript type definitions.
 
-## 🔄 Change Made
+## 🔄 Changes Made
 
-### Updated `formatTransactionIcon` function in `src/pages/Wallet.tsx`
+### 1. Updated Transaction Type Definition in `src/types/api.ts`
+
+**Before:**
+```typescript
+export interface Transaction {
+  // ...
+  type: 'deposit' | 'withdrawal' | 'payment' | 'refund';
+  // ...
+}
+```
+
+**After:**
+```typescript
+export interface Transaction {
+  // ...
+  type: 'deposit' | 'withdrawal' | 'payment' | 'refund' | 'conversion';
+  // ...
+}
+```
+
+### 2. Updated `formatTransactionIcon` function in `src/pages/Wallet.tsx`
 
 **Before:**
 ```typescript

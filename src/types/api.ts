@@ -92,7 +92,7 @@ export interface Transaction {
   id: string;
   transactionId?: string; // Add transactionId field for API calls
   userId: string;
-  type: 'deposit' | 'withdrawal' | 'payment' | 'refund';
+  type: 'deposit' | 'withdrawal' | 'payment' | 'refund' | 'conversion';
   amount: number;
   currency: 'XAF' | 'USD' | string;
   status: 'pending' | 'completed' | 'failed' | 'cancelled' | 'refunded' | 'processing' | 'pending_otp_verification';
