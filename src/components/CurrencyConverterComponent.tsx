@@ -61,6 +61,12 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
   };
 
   const handlePreviewConversion = async () => {
+    // Check if the source balance is negative
+    if (maxAmount < 0) {
+      setError(`Impossible de convertir avec un solde ${fromCurrency} négatif. Solde actuel: ${maxAmount.toLocaleString('fr-FR')} ${fromCurrency}`);
+      return;
+    }
+    
     // Validate amount using helper function with correct signature
     const validation = validateConversionAmount(Number(amount), maxAmount, fromCurrency, toCurrency);
     if (!validation.isValid) {
@@ -87,6 +93,12 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
   const handleConfirmConversion = async () => {
     if (!convertedAmount) {
       setError('Veuillez d\'abord prévisualiser la conversion');
+      return;
+    }
+
+    // Check if the source balance is negative
+    if (maxAmount < 0) {
+      setError(`Impossible de convertir avec un solde ${fromCurrency} négatif. Solde actuel: ${maxAmount.toLocaleString('fr-FR')} ${fromCurrency}`);
       return;
     }
 
@@ -188,11 +200,15 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                 <div className="flex justify-between text-sm">
                   <div className="text-center">
                     <div className="text-xs text-gray-600">FCFA</div>
-                    <div className="font-bold text-blue-600">{balance.toLocaleString('fr-FR')} F</div>
+                    <div className={`font-bold ${balance < 0 ? 'text-red-600' : 'text-blue-600'}`}>
+                      {balance.toLocaleString('fr-FR')} F
+                    </div>
                   </div>
                   <div className="text-center">
                     <div className="text-xs text-gray-600">USD</div>
-                    <div className="font-bold text-green-600">${usdBalance.toFixed(2)}</div>
+                    <div className={`font-bold ${usdBalance < 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      ${usdBalance.toFixed(2)}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -203,6 +219,15 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                   USD→FCFA: 1$ = {EXCHANGE_RATES.DISPLAY.USD_TO_XAF_RATE}F • FCFA→USD: {EXCHANGE_RATES.DISPLAY.XAF_TO_USD_RATE}F = 1$
                 </div>
               </div>
+
+              {/* Negative Balance Warning */}
+              {maxAmount < 0 && (
+                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="text-xs text-red-700 text-center">
+                    ⚠️ Impossible de convertir avec un solde {fromCurrency} négatif
+                  </div>
+                </div>
+              )}
 
               {/* Conversion Form - Compact */}
               <div className="space-y-3">
@@ -227,10 +252,15 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                       setError(null);
                     }}
                     placeholder={`Montant en ${fromCurrency}`}
-                    className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    max={maxAmount}
+                    className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 ${
+                      maxAmount < 0 
+                        ? 'border-red-300 bg-red-50 cursor-not-allowed focus:ring-red-500' 
+                        : 'border-gray-300 focus:ring-blue-500'
+                    }`}
+                    max={Math.max(0, maxAmount)}
+                    disabled={maxAmount < 0}
                   />
-                  <div className="text-xs text-gray-500 mt-1">
+                  <div className={`text-xs mt-1 ${maxAmount < 0 ? 'text-red-500' : 'text-gray-500'}`}>
                     Disponible: {maxAmount.toLocaleString('fr-FR')} {fromCurrency}
                   </div>
                 </div>
@@ -265,7 +295,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={handlePreviewConversion}
-                    disabled={loading || !amount}
+                    disabled={loading || !amount || maxAmount < 0}
                     className="flex-1 bg-blue-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {loading ? <FiLoader className="animate-spin mr-1" size={14} /> : null}
@@ -273,7 +303,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                   </button>
                   <button
                     onClick={handleConfirmConversion}
-                    disabled={converting || !convertedAmount}
+                    disabled={converting || !convertedAmount || maxAmount < 0}
                     className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
                     {converting ? <FiLoader className="animate-spin mr-1" size={14} /> : null}

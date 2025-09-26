@@ -308,6 +308,17 @@ function Wallet() {
     if (withdrawAmount && Number(withdrawAmount) > 0 && !isNaN(Number(withdrawAmount))) {
       // Check if user has sufficient balance
       const currentBalance = selectedBalanceType === 'FCFA' ? balance : usdBalance;
+      
+      // Prevent withdrawal if balance is negative
+      if (currentBalance < 0) {
+        setModalContent({
+          type: 'error',
+          message: `Impossible d'effectuer un retrait avec un solde ${selectedBalanceType} négatif. Votre solde actuel est de ${selectedBalanceType === 'FCFA' ? `${currentBalance.toLocaleString('fr-FR')} F` : `$${currentBalance.toFixed(2)}`}.`
+        });
+        setShowModal(true);
+        return;
+      }
+      
       const requiredAmount = totalDeduction; // Always use totalDeduction (amount + fee) for balance check
       
       if (currentBalance < requiredAmount) {
@@ -668,6 +679,7 @@ function Wallet() {
       case 'withdrawal': return '💸';
       case 'payment': return '💳';
       case 'refund': return '🔄';
+      case 'conversion': return '🔀'; // Currency conversion icon (shuffle/exchange arrows)
       default: return '💼';
     }
   };
@@ -829,11 +841,15 @@ function Wallet() {
               <div className="text-sm opacity-80">Vos soldes</div>
               <div className="flex flex-col gap-2 mb-3">
                 <div className="flex justify-between items-center">
-                  <div className="text-2xl font-bold">{balance.toLocaleString('fr-FR')} F</div>
+                  <div className={`text-2xl font-bold ${balance < 0 ? 'text-red-300' : ''}`}>
+                    {balance.toLocaleString('fr-FR')} F
+                  </div>
                   <div className="text-xs opacity-80">FCFA</div>
                 </div>
                 <div className="flex justify-between items-center">
-                  <div className="text-xl font-bold">${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
+                  <div className={`text-xl font-bold ${usdBalance < 0 ? 'text-red-300' : ''}`}>
+                    ${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </div>
                   <div className="text-xs opacity-80">USD</div>
                 </div>
               </div>
@@ -880,15 +896,45 @@ function Wallet() {
                 <span className="text-xs font-semibold">Dépôt</span>
               </button>
               <button
-                onClick={handleWithdraw}
-                className="flex-1 flex flex-col items-center justify-center bg-[#94B027] rounded-2xl py-4 shadow hover:bg-green-700 transition-colors"
+                onClick={() => {
+                  if (balance < 0 && usdBalance < 0) {
+                    setModalContent({
+                      type: 'error',
+                      message: 'Impossible d\'effectuer un retrait avec des soldes négatifs. FCFA: ' + balance.toLocaleString('fr-FR') + ' F, USD: $' + usdBalance.toFixed(2)
+                    });
+                    setShowModal(true);
+                  } else {
+                    handleWithdraw();
+                  }
+                }}
+                disabled={balance < 0 && usdBalance < 0}
+                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4 shadow transition-colors ${
+                  balance < 0 && usdBalance < 0
+                    ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                    : 'bg-[#94B027] hover:bg-green-700'
+                }`}
               >
                 <FaMoneyBillWave size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Retrait</span>
               </button>
               <button
-                onClick={() => setShowCurrencyConverter(true)}
-                className="flex-1 flex flex-col items-center justify-center bg-orange-500 rounded-2xl py-4 shadow hover:bg-orange-600 transition-colors text-white"
+                onClick={() => {
+                  if (balance < 0 && usdBalance < 0) {
+                    setModalContent({
+                      type: 'error',
+                      message: 'Impossible de convertir avec des soldes négatifs. FCFA: ' + balance.toLocaleString('fr-FR') + ' F, USD: $' + usdBalance.toFixed(2)
+                    });
+                    setShowModal(true);
+                  } else {
+                    setShowCurrencyConverter(true);
+                  }
+                }}
+                disabled={balance < 0 && usdBalance < 0}
+                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4 shadow transition-colors text-white ${
+                  balance < 0 && usdBalance < 0
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-orange-500 hover:bg-orange-600'
+                }`}
               >
                 <svg className="w-5 h-5 mb-1" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
@@ -922,7 +968,9 @@ function Wallet() {
                       }`}
                     >
                       <div className="text-xs font-medium text-blue-600">Solde Principal</div>
-                      <div className="text-lg font-bold text-blue-800">{balance.toLocaleString('fr-FR')} F</div>
+                      <div className={`text-lg font-bold ${balance < 0 ? 'text-red-600' : 'text-blue-800'}`}>
+                        {balance.toLocaleString('fr-FR')} F
+                      </div>
                       <div className="text-xs text-blue-500 mt-1">
                         {selectedBalanceType === 'FCFA' ? '✓ Sélectionné' : 'FCFA'}
                       </div>
@@ -941,7 +989,9 @@ function Wallet() {
                       }`}
                     >
                       <div className="text-xs font-medium text-green-600">Solde USD</div>
-                      <div className="text-lg font-bold text-green-800">${usdBalance.toFixed(2)}</div>
+                      <div className={`text-lg font-bold ${usdBalance < 0 ? 'text-red-600' : 'text-green-800'}`}>
+                        ${usdBalance.toFixed(2)}
+                      </div>
                       <div className="text-xs text-green-500 mt-1">
                         {selectedBalanceType === 'USD' ? '✓ Sélectionné' : 'USD'}
                       </div>
@@ -950,6 +1000,17 @@ function Wallet() {
                 </div>
                 
                 <label className="text-gray-800 font-semibold">Montant à retirer ({selectedBalanceType})</label>
+                
+                {/* Show warning if balance is negative */}
+                {((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0)) && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 mb-3">
+                    ⚠️ Impossible d'effectuer un retrait avec un solde négatif. 
+                    Solde actuel: {selectedBalanceType === 'FCFA' 
+                      ? `${balance.toLocaleString('fr-FR')} F` 
+                      : `$${usdBalance.toFixed(2)}`}
+                  </div>
+                )}
+                
                 <div className="flex justify-between gap-2">
                   <input
                     type="number"
@@ -959,13 +1020,28 @@ function Wallet() {
                       console.log('Input value changed to:', e.target.value);
                       setWithdrawAmount(e.target.value);
                     }}
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900 text-center font-bold"
+                    className={`w-full rounded-lg border px-3 py-2 text-gray-900 text-center font-bold ${
+                      ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
+                        ? 'border-red-300 bg-red-50 cursor-not-allowed' 
+                        : 'border-gray-300'
+                    }`}
                     placeholder={`Montant en ${selectedBalanceType}`}
                     step={selectedBalanceType === 'USD' ? '0.01' : '1'}
-                    max={selectedBalanceType === 'FCFA' ? balance : usdBalance}
+                    max={selectedBalanceType === 'FCFA' ? Math.max(0, balance) : Math.max(0, usdBalance)}
+                    disabled={((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))}
                     required
                   />
-                  <button type="submit" className="bg-[#115CF6] text-white rounded-full p-3 font-bold shadow hover:bg-blue-800 transition-colors"><FaMoneyBill1 size={24} /></button>
+                  <button 
+                    type="submit" 
+                    disabled={((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))}
+                    className={`rounded-full p-3 font-bold shadow transition-colors ${
+                      ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
+                        ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
+                        : 'bg-[#115CF6] text-white hover:bg-blue-800'
+                    }`}
+                  >
+                    <FaMoneyBill1 size={24} />
+                  </button>
                 </div>
 
                 {/* Fee calculation display */}
