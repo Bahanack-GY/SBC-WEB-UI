@@ -11,8 +11,9 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { useTour } from '../components/common/TourProvider';
+import { useRelance } from '../contexts/RelanceContext';
 
-const actions = [
+const baseActions = [
   { label: 'Modifier le profil', icon: <FiEdit2 className="text-[#115CF6]" />, to: '/modifier-le-profil' },
   { label: 'Modifier mon email', icon: <FiMail className="text-[#115CF6]" />, to: '/modifier-email' },
   { label: 'Changer le numéro de téléphone', icon: <FiPhone className="text-[#115CF6]" />, to: '/change-phone' },
@@ -27,6 +28,7 @@ const actions = [
 function Profile() {
   const { user, logout, loading: authLoading, refreshUser } = useAuth();
   const { startTour, hasSeenTour } = useTour();
+  const { hasRelanceSubscription } = useRelance();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -48,6 +50,16 @@ function Profile() {
   // New states for the affiliator info modal
   const [showAffiliatorModal, setShowAffiliatorModal] = useState(false);
   const [affiliatorModalContent, setAffiliatorModalContent] = useState<string | null>(null);
+
+  // Relance modal state
+  const [showRelanceModal, setShowRelanceModal] = useState(false);
+
+  // Build actions list dynamically based on Relance subscription
+  const actions = [
+    ...baseActions.slice(0, 5), // Up to "Mon Abonnement"
+    { label: 'Relance WhatsApp', icon: <FaWhatsapp className="text-[#25D366]" />, to: '/relance', badge: 'Bientôt', requiresRelance: true },
+    ...baseActions.slice(5), // Rest of the actions
+  ];
 
   // New states for the generic info/confirmation modal
   const [showModal, setShowModal] = useState(false);
@@ -315,14 +327,25 @@ function Profile() {
             {actions.map((action, i) => (
               <motion.button
                 key={action.label}
-                onClick={() => handleNavigation(action.to, action.external)}
+                onClick={() => {
+                  if ((action as any).requiresRelance) {
+                    handleNavigation(action.to!, action.external);
+                  } else {
+                    handleNavigation(action.to!, action.external);
+                  }
+                }}
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + i * 0.07, duration: 0.4, type: 'spring' }}
-                className="w-full flex items-center gap-3 px-6 py-4 hover:bg-[#f1f5fd] transition cursor-pointer text-left"
+                className="w-full flex items-center gap-3 px-6 py-4 hover:bg-[#f1f5fd] transition cursor-pointer text-left relative"
               >
                 {action.icon}
                 <span className="flex-1 text-gray-700 font-medium">{action.label}</span>
+                {(action as any).badge && (
+                  <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mr-2">
+                    {(action as any).badge}
+                  </span>
+                )}
                 <FiChevronRight className="text-gray-400" />
               </motion.button>
             ))}
@@ -508,6 +531,60 @@ function Profile() {
             </motion.div>
           </motion.div>
         )}
+
+      {/* Relance Modal */}
+      <AnimatePresence>
+        {showRelanceModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', bounce: 0.2 }}
+            >
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <FaWhatsapp className="text-[#25D366]" size={24} />
+                Relance WhatsApp
+              </h4>
+              <p className="text-gray-700 mb-4">
+                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non-payants via WhatsApp pendant 7 jours.
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <p className="text-sm text-gray-600 mb-2">✅ Messages automatiques quotidiens</p>
+                <p className="text-sm text-gray-600 mb-2">✅ Suivi intelligent des filleuls</p>
+                <p className="text-sm text-gray-600 mb-2">✅ Augmente vos conversions</p>
+                <p className="text-sm font-bold text-[#25D366] mt-4">1 000 XAF/mois</p>
+              </div>
+              <p className="text-sm text-gray-500 mb-6">
+                Vous n'avez pas encore souscrit à la fonction Relance. Cliquez ci-dessous pour vous abonner.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                  onClick={() => setShowRelanceModal(false)}
+                >
+                  Fermer
+                </button>
+                <button
+                  className="flex-1 bg-[#25D366] text-white rounded-xl py-2 font-bold shadow hover:bg-[#1ea952] transition-colors"
+                  onClick={() => {
+                    setShowRelanceModal(false);
+                    navigate('/ads-pack');
+                  }}
+                >
+                  S'abonner
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       </div>
     </ProtectedRoute>

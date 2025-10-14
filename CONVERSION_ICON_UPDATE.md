@@ -73,6 +73,14 @@ Now when users view their transaction history, conversion transactions will disp
 - **🔀 Conversions** - Exchange arrows icon (NEW)
 - **💼 Other** - Briefcase icon (default)
 
+## 🔧 TypeScript Fix
+
+**Issue**: TypeScript error `TS2678: Type '"conversion"' is not comparable to type '"deposit" | "withdrawal" | "payment" | "refund"'`
+
+**Solution**: Added 'conversion' to the Transaction type definition in `src/types/api.ts`
+
+**Result**: Build now completes successfully without TypeScript errors
+
 ## ✅ Testing
 
 The change will be visible in:
@@ -85,3 +93,5 @@ Based on the transaction data provided, conversion transactions like:
 - "Conversion de solde: 1 USD vers 500 XAF"
 
 Will now display with the 🔀 icon instead of the default 💼 icon.
+
+**Build Status**: ✅ Successfully builds without TypeScript errors

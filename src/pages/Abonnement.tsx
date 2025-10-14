@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import iconOne from "../assets/icon/Growth.png";
 import iconTwo from "../assets/icon/analyse.png";
+import iconContact from "../assets/icon/contact.png";
 import BackButton from "../components/common/BackButton";
 import { HiMiniMinusCircle } from "react-icons/hi2";
 import Skeleton from '../components/common/Skeleton';
@@ -34,7 +35,12 @@ function Abonnement() {
         'subscription-plans',
         async () => {
             const response = await sbcApiService.getSubscriptionPlans();
-            return handleApiResponse(response) || [];
+            const allPlans = handleApiResponse(response) || [];
+            // Filter to show only REGISTRATION category plans (CLASSIQUE, CIBLE)
+            // Exclude FEATURE category plans (RELANCE) - those are shown in Marketing page
+            return allPlans.filter((plan: SubscriptionPlan) =>
+                plan.type === 'CLASSIQUE' || plan.type === 'CIBLE'
+            );
         },
         { staleTime: 300000 } // 5 minutes
     );
@@ -128,9 +134,14 @@ function Abonnement() {
             const sessionId = data?.paymentDetails?.sessionId;
             if (sessionId) {
                 const paymentUrl = sbcApiService.generatePaymentUrl(sessionId);
-                // Use window.open() instead of creating a temporary link
-                // window.open(paymentUrl, '_blank', 'noopener,noreferrer');
-                window.location.href = paymentUrl;
+                // Create a temporary link element and trigger click
+                const link = document.createElement('a');
+                link.href = paymentUrl;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
             } else {
                 await fetchSubscriptionData();
             }
@@ -187,7 +198,7 @@ function Abonnement() {
 
     return (
         <ProtectedRoute>
-            <div className="p-3 h-screen bg-white justify-center items-center">
+            <div className="p-3 bg-white justify-center items-center pb-32">
                 <div className="flex items-center mb-3">
                     <BackButton />
                     <h3 className="text-xl font-medium text-center w-full">Abonnement</h3>
@@ -324,6 +335,77 @@ function Abonnement() {
                                     </div>
                                 </motion.div>
                             ))
+                        )}
+
+                        {/* Winner Pack - Coming Soon - PREMIUM */}
+                        {!loading && (
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 }}
+                                className="bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 rounded-2xl p-5 shadow-xl relative overflow-visible border-2 border-yellow-300 mt-4"
+                            >
+                                {/* Premium badge at top */}
+                                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-300 to-amber-400 text-gray-900 text-[10px] font-bold px-4 py-1 rounded-full shadow-lg z-20 border-2 border-white">
+                                    👑 OFFRE PREMIUM
+                                </div>
+
+                                {/* Bientôt disponible badge */}
+                                <div className="absolute top-3 right-3 bg-white text-orange-600 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg z-10 animate-pulse">
+                                    Bientôt disponible
+                                </div>
+
+                                <div className="w-full mt-2">
+                                    <div className="uppercase text-white text-xs font-bold">ABONNEMENT WINNER</div>
+                                    <div className="flex items-baseline gap-2">
+                                        <div className="text-2xl font-bold text-white">15 000F</div>
+                                        <span className="text-white/90 font-medium text-xs">ou 32$</span>
+                                    </div>
+                                    <div className="text-white text-sm font-bold mt-1 mb-3">
+                                        🎯 1 million de FCFA en 3 mois
+                                    </div>
+
+                                    {/* Features List */}
+                                    <ul className="mt-3 mb-2 space-y-1">
+                                        <li className="flex items-center text-white text-xs gap-2">
+                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <span>Accès à toutes les offres du pack ciblé</span>
+                                        </li>
+                                        <li className="flex items-center text-white text-xs gap-2">
+                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <span>Accès à la méthode Atem (formation en création de contenu + page de capture + page de vente)</span>
+                                        </li>
+                                        <li className="flex items-center text-white text-xs gap-2">
+                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <span>Relance des prospects automatiquement à vie</span>
+                                        </li>
+                                        <li className="flex items-center text-white text-xs gap-2">
+                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <span>Accès au système d'affiliation</span>
+                                        </li>
+                                        <li className="flex items-center text-white text-xs gap-2">
+                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <span>Plus de 1000 vues en statut WhatsApp</span>
+                                        </li>
+                                    </ul>
+
+                                    <div className="mt-3">
+                                        <button
+                                            disabled
+                                            className="bg-white text-orange-600 rounded-xl px-4 py-2 font-bold shadow cursor-not-allowed opacity-80"
+                                        >
+                                            Bientôt disponible
+                                        </button>
+                                    </div>
+                                </div>
+                                <div className="absolute right-4 bottom-4 opacity-30">
+                                    <img
+                                        src={iconContact}
+                                        alt="icon"
+                                        className="size-40"
+                                    />
+                                </div>
+                            </motion.div>
                         )}
                     </div>
                 )}

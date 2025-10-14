@@ -1318,7 +1318,7 @@ export class SBCApiService extends ApiService {
    */
   async getRecoveryNotification(email: string, phoneNumber?: string): Promise<ApiResponse> {
     const body: { email?: string; phoneNumber?: string } = {};
-    
+
     if (email) body.email = email;
     if (phoneNumber) body.phoneNumber = phoneNumber;
 
@@ -1326,6 +1326,142 @@ export class SBCApiService extends ApiService {
       body,
       requiresAuth: false
     });
+  }
+
+  // ==================== RELANCE (WhatsApp Campaign Follow-up) ====================
+
+  // ===== WhatsApp Connection =====
+
+  /**
+   * Connect WhatsApp - Generate QR code for WhatsApp Web connection
+   */
+  async relanceConnect(): Promise<ApiResponse> {
+    return await this.post('/relance/connect', { body: {} });
+  }
+
+  /**
+   * Get Relance status - Check WhatsApp connection status and campaign settings
+   */
+  async relanceGetStatus(): Promise<ApiResponse> {
+    return await this.get('/relance/status');
+  }
+
+  /**
+   * Disconnect WhatsApp - Logout WhatsApp session
+   * @param force - If true, completely deletes session (requires new QR). If false/undefined, preserves session for auto-reconnect
+   */
+  async relanceDisconnect(force?: boolean): Promise<ApiResponse> {
+    return await this.delete('/relance/disconnect', {
+      body: force ? { force: true } : undefined
+    });
+  }
+
+  // ===== Campaign Management =====
+
+  /**
+   * Preview filter results with sample users (5 users shown)
+   */
+  async relancePreviewFilters(targetFilter: {
+    countries?: string[];
+    gender?: string;
+    professions?: string[];
+    minAge?: number;
+    maxAge?: number;
+    registrationDateFrom?: string;
+    registrationDateTo?: string;
+    excludeCurrentTargets?: boolean;
+  }): Promise<ApiResponse> {
+    return await this.post('/relance/campaigns/preview', { body: { targetFilter } });
+  }
+
+  /**
+   * Create a new campaign
+   */
+  async relanceCreateCampaign(campaignData: {
+    name: string;
+    targetFilter: {
+      countries?: string[];
+      gender?: string;
+      professions?: string[];
+      minAge?: number;
+      maxAge?: number;
+      registrationDateFrom?: string;
+      registrationDateTo?: string;
+      excludeCurrentTargets?: boolean;
+    };
+    maxMessagesPerDay?: number;
+    scheduledStartDate?: string | null;
+    runAfterCampaignId?: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/relance/campaigns', { body: campaignData });
+  }
+
+  /**
+   * Get all user's campaigns
+   */
+  async relanceGetCampaigns(filters?: {
+    status?: string;
+    type?: string;
+  }): Promise<ApiResponse> {
+    return await this.get('/relance/campaigns', { queryParameters: filters });
+  }
+
+  /**
+   * Get campaign details by ID
+   */
+  async relanceGetCampaignDetails(campaignId: string): Promise<ApiResponse> {
+    return await this.get(`/relance/campaigns/${campaignId}`);
+  }
+
+  /**
+   * Start a campaign
+   */
+  async relanceStartCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/relance/campaigns/${campaignId}/start`, { body: {} });
+  }
+
+  /**
+   * Pause a campaign
+   */
+  async relancePauseCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/relance/campaigns/${campaignId}/pause`, { body: {} });
+  }
+
+  /**
+   * Resume a campaign
+   */
+  async relanceResumeCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/relance/campaigns/${campaignId}/resume`, { body: {} });
+  }
+
+  /**
+   * Cancel a campaign
+   */
+  async relanceCancelCampaign(campaignId: string, reason: string): Promise<ApiResponse> {
+    return await this.post(`/relance/campaigns/${campaignId}/cancel`, { body: { reason } });
+  }
+
+  // ===== Configuration =====
+
+  /**
+   * Update campaign configuration settings
+   */
+  async relanceUpdateConfig(config: {
+    allowSimultaneousCampaigns?: boolean;
+    maxMessagesPerDay?: number;
+    maxTargetsPerCampaign?: number;
+    defaultCampaignPaused?: boolean;
+  }): Promise<ApiResponse> {
+    return await this.patch('/relance/config', { body: config });
+  }
+
+  // ===== Targets =====
+
+  /**
+   * Get Relance targets - Get user's active referrals in campaigns
+   */
+  async relanceGetTargets(): Promise<ApiResponse> {
+    return await this.get('/relance/targets');
   }
 }
 

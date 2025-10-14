@@ -32,10 +32,12 @@ import ChangeEmail from './pages/ChangeEmail'
 import ChangePhoneNumber from './pages/ChangePhoneNumber'
 import PartnerSpace from './pages/PartnerSpace'
 import WithdrawalOtpVerification from './pages/WithdrawalOtpVerification'
+import RelancePage from './pages/RelancePage'
 import { useQuery } from '@tanstack/react-query'
 import { handleApiResponse } from './utils/apiHelpers'
 import { sbcApiService } from './services/SBCApiService'
 import { TourProvider } from './components/common/TourProvider'
+import { RelanceProvider } from './contexts/RelanceContext'
 
 // Add this type definition at the top (after imports)
 type SubscriptionData = {
@@ -137,7 +139,7 @@ function AppContent() {
   // Logout button for unsubscribed users
   const showLogout = isAuthenticated && !isSubscribed;
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification';
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance';
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -178,6 +180,7 @@ function AppContent() {
         <Route path="/change-phone" element={<ChangePhoneNumber />} />
         <Route path="/partenaire" element={<PartnerSpace />} />
         <Route path="/withdrawal-otp-verification" element={<WithdrawalOtpVerification />} />
+        <Route path="/relance" element={<RelancePage />} />
       </Routes>
       {!hideNav && <NavigationBar />}
     </div>
@@ -188,9 +191,11 @@ function App() {
   return (
     <AuthProvider>
       <AffiliationProvider>
-        <TourProvider>
-          <AppContent />
-        </TourProvider>
+        <RelanceProvider>
+          <TourProvider>
+            <AppContent />
+          </TourProvider>
+        </RelanceProvider>
       </AffiliationProvider>
     </AuthProvider>
   )

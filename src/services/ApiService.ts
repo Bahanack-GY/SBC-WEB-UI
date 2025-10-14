@@ -255,6 +255,49 @@ export class ApiService {
   }
 
   /**
+   * PATCH request
+   */
+  async patch(
+    endpoint: string,
+    options: {
+      body?: any;
+      requiresAuth?: boolean;
+    } = {}
+  ): Promise<ApiResponse> {
+    const { body = null, requiresAuth = true } = options;
+    const headers = getHeaders(requiresAuth);
+    const url = `${this.baseUrl}${endpoint}`;
+
+    console.log('PATCH Request:', url);
+    console.log('Headers:', headers);
+    if (body) console.log('Body:', JSON.stringify(body));
+
+    try {
+      const response = await fetch(url, {
+        method: 'PATCH',
+        headers,
+        body: body ? JSON.stringify(body) : null
+      });
+
+      return await this.handleHttpResponse(response);
+    } catch (error) {
+      console.error(`Error in PATCH ${endpoint}:`, error);
+
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        return ApiResponse.fromError(
+          'Network error: Please check your connection and try again.',
+          -1
+        );
+      }
+
+      return ApiResponse.fromError(
+        `An unexpected error occurred: ${error instanceof Error ? error.message : String(error)}`,
+        -3
+      );
+    }
+  }
+
+  /**
    * File upload request
    */
   async uploadFiles(options: {

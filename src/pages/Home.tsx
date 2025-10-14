@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaPhone } from "react-icons/fa";
+import { FaBook, FaPhone, FaWhatsapp } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
 import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
@@ -18,6 +18,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
 import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
+import { useRelance } from '../contexts/RelanceContext';
 
 // Define interfaces
 interface Formation {
@@ -60,10 +61,12 @@ export const queryKeys = {
 function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { hasRelanceSubscription } = useRelance();
   const queryClient = useQueryClient();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Non abonné');
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);
   const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
+  const [showRelanceModal, setShowRelanceModal] = useState(false);
 
   // Use React Query for API calls with optimized settings
   const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<TransactionStats>({
@@ -271,6 +274,12 @@ function Home() {
                 <HomeButtons icon={<FaBook size={30} />} title="Formations" onClick={() => setIsFormationsModalOpen(true)} />
                 <HomeButtons icon={<FaCartShopping size={30} />} title="Marketplace" onClick={() => navigate("/marketplace")} />
                 <HomeButtons icon={<FaPhone size={30} />} title="Contacts" onClick={() => navigate("/contacts")} />
+                <HomeButtons
+                  icon={<FaWhatsapp size={30} />}
+                  title="Relance"
+                  badge="Bientôt"
+                  onClick={() => navigate("/relance")}
+                />
               </div>
             </div>
             <div className="balance-card">
@@ -304,6 +313,60 @@ function Home() {
           </>
         )}
       </div>
+
+      {/* Relance Modal */}
+      <AnimatePresence>
+        {showRelanceModal && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', bounce: 0.2 }}
+            >
+              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
+                <FaWhatsapp className="text-[#25D366]" size={24} />
+                Relance WhatsApp
+              </h4>
+              <p className="text-gray-700 mb-4">
+                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non-payants via WhatsApp pendant 7 jours.
+              </p>
+              <div className="bg-gray-50 p-4 rounded-lg mb-4">
+                <p className="text-sm text-gray-600 mb-2">✅ Messages automatiques quotidiens</p>
+                <p className="text-sm text-gray-600 mb-2">✅ Suivi intelligent des filleuls</p>
+                <p className="text-sm text-gray-600 mb-2">✅ Augmente vos conversions</p>
+                <p className="text-sm font-bold text-[#25D366] mt-4">100 XAF/2 mois</p>
+              </div>
+              <p className="text-sm text-gray-500 mb-6">
+                Vous n'avez pas encore souscrit à la fonction Relance. Cliquez ci-dessous pour vous abonner.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                  onClick={() => setShowRelanceModal(false)}
+                >
+                  Fermer
+                </button>
+                <button
+                  className="flex-1 bg-[#25D366] text-white rounded-xl py-2 font-bold shadow hover:bg-[#1ea952] transition-colors"
+                  onClick={() => {
+                    setShowRelanceModal(false);
+                    navigate('/ads-pack');
+                  }}
+                >
+                  S'abonner
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Formations Modal */}
       <AnimatePresence>
