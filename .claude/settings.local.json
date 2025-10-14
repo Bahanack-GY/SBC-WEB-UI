@@ -6,7 +6,8 @@
       "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI/**)",
       "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI/**)",
       "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI\\src/**)",
-      "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI\\src/**)"
+      "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI\\src/**)",
+      "Bash(npm run build)"
     ],
     "deny": [],
     "ask": []

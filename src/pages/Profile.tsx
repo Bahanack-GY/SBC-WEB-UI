@@ -11,9 +11,17 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { useTour } from '../components/common/TourProvider';
-import { useRelance } from '../contexts/RelanceContext';
 
-const baseActions = [
+type ActionItem = {
+  label: string;
+  icon: JSX.Element;
+  to: string;
+  external?: boolean;
+  badge?: string;
+  requiresRelance?: boolean;
+};
+
+const baseActions: ActionItem[] = [
   { label: 'Modifier le profil', icon: <FiEdit2 className="text-[#115CF6]" />, to: '/modifier-le-profil' },
   { label: 'Modifier mon email', icon: <FiMail className="text-[#115CF6]" />, to: '/modifier-email' },
   { label: 'Changer le numéro de téléphone', icon: <FiPhone className="text-[#115CF6]" />, to: '/change-phone' },
@@ -28,7 +36,6 @@ const baseActions = [
 function Profile() {
   const { user, logout, loading: authLoading, refreshUser } = useAuth();
   const { startTour, hasSeenTour } = useTour();
-  const { hasRelanceSubscription } = useRelance();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const [loading, setLoading] = useState(false);
@@ -55,7 +62,7 @@ function Profile() {
   const [showRelanceModal, setShowRelanceModal] = useState(false);
 
   // Build actions list dynamically based on Relance subscription
-  const actions = [
+  const actions: ActionItem[] = [
     ...baseActions.slice(0, 5), // Up to "Mon Abonnement"
     { label: 'Relance WhatsApp', icon: <FaWhatsapp className="text-[#25D366]" />, to: '/relance', badge: 'Bientôt', requiresRelance: true },
     ...baseActions.slice(5), // Rest of the actions
@@ -327,13 +334,7 @@ function Profile() {
             {actions.map((action, i) => (
               <motion.button
                 key={action.label}
-                onClick={() => {
-                  if ((action as any).requiresRelance) {
-                    handleNavigation(action.to!, action.external);
-                  } else {
-                    handleNavigation(action.to!, action.external);
-                  }
-                }}
+                onClick={() => handleNavigation(action.to, action.external)}
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + i * 0.07, duration: 0.4, type: 'spring' }}
@@ -341,9 +342,9 @@ function Profile() {
               >
                 {action.icon}
                 <span className="flex-1 text-gray-700 font-medium">{action.label}</span>
-                {(action as any).badge && (
+                {action.badge && (
                   <span className="bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full mr-2">
-                    {(action as any).badge}
+                    {action.badge}
                   </span>
                 )}
                 <FiChevronRight className="text-gray-400" />

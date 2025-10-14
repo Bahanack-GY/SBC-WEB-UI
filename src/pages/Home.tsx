@@ -18,7 +18,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
 import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
-import { useRelance } from '../contexts/RelanceContext';
 
 // Define interfaces
 interface Formation {
@@ -61,7 +60,6 @@ export const queryKeys = {
 function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { hasRelanceSubscription } = useRelance();
   const queryClient = useQueryClient();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Non abonné');
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);

@@ -47,8 +47,8 @@ function RelancePage() {
     type: 'info'
   });
 
-  const qrPollingInterval = useRef<NodeJS.Timeout | null>(null);
-  const qrPollingTimeout = useRef<NodeJS.Timeout | null>(null);
+  const qrPollingInterval = useRef<ReturnType<typeof setInterval> | null>(null);
+  const qrPollingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Helper function to show messages
   const showMessage = (title: string, message: string, type: 'success' | 'error' | 'info' = 'info') => {
