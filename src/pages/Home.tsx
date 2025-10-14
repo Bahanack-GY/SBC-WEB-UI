@@ -364,7 +364,7 @@ function Home() {
                 <p className="text-sm text-gray-600 mb-2">✅ Messages automatiques quotidiens</p>
                 <p className="text-sm text-gray-600 mb-2">✅ Suivi intelligent des filleuls</p>
                 <p className="text-sm text-gray-600 mb-2">✅ Augmente vos conversions</p>
-                <p className="text-sm font-bold text-[#25D366] mt-4">100 XAF/2 mois</p>
+                <p className="text-sm font-bold text-[#25D366] mt-4">1 000 XAF/2 mois</p>
               </div>
               <p className="text-sm text-gray-500 mb-6">
                 Vous n'avez pas encore souscrit à la fonction Relance. Cliquez ci-dessous pour vous abonner.

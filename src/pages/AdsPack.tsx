@@ -131,7 +131,7 @@ function AdsPack() {
                             <div className="w-full">
                                 <div className="uppercase text-white text-xs">Relance WhatsApp</div>
                                 <div className="flex items-baseline gap-2">
-                                    <div className="text-2xl font-bold text-white">100F</div>
+                                    <div className="text-2xl font-bold text-white">1 000F</div>
                                     <span className="text-green-100 font-medium text-xs">/2 mois</span>
                                 </div>
                                 <div className="text-white text-sm mt-1 mb-3">
