@@ -39,6 +39,7 @@ function Profile() {
   const navigate = useNavigate();
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
   const [loading, setLoading] = useState(false);
+  const [hasRelanceSubscription, setHasRelanceSubscription] = useState(false);
   const [referralStats, setReferralStats] = useState<{
     totalReferrals: number;
     level1Count: number;
@@ -96,6 +97,16 @@ function Profile() {
         setAffiliator(null);
       } finally {
         setAffiliatorLoading(false);
+      }
+
+      // Check for Relance subscription
+      try {
+        const response = await sbcApiService.checkSubscription('RELANCE');
+        const hasSub = response?.body?.data?.hasSubscription || false;
+        setHasRelanceSubscription(hasSub);
+      } catch (error) {
+        console.error('Error checking Relance subscription:', error);
+        setHasRelanceSubscription(false);
       }
     };
 
@@ -180,6 +191,13 @@ function Profile() {
     } else {
       if (to === '/parrain') {
         handleOpenAffiliatorModal();
+      } else if (to === '/relance') {
+        // Check if user has Relance subscription and is admin before navigating
+        if (hasRelanceSubscription && user?.role === 'admin') {
+          navigate(to);
+        } else {
+          setShowRelanceModal(true);
+        }
       } else {
         navigate(to);
       }
@@ -560,7 +578,7 @@ function Profile() {
                 <p className="text-sm text-gray-600 mb-2">✅ Messages automatiques quotidiens</p>
                 <p className="text-sm text-gray-600 mb-2">✅ Suivi intelligent des filleuls</p>
                 <p className="text-sm text-gray-600 mb-2">✅ Augmente vos conversions</p>
-                <p className="text-sm font-bold text-[#25D366] mt-4">1 000 XAF/mois</p>
+                <p className="text-sm font-bold text-[#25D366] mt-4">100 XAF/2 mois</p>
               </div>
               <p className="text-sm text-gray-500 mb-6">
                 Vous n'avez pas encore souscrit à la fonction Relance. Cliquez ci-dessous pour vous abonner.

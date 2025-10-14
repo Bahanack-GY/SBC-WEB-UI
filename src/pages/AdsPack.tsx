@@ -83,7 +83,8 @@ function AdsPack() {
     };
 
     const handleAccessRelance = () => {
-        if (!isAdmin) {
+        // Check both admin status AND subscription
+        if (!isAdmin || !hasRelanceSub) {
             setShowComingSoonModal(true);
             return;
         }

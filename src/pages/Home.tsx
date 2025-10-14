@@ -65,6 +65,7 @@ function Home() {
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);
   const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
   const [showRelanceModal, setShowRelanceModal] = useState(false);
+  const [hasRelanceSubscription, setHasRelanceSubscription] = useState(false);
 
   // Use React Query for API calls with optimized settings
   const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<TransactionStats>({
@@ -126,6 +127,24 @@ function Home() {
     refetchOnMount: false,
     retry: 2,
   });
+
+  // Check for Relance subscription
+  useEffect(() => {
+    const checkRelanceSubscription = async () => {
+      try {
+        const response = await sbcApiService.checkSubscription('RELANCE');
+        const hasSub = response?.body?.data?.hasSubscription || false;
+        setHasRelanceSubscription(hasSub);
+      } catch (error) {
+        console.error('Error checking Relance subscription:', error);
+        setHasRelanceSubscription(false);
+      }
+    };
+
+    if (user) {
+      checkRelanceSubscription();
+    }
+  }, [user]);
 
   // Update subscription status when data changes
   useEffect(() => {
@@ -276,7 +295,13 @@ function Home() {
                   icon={<FaWhatsapp size={30} />}
                   title="Relance"
                   badge="Bientôt"
-                  onClick={() => navigate("/relance")}
+                  onClick={() => {
+                    if (hasRelanceSubscription && user?.role === 'admin') {
+                      navigate("/relance");
+                    } else {
+                      setShowRelanceModal(true);
+                    }
+                  }}
                 />
               </div>
             </div>
