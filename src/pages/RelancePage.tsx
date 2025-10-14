@@ -10,8 +10,10 @@ import type { RelanceStatus, Campaign, FilterPreviewResponse, CampaignFilter, Sa
 function RelancePage() {
   const { user } = useAuth();
 
-  // Check if user is admin
+  // Check if user is admin AND has Relance subscription
   const isAdmin = user?.role === 'admin';
+  const [hasRelanceSubscription, setHasRelanceSubscription] = useState(false);
+  const [checkingSubscription, setCheckingSubscription] = useState(true);
 
   // WhatsApp connection state
   const [status, setStatus] = useState<RelanceStatus | null>(null);
@@ -68,11 +70,31 @@ function RelancePage() {
     }
   };
 
-  // Fetch status on mount
+  // Check Relance subscription on mount
   useEffect(() => {
-    fetchStatus();
-    fetchCampaigns();
+    const checkSubscription = async () => {
+      try {
+        const response = await sbcApiService.checkSubscription('RELANCE');
+        const hasSub = response?.body?.data?.hasSubscription || false;
+        setHasRelanceSubscription(hasSub);
+      } catch (error) {
+        console.error('Error checking Relance subscription:', error);
+        setHasRelanceSubscription(false);
+      } finally {
+        setCheckingSubscription(false);
+      }
+    };
+
+    checkSubscription();
   }, []);
+
+  // Fetch status on mount (only if has subscription)
+  useEffect(() => {
+    if (hasRelanceSubscription && !checkingSubscription) {
+      fetchStatus();
+      fetchCampaigns();
+    }
+  }, [hasRelanceSubscription, checkingSubscription]);
 
   const fetchStatus = async () => {
     try {
@@ -302,7 +324,7 @@ function RelancePage() {
     return null;
   };
 
-  if (loading) {
+  if (loading || checkingSubscription) {
     return (
       <ProtectedRoute>
         <div className="flex items-center justify-center min-h-screen">Chargement...</div>
@@ -310,8 +332,8 @@ function RelancePage() {
     );
   }
 
-  // Show coming soon modal for non-admin users
-  if (!isAdmin) {
+  // Show coming soon modal if user doesn't have Relance subscription OR is not admin
+  if (!hasRelanceSubscription || !isAdmin) {
     return (
       <ProtectedRoute>
         <div className="p-3 bg-white relative pb-20 min-h-screen">
