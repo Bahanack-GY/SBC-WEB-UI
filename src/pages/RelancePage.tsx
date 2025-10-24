@@ -509,7 +509,7 @@ function RelancePage() {
       <div className="p-3 bg-white relative pb-20">
         <div className="flex items-center mb-4 gap-2">
           <BackButton />
-          <h3 className="text-xl font-medium text-center flex-1">{t('relance.title')}</h3>
+          <h3 className="text-xl font-medium text-center flex-1">{t('pages.relance.title')}</h3>
           <LanguageSwitcher />
           <button
             onClick={handleRefresh}
