@@ -87,15 +87,29 @@ export interface Subscription {
   updatedAt?: string;
 }
 
+// Transaction Status Enum
+export enum TransactionStatus {
+  PENDING = 'pending',
+  PENDING_OTP_VERIFICATION = 'pending_otp_verification',
+  PENDING_ADMIN_APPROVAL = 'pending_admin_approval',
+  PROCESSING = 'processing',
+  COMPLETED = 'completed',
+  FAILED = 'failed',
+  REJECTED_BY_ADMIN = 'rejected_by_admin',
+  CANCELLED = 'cancelled',
+  REFUNDED = 'refunded'
+}
+
 // Transaction Types
 export interface Transaction {
   id: string;
+  _id?: string;
   transactionId?: string; // Add transactionId field for API calls
   userId: string;
   type: 'deposit' | 'withdrawal' | 'payment' | 'refund' | 'conversion';
   amount: number;
   currency: 'XAF' | 'USD' | string;
-  status: 'pending' | 'completed' | 'failed' | 'cancelled' | 'refunded' | 'processing' | 'pending_otp_verification';
+  status: TransactionStatus | 'pending' | 'completed' | 'failed' | 'cancelled' | 'refunded' | 'processing' | 'pending_otp_verification' | 'pending_admin_approval' | 'rejected_by_admin';
   description?: string;
   reference?: string;
   paymentMethod?: 'MOMO' | 'CRYPTO' | string;
@@ -105,6 +119,26 @@ export interface Transaction {
     cryptoCurrency: string;
     transactionHash?: string;
     networkFee?: number;
+  };
+  // NEW: Approval-related fields
+  approvedBy?: string; // Admin user ID
+  approvedAt?: string; // ISO date string
+  rejectedBy?: string; // Admin user ID
+  rejectedAt?: string; // ISO date string
+  rejectionReason?: string; // Reason for rejection
+  adminNotes?: string; // Optional admin notes
+  // Metadata
+  metadata?: {
+    withdrawalType?: 'mobile_money' | 'crypto';
+    accountInfo?: {
+      fullMomoNumber?: string;
+      momoOperator?: string;
+      countryCode?: string;
+      recipientName?: string;
+    };
+    cryptoAddress?: string;
+    cryptoCurrency?: string;
+    usdAmount?: number;
   };
   createdAt: string;
   updatedAt: string;

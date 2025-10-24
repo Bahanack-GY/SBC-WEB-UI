@@ -118,13 +118,14 @@ export interface RelanceConnectResponse {
  * Campaign filter options
  */
 export interface CampaignFilter {
+  // Primary filters
   countries?: string[];
-  gender?: 'all' | 'male' | 'female' | 'other';
-  professions?: string[];
-  minAge?: number;
-  maxAge?: number;
-  registrationDateFrom?: string;
-  registrationDateTo?: string;
+  registrationDateFrom?: string; // ISO date string
+  registrationDateTo?: string; // ISO date string
+  subscriptionStatus?: 'subscribed' | 'non-subscribed' | 'all';
+
+  // Additional filters (optional)
+  hasUnpaidReferrals?: boolean;
   excludeCurrentTargets?: boolean;
 }
 
@@ -207,4 +208,33 @@ export interface RelanceConfigUpdate {
   maxMessagesPerDay?: number;
   maxTargetsPerCampaign?: number;
   defaultCampaignPaused?: boolean;
+}
+
+/**
+ * Default relance statistics
+ * Default relance is NOT a campaign - it's tracked separately
+ */
+export interface DefaultRelanceStats {
+  isPaused: boolean;                      // defaultCampaignPaused status
+  totalEnrolled: number;                  // Total enrolled in default relance
+  activeTargets: number;                  // Currently in the 7-day loop
+  completedRelance: number;               // Completed or exited
+  totalMessagesSent: number;              // Total messages sent
+  totalMessagesDelivered: number;         // Successfully delivered
+  deliveryPercentage: number;             // Delivery success rate (0-100%)
+  dayProgression: Array<{                 // Day-by-day progression
+    day: number;                          // 1-7
+    count: number;                        // Number of active targets on this day
+  }>;
+  // Legacy fields for backward compatibility
+  completedTargets?: number;
+  totalTargets?: number;
+  successRate?: number;
+  targetsEnrolled?: number;
+  messagesSent?: number;
+  messagesDelivered?: number;
+  messagesFailed?: number;
+  targetsCompleted?: number;
+  targetsExited?: number;
+  isActive?: boolean;
 }

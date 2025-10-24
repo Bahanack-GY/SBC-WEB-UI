@@ -1397,20 +1397,59 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Get all user's campaigns
+   * Get all user's FILTERED campaigns (excludes default relance)
+   * Default relance is NOT a campaign - it's a background system
    */
   async relanceGetCampaigns(filters?: {
     status?: string;
-    type?: string;
   }): Promise<ApiResponse> {
     return await this.get('/relance/campaigns', { queryParameters: filters });
   }
 
   /**
-   * Get campaign details by ID
+   * Get default relance statistics
+   * Default relance doesn't have a Campaign document - it's tracked via RelanceConfig
+   */
+  async relanceGetDefaultStats(): Promise<ApiResponse> {
+    return await this.get('/relance/campaigns/default/stats');
+  }
+
+  /**
+   * Get default relance targets (targets with campaignId: null)
+   */
+  async relanceGetDefaultTargets(params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse> {
+    return await this.get('/relance/campaigns/default/targets', {
+      queryParameters: params
+    });
+  }
+
+  /**
+   * Get campaign details by ID (for FILTERED campaigns only)
    */
   async relanceGetCampaignDetails(campaignId: string): Promise<ApiResponse> {
     return await this.get(`/relance/campaigns/${campaignId}`);
+  }
+
+  /**
+   * Get campaign by ID (alias for relanceGetCampaignDetails)
+   */
+  async relanceGetCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.get(`/relance/campaigns/${campaignId}`);
+  }
+
+  /**
+   * Get campaign targets (enrolled referrals for FILTERED campaigns)
+   */
+  async relanceGetCampaignTargets(campaignId: string, params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse> {
+    return await this.get(`/relance/campaigns/${campaignId}/targets`, {
+      queryParameters: params
+    });
   }
 
   /**
@@ -1432,6 +1471,15 @@ export class SBCApiService extends ApiService {
    */
   async relanceResumeCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.post(`/relance/campaigns/${campaignId}/resume`, { body: {} });
+  }
+
+  /**
+   * Delete a campaign
+   * Can only delete campaigns with status: DRAFT, SCHEDULED, COMPLETED, or CANCELLED
+   * Cannot delete ACTIVE or PAUSED campaigns (must cancel first)
+   */
+  async relanceDeleteCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.delete(`/relance/campaigns/${campaignId}`);
   }
 
   /**

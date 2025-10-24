@@ -17,6 +17,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { momoCorrespondents, countryOptions } from '../utils/countriesData';
 import TourButton from '../components/common/TourButton';
 import CurrencyConverterComponent from '../components/CurrencyConverterComponent';
+import { useTranslation } from 'react-i18next';
+import {
+  getStatusColor,
+  getStatusTranslationKey
+} from '../utils/transactionHelpers';
+import TransactionApprovalInfo from '../components/TransactionApprovalInfo';
 
 // Use Transaction['status'] type from api.ts instead of defining a separate type
 
@@ -77,18 +83,19 @@ const getStatusIconWrapperClasses = (status: string) => {
   let bgColor = 'bg-gray-100'; // Default subtle background
   let textColor = 'text-gray-700'; // Default text color
 
-  if (status === 'failed') {
-    bgColor = 'bg-red-200'; // Light red background for failed
-    textColor = 'text-red-700'; // Matching text color for failed
+  if (status === 'failed' || status === 'rejected_by_admin') {
+    bgColor = 'bg-red-200'; // Light red background for failed/rejected
+    textColor = 'text-red-700'; // Matching text color for failed/rejected
   } else if (status === 'completed' || status === 'refunded') {
     bgColor = 'bg-green-100'; // Green background for successful transactions
     textColor = 'text-green-700';
   } else if (
     status === 'pending' ||
     status === 'processing' ||
-    status === 'pending_otp_verification'
+    status === 'pending_otp_verification' ||
+    status === 'pending_admin_approval'  // NEW
   ) {
-    bgColor = 'bg-yellow-100'; // Yellow background for pending/processing/OTP
+    bgColor = 'bg-yellow-100'; // Yellow background for pending/processing/OTP/admin approval
     textColor = 'text-yellow-700';
   }
 
@@ -96,6 +103,7 @@ const getStatusIconWrapperClasses = (status: string) => {
 };
 
 function Wallet() {
+  const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
   const [chartData, setChartData] = useState<ChartDataPoint[]>([{ name: '', 'Dépôt': 0, 'Retrait': 0, 'Dépôt_count': 0, 'Retrait_count': 0 }]);
@@ -1259,7 +1267,7 @@ function Wallet() {
                           </span>
                         )}
                       </div>
-                      {tx.status === 'pending_otp_verification' && tx.type === 'withdrawal' && (
+                      {(tx.status === 'pending_otp_verification' || tx.status === 'pending_admin_approval') && tx.type === 'withdrawal' && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1318,16 +1326,12 @@ function Wallet() {
                       <div className="text-xs text-gray-400 mb-1">Type</div>
                       <div className="font-semibold mb-2">{selectedTx.type}</div>
                       <div className="text-xs text-gray-400 mb-1">Statut</div>
-                      <div className={`font-semibold mb-2 ${String(selectedTx.status) === 'completed' ? 'text-green-600' :
-                        (String(selectedTx.status) === 'pending' || String(selectedTx.status) === 'processing' || String(selectedTx.status) === 'pending_otp_verification') ? 'text-yellow-600' :
-                          String(selectedTx.status) === 'failed' ? 'text-red-600' : 'text-gray-600'
-                        }`}>
-                        {String(selectedTx.status) === 'completed' ? 'Terminé' :
-                          String(selectedTx.status) === 'pending' ? 'En attente' :
-                            String(selectedTx.status) === 'processing' ? 'En cours' :
-                              String(selectedTx.status) === 'pending_otp_verification' ? 'En attente OTP' :
-                                String(selectedTx.status) === 'failed' ? 'Échoué' : selectedTx.status}
+                      <div className="font-semibold mb-2" style={{ color: getStatusColor(selectedTx.status) }}>
+                        {t(getStatusTranslationKey(selectedTx.status))}
                       </div>
+
+                      {/* NEW: Approval Info Section */}
+                      <TransactionApprovalInfo transaction={selectedTx} />
                       <div className="flex items-center justify-between mb-1">
                         <div className="text-xs text-gray-400">Montant</div>
                         {selectedTx.currency && (
@@ -1362,7 +1366,7 @@ function Wallet() {
                       >
                         <FiShare2 className="inline mr-2" />Partager
                       </button>
-                      {selectedTx.status === 'pending_otp_verification' && selectedTx.type === 'withdrawal' && (
+                      {(selectedTx.status === 'pending_otp_verification' || selectedTx.status === 'pending_admin_approval') && selectedTx.type === 'withdrawal' && (
                         <button
                           className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
                           onClick={() => {
@@ -1456,7 +1460,7 @@ function Wallet() {
                                   </span>
                                 )}
                               </div>
-                              {tx.status === 'pending_otp_verification' && tx.type === 'withdrawal' && (
+                              {(tx.status === 'pending_otp_verification' || tx.status === 'pending_admin_approval') && tx.type === 'withdrawal' && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();

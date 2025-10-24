@@ -9,8 +9,10 @@ import RecoveryModal from '../components/RecoveryModal';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import logo from '../assets/img/logo-sbc.png';
 import { clearSignupCacheWithFeedback } from '../utils/signupHelpers';
+import { useTranslation } from 'react-i18next';
 
 function Connexion() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [identifier, setIdentifier] = useState(''); // Changed from email to identifier
   const [password, setPassword] = useState('');
@@ -25,21 +27,21 @@ function Connexion() {
   const validate = () => {
     let valid = true;
     const newErrors = { identifier: '', password: '' };
-    
+
     // Validate identifier (email or phone)
     if (!identifier) {
-      newErrors.identifier = 'Veuillez entrer votre email ou numéro de téléphone.';
+      newErrors.identifier = t('pages.connexion.invalidEmailOrPhone');
       valid = false;
     } else if (!isEmail(identifier) && !isPhoneNumber(identifier)) {
-      newErrors.identifier = 'Veuillez entrer un email ou numéro de téléphone valide.';
+      newErrors.identifier = t('pages.connexion.invalidEmailOrPhone');
       valid = false;
     }
-    
+
     if (password.length < 6) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères.';
+      newErrors.password = t('pages.connexion.passwordMinLength');
       valid = false;
     }
-    
+
     setErrors(newErrors);
     return valid;
   };
@@ -52,7 +54,7 @@ function Connexion() {
         const recoveryInfo = {
           totalTransactions: 0,
           totalAmount: 0,
-          message: "Vos informations de compte ont été perdues, mais vos transactions peuvent être récupérées !",
+          message: t('pages.connexion.recoveryMessage') || "Your account information has been lost, but your transactions can be recovered!",
           suggestedIdentifiers: {
             email: checkRecoveryHint.email,
             phoneNumber: checkRecoveryHint.phoneNumber,
@@ -126,12 +128,12 @@ function Connexion() {
           await checkRecoverableTransactions(identifier);
           setErrors({
             identifier: '',
-            password: 'Email ou mot de passe incorrect'
+            password: t('pages.connexion.checkCredentials')
           });
         } else {
           setErrors({
             identifier: '',
-            password: error instanceof Error ? error.message : 'Login failed'
+            password: error instanceof Error ? error.message : t('pages.connexion.loginFailed')
           });
         }
       } finally {
@@ -144,29 +146,29 @@ function Connexion() {
     <div className="min-h-screen flex items-center justify-center bg-white">
       <div className="w-full max-w-md p-8">
         <img src={logo} alt="logo" className=" mb-4 object-contain" />
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">Connexion</h1>
-        <p className="text-gray-500 mb-8">Entrez votre email et votre mot de passe pour vous connecter</p>
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('pages.connexion.title')}</h1>
+        <p className="text-gray-500 mb-8">{t('pages.connexion.loginHere')}</p>
         <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
           <div>
-            <label className="block text-gray-700 font-medium mb-2">Email ou Numéro de téléphone</label>
+            <label className="block text-gray-700 font-medium mb-2">{t('pages.connexion.emailOrPhone')}</label>
             <input
               type="text"
-              placeholder="Ex : jeanpierre@gmail.com ou 237670123456"
+              placeholder={t('pages.connexion.emailOrPhonePlaceholder')}
               className={`w-full border ${errors.identifier ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400`}
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
             />
             {errors.identifier && <div className="text-red-500 text-xs mt-1">{errors.identifier}</div>}
             <small className="text-gray-500 text-xs mt-1">
-              Vous pouvez utiliser votre email (user@example.com) ou numéro de téléphone (237670123456)
+              {t('pages.connexion.emailPhoneHint')}
             </small>
           </div>
           <div>
-            <label className="block text-gray-700 font-medium mb-2">Mot de passe</label>
+            <label className="block text-gray-700 font-medium mb-2">{t('common.password')}</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Mot de passe"
+                placeholder={t('common.password')}
                 className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400 pr-12`}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
@@ -182,7 +184,7 @@ function Connexion() {
             </div>
             {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
             <div className="flex justify-end mt-2">
-              <button type="button" className="text-[#115CF6] text-sm font-medium hover:underline bg-transparent" onClick={() => navigate('/forgot-password')}>Mot de passe oublié ?</button>
+              <button type="button" className="text-[#115CF6] text-sm font-medium hover:underline bg-transparent" onClick={() => navigate('/forgot-password')}>{t('pages.connexion.forgotPassword')}</button>
             </div>
           </div>
           <button
@@ -190,17 +192,17 @@ function Connexion() {
             disabled={loading}
             className="w-full bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-lg mt-2 shadow"
           >
-            {loading ? 'Connexion...' : 'Se connecter'}
+            {loading ? t('common.pleaseWait') : t('pages.connexion.connectButton')}
           </button>
         </form>
         <div className="text-center text-md text-gray-500 mt-6">
-          Pas de compte ?{' '}
+          {t('pages.connexion.noAccount')}{' '}
           <button
             type="button"
             className="text-[#115CF6] font-semibold hover:underline bg-transparent"
             onClick={() => navigate('/signup')}
           >
-            S'inscrire
+            {t('common.signup')}
           </button>
         </div>
       </div>
