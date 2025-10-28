@@ -15,7 +15,6 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
   userReferralCode,
   negativeBalance,
 }) => {
-  console.log('NegativeBalanceNotification props:', { isOpen, userReferralCode, negativeBalance });
 
   const message = `Vous avez un solde négatif de ${Math.abs(negativeBalance).toLocaleString()} XAF parce que vous avez perdu vos filleuls. Ne vous inquiétez pas ! Vous pouvez facilement récupérer ces montants.`;
 
@@ -28,8 +27,6 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
     "🎉 Votre solde négatif sera corrigé instantanément"
   ];
 
-  console.log('NegativeBalanceNotification message:', message);
-  console.log('Recovery steps:', recoverySteps);
 
   return (
     <AnimatePresence>

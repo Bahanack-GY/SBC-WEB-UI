@@ -17,7 +17,6 @@ function TransactionConfirmation() {
 
   useEffect(() => {
     if (!transactionId || withdrawalAmount === undefined) {
-      console.warn("Transaction ID or amount missing in state. Redirecting to Wallet.");
       navigate('/wallet');
     }
   }, [transactionId, withdrawalAmount, navigate]);

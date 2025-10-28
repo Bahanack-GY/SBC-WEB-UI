@@ -151,7 +151,6 @@ const WithdrawalComponent: React.FC = () => {
         setError('Impossible de vérifier les limites de retrait');
       }
     } catch (err) {
-      console.error('Withdrawal limits check error:', err);
       setError('Erreur lors de la vérification des limites');
     } finally {
       setCheckingLimits(false);

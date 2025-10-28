@@ -26,13 +26,6 @@ export const getHeaders = (requiresAuth: boolean = true, isFormData: boolean = f
  * Handle API response with consistent error handling
  */
 export const handleApiResponse = (response: ApiResponse): any => {
-  // Always log the outcome first
-  if (response.isOverallSuccess) {
-    console.log('API Success:', response.message, response.endpoint);
-  } else {
-    console.error('API Error:', response.message, response.endpoint, response.statusCode, response.body);
-  }
-
   // Handle critical errors regardless of body.success
   if (response.statusCode === 401) {
     // Unauthorized - Throw a specific error, let the caller handle authentication/redirect

@@ -100,7 +100,6 @@ export function useApiCache<T>(
   options: ApiCacheOptions = {}
 ): UseApiCacheResult<T> {
   const { staleTime = 30 * 1000 } = options; // 5 min cache, 30s stale
-  console.log('staleTime', staleTime);
   const [data, setData] = useState<T | undefined>(undefined);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string>('');

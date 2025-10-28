@@ -80,7 +80,6 @@ function ModifierProduit() {
                     setFeedback({ type: 'error', message: "Produit introuvable." });
                 }
             } catch (err) {
-                console.error("Failed to fetch product:", err);
                 setFeedback({ type: 'error', message: err instanceof Error ? err.message : "Erreur lors du chargement du produit." });
             } finally {
                 setLoading(false);
@@ -175,7 +174,6 @@ function ModifierProduit() {
                 setFeedback({ type: 'error', message: result.message || 'Échec de la mise à jour du produit.' });
             }
         } catch (error) {
-            console.error('Failed to update product:', error);
             const errorMessage = error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
             setFeedback({ type: 'error', message: errorMessage });
         } finally {

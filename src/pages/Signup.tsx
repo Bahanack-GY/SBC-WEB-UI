@@ -192,7 +192,6 @@ function Signup() {
     if (termsAndConditionsUrl) {
       window.open(termsAndConditionsUrl, '_blank');
     } else {
-      console.warn('Terms and Conditions URL not available yet.');
     }
   };
 
@@ -206,15 +205,11 @@ function Signup() {
       
       const savedData = localStorage.getItem(STORAGE_KEY_DATA);
       const savedStep = localStorage.getItem(STORAGE_KEY_STEP);
-      console.log('Attempting to load from localStorage...');
-      console.log('Saved data:', savedData);
-      console.log('Saved step:', savedStep);
       
       let dataToSet = { ...initialData };
 
       if (savedData) {
         const parsedData: SignupData = JSON.parse(savedData);
-        console.log('Loaded and parsed data:', parsedData);
         dataToSet = { ...dataToSet, ...parsedData };
       }
       
@@ -231,7 +226,6 @@ function Signup() {
         
         if (phoneFromUrl) {
           // Extract country code from phone number - handle different formats
-          console.log('Signup: Parsing phone number from URL:', phoneFromUrl);
           
           // Normalize phone number by removing spaces, hyphens, and ensuring it starts with +
           let normalizedPhone = phoneFromUrl.replace(/[\s\-()]/g, '');
@@ -239,19 +233,15 @@ function Signup() {
             normalizedPhone = '+' + normalizedPhone;
           }
           
-          console.log('Signup: Normalized phone:', normalizedPhone);
           
           // Find matching country code
           const matchedCode = africanCountryCodes.find(c => normalizedPhone.startsWith(c.code));
           if (matchedCode) {
-            console.log('Signup: Found matching country code:', matchedCode);
             setSelectedCode(matchedCode);
             // Remove the country code (including +) from the phone number
             const phoneWithoutCode = normalizedPhone.replace(matchedCode.code, '');
             dataToSet.whatsapp = phoneWithoutCode;
-            console.log('Signup: Phone without code:', phoneWithoutCode);
           } else {
-            console.log('Signup: No matching country code found, using full phone number');
             dataToSet.whatsapp = phoneFromUrl;
           }
         }
@@ -261,7 +251,6 @@ function Signup() {
       
       // Handle phone number parsing for saved data (if not from URL)
       if (dataToSet.whatsapp && !phoneFromUrl) {
-        console.log('Signup: Parsing saved phone number:', dataToSet.whatsapp);
         
         // Normalize saved phone number
         let normalizedSavedPhone = dataToSet.whatsapp.replace(/[\s\-()]/g, '');
@@ -271,12 +260,10 @@ function Signup() {
         
         const matchedCode = africanCountryCodes.find(c => normalizedSavedPhone.startsWith(c.code));
         if (matchedCode) {
-          console.log('Signup: Found matching country code for saved phone:', matchedCode);
           setSelectedCode(matchedCode);
           const phoneWithoutCode = normalizedSavedPhone.replace(matchedCode.code, '');
           setData(prev => ({ ...prev, whatsapp: phoneWithoutCode }));
         } else {
-          console.log('Signup: No matching country code for saved phone, using default');
           setSelectedCode(africanCountryCodes[0]);
         }
       } else if (!phoneFromUrl) {
@@ -286,11 +273,8 @@ function Signup() {
 
       if (savedStep) {
         setStep(parseInt(savedStep, 10));
-        console.log('Loaded step:', parseInt(savedStep, 10));
       }
-      console.log('Finished loading from localStorage.');
     } catch (error) {
-      console.error('Failed to load signup form data from localStorage:', error);
     }
   }, []);
 
@@ -310,7 +294,6 @@ function Signup() {
             setAffiliateName(null);
           }
         } catch (error) {
-          console.error('Error fetching affiliate info (deep link):', error);
           setAffiliateName(null);
         } finally {
           setAffiliateLoading(false);
@@ -343,7 +326,6 @@ function Signup() {
             }
           })
           .catch(error => {
-            console.error('Error fetching affiliate info (manual input):', error);
             setAffiliateName(null);
             let errorMessage = 'Erreur lors de la vérification du code parrain.';
             if (error instanceof Error) { errorMessage = error.message; }
@@ -380,23 +362,18 @@ function Signup() {
 
         try {
           const fullPhoneNumber = phoneNumber ? `${selectedCode.code}${phoneNumber}` : undefined;
-          console.log('Signup: Checking recovery for:', { email, fullPhoneNumber });
 
           const recoveryResponse = await safeRecoveryApiCall(
             () => sbcApiService.checkRecoveryRegistration(email, fullPhoneNumber)
           );
 
-          console.log('Signup: Raw recovery response:', recoveryResponse);
 
           if (recoveryResponse) {
-            console.log('Signup: Raw recovery response:', recoveryResponse);
 
             // First check if it's a 409 Conflict error
             const conflictError = sbcApiService.parseConflictError(recoveryResponse);
-            console.log('Signup: Conflict error result:', conflictError);
 
             if (conflictError) {
-              console.log('Signup: Conflict error detected:', conflictError);
 
               // Handle conflict error - set conflict status for display below fields
               const newConflictStatus = {
@@ -406,7 +383,6 @@ function Signup() {
                 phone: conflictError.conflictType === 'PHONE_TAKEN' || conflictError.conflictType === 'BOTH_TAKEN' ? 'conflict' : undefined
               };
 
-              console.log('Signup: Setting conflict status:', newConflictStatus);
               setConflictStatus(newConflictStatus);
 
               // Set none status for recovery
@@ -421,10 +397,8 @@ function Signup() {
 
             // If no conflict error, proceed with normal recovery check
             const recoveryData = handleApiResponse(recoveryResponse);
-            console.log('Signup: Processed recovery data:', recoveryData);
 
             if (recoveryData && recoveryData.hasPendingRecoveries) {
-              console.log('Signup: Pending recoveries found, setting recovery status');
               setPendingRecovery(recoveryData);
               // Clear any previous conflict status
               setConflictStatus({});
@@ -435,7 +409,6 @@ function Signup() {
                 phone: phoneNumber ? 'recoverable' : prev.phone
               }));
             } else {
-              console.log('Signup: No pending recoveries found in data:', recoveryData);
               setPendingRecovery(null);
               // Clear any previous conflict status
               setConflictStatus({});
@@ -447,7 +420,6 @@ function Signup() {
               }));
             }
           } else {
-            console.log('Signup: No recovery response received');
             setPendingRecovery(null);
             // Clear any previous conflict status
             setConflictStatus({});
@@ -459,7 +431,6 @@ function Signup() {
             }));
           }
         } catch (error) {
-          console.error('Recovery check error:', error);
           // Set none status on error
           setPendingRecovery(null);
           // Clear any previous conflict status
@@ -506,7 +477,6 @@ function Signup() {
         }
       }
     } catch (error) {
-      console.error('Recovery completion check error:', error);
       // Silently fail - don't show notification if there's an error
     }
   };
@@ -559,7 +529,6 @@ function Signup() {
   // Helper function to render recovery status message
   const renderRecoveryStatusMessage = (type: 'email' | 'phone') => {
     const status = recoveryStatus[type];
-    console.log(`Signup: renderRecoveryStatusMessage for ${type}:`, { status, pendingRecovery });
 
     if (!status) return null;
 
@@ -592,7 +561,6 @@ function Signup() {
   // Helper function to render conflict status message
   const renderConflictStatusMessage = (type: 'email' | 'phone') => {
     const hasConflict = conflictStatus[type] === 'conflict';
-    console.log(`Signup: renderConflictStatusMessage for ${type}:`, { hasConflict, conflictStatus });
 
     if (!hasConflict) return null;
 
@@ -630,7 +598,6 @@ function Signup() {
             emailExists = true;
           }
         } catch (error) {
-          console.error('Error checking email existence:', error);
           let errorMessage = 'Erreur lors de la vérification de l\'email.';
           if (error instanceof Error) { errorMessage = error.message; }
           else if (error instanceof ApiResponse && error.body?.message) { errorMessage = error.body.message; }
@@ -647,7 +614,6 @@ function Signup() {
             whatsappExists = true;
           }
         } catch (error) {
-          console.error('Error checking phone number existence:', error);
           let errorMessage = 'Erreur lors de la vérification du numéro WhatsApp.';
           if (error instanceof Error) { errorMessage = error.message; }
           else if (error instanceof ApiResponse && error.body?.message) { errorMessage = error.body.message; }
@@ -696,9 +662,7 @@ function Signup() {
       try {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataToSave));
         localStorage.setItem(STORAGE_KEY_STEP, (step + 1).toString());
-        console.log('Saved signup data and step to localStorage', dataToSave, step + 1);
       } catch (error) {
-        console.error('Failed to save signup form data to localStorage:', error);
       }
       setStep((s) => s + 1);
     }
@@ -731,7 +695,6 @@ function Signup() {
           interests: data.interets.length > 0 ? data.interets.map(i => removeAccents(i)) : undefined,
           notificationPreference: data.notificationPreference,
         };
-        console.log('Attempting registration with userData:', userData);
 
         const result = await register(userData);
 
@@ -752,7 +715,6 @@ function Signup() {
         });
       } catch (error) {
         setLoading(false);
-        console.error('Registration error:', error);
         let errorMessage = 'Registration failed.';
         if (error instanceof Error) { errorMessage = error.message; }
         else if (error instanceof ApiResponse && error.body?.message) { errorMessage = error.body.message; }

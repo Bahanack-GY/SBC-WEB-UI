@@ -135,7 +135,6 @@ function Money() {
                     onClose={() => setShowCurrencyConverter(false)}
                     onConversionComplete={() => {
                         // Just refresh user context, no page reload
-                        console.log('Conversion completed');
                     }}
                 />
 
@@ -145,7 +144,6 @@ function Money() {
                     onClose={() => setShowUnifiedWithdrawal(false)}
                     onWithdrawalComplete={() => {
                         // Just refresh user context, no page reload
-                        console.log('Withdrawal completed');
                     }}
                 />
             </div>

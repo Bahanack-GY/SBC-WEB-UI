@@ -57,7 +57,6 @@ function MesProduits() {
                     setModalContent({ type: 'success', message: 'Produit supprimé avec succès!' }); // Success feedback
                     setShowModal(true);
                 } catch (err) {
-                    console.error("Failed to delete product:", err);
                     setModalContent({ type: 'error', message: err instanceof Error ? `Échec de la suppression: ${err.message}` : 'Échec de la suppression du produit.' }); // Error feedback
                     setShowModal(true);
                 } finally {

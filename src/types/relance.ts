@@ -115,6 +115,26 @@ export interface RelanceConnectResponse {
 }
 
 /**
+ * Media attachment for messages
+ */
+export interface MediaAttachment {
+  url: string;
+  type: 'image' | 'video' | 'pdf';
+}
+
+/**
+ * Custom message template for a specific day
+ */
+export interface CustomMessage {
+  dayNumber: number; // 1-7
+  messageTemplate: {
+    fr: string; // French message
+    en: string; // English message
+  };
+  mediaUrls?: MediaAttachment[];
+}
+
+/**
  * Campaign filter options
  */
 export interface CampaignFilter {
@@ -163,6 +183,7 @@ export interface Campaign {
   type: CampaignType;
   status: CampaignStatus;
   targetFilter?: CampaignFilter;
+  customMessages?: CustomMessage[]; // Custom messages for Days 1-7
   estimatedTargetCount: number;
   actualTargetCount: number;
   targetsEnrolled: number;
@@ -187,6 +208,7 @@ export interface Campaign {
 export interface CreateCampaignRequest {
   name: string;
   targetFilter: CampaignFilter;
+  customMessages?: CustomMessage[]; // Optional - if not provided, uses default messages
   maxMessagesPerDay?: number;
   scheduledStartDate?: string | null;
   runAfterCampaignId?: string;

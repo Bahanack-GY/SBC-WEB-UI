@@ -65,23 +65,19 @@ export const safeRecoveryApiCall = async (
     
     // Check for various error conditions
     if (!response) {
-      console.warn('Recovery API: No response received');
       return null;
     }
     
     // Handle HTTP error status codes
     if (response.status && response.status >= 400) {
       if (response.status === 404) {
-        console.warn('Recovery API: Endpoint not found (404) - recovery features may not be available');
       } else {
-        console.warn(`Recovery API: HTTP ${response.status} error`);
       }
       return null;
     }
     
     // Handle API response structure
     if (response.isOverallSuccess === false) {
-      console.warn('Recovery API: Request failed with success=false');
       return null;
     }
     
@@ -89,11 +85,8 @@ export const safeRecoveryApiCall = async (
   } catch (error: any) {
     // Handle network errors and other exceptions
     if (error?.message?.includes('404') || error?.status === 404) {
-      console.warn('Recovery API: Endpoint not found - recovery endpoints may not be implemented yet');
     } else if (error?.message?.includes('Network Error') || error?.code === 'NETWORK_ERROR') {
-      console.warn('Recovery API: Network error - service may be unavailable');
     } else {
-      console.error('Recovery API error:', error);
     }
     return null; // Always graceful fallback
   }

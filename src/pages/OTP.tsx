@@ -144,7 +144,6 @@ function OTP() {
         setModalContent({ type: 'success', message: result.message || 'Code de retrait renvoyé ! Veuillez vérifier votre téléphone.' });
         setShowModal(true);
       } else {
-        console.warn("Resend OTP called without clear purpose context or missing details.");
         setError('Impossible de renvoyer l\'OTP. Informations manquantes.');
         return;
       }

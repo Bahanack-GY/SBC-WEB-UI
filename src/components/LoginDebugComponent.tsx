@@ -26,12 +26,9 @@ const LoginDebugComponent: React.FC = () => {
     setResult(null);
     
     try {
-      console.log('Testing login with:', { email, password });
       const response = await sbcApiService.loginUser(email, password);
-      console.log('Raw API Response:', response);
-      
+
       const data = handleApiResponse(response);
-      console.log('Processed Data:', data);
       
       setResult({
         rawResponse: response,
@@ -46,7 +43,6 @@ const LoginDebugComponent: React.FC = () => {
         }
       });
     } catch (err) {
-      console.error('Login test error:', err);
       setError(err instanceof Error ? err.message : 'Login test failed');
     } finally {
       setLoading(false);

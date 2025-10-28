@@ -572,7 +572,30 @@
       },
       "campaigns": "Campagnes",
       "createCampaign": "Créer une campagne",
-      "campaignStats": "Statistiques de campagne"
+      "campaignStats": "Statistiques de campagne",
+      "customMessages": {
+        "title": "Messages personnalisés",
+        "useCustomMessages": "Utiliser des messages personnalisés",
+        "useDefaultMessages": "Utiliser les messages par défaut",
+        "day": "Jour",
+        "frenchMessage": "Message en français",
+        "englishMessage": "Message en anglais",
+        "frenchPlaceholder": "Saisissez votre message en français...",
+        "englishPlaceholder": "Entrez votre message en anglais...",
+        "addMedia": "Ajouter un média",
+        "removeMedia": "Retirer le média",
+        "mediaType": "Type de média",
+        "mediaUrl": "URL du média",
+        "availableVariables": "Variables disponibles",
+        "variablesHelp": "Vous pouvez utiliser ces variables dans vos messages:",
+        "varName": "{{name}} - Nom du filleul",
+        "varReferrerName": "{{referrerName}} - Nom du parrain",
+        "varDay": "{{day}} - Numéro du jour (1-7)",
+        "messagePreview": "Aperçu du message",
+        "bothLanguagesRequired": "Les messages en français et en anglais sont requis",
+        "invalidDayNumber": "Le numéro du jour doit être entre 1 et 7",
+        "customMessagesInfo": "Personnalisez les messages pour chaque jour de la campagne. Si vous ne définissez pas de messages personnalisés, les messages par défaut seront utilisés."
+      }
     }
   },
   "messages": {

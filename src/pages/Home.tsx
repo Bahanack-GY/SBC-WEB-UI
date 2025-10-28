@@ -104,7 +104,6 @@ function Home() {
         const response = await sbcApiService.getFormations();
         return handleApiResponse(response);
       } catch (err) {
-        console.error('Failed to fetch formations:', err);
         return [];
       }
     },
@@ -136,7 +135,6 @@ function Home() {
         const hasSub = response?.body?.data?.hasSubscription || false;
         setHasRelanceSubscription(hasSub);
       } catch (error) {
-        console.error('Error checking Relance subscription:', error);
         setHasRelanceSubscription(false);
       }
     };
@@ -164,43 +162,13 @@ function Home() {
 
   // Check for negative balance and show notification
   useEffect(() => {
-    console.log('🔍 Home: Checking for negative balance modal trigger', {
-      loading,
-      error,
-      balance,
-      userId: user?.id,
-      userBalance: user?.balance,
-      statsBalance: statsData?.balance
-    });
-
     if (!loading && !error && balance < 0) {
-      console.log('Home: Negative balance detected, checking if modal should show');
-
-      // Check if enough time has passed since last showing (24 hours)
-      const modalShownKey = `negative-balance-modal-shown-${user?.id || 'anonymous'}`;
-      const lastShown = localStorage.getItem(modalShownKey);
-      const shouldShowBasedOnTime = !lastShown || (Date.now() - parseInt(lastShown)) > (24 * 60 * 60 * 1000);
-
-      console.log('Home: Time-based check', {
-        modalShownKey,
-        lastShown,
-        timeSinceLastShown: lastShown ? (Date.now() - parseInt(lastShown)) : null,
-        shouldShowBasedOnTime
-      });
-
       // Check if this is the first page load for this user session (login)
       const sessionKey = `first-home-visit-${user?.id || 'anonymous'}`;
       const isFirstVisit = !sessionStorage.getItem(sessionKey);
 
-      console.log('Home: Session check', {
-        sessionKey,
-        isFirstVisit,
-        currentSessionValue: sessionStorage.getItem(sessionKey)
-      });
-
       // Show modal only on first visit of the session (login)
       if (isFirstVisit) {
-        console.log('Home: First visit detected, showing negative balance notification modal');
         setShowNegativeBalanceModal(true);
 
         // Mark this session as visited
@@ -209,30 +177,18 @@ function Home() {
         // Also track globally to prevent showing again after logout/login
         const modalShownKey = `negative-balance-modal-shown-${user?.id || 'anonymous'}`;
         localStorage.setItem(modalShownKey, Date.now().toString());
-      } else {
-        console.log('Home: Not first visit, skipping modal display');
       }
 
       // Optional: Uncomment below for time-based behavior
       /*
       // Show modal if enough time has passed (24 hours)
       if (shouldShowBasedOnTime) {
-        console.log('Home: Enough time has passed, showing negative balance notification modal');
         setShowNegativeBalanceModal(true);
 
         // Update the timestamp to track when modal was shown
         localStorage.setItem(modalShownKey, Date.now().toString());
-      } else {
-        console.log('Home: Modal shown recently, skipping display');
       }
       */
-    } else {
-      console.log('Home: Modal conditions not met', {
-        hasLoading: loading,
-        hasError: error,
-        balanceValue: balance,
-        isNegative: balance < 0
-      });
     }
   }, [loading, error, balance, user?.id]);
 

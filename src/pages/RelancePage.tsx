@@ -7,7 +7,7 @@ import { sbcApiService } from '../services/SBCApiService';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import type { RelanceStatus, Campaign, FilterPreviewResponse, CampaignFilter, SampleUser, CampaignStatus, DefaultRelanceStats } from '../types/relance';
+import type { RelanceStatus, Campaign, FilterPreviewResponse, CampaignFilter, SampleUser, CampaignStatus, DefaultRelanceStats, CustomMessage } from '../types/relance';
 import { countryOptions } from '../utils/countriesData';
 
 function RelancePage() {
@@ -42,6 +42,17 @@ function RelancePage() {
     excludeCurrentTargets: true,
   });
   const [previewData, setPreviewData] = useState<FilterPreviewResponse | null>(null);
+
+  // Custom messages state
+  const [useCustomMessages, setUseCustomMessages] = useState(false);
+  const [customMessages, setCustomMessages] = useState<CustomMessage[]>(
+    Array.from({ length: 7 }, (_, i) => ({
+      dayNumber: i + 1,
+      messageTemplate: { fr: '', en: '' },
+      mediaUrls: []
+    }))
+  );
+  const [activeMessageDay, setActiveMessageDay] = useState(1);
 
   // UI state
   const [loading, setLoading] = useState(true);
@@ -94,7 +105,6 @@ function RelancePage() {
         const hasSub = response?.body?.data?.hasSubscription || false;
         setHasRelanceSubscription(hasSub);
       } catch (error) {
-        console.error('Error checking Relance subscription:', error);
         setHasRelanceSubscription(false);
       } finally {
         setCheckingSubscription(false);
@@ -107,22 +117,17 @@ function RelancePage() {
   // Fetch status on mount (only if has subscription)
   useEffect(() => {
     if (hasRelanceSubscription && !checkingSubscription) {
-      console.log('🚀 Fetching status and campaigns...');
       fetchStatus();
       fetchCampaigns();
     }
   }, [hasRelanceSubscription, checkingSubscription]);
 
   const fetchStatus = async () => {
-    console.log('📡 Calling GET /api/relance/status...');
     try {
       const response = await sbcApiService.relanceGetStatus();
-      console.log('📊 Status response:', response);
       if (response.isSuccessByStatusCode && response.body?.data) {
-        console.log('✅ Setting status:', response.body.data);
         setStatus(response.body.data as RelanceStatus);
       } else {
-        console.error('❌ Invalid status response:', response);
         showMessage(
           'Erreur de chargement',
           response.body?.message || 'Impossible de charger le statut de la relance',
@@ -130,7 +135,6 @@ function RelancePage() {
         );
       }
     } catch (err: any) {
-      console.error('❌ Failed to fetch status:', err);
       showMessage(
         'Erreur de connexion',
         err.message || 'Une erreur inattendue s\'est produite lors du chargement du statut',
@@ -152,7 +156,6 @@ function RelancePage() {
       // Process default stats
       if (defaultStatsResponse.isSuccessByStatusCode && defaultStatsResponse.body?.data) {
         const stats = defaultStatsResponse.body.data as DefaultRelanceStats;
-        console.log('📊 Default stats received:', stats);
         setDefaultStats(stats);
 
         // Update status with isPaused from default stats
@@ -178,7 +181,6 @@ function RelancePage() {
         setCampaigns([]);
       }
     } catch (err: any) {
-      console.error('Failed to fetch campaigns:', err);
       setDefaultStats(null);
       setCampaigns([]);
       showMessage(
@@ -267,6 +269,16 @@ function RelancePage() {
       excludeCurrentTargets: true,
     });
     setPreviewData(null);
+    // Reset custom messages
+    setUseCustomMessages(false);
+    setCustomMessages(
+      Array.from({ length: 7 }, (_, i) => ({
+        dayNumber: i + 1,
+        messageTemplate: { fr: '', en: '' },
+        mediaUrls: []
+      }))
+    );
+    setActiveMessageDay(1);
     setWizardStep(1);
     setShowCampaignWizard(true);
   };
@@ -276,7 +288,7 @@ function RelancePage() {
       const response = await sbcApiService.relancePreviewFilters(filters);
       if (response.isSuccessByStatusCode && response.body?.data) {
         setPreviewData(response.body.data);
-        setWizardStep(3);
+        setWizardStep(4); // Updated to step 4
       }
     } catch (err: any) {
       showMessage('Erreur', err.message || 'Échec de l\'aperçu des filtres', 'error');
@@ -285,9 +297,17 @@ function RelancePage() {
 
   const handleCreateCampaign = async () => {
     try {
+      // Filter out empty messages if using custom messages
+      const filteredCustomMessages = useCustomMessages
+        ? customMessages.filter(
+            (msg) => msg.messageTemplate.fr.trim() && msg.messageTemplate.en.trim()
+          )
+        : undefined;
+
       const response = await sbcApiService.relanceCreateCampaign({
         name: campaignName,
         targetFilter: filters,
+        customMessages: filteredCustomMessages, // Include custom messages if provided
         maxMessagesPerDay: 30,
       });
       if (response.isSuccessByStatusCode && response.body?.data) {
@@ -587,12 +607,6 @@ function RelancePage() {
             // Use defaultStats.isPaused as fallback if status hasn't loaded yet
             const isPaused = status?.defaultCampaignPaused ?? defaultStats?.isPaused ?? false;
             const isActive = !isPaused && status?.whatsappStatus === 'connected';
-
-            console.log('🔍 Pause state:', {
-              statusPaused: status?.defaultCampaignPaused,
-              defaultStatsPaused: defaultStats?.isPaused,
-              finalIsPaused: isPaused
-            });
 
             return (
               <motion.div
@@ -1188,14 +1202,157 @@ function RelancePage() {
                       <button onClick={() => setWizardStep(1)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-xl font-medium hover:bg-gray-300 transition-colors">
                         Retour
                       </button>
-                      <button onClick={handlePreviewFilters} className="flex-1 bg-[#25D366] text-white py-2 rounded-xl font-medium hover:bg-[#1ea952] transition-colors">
+                      <button onClick={() => setWizardStep(3)} className="flex-1 bg-[#25D366] text-white py-2 rounded-xl font-medium hover:bg-[#1ea952] transition-colors">
+                        {t('common.next')}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Step 3: Custom Messages (Optional) */}
+                {wizardStep === 3 && (
+                  <div>
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                      <p className="text-sm text-blue-800">
+                        {t('pages.relance.customMessages.customMessagesInfo')}
+                      </p>
+                    </div>
+
+                    {/* Toggle for custom messages */}
+                    <div className="mb-6">
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={useCustomMessages}
+                          onChange={(e) => setUseCustomMessages(e.target.checked)}
+                          className="w-5 h-5 text-blue-600"
+                        />
+                        <span className="font-semibold text-gray-800">
+                          {t('pages.relance.customMessages.useCustomMessages')}
+                        </span>
+                      </label>
+                    </div>
+
+                    {useCustomMessages && (
+                      <div>
+                        {/* Day tabs */}
+                        <div className="mb-4 overflow-x-auto">
+                          <div className="flex gap-2 min-w-max">
+                            {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                              <button
+                                key={day}
+                                onClick={() => setActiveMessageDay(day)}
+                                className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+                                  activeMessageDay === day
+                                    ? 'bg-blue-500 text-white'
+                                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                                }`}
+                              >
+                                {t('pages.relance.customMessages.day')} {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Message editor for active day */}
+                        <div className="space-y-4">
+                          {/* Variables helper */}
+                          <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
+                            <p className="text-xs font-semibold text-gray-700 mb-2">
+                              {t('pages.relance.customMessages.availableVariables')}:
+                            </p>
+                            <div className="text-xs text-gray-600 space-y-1">
+                              <div><code className="bg-white px-2 py-0.5 rounded">{'{{name}}'}</code> - {t('pages.relance.customMessages.varName').split(' - ')[1]}</div>
+                              <div><code className="bg-white px-2 py-0.5 rounded">{'{{referrerName}}'}</code> - {t('pages.relance.customMessages.varReferrerName').split(' - ')[1]}</div>
+                              <div><code className="bg-white px-2 py-0.5 rounded">{'{{day}}'}</code> - {t('pages.relance.customMessages.varDay').split(' - ')[1]}</div>
+                            </div>
+                          </div>
+
+                          {/* French message */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              {t('pages.relance.customMessages.frenchMessage')} *
+                            </label>
+                            <textarea
+                              value={customMessages[activeMessageDay - 1]?.messageTemplate.fr || ''}
+                              onChange={(e) => {
+                                const updatedMessages = [...customMessages];
+                                updatedMessages[activeMessageDay - 1].messageTemplate.fr = e.target.value;
+                                setCustomMessages(updatedMessages);
+                              }}
+                              placeholder={t('pages.relance.customMessages.frenchPlaceholder')}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              rows={4}
+                            />
+                          </div>
+
+                          {/* English message */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              {t('pages.relance.customMessages.englishMessage')} *
+                            </label>
+                            <textarea
+                              value={customMessages[activeMessageDay - 1]?.messageTemplate.en || ''}
+                              onChange={(e) => {
+                                const updatedMessages = [...customMessages];
+                                updatedMessages[activeMessageDay - 1].messageTemplate.en = e.target.value;
+                                setCustomMessages(updatedMessages);
+                              }}
+                              placeholder={t('pages.relance.customMessages.englishPlaceholder')}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              rows={4}
+                            />
+                          </div>
+
+                          {/* Media URL (simplified - can be enhanced later) */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">
+                              {t('pages.relance.customMessages.mediaUrl')} ({t('common.optional')})
+                            </label>
+                            <input
+                              type="url"
+                              placeholder="https://example.com/image.jpg"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                              onChange={(e) => {
+                                const updatedMessages = [...customMessages];
+                                if (e.target.value) {
+                                  updatedMessages[activeMessageDay - 1].mediaUrls = [{
+                                    url: e.target.value,
+                                    type: 'image' // Default to image, can add selector later
+                                  }];
+                                } else {
+                                  updatedMessages[activeMessageDay - 1].mediaUrls = [];
+                                }
+                                setCustomMessages(updatedMessages);
+                              }}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">
+                              URL publique d'une image, vidéo ou PDF
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Navigation buttons */}
+                    <div className="flex gap-2 mt-6">
+                      <button
+                        onClick={() => setWizardStep(2)}
+                        className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+                      >
+                        {t('common.previous')}
+                      </button>
+                      <button
+                        onClick={handlePreviewFilters}
+                        className="flex-1 bg-[#25D366] text-white py-2 rounded-lg hover:bg-[#1ea952]"
+                      >
                         Aperçu des résultats
                       </button>
                     </div>
                   </div>
                 )}
 
-                {wizardStep === 3 && previewData && (
+                {wizardStep === 4 && previewData && (
                   <div>
                     <div className="bg-green-50 border border-green-300 rounded-lg p-4 mb-4">
                       <p className="font-bold text-green-700 mb-2">✓ {previewData.message}</p>
@@ -1214,8 +1371,8 @@ function RelancePage() {
                     </div>
 
                     <div className="flex gap-2">
-                      <button onClick={() => setWizardStep(2)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
-                        Ajuster filtres
+                      <button onClick={() => setWizardStep(3)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
+                        {t('common.previous')}
                       </button>
                       <button onClick={handleCreateCampaign} className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">
                         Créer la campagne

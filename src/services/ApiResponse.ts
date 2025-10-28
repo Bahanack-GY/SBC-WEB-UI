@@ -51,7 +51,6 @@ export class ApiResponse {
         apiSuccess = Boolean(body.success);
       }
     } catch (e) {
-      console.error('Error parsing JSON response:', e);
       message = 'Failed to parse server response.';
       apiSuccess = false;
     }

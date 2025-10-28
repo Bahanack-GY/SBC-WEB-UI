@@ -28,9 +28,7 @@ export const clearSignupCache = (): void => {
       window.history.replaceState({}, document.title, url.toString());
     }
     
-    console.log('✅ Signup cache cleared successfully');
   } catch (error) {
-    console.error('❌ Error clearing signup cache:', error);
   }
 };
 
@@ -43,7 +41,6 @@ export const hasSignupCache = (): boolean => {
     const hasStep = localStorage.getItem(SIGNUP_STORAGE_KEYS.STEP) !== null;
     return hasData || hasStep;
   } catch (error) {
-    console.error('Error checking signup cache:', error);
     return false;
   }
 };
@@ -61,7 +58,6 @@ export const getSignupCache = (): { data: any | null; step: number | null } => {
       step: stepStr ? parseInt(stepStr, 10) : null,
     };
   } catch (error) {
-    console.error('Error getting signup cache:', error);
     return { data: null, step: null };
   }
 };
@@ -74,6 +70,5 @@ export const clearSignupCacheWithFeedback = (): void => {
   clearSignupCache();
   
   if (hadCache) {
-    console.log('🧹 Previous signup data cleared for better security');
   }
 };

@@ -79,7 +79,6 @@ function Connexion() {
         }
       }
     } catch (error) {
-      console.error('Recovery check error:', error);
       // Silently fail - don't show recovery modal if there's an error
     }
   };
@@ -89,24 +88,19 @@ function Connexion() {
     if (validate()) {
       setLoading(true);
       try {
-        console.log('Connexion: Starting login process for', identifier);
-
         // Process the login through auth context (single API call)
         const result = await login(identifier, password);
-        console.log('Connexion: Login result:', result);
 
         // Clear any cached signup data since user is now logging in
         clearSignupCacheWithFeedback();
 
         // Check for negative balance after successful login
         if (result.hasNegativeBalance && result.recoveryMessage) {
-          console.log('Connexion: Negative balance detected, showing recovery message');
           setShowNegativeBalanceNotification(true);
           // Still continue with normal flow after showing notification
         }
 
         if (result.requiresOtp) {
-          console.log('Connexion: OTP required, redirecting to OTP page');
           // Redirect to OTP verification page
           navigate('/otp', {
             state: {
@@ -116,12 +110,10 @@ function Connexion() {
             }
           });
         } else {
-          console.log('Connexion: Direct login success, redirecting to home');
           // Direct login success - redirect to home
           navigate('/');
         }
       } catch (error: unknown) {
-        console.error('Connexion: Login error:', error);
         
         // Fall back to general recovery check for 401/404 errors
         if (error instanceof Error && (error.message.includes('401') || error.message.includes('404'))) {

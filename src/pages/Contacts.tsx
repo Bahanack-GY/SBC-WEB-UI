@@ -306,7 +306,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     try {
                         suggestedFilename = decodeURIComponent(filenameMatch[1].trim().replace(/^"|"$/g, ''));
                     } catch (e) {
-                        console.warn("Could not decode filename from Content-Disposition, using default.", e);
                         suggestedFilename = filenameMatch[1].trim().replace(/^"|"$/g, '');
                     }
                 }
@@ -324,7 +323,6 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
             window.URL.revokeObjectURL(urlBlob);
             alert('Téléchargement réussi!');
         } catch (err) {
-            console.error("Failed to download contacts:", err);
             alert('Échec du téléchargement des contacts.');
         } finally {
             setDownloading(false);

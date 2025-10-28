@@ -81,7 +81,6 @@ const WithdrawalOtpVerification: React.FC = () => {
           }
         });
       } catch (err) {
-        console.error('Failed to cancel withdrawal:', err);
         navigate('/money');
       }
     } else {

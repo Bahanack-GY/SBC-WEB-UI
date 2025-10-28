@@ -126,7 +126,6 @@ function AjouterProduit() {
                 setFeedback({ type: 'error', message: result.message || 'Échec de l\'ajout du produit.' });
             }
         } catch (error) {
-            console.error('Failed to add product:', error);
             const errorMessage = error instanceof Error ? error.message : 'Une erreur inattendue est survenue.';
             setFeedback({ type: 'error', message: errorMessage });
         } finally {

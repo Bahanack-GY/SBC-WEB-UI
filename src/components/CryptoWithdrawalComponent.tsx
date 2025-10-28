@@ -56,7 +56,6 @@ const CryptoWithdrawalComponent: React.FC<CryptoWithdrawalProps> = ({
           setSelectedCrypto(data.currencies[0] || 'BTC');
         }
       } catch (err) {
-        console.error('Failed to load supported cryptocurrencies:', err);
         // Fallback to common cryptos
         setSupportedCryptos(['BTC', 'LTC', 'XRP', 'TRX', 'USDTSOL', 'USDTBSC', 'BNBBSC']);
       }
@@ -96,7 +95,6 @@ const CryptoWithdrawalComponent: React.FC<CryptoWithdrawalProps> = ({
         setError('Impossible de vérifier les limites de retrait');
       }
     } catch (err) {
-      console.error('Withdrawal limits check error:', err);
       setError('Erreur lors de la vérification des limites');
     } finally {
       setCheckingLimits(false);
@@ -123,7 +121,6 @@ const CryptoWithdrawalComponent: React.FC<CryptoWithdrawalProps> = ({
         setError('Impossible d\'obtenir l\'estimation crypto');
       }
     } catch (err) {
-      console.error('Crypto estimate error:', err);
       setError('Erreur lors de l\'estimation crypto');
     } finally {
       setEstimating(false);
@@ -193,7 +190,6 @@ const CryptoWithdrawalComponent: React.FC<CryptoWithdrawalProps> = ({
         setError(data?.message || 'Erreur lors du retrait crypto');
       }
     } catch (err) {
-      console.error('Crypto withdrawal error:', err);
       if (err instanceof Error) {
         setError(err.message);
       } else {

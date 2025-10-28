@@ -25,18 +25,10 @@ export class ApiService {
    * Handle HTTP response and convert to ApiResponse
    */
   private async handleHttpResponse(response: Response): Promise<ApiResponse> {
-    console.log('Response Status:', response.status);
-
     const contentType = response.headers.get('content-type');
     const isJson = contentType?.includes('application/json') ?? false;
 
     const responseText = await response.text();
-
-    if (responseText.length > 1024) {
-      console.log('Response Body: [Truncated due to length > 1024 characters]');
-    } else {
-      console.log('Response Body:', responseText);
-    }
 
     if (isJson) {
       return ApiResponse.fromHttpResponse(response, responseText, response.url);
@@ -69,7 +61,6 @@ export class ApiService {
 
     // Check if there's already a pending request (unless skipped)
     if (!skipDeduplication && this.pendingRequests.has(requestKey)) {
-      console.log('Returning cached request for:', endpoint);
       return this.pendingRequests.get(requestKey)!;
     }
 
@@ -86,9 +77,6 @@ export class ApiService {
       url += `?${params.toString()}`;
     }
 
-    console.log('GET Request:', url);
-    console.log('Headers:', headers);
-
     const requestPromise = (async () => {
       try {
         const response = await fetch(url, {
@@ -98,8 +86,6 @@ export class ApiService {
 
         return await this.handleHttpResponse(response);
       } catch (error) {
-        console.error(`Error in GET ${endpoint}:`, error);
-
         if (error instanceof TypeError && error.message.includes('fetch')) {
           return ApiResponse.fromError(
             'Network error: Please check your connection and try again.',
@@ -139,10 +125,6 @@ export class ApiService {
     const headers = getHeaders(requiresAuth);
     const url = `${this.baseUrl}${endpoint}`;
 
-    console.log('POST Request:', url);
-    console.log('Headers:', headers);
-    console.log('Body:', JSON.stringify(body));
-
     try {
       const response = await fetch(url, {
         method: 'POST',
@@ -152,8 +134,6 @@ export class ApiService {
 
       return await this.handleHttpResponse(response);
     } catch (error) {
-      console.error(`Error in POST ${endpoint}:`, error);
-
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return ApiResponse.fromError(
           'Network error: Please check your connection and try again.',
@@ -182,10 +162,6 @@ export class ApiService {
     const headers = getHeaders(requiresAuth);
     const url = `${this.baseUrl}${endpoint}`;
 
-    console.log('PUT Request:', url);
-    console.log('Headers:', headers);
-    console.log('Body:', JSON.stringify(body));
-
     try {
       const response = await fetch(url, {
         method: 'PUT',
@@ -195,8 +171,6 @@ export class ApiService {
 
       return await this.handleHttpResponse(response);
     } catch (error) {
-      console.error(`Error in PUT ${endpoint}:`, error);
-
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return ApiResponse.fromError(
           'Network error: Please check your connection and try again.',
@@ -225,10 +199,6 @@ export class ApiService {
     const headers = getHeaders(requiresAuth);
     const url = `${this.baseUrl}${endpoint}`;
 
-    console.log('DELETE Request:', url);
-    console.log('Headers:', headers);
-    if (body) console.log('Body:', JSON.stringify(body));
-
     try {
       const response = await fetch(url, {
         method: 'DELETE',
@@ -238,8 +208,6 @@ export class ApiService {
 
       return await this.handleHttpResponse(response);
     } catch (error) {
-      console.error(`Error in DELETE ${endpoint}:`, error);
-
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return ApiResponse.fromError(
           'Network error: Please check your connection and try again.',
@@ -268,10 +236,6 @@ export class ApiService {
     const headers = getHeaders(requiresAuth);
     const url = `${this.baseUrl}${endpoint}`;
 
-    console.log('PATCH Request:', url);
-    console.log('Headers:', headers);
-    if (body) console.log('Body:', JSON.stringify(body));
-
     try {
       const response = await fetch(url, {
         method: 'PATCH',
@@ -281,8 +245,6 @@ export class ApiService {
 
       return await this.handleHttpResponse(response);
     } catch (error) {
-      console.error(`Error in PATCH ${endpoint}:`, error);
-
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return ApiResponse.fromError(
           'Network error: Please check your connection and try again.',
@@ -320,12 +282,6 @@ export class ApiService {
     const headers = getHeaders(requiresAuth, true); // isFormData = true
     const url = `${this.baseUrl}${endpoint}`;
 
-    console.log(`File Upload Request (${httpMethod}):`, url);
-    console.log('Headers:', headers);
-    console.log('Files:', files.map(f => f.name));
-    console.log('FieldName:', fieldName);
-    if (fields) console.log('Fields:', fields);
-
     try {
       const formData = new FormData();
 
@@ -347,8 +303,6 @@ export class ApiService {
 
       return await this.handleHttpResponse(response);
     } catch (error) {
-      console.error(`Error during file upload ${endpoint}:`, error);
-
       if (error instanceof TypeError && error.message.includes('fetch')) {
         return ApiResponse.fromError(
           'Network error during file upload. Please check your connection.',

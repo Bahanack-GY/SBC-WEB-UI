@@ -572,7 +572,30 @@
       },
       "campaigns": "Campaigns",
       "createCampaign": "Create campaign",
-      "campaignStats": "Campaign stats"
+      "campaignStats": "Campaign stats",
+      "customMessages": {
+        "title": "Custom Messages",
+        "useCustomMessages": "Use custom messages",
+        "useDefaultMessages": "Use default messages",
+        "day": "Day",
+        "frenchMessage": "French Message",
+        "englishMessage": "English Message",
+        "frenchPlaceholder": "Enter your message in French...",
+        "englishPlaceholder": "Enter your message in English...",
+        "addMedia": "Add Media",
+        "removeMedia": "Remove Media",
+        "mediaType": "Media Type",
+        "mediaUrl": "Media URL",
+        "availableVariables": "Available Variables",
+        "variablesHelp": "You can use these variables in your messages:",
+        "varName": "{{name}} - Referral's name",
+        "varReferrerName": "{{referrerName}} - Referrer's name",
+        "varDay": "{{day}} - Day number (1-7)",
+        "messagePreview": "Message Preview",
+        "bothLanguagesRequired": "Both French and English messages are required",
+        "invalidDayNumber": "Day number must be between 1 and 7",
+        "customMessagesInfo": "Customize messages for each day of the campaign. If you don't define custom messages, default messages will be used."
+      }
     }
   },
   "messages": {

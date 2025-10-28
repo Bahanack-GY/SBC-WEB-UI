@@ -262,7 +262,6 @@ function Wallet() {
   // Calculate withdrawal fee and total deduction in real-time
   useEffect(() => {
     const amount = Number(withdrawAmount) || 0;
-    console.log('Fee calculation triggered with withdrawAmount:', withdrawAmount, 'parsed as:', amount);
     let fee = 0;
     let total = 0;
     
@@ -362,11 +361,9 @@ function Wallet() {
         if (userCountryCode && momoCorrespondents[userCountryCode] && momoCorrespondents[userCountryCode].currencies.length > 0) {
           currency = momoCorrespondents[userCountryCode].currencies[0];
         } else {
-          console.warn(`Could not determine specific currency for country: ${userCountryName} (code: ${userCountryCode}). Defaulting to XAF.`);
         }
 
         // NEW UNIFIED WITHDRAWAL SYSTEM
-        console.log(`Initiating ${selectedBalanceType} withdrawal:`, Number(withdrawAmount));
         
         // For USD withdrawals, check if crypto wallet is set up
         if (selectedBalanceType === 'USD') {
@@ -394,7 +391,6 @@ function Wallet() {
               return;
             }
           } catch (err) {
-            console.warn('Could not check crypto limits, proceeding with withdrawal');
           }
         }
         
@@ -404,17 +400,12 @@ function Wallet() {
           throw new Error('Montant invalide: doit être supérieur à 0');
         }
         
-        console.log('Using new unified withdrawal endpoint');
         const response = await sbcApiService.initiateUnifiedWithdrawal(
           withdrawalAmount, 
           selectedBalanceType === 'FCFA' ? 'mobile_money' : 'crypto'
         );
         const data = handleApiResponse(response); // This assumes handleApiResponse throws on !success
 
-        console.log("data", data);
-        console.log("response", response);
-        console.log("data.message:", data?.message);
-        console.log("response.isOverallSuccess:", response.isOverallSuccess);
 
         if (data && response.isOverallSuccess) {
           // Handle crypto withdrawals with same flow as mobile money
@@ -602,7 +593,6 @@ function Wallet() {
         }
 
       } catch (err) {
-        console.error('Withdrawal initiation error:', err);
         let errorMessage = 'Échec de l\'initiation du retrait.';
         if (err instanceof Error) {
           errorMessage = err.message;
@@ -671,7 +661,6 @@ function Wallet() {
         setShowModal(true);
       }
     } catch (err) {
-      console.error('Transaction cancellation error:', err);
       let errorMessage = 'Erreur lors de l\'annulation de la transaction.';
       if (err instanceof Error) {
         errorMessage = err.message;
@@ -754,7 +743,6 @@ function Wallet() {
           setAllTransactionsHasMore(fetchedTxs.length === 20); // Still assume limit is 20
         }
       } catch (err) {
-        console.error("Failed to fetch all transactions:", err);
         setAllTransactionsHasMore(false); // Stop trying to load more on error
       } finally {
         setAllTransactionsLoadingMore(false);
@@ -1025,7 +1013,6 @@ function Wallet() {
                     min="1"
                     value={withdrawAmount}
                     onChange={e => {
-                      console.log('Input value changed to:', e.target.value);
                       setWithdrawAmount(e.target.value);
                     }}
                     className={`w-full rounded-lg border px-3 py-2 text-gray-900 text-center font-bold ${

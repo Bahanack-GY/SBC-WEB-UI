@@ -73,7 +73,6 @@ const PartnerSpace = () => {
         setIsPartner(true);
         return result as PartnerDetails;
       } catch (error) {
-        console.error('Partner details error:', error);
         setIsPartner(false);
         throw error;
       }
@@ -96,14 +95,10 @@ const PartnerSpace = () => {
         const response = await sbcApiService.getPartnerTransactions();
         // Don't use handleApiResponse here since we need the full response structure
         if (response.isOverallSuccess && response.body) {
-          console.log('Partner transactions response:', response.body);
-          console.log('Transactions data:', response.body.data);
-          console.log('Pagination:', response.body.pagination);
           return response.body; // Return the full response body with data and pagination
         }
         throw new Error('Failed to fetch partner transactions');
       } catch (error) {
-        console.error('Partner transactions error:', error);
         throw error;
       }
     },
@@ -214,7 +209,6 @@ const PartnerSpace = () => {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch all transactions:", err);
         setAllTransactionsHasMore(false);
       } finally {
         setAllTransactionsLoadingMore(false);

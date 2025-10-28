@@ -65,7 +65,6 @@ function MesFilleuls() {
 
   // Debug logging
   useEffect(() => {
-    console.log('MesFilleuls - Auth state:', { user: !!user, authLoading });
   }, [user, authLoading]);
 
   // Filter states for input and debounced values
@@ -98,11 +97,8 @@ function MesFilleuls() {
   const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
     queryKey: queryKeys.stats,
     queryFn: async () => {
-      console.log('Fetching referral stats...');
       const statsResponse = await sbcApiService.getReferralStats();
-      console.log('Stats response:', statsResponse);
       const statsResult = handleApiResponse(statsResponse);
-      console.log('Processed stats result:', statsResult);
       return {
         direct: statsResult.level1Count || 0,
         indirect: (statsResult.level2Count || 0) + (statsResult.level3Count || 0),

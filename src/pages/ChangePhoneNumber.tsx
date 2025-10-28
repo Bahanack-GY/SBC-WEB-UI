@@ -63,7 +63,6 @@ function ChangePhoneNumber() {
       setShowModal(true);
       setStep('verify');
     } catch (error) {
-      console.error('Error requesting phone change OTP:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'envoi du code OTP';
       setError(errorMessage);
     } finally {
@@ -98,7 +97,6 @@ function ChangePhoneNumber() {
         navigate('/profile');
       }, 2000);
     } catch (error) {
-      console.error('Error confirming phone change:', error);
       const errorMessage = error instanceof Error ? error.message : 'Code OTP invalide ou numéro déjà utilisé';
       setError(errorMessage);
     } finally {
@@ -121,7 +119,6 @@ function ChangePhoneNumber() {
       });
       setShowModal(true);
     } catch (error) {
-      console.error('Error resending OTP:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors du renvoi du code';
       setError(errorMessage);
     } finally {

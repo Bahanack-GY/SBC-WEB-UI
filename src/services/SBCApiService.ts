@@ -1055,7 +1055,6 @@ export class SBCApiService extends ApiService {
    * Legacy method for compatibility - deprecated
    */
   async convertCurrency(amount: number, fromCurrency: string, toCurrency: string): Promise<ApiResponse> {
-    console.warn('convertCurrency is deprecated. Use convertUserBalance instead.');
     const fromCurr = fromCurrency === 'XAF' ? 'FCFA' : 'USD';
     const toCurr = toCurrency === 'XAF' ? 'FCFA' : 'USD';
     return await this.convertUserBalance(amount, fromCurr as 'FCFA' | 'USD', toCurr as 'FCFA' | 'USD');
@@ -1265,15 +1264,8 @@ export class SBCApiService extends ApiService {
    * @returns Parsed conflict error information
    */
   parseConflictError(errorResponse: ApiResponse): { errorType: string; conflictType: string; canProceedWithRegistration: boolean; message: string } | null {
-    console.log('parseConflictError: Checking response:', {
-      statusCode: errorResponse.statusCode,
-      body: errorResponse.body,
-      hasBody: !!errorResponse.body
-    });
-
     if (errorResponse.statusCode === 409 && errorResponse.body) {
       const errorData = errorResponse.body;
-      console.log('parseConflictError: Error data:', errorData);
 
       // Handle the specific error structure mentioned in the task
       if (errorData.errorType === 'USER_ALREADY_EXISTS') {
@@ -1283,13 +1275,8 @@ export class SBCApiService extends ApiService {
           canProceedWithRegistration: errorData.canProceedWithRegistration ?? false,
           message: this.getConflictErrorMessage(errorData.conflictType || 'UNKNOWN')
         };
-        console.log('parseConflictError: Returning conflict data:', result);
         return result;
-      } else {
-        console.log('parseConflictError: No USER_ALREADY_EXISTS errorType found');
       }
-    } else {
-      console.log('parseConflictError: Not a 409 error or no body');
     }
     return null;
   }
@@ -1389,6 +1376,17 @@ export class SBCApiService extends ApiService {
       registrationDateTo?: string;
       excludeCurrentTargets?: boolean;
     };
+    customMessages?: Array<{
+      dayNumber: number;
+      messageTemplate: {
+        fr: string;
+        en: string;
+      };
+      mediaUrls?: Array<{
+        url: string;
+        type: 'image' | 'video' | 'pdf';
+      }>;
+    }>;
     maxMessagesPerDay?: number;
     scheduledStartDate?: string | null;
     runAfterCampaignId?: string;

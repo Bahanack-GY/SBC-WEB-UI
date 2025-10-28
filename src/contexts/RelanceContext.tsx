@@ -19,7 +19,6 @@ export const RelanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       const hasSub = response?.body?.data?.hasSubscription || false;
       setHasRelanceSubscription(hasSub);
     } catch (error) {
-      console.error('Error checking Relance subscription:', error);
       setHasRelanceSubscription(false);
     } finally {
       setIsLoading(false);

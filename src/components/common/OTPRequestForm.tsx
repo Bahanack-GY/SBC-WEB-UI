@@ -51,7 +51,6 @@ function OTPRequestForm({
       const channelText = channelOverride || 'votre méthode préférée';
       onSuccess(`Code OTP envoyé via ${channelText}!`);
     } catch (error) {
-      console.error('Error requesting OTP:', error);
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'envoi du code OTP';
       onError(errorMessage);
     } finally {

@@ -232,7 +232,6 @@ function ModifierLeProfil() {
           await refreshUser(); // Refresh user context
         }
       } catch (error) {
-        console.error('Avatar upload failed', error);
         const errorMessage = error instanceof Error ? error.message : "Erreur lors de l'envoi de l'avatar.";
         setFeedback({ type: 'error', message: errorMessage });
       } finally {
@@ -274,7 +273,6 @@ function ModifierLeProfil() {
             cryptoWalletCurrency: formData.cryptoWalletCurrency
           });
         } catch (cryptoError) {
-          console.warn('Crypto wallet update failed:', cryptoError);
           // Don't fail the entire update if crypto wallet update fails
         }
       }
@@ -282,7 +280,6 @@ function ModifierLeProfil() {
       await refreshUser(); // Refresh user in context
       setFeedback({ type: 'success', message: 'Profil sauvegardé avec succès!' });
     } catch (error) {
-      console.error('Profile update failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'La sauvegarde a échoué.';
       setFeedback({ type: 'error', message: errorMessage });
     } finally {

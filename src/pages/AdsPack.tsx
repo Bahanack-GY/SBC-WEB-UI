@@ -37,19 +37,15 @@ function AdsPack() {
     const checkRelanceSubscription = async () => {
         try {
             const response = await sbcApiService.checkSubscription('RELANCE');
-            console.log('Raw API response:', response);
 
             // Handle the response directly without handleApiResponse wrapper
             if (response.isSuccessByStatusCode && response.body?.data) {
                 const hasSub = response.body.data.hasSubscription || false;
-                console.log('Has Relance subscription:', hasSub);
                 setHasRelanceSub(hasSub);
             } else {
-                console.log('No subscription data found');
                 setHasRelanceSub(false);
             }
         } catch (error) {
-            console.error('Error checking Relance subscription:', error);
             setHasRelanceSub(false);
         } finally {
             setCheckingSubscription(false);

@@ -82,7 +82,6 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
       const preview = calculateConversionPreview(Number(amount), fromCurrency, toCurrency);
       setConvertedAmount(preview.convertedAmount);
     } catch (err) {
-      console.error('Conversion preview error:', err);
       const conversionError = parseBalanceConversionError(err);
       setError(conversionError.message);
     } finally {
@@ -153,7 +152,6 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
         });
       }
     } catch (err) {
-      console.error('Conversion error:', err);
       const conversionError = parseBalanceConversionError(err);
       setError(conversionError.message);
       

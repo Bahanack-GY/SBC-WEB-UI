@@ -62,7 +62,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         try {
           await refreshUser();
         } catch (error) {
-          console.error('Failed to load user:', error);
           removeToken();
         }
       }
@@ -74,12 +73,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const login = async (identifier: string, password: string): Promise<{ requiresOtp: boolean; userId?: string; email?: string; hasNegativeBalance?: boolean; recoveryMessage?: string }> => {
     try {
-      console.log('AuthContext: Starting login for', identifier);
       const response = await sbcApiService.loginUser(identifier, password);
-      console.log('AuthContext: Raw login response:', response);
 
       const data = handleApiResponse(response);
-      console.log('AuthContext: Processed login data:', data);
 
       // Check if the response indicates OTP verification is required
       // This handles various possible response formats from the API
@@ -87,7 +83,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         (!data.token && (data.userId || data.id)) ||
         data.status === 'pending_verification';
 
-      console.log('AuthContext: Needs OTP verification?', needsOtp);
 
       if (needsOtp) {
         // OTP verification required - don't set token or user yet
@@ -102,12 +97,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           userId: userId,
           email: userEmail
         };
-        console.log('AuthContext: Returning OTP required result:', result);
         return result;
       }
 
       // Direct login success (no OTP required)
-      console.log('AuthContext: Direct login success, setting token and user');
       if (data.token) {
         setToken(data.token);
       }
@@ -118,7 +111,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         // Check for negative balance and recovery options
         if (data.user.balance && data.user.balance < 0) {
           try {
-            console.log('AuthContext: Checking recovery for negative balance user');
             const recoveryResponse = await sbcApiService.checkRecoveryLogin(identifier);
             
             if (recoveryResponse) {
@@ -144,7 +136,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
               recoveryMessage: genericMessage 
             };
           } catch (recoveryError) {
-            console.warn('AuthContext: Recovery check failed (endpoints may not be available):', recoveryError);
             
             // Fallback message when recovery endpoints are not available
             const fallbackMessage = `Votre compte a un solde négatif. Si vous avez des filleuls qui ont effectué des paiements récemment, demandez-leur de s'inscrire avec le même email ou numéro de téléphone qu'ils ont utilisé précédemment pour restaurer leurs comptes.`;
@@ -162,7 +153,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       return { requiresOtp: false };
     } catch (error) {
-      console.error('AuthContext: Login error:', error);
       throw error;
     }
   };
@@ -188,7 +178,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Call logout API
       await sbcApiService.logoutUser();
     } catch (error) {
-      console.error('Logout API call failed:', error);
       // Continue with local logout even if API call fails
     } finally {
       // Always clear local state
@@ -196,7 +185,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null);
 
       // Clear sessionStorage to reset modal display logic for next login
-      console.log('AuthContext: Clearing sessionStorage on logout');
       sessionStorage.clear();
     }
   };
@@ -265,7 +253,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Invalidate specific caches used by Home.tsx after user data is refreshed
       invalidateApiCache(['transaction-stats', 'referral-stats', 'current-subscription', 'formations']);
     } catch (error: any) {
-      console.error('Failed to refresh user:', error);
       // If unauthorized, log out and set session expired flag
       if (error?.status === 401 || (error?.message && error.message.toLowerCase().includes('unauthorized'))) {
         await logout();

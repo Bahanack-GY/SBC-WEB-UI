@@ -59,7 +59,6 @@ function Abonnement() {
                 // The API returns { subscriptions: [...] }, so we extract the array
                 return result?.subscriptions || [];
             } catch (err) {
-                console.warn('Current subscription endpoint failed:', err);
                 return [];
             }
         },
@@ -80,21 +79,9 @@ function Abonnement() {
 
     // Check for negative balance and show notification
     useEffect(() => {
-        console.log('🔍 Abonnement: Checking for negative balance modal trigger', {
-            balance,
-            userId: user?.id,
-            userBalance: user?.balance
-        });
-
         if (balance < 0) {
-            console.log('✅ Abonnement: Negative balance detected, showing modal immediately');
-
             // Show modal every time user logs in or signs up (no restrictions)
             setShowNegativeBalanceModal(true);
-
-            console.log('🎯 Abonnement: Negative balance notification modal displayed');
-        } else {
-            console.log('❌ Abonnement: Balance is not negative', { balance });
         }
     }, [balance, user?.id, user?.balance]);
 

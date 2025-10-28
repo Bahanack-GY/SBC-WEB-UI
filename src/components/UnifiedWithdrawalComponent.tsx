@@ -220,17 +220,11 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
       );
       
       const data = handleApiResponse(response);
-      
-      console.log('🔥 WITHDRAWAL DEBUG - Response data:', data);
-      console.log('🔥 WITHDRAWAL DEBUG - Selected type:', selectedType);
-      console.log('🔥 WITHDRAWAL DEBUG - Response status:', data?.status);
-      console.log('🔥 WITHDRAWAL DEBUG - Transaction ID:', data?.transactionId);
-      
+
       if (data && data.transactionId) {
         // Check if OTP verification is required
         if (data.status === 'pending_otp_verification') {
           const withdrawalType = availableWithdrawalTypes.find(t => t.id === selectedType)!;
-          console.log('🚀 NAVIGATING TO OTP - Currency:', withdrawalType.currency);
           navigate('/otp', {
             state: {
               withdrawalId: data.transactionId,
@@ -242,7 +236,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           onClose();
         } else {
           // Handle other statuses - might be auto-processed
-          console.log(`❌ NOT NAVIGATING - Status: ${data.status}`);
           onClose();
           // Could show a success message or handle differently based on status
         }
@@ -264,7 +257,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         await sbcApiService.cancelWithdrawal(transactionId);
         setSuccess('Withdrawal cancelled successfully');
       } catch (err) {
-        console.error('Failed to cancel withdrawal:', err);
+        // Handle error silently
       }
     }
     onClose();

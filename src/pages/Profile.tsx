@@ -84,7 +84,6 @@ function Profile() {
         const statsResult = handleApiResponse(statsResponse);
         setReferralStats(statsResult);
       } catch (error) {
-        console.error('Error fetching referral stats:', error);
       }
 
       try {
@@ -93,7 +92,6 @@ function Profile() {
         const affiliatorResult = handleApiResponse(affiliatorResponse);
         setAffiliator(affiliatorResult);
       } catch (error) {
-        console.warn('Error fetching affiliator info (might not have one):', error);
         setAffiliator(null);
       } finally {
         setAffiliatorLoading(false);
@@ -105,7 +103,6 @@ function Profile() {
         const hasSub = response?.body?.data?.hasSubscription || false;
         setHasRelanceSubscription(hasSub);
       } catch (error) {
-        console.error('Error checking Relance subscription:', error);
         setHasRelanceSubscription(false);
       }
     };
@@ -143,7 +140,6 @@ function Profile() {
           await logout();
           navigate('/connexion');
         } catch (error) {
-          console.error('Logout failed:', error);
           setModalContent({ type: 'error', message: 'Échec de la déconnexion.' });
           setShowModal(true);
         } finally {
@@ -225,7 +221,6 @@ function Profile() {
       await refreshUser(); // Refresh user context to reflect the new referral code
       setTimeout(() => setShowChangeReferralCodeModal(false), 1500); // Close modal after success
     } catch (error) {
-      console.error('Failed to change referral code:', error);
       const errorMessage = error instanceof Error ? error.message : "Échec de la mise à jour du code de parrainage.";
       setChangeCodeFeedback({ type: 'error', message: errorMessage });
     } finally {

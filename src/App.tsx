@@ -61,7 +61,6 @@ function AppContent() {
         const response = await sbcApiService.getCurrentSubscription();
         return handleApiResponse(response);
       } catch (err) {
-        console.warn('Subscription endpoint failed:', err);
         return null;
       }
     },
@@ -79,9 +78,6 @@ function AppContent() {
     (subscriptionData && subscriptionData.status === 'active') ||
     (typeof subscriptionData?.totalCount === 'number' && subscriptionData.totalCount > 0)
   );
-  console.log("subscriptionData", subscriptionData);
-  console.log("subscriptionData.status", subscriptionData?.totalCount);
-  console.log("isSubscribed", isSubscribed);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

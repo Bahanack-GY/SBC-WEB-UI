@@ -64,7 +64,6 @@ function ResetPassword() {
             }, 3000);
             
         } catch (error) {
-            console.error('Password reset error:', error);
             const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue lors de la réinitialisation de votre mot de passe.";
             setModalContent({
                 type: 'error',
