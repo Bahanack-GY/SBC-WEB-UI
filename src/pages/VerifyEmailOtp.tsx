@@ -92,6 +92,9 @@ function VerifyEmailOtp() {
           <div className="text-center text-sm text-gray-500 mb-2">
             Un code de vérification a été envoyé à votre nouvel email.
           </div>
+          <div className="text-center text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+            Si vous ne trouvez pas l'email, vérifiez votre dossier spam ou courrier indésirable.
+          </div>
           {error && (
             <div className="text-center text-red-500 text-sm mb-2">{error}</div>
           )}

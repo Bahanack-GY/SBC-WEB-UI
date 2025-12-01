@@ -170,6 +170,11 @@ function ForgotPassword() {
                         <p className="text-sm text-gray-700 text-center mb-4">
                             {modalContent.message}
                         </p>
+                        {modalContent.type === 'success' && (
+                            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center mb-4">
+                                Si vous ne trouvez pas l'email, vérifiez votre dossier spam ou courrier indésirable.
+                            </p>
+                        )}
                         <button
                             type="button"
                             className={`w-full ${modalContent.type === 'success'

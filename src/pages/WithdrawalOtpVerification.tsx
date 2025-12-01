@@ -188,6 +188,9 @@ const WithdrawalOtpVerification: React.FC = () => {
               <p className="text-sm text-gray-600">
                 We've sent a verification code to your registered email and phone number.
               </p>
+              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+                If you can't find the email, please check your spam or junk folder.
+              </p>
             </div>
 
             <div className="space-y-4">
