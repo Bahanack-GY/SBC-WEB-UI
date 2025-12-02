@@ -135,14 +135,52 @@ function ModifierLeProfil() {
         // New: Parse existing phone number to set selectedPhoneCountryCode and local phoneNumber
         let localPhoneNumber = user.phoneNumber || '';
         let matchedCode = africanCountryCodes[0]; // Default to the first code if no match
-        for (const c of africanCountryCodes) {
-          if (user.phoneNumber && user.phoneNumber.startsWith(c.code.replace('+', ''))) {
-            matchedCode = c;
-            localPhoneNumber = user.phoneNumber.substring(c.code.replace('+', '').length);
-            break;
+
+        if (user.phoneNumber) {
+          // Normalize phone number - remove spaces, dashes, and handle + prefix
+          let normalizedPhone = user.phoneNumber.replace(/[\s\-()]/g, '');
+
+          // Sort country codes by length (longest first) to match correctly (e.g., +233 before +23)
+          const sortedCodes = [...africanCountryCodes].sort((a, b) => b.code.length - a.code.length);
+
+          for (const c of sortedCodes) {
+            const codeWithPlus = c.code; // e.g., "+237"
+            const codeWithoutPlus = c.code.replace('+', ''); // e.g., "237"
+
+            // Check if phone starts with +237 or 237
+            if (normalizedPhone.startsWith(codeWithPlus)) {
+              matchedCode = c;
+              localPhoneNumber = normalizedPhone.substring(codeWithPlus.length);
+              break;
+            } else if (normalizedPhone.startsWith(codeWithoutPlus)) {
+              matchedCode = c;
+              localPhoneNumber = normalizedPhone.substring(codeWithoutPlus.length);
+              break;
+            }
           }
         }
         setSelectedPhoneCountryCode(matchedCode); // Update the separate state for country code
+
+        // Parse MoMo number to strip country code (based on selected country)
+        let localMomoNumber = user.momoNumber || '';
+        if (user.momoNumber) {
+          // Get the phone code for the user's country
+          const userCountryData = countryOptions.find((c: { value: string; code: string; }) => c.code === user.country || c.value === countryName);
+          const countryPhoneCode = userCountryData?.phoneCode || '';
+
+          if (countryPhoneCode) {
+            let normalizedMomo = user.momoNumber.replace(/[\s\-()]/g, '');
+            const codeWithPlus = countryPhoneCode; // e.g., "+237"
+            const codeWithoutPlus = countryPhoneCode.replace('+', ''); // e.g., "237"
+
+            // Strip country code from MoMo number
+            if (normalizedMomo.startsWith(codeWithPlus)) {
+              localMomoNumber = normalizedMomo.substring(codeWithPlus.length);
+            } else if (normalizedMomo.startsWith(codeWithoutPlus)) {
+              localMomoNumber = normalizedMomo.substring(codeWithoutPlus.length);
+            }
+          }
+        }
 
         return {
           ...prev, // Keep other previous state values
@@ -155,7 +193,7 @@ function ModifierLeProfil() {
           avatar: user.avatar ? user.avatar : user.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360',
           birthDate: birthDate,
           sex: user.sex || '',
-          momoNumber: user.momoNumber || '',
+          momoNumber: localMomoNumber, // Set the local part of the MoMo number (without country code)
           momoOperator: momoOperatorToSet,
           cryptoWalletAddress: user.cryptoWalletAddress || '',
           cryptoWalletCurrency: user.cryptoWalletCurrency || '',
@@ -247,6 +285,13 @@ function ModifierLeProfil() {
     try {
       const countryCode = countryOptions.find(c => c.value === formData.country)?.code || formData.country;
       const fullPhoneNumber = `${selectedPhoneCountryCode.code.replace('+', '')}${formData.phoneNumber}`; // Reconstruct full phone number
+
+      // Reconstruct full MoMo number with country code
+      const countryPhoneCode = countryOptions.find(c => c.value === formData.country)?.phoneCode || '';
+      const fullMomoNumber = formData.momoNumber
+        ? `${countryPhoneCode.replace('+', '')}${formData.momoNumber}`
+        : '';
+
       const updates = {
         name: formData.name,
         phoneNumber: fullPhoneNumber, // Use the reconstructed full phone number
@@ -256,7 +301,7 @@ function ModifierLeProfil() {
         interests: formData.interests.map(i => removeAccents(i)),
         birthDate: formData.birthDate,
         sex: formData.sex,
-        momoNumber: formData.momoNumber,
+        momoNumber: fullMomoNumber, // Use the reconstructed full MoMo number with country code
         momoOperator: formData.momoOperator,
         referralCode: formData.referralCode,
         notificationPreference: formData.notificationPreference,
