@@ -278,30 +278,57 @@ function ModifierLeProfil() {
     }
   };
 
+  // Helper function to normalize phone number before submission
+  const normalizePhoneNumber = (phoneNumber: string, countryCodeWithPlus: string): string => {
+    if (!phoneNumber) return '';
+
+    // Remove spaces, dashes, parentheses
+    let normalized = phoneNumber.replace(/[\s\-()]/g, '');
+    const codeWithPlus = countryCodeWithPlus; // e.g., "+237"
+    const codeWithoutPlus = countryCodeWithPlus.replace('+', ''); // e.g., "237"
+
+    // Check if the number already starts with the country code (with or without +)
+    if (normalized.startsWith(codeWithPlus)) {
+      // Already has +237, remove the + and return
+      return normalized.substring(1);
+    } else if (normalized.startsWith(codeWithoutPlus)) {
+      // Already has 237, return as is
+      return normalized;
+    } else if (normalized.startsWith('+')) {
+      // Starts with a different country code, remove the + and return
+      return normalized.substring(1);
+    } else {
+      // No country code, prepend the code without +
+      return `${codeWithoutPlus}${normalized}`;
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setFeedback(null);
     try {
       const countryCode = countryOptions.find(c => c.value === formData.country)?.code || formData.country;
-      const fullPhoneNumber = `${selectedPhoneCountryCode.code.replace('+', '')}${formData.phoneNumber}`; // Reconstruct full phone number
 
-      // Reconstruct full MoMo number with country code
+      // Normalize phone number - check if country code is already present
+      const fullPhoneNumber = normalizePhoneNumber(formData.phoneNumber, selectedPhoneCountryCode.code);
+
+      // Normalize MoMo number - check if country code is already present
       const countryPhoneCode = countryOptions.find(c => c.value === formData.country)?.phoneCode || '';
       const fullMomoNumber = formData.momoNumber
-        ? `${countryPhoneCode.replace('+', '')}${formData.momoNumber}`
+        ? normalizePhoneNumber(formData.momoNumber, countryPhoneCode)
         : '';
 
       const updates = {
         name: formData.name,
-        phoneNumber: fullPhoneNumber, // Use the reconstructed full phone number
+        phoneNumber: fullPhoneNumber, // Use the normalized phone number
         city: formData.city,
         country: countryCode,
         profession: formData.profession ? removeAccents(formData.profession) : '',
         interests: formData.interests.map(i => removeAccents(i)),
         birthDate: formData.birthDate,
         sex: formData.sex,
-        momoNumber: fullMomoNumber, // Use the reconstructed full MoMo number with country code
+        momoNumber: fullMomoNumber, // Use the normalized MoMo number
         momoOperator: formData.momoOperator,
         referralCode: formData.referralCode,
         notificationPreference: formData.notificationPreference,
