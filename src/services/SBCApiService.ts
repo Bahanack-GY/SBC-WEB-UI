@@ -1509,6 +1509,376 @@ export class SBCApiService extends ApiService {
   async relanceGetTargets(): Promise<ApiResponse> {
     return await this.get('/relance/targets');
   }
+
+  // ==================== ACTIVATION BALANCE ====================
+
+  /**
+   * Get activation balance summary
+   * Returns: activationBalance, totalSponsored, sponsoredCount
+   */
+  async getActivationBalance(): Promise<ApiResponse> {
+    return await this.get('/activation-balance');
+  }
+
+  /**
+   * Get activation pricing information
+   * Returns: pricing (CLASSIQUE, CIBLE, UPGRADE), minimumTransfers
+   */
+  async getActivationPricing(): Promise<ApiResponse> {
+    return await this.get('/activation-balance/pricing');
+  }
+
+  /**
+   * Transfer from main balance to activation balance
+   */
+  async transferToActivationBalance(amount: number): Promise<ApiResponse> {
+    return await this.post('/activation-balance/transfer', {
+      body: { amount }
+    });
+  }
+
+  /**
+   * P2P transfer of activation balance to another user
+   */
+  async transferActivationBalanceToUser(recipientId: string, amount: number): Promise<ApiResponse> {
+    return await this.post('/activation-balance/transfer-to-user', {
+      body: { recipientId, amount }
+    });
+  }
+
+  /**
+   * Get referrals available for activation/sponsorship
+   * @param filter - "all" | "activatable" | "upgradable"
+   * @param page - Page number (default 1)
+   * @param limit - Items per page (default 20)
+   */
+  async getActivationReferrals(filter: 'all' | 'activatable' | 'upgradable' = 'all', page: number = 1, limit: number = 20): Promise<ApiResponse> {
+    return await this.get(`/activation-balance/referrals?filter=${filter}&page=${page}&limit=${limit}`);
+  }
+
+  /**
+   * Sponsor a referral's activation
+   * @param beneficiaryId - The user ID to sponsor
+   * @param subscriptionType - "CLASSIQUE" | "CIBLE" | "UPGRADE"
+   */
+  async sponsorReferralActivation(beneficiaryId: string, subscriptionType: 'CLASSIQUE' | 'CIBLE' | 'UPGRADE'): Promise<ApiResponse> {
+    return await this.post('/activation-balance/sponsor', {
+      body: { beneficiaryId, subscriptionType }
+    });
+  }
+
+  /**
+   * Get sponsored activation history (sponsorship records only - who you sponsored)
+   * @param page - Page number (default 1)
+   * @param limit - Items per page (default 20)
+   */
+  async getSponsoredHistory(page: number = 1, limit: number = 20): Promise<ApiResponse> {
+    return await this.get(`/activation-balance/history?page=${page}&limit=${limit}`);
+  }
+
+  /**
+   * Get all activation balance transactions (transfers in/out, sponsorships)
+   * This gives a complete view of all transactions affecting activation balance
+   * @param page - Page number (default 1)
+   * @param limit - Items per page (default 20)
+   */
+  async getActivationTransactionHistory(page: number = 1, limit: number = 20): Promise<ApiResponse> {
+    return await this.get(`/transactions/activation-history?page=${page}&limit=${limit}`);
+  }
+
+  // ==================== CHAT & MESSAGING ====================
+
+  /**
+   * Get user's conversations
+   */
+  async getConversations(page: number = 1, limit: number = 20): Promise<ApiResponse> {
+    return await this.get(`/chat/conversations?page=${page}&limit=${limit}`);
+  }
+
+  /**
+   * Get user's archived conversations
+   */
+  async getArchivedConversations(page: number = 1, limit: number = 20): Promise<ApiResponse> {
+    return await this.get(`/chat/conversations/archived?page=${page}&limit=${limit}`);
+  }
+
+  /**
+   * Get or create a conversation with another user
+   */
+  async getOrCreateConversation(participantId: string): Promise<ApiResponse> {
+    return await this.post('/chat/conversations', {
+      body: { participantId }
+    });
+  }
+
+  /**
+   * Get a single conversation by ID
+   */
+  async getConversation(conversationId: string): Promise<ApiResponse> {
+    return await this.get(`/chat/conversations/${conversationId}`);
+  }
+
+  /**
+   * Archive a conversation (hides it but preserves data)
+   */
+  async archiveConversation(conversationId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/conversations/${conversationId}/archive`);
+  }
+
+  /**
+   * Unarchive a conversation (restores it to chat list)
+   */
+  async unarchiveConversation(conversationId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/conversations/${conversationId}/unarchive`);
+  }
+
+  /**
+   * Delete a conversation (DEPRECATED - use archiveConversation instead)
+   * @deprecated Use archiveConversation() instead
+   */
+  async deleteConversation(conversationId: string): Promise<ApiResponse> {
+    return await this.delete(`/chat/conversations/${conversationId}`);
+  }
+
+  /**
+   * Bulk delete conversations (DEPRECATED - use bulkArchiveConversations instead)
+   * @deprecated Use bulkArchiveConversations() instead
+   */
+  async bulkDeleteConversations(conversationIds: string[]): Promise<ApiResponse> {
+    return await this.post('/chat/conversations/bulk-delete', {
+      body: { conversationIds }
+    });
+  }
+
+  /**
+   * Bulk archive conversations
+   */
+  async bulkArchiveConversations(conversationIds: string[]): Promise<ApiResponse> {
+    return await this.post('/chat/conversations/bulk-archive', {
+      body: { conversationIds }
+    });
+  }
+
+  /**
+   * Mark conversation as read
+   */
+  async markConversationAsRead(conversationId: string): Promise<ApiResponse> {
+    return await this.patch(`/chat/conversations/${conversationId}/read`);
+  }
+
+  /**
+   * Get messages in a conversation
+   */
+  async getMessages(conversationId: string, page: number = 1, limit: number = 50): Promise<ApiResponse> {
+    return await this.get(`/chat/conversations/${conversationId}/messages?page=${page}&limit=${limit}`);
+  }
+
+  /**
+   * Send a text message
+   */
+  async sendMessage(conversationId: string, content: string, replyToId?: string): Promise<ApiResponse> {
+    return await this.post('/chat/messages', {
+      body: { conversationId, content, type: 'text', replyToId }
+    });
+  }
+
+  /**
+   * Send a document
+   */
+  async sendDocument(conversationId: string, file: File, caption?: string): Promise<ApiResponse> {
+    const fields: Record<string, string> = {
+      conversationId
+    };
+
+    if (caption) {
+      fields.content = caption;
+    }
+
+    return await this.uploadFiles({
+      endpoint: '/chat/messages/document',
+      files: [file],
+      fieldName: 'document',
+      fields,
+      httpMethod: 'POST'
+    });
+  }
+
+  /**
+   * Refresh document signed URL (for expired URLs)
+   */
+  async refreshDocumentUrl(messageId: string): Promise<ApiResponse> {
+    return await this.get(`/chat/messages/${messageId}/document-url`);
+  }
+
+  /**
+   * Delete a message
+   */
+  async deleteMessage(messageId: string): Promise<ApiResponse> {
+    return await this.delete(`/chat/messages/${messageId}`);
+  }
+
+  /**
+   * Bulk delete messages
+   */
+  async bulkDeleteMessages(messageIds: string[]): Promise<ApiResponse> {
+    return await this.post('/chat/messages/bulk-delete', {
+      body: { messageIds }
+    });
+  }
+
+  /**
+   * Forward messages to conversations
+   */
+  async forwardMessages(messageIds: string[], targetConversationIds: string[]): Promise<ApiResponse> {
+    return await this.post('/chat/messages/forward', {
+      body: { messageIds, targetConversationIds }
+    });
+  }
+
+  /**
+   * Accept a conversation (removes message limit)
+   */
+  async acceptConversation(conversationId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/conversations/${conversationId}/accept`);
+  }
+
+  /**
+   * Report a conversation (blocks further messages)
+   */
+  async reportConversation(conversationId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/conversations/${conversationId}/report`);
+  }
+
+  /**
+   * Search users for starting a chat
+   */
+  async searchUsers(query: {
+    search?: string;
+    status?: 'active' | 'blocked' | 'deleted';
+    country?: string;
+    profession?: string;
+    interests?: string;
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse> {
+    const params = new URLSearchParams();
+    Object.entries(query).forEach(([key, value]) => {
+      if (value !== undefined) {
+        params.append(key, value.toString());
+      }
+    });
+    return await this.get(`/users/admin/users?${params.toString()}`);
+  }
+
+  // ==================== STATUS / STORIES ====================
+
+  /**
+   * Get status feed
+   */
+  async getStatuses(page: number = 1, limit: number = 20, category?: string): Promise<ApiResponse> {
+    const params = new URLSearchParams({ page: page.toString(), limit: limit.toString() });
+    if (category) {
+      params.append('category', category);
+    }
+    return await this.get(`/chat/statuses?${params.toString()}`);
+  }
+
+  /**
+   * Get a single status
+   */
+  async getStatus(statusId: string): Promise<ApiResponse> {
+    return await this.get(`/chat/statuses/${statusId}`);
+  }
+
+  /**
+   * Create a new status
+   */
+  async createStatus(data: {
+    category: string;
+    contentType: 'text' | 'image' | 'video' | 'flyer';
+    content?: string;
+    media?: File;
+    duration?: number;
+  }): Promise<ApiResponse> {
+    const fields: Record<string, string> = {
+      category: data.category,
+      contentType: data.contentType
+    };
+
+    if (data.content) {
+      fields.content = data.content;
+    }
+
+    if (data.duration) {
+      fields.duration = data.duration.toString();
+    }
+
+    if (data.media) {
+      return await this.uploadFiles({
+        endpoint: '/chat/statuses',
+        files: [data.media],
+        fieldName: 'media',
+        fields,
+        httpMethod: 'POST'
+      });
+    } else {
+      // Text-only status, no file upload needed
+      return await this.post('/chat/statuses', {
+        body: fields
+      });
+    }
+  }
+
+  /**
+   * Delete own status
+   */
+  async deleteStatus(statusId: string): Promise<ApiResponse> {
+    return await this.delete(`/chat/statuses/${statusId}`);
+  }
+
+  /**
+   * Like a status
+   */
+  async likeStatus(statusId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/statuses/${statusId}/like`);
+  }
+
+  /**
+   * Unlike a status
+   */
+  async unlikeStatus(statusId: string): Promise<ApiResponse> {
+    return await this.delete(`/chat/statuses/${statusId}/like`);
+  }
+
+  /**
+   * Repost a status
+   */
+  async repostStatus(statusId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/statuses/${statusId}/repost`);
+  }
+
+  /**
+   * Record a view on a status
+   */
+  async viewStatus(statusId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/statuses/${statusId}/view`);
+  }
+
+  /**
+   * Get status interactions (likes, reposts, views)
+   */
+  async getStatusInteractions(statusId: string, type: 'like' | 'repost' | 'view'): Promise<ApiResponse> {
+    return await this.get(`/chat/statuses/${statusId}/interactions?type=${type}`);
+  }
+
+  /**
+   * Reply to a status (opens a chat with the author)
+   */
+  async replyToStatus(statusId: string, content: string): Promise<ApiResponse> {
+    return await this.post(`/chat/statuses/${statusId}/reply`, {
+      body: { content }
+    });
+  }
 }
 
 // Create and export singleton instance

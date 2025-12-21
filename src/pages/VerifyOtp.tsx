@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import Security from '../assets/icon/Data-security.png';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -8,6 +9,7 @@ function VerifyOtp() {
     const [otp, setOtp] = useState(['', '', '', '', '', '']);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
+    const [successModal, setSuccessModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const inputs = useRef<(HTMLInputElement | null)[]>([]);
     const location = useLocation();
     const navigate = useNavigate();
@@ -65,7 +67,7 @@ function VerifyOtp() {
         setError('');
         try {
             await sbcApiService.requestPasswordResetOtp(email);
-            alert('Code renvoyé ! Veuillez vérifier votre email.');
+            setSuccessModal({ show: true, message: 'Code renvoyé ! Veuillez vérifier votre email.' });
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Échec du renvoi de l\'OTP');
         } finally {
@@ -131,6 +133,43 @@ function VerifyOtp() {
                     </button>
                 </form>
             </div>
+
+            {/* Success Modal */}
+            <AnimatePresence>
+                {successModal.show && (
+                    <motion.div
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setSuccessModal({ show: false, message: '' })}
+                    >
+                        <motion.div
+                            className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="text-center">
+                                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-gray-900 mb-2">Succès</h3>
+                                <p className="text-gray-600 mb-6">{successModal.message}</p>
+                                <button
+                                    onClick={() => setSuccessModal({ show: false, message: '' })}
+                                    className="w-full bg-green-600 text-white py-2 px-4 rounded-xl font-medium hover:bg-green-700 transition-colors"
+                                >
+                                    OK
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </>
     );
 }

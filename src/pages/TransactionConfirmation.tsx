@@ -6,6 +6,7 @@ import BackButton from '../components/common/BackButton';
 
 function TransactionConfirmation() {
   const [showDetails, setShowDetails] = useState(false);
+  const [infoModal, setInfoModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -22,7 +23,7 @@ function TransactionConfirmation() {
   }, [transactionId, withdrawalAmount, navigate]);
 
   const handleDownload = () => {
-    alert('Le reçu PDF sera disponible une fois la transaction finalisée.');
+    setInfoModal({ show: true, message: 'Le reçu PDF sera disponible une fois la transaction finalisée.' });
   };
   const handleShare = () => {
     if (transactionId && withdrawalAmount !== undefined && withdrawalCurrency) {
@@ -31,10 +32,10 @@ function TransactionConfirmation() {
         navigator.share({ text: shareText });
       } else {
         navigator.clipboard.writeText(shareText);
-        alert('Informations de la transaction copiées dans le presse-papier !');
+        setInfoModal({ show: true, message: 'Informations de la transaction copiées dans le presse-papier !' });
       }
     } else {
-      alert("Informations de transaction insuffisantes pour partager.");
+      setInfoModal({ show: true, message: "Informations de transaction insuffisantes pour partager." });
     }
   };
 
@@ -118,6 +119,43 @@ function TransactionConfirmation() {
                 minute: '2-digit'
               })}
             </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Info Modal */}
+      <AnimatePresence>
+        {infoModal.show && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setInfoModal({ show: false, message: '' })}
+          >
+            <motion.div
+              className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="text-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Information</h3>
+                <p className="text-gray-600 mb-6">{infoModal.message}</p>
+                <button
+                  onClick={() => setInfoModal({ show: false, message: '' })}
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors"
+                >
+                  OK
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>

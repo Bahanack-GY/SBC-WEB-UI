@@ -1,9 +1,9 @@
 import BackButton from "../components/common/BackButton";
 import { useState, useEffect, useRef } from "react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { FaArrowUp } from 'react-icons/fa';
+import { FaArrowUp, FaGift, FaSpinner, FaCheck } from 'react-icons/fa';
 import { FaMoneyBillWave } from 'react-icons/fa';
-import { FiShare2, FiX } from 'react-icons/fi';
+import { FiShare2, FiX, FiChevronRight } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'framer-motion';
 import Skeleton from '../components/common/Skeleton';
 import { FaMoneyBill1 } from "react-icons/fa6";
@@ -258,6 +258,7 @@ function Wallet() {
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
   const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
+  const [showFundActivationModal, setShowFundActivationModal] = useState(false);
 
   // Calculate withdrawal fee and total deduction in real-time
   useEffect(() => {
@@ -629,11 +630,6 @@ function Wallet() {
     }
   };
 
-  const handleDeposit = () => {
-    // Navigate to deposit page or show deposit modal
-    navigate('/deposit');
-  };
-
   const handleCancelTransaction = async (transactionId: string) => {
     try {
       const response = await sbcApiService.cancelWithdrawal(transactionId);
@@ -885,11 +881,11 @@ function Wallet() {
             {/* Action Buttons */}
             <div className="flex gap-2 mb-6">
               <button
-                onClick={handleDeposit}
+                onClick={() => setShowFundActivationModal(true)}
                 className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 shadow hover:bg-blue-800 transition-colors"
               >
                 <FaArrowUp size={20} className="mb-1" />
-                <span className="text-xs font-semibold">Dépôt</span>
+                <span className="text-xs font-semibold">Activation</span>
               </button>
               <button
                 onClick={() => {
@@ -1096,6 +1092,25 @@ function Wallet() {
                 )}
               </form>
             )}
+            {/* Navigation to Activation Balance */}
+            <button
+              onClick={() => navigate('/activation-balance')}
+              className="w-full mb-6 bg-gradient-to-r from-[#115CF6] to-blue-600 text-white p-4 rounded-2xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-between"
+            >
+              <div className="flex items-center gap-3">
+                <div className="bg-white/20 p-3 rounded-full">
+                  <FaGift size={20} />
+                </div>
+                <div className="text-left">
+                  <span className="font-bold block">Solde d'Activation</span>
+                  <span className="text-xs opacity-80">Voir & sponsoriser vos filleuls</span>
+                </div>
+              </div>
+              <div className="bg-white/20 p-2 rounded-full">
+                <FiChevronRight size={20} />
+              </div>
+            </button>
+
             {/* Bar Chart */}
             <div className="bg-white rounded-2xl p-4 mb-6 shadow text-gray-800 relative">
               <div className="flex items-center justify-between mb-2">
@@ -1277,7 +1292,7 @@ function Wallet() {
               )}
             </div>
             {/* Button to open All Transactions Modal */}
-            <div className="flex justify-center mt-6 mb-20">
+            <div className="flex justify-center mt-6">
               <button
                 onClick={openAllTransactionsModal}
                 className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition-colors"
@@ -1285,6 +1300,7 @@ function Wallet() {
                 Voir toutes les transactions
               </button>
             </div>
+
             {/* Modal */}
             <AnimatePresence>
               {modalOpen && selectedTx && (
@@ -1559,9 +1575,157 @@ function Wallet() {
             refreshUser();
           }}
         />
+
+        {/* Fund Activation Balance Modal */}
+        <FundActivationModal
+          isOpen={showFundActivationModal}
+          onClose={() => setShowFundActivationModal(false)}
+          mainBalance={balance}
+          onSuccess={() => {
+            refreshUser();
+            invalidateTransactions();
+          }}
+        />
       </div>
     </ProtectedRoute>
   )
+}
+
+// ==================== FUND ACTIVATION MODAL ====================
+interface FundModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  mainBalance: number;
+  onSuccess: () => void;
+}
+
+function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundModalProps) {
+  const [amount, setAmount] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+  const minimumAmount = 100; // Default minimum
+
+  const handleSubmit = async () => {
+    const amountNum = parseInt(amount);
+    if (isNaN(amountNum) || amountNum < minimumAmount) {
+      setError(`Le montant minimum est de ${minimumAmount.toLocaleString('fr-FR')} F`);
+      return;
+    }
+    if (amountNum > mainBalance) {
+      setError('Solde principal insuffisant');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await sbcApiService.transferToActivationBalance(amountNum);
+      handleApiResponse(response);
+      setSuccess(true);
+      onSuccess();
+      setTimeout(() => {
+        onClose();
+        setAmount('');
+        setSuccess(false);
+      }, 2000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleClose = () => {
+    setAmount('');
+    setError('');
+    setSuccess(false);
+    onClose();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={handleClose}
+    >
+      <motion.div
+        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl"
+        initial={{ scale: 0.9, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        exit={{ scale: 0.9, opacity: 0 }}
+        onClick={e => e.stopPropagation()}
+      >
+        {success ? (
+          <div className="text-center py-6">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <FaCheck className="text-green-600" size={32} />
+            </div>
+            <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
+            <p className="text-gray-600">Votre solde d'activation a été alimenté.</p>
+          </div>
+        ) : (
+          <>
+            <h4 className="text-xl font-bold text-gray-900 mb-4">Alimenter le solde d'activation</h4>
+
+            <div className="bg-gray-50 rounded-xl p-4 mb-4">
+              <p className="text-sm text-gray-600">Solde principal disponible</p>
+              <p className="text-2xl font-bold text-gray-900">{mainBalance.toLocaleString('fr-FR')} F</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Montant à transférer (min. {minimumAmount.toLocaleString('fr-FR')} F)
+              </label>
+              <input
+                type="number"
+                value={amount}
+                onChange={(e) => {
+                  setAmount(e.target.value);
+                  setError('');
+                }}
+                placeholder="Ex: 5000"
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+              />
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p className="text-red-600 text-sm">{error}</p>
+              </div>
+            )}
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+              <p className="text-xs text-yellow-700">
+                ⚠️ Ce transfert est irréversible. Le solde d'activation ne peut être utilisé que pour sponsoriser vos filleuls.
+              </p>
+            </div>
+
+            <div className="flex gap-3">
+              <button
+                onClick={handleClose}
+                className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleSubmit}
+                disabled={loading || !amount}
+                className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+              </button>
+            </div>
+          </>
+        )}
+      </motion.div>
+    </motion.div>
+  );
 }
 
 export default Wallet;

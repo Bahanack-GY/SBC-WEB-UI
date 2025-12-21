@@ -83,8 +83,59 @@ const initialData: SignupData = {
 const icons = [<FiUser size={48} className="text-[#115CF6] mx-auto" />, <FiMapPin size={48} className="text-[#115CF6] mx-auto" />, <FiHeart size={48} className="text-[#115CF6] mx-auto" />];
 
 
+// Regions and cities data per country
+const regionsPerCountry: Record<string, string[]> = {
+  CM: ['Adamaoua', 'Centre', 'Est', 'Extrême-Nord', 'Littoral', 'Nord', 'Nord-Ouest', 'Ouest', 'Sud', 'Sud-Ouest'],
+  SN: ['Dakar', 'Diourbel', 'Fatick', 'Kaffrine', 'Kaolack', 'Kédougou', 'Kolda', 'Louga', 'Matam', 'Saint-Louis', 'Sédhiou', 'Tambacounda', 'Thiès', 'Ziguinchor'],
+  CI: ['Abidjan', 'Bas-Sassandra', 'Comoé', 'Denguélé', 'Gôh-Djiboua', 'Lacs', 'Lagunes', 'Montagnes', 'Sassandra-Marahoué', 'Savanes', 'Vallée du Bandama', 'Woroba', 'Yamoussoukro', 'Zanzan'],
+  GA: ['Estuaire', 'Haut-Ogooué', 'Moyen-Ogooué', 'Ngounié', 'Nyanga', 'Ogooué-Ivindo', 'Ogooué-Lolo', 'Ogooué-Maritime', 'Woleu-Ntem'],
+  CG: ['Bouenza', 'Brazzaville', 'Cuvette', 'Cuvette-Ouest', 'Kouilou', 'Lékoumou', 'Likouala', 'Niari', 'Plateaux', 'Pointe-Noire', 'Pool', 'Sangha'],
+  CD: ['Bas-Uele', 'Équateur', 'Haut-Katanga', 'Haut-Lomami', 'Haut-Uele', 'Ituri', 'Kasaï', 'Kasaï-Central', 'Kasaï-Oriental', 'Kinshasa', 'Kongo-Central', 'Kwango', 'Kwilu', 'Lomami', 'Lualaba', 'Mai-Ndombe', 'Maniema', 'Mongala', 'Nord-Kivu', 'Nord-Ubangi', 'Sankuru', 'Sud-Kivu', 'Sud-Ubangi', 'Tanganyika', 'Tshopo', 'Tshuapa'],
+  BJ: ['Alibori', 'Atacora', 'Atlantique', 'Borgou', 'Collines', 'Couffo', 'Donga', 'Littoral', 'Mono', 'Ouémé', 'Plateau', 'Zou'],
+  TG: ['Centrale', 'Kara', 'Maritime', 'Plateaux', 'Savanes'],
+  BF: ['Boucle du Mouhoun', 'Cascades', 'Centre', 'Centre-Est', 'Centre-Nord', 'Centre-Ouest', 'Centre-Sud', 'Est', 'Hauts-Bassins', 'Nord', 'Plateau-Central', 'Sahel', 'Sud-Ouest'],
+  ML: ['Bamako', 'Gao', 'Kayes', 'Kidal', 'Koulikoro', 'Mopti', 'Ségou', 'Sikasso', 'Tombouctou'],
+  GN: ['Boké', 'Conakry', 'Faranah', 'Kankan', 'Kindia', 'Labé', 'Mamou', 'Nzérékoré'],
+  NE: ['Agadez', 'Diffa', 'Dosso', 'Maradi', 'Niamey', 'Tahoua', 'Tillabéri', 'Zinder'],
+  TD: ['Batha', 'Borkou', 'Chari-Baguirmi', 'Ennedi-Est', 'Ennedi-Ouest', 'Guéra', 'Hadjer-Lamis', 'Kanem', 'Lac', 'Logone Occidental', 'Logone Oriental', 'Mandoul', 'Mayo-Kebbi Est', 'Mayo-Kebbi Ouest', 'Moyen-Chari', 'N\'Djamena', 'Ouaddaï', 'Salamat', 'Sila', 'Tandjilé', 'Tibesti', 'Wadi Fira'],
+  CF: ['Bamingui-Bangoran', 'Bangui', 'Basse-Kotto', 'Haute-Kotto', 'Haut-Mbomou', 'Kémo', 'Lobaye', 'Mambéré-Kadéï', 'Mbomou', 'Nana-Grébizi', 'Nana-Mambéré', 'Ombella-M\'Poko', 'Ouaka', 'Ouham', 'Ouham-Pendé', 'Sangha-Mbaéré', 'Vakaga'],
+  GQ: ['Annobón', 'Bioko Norte', 'Bioko Sur', 'Centro Sur', 'Djibloho', 'Kié-Ntem', 'Litoral', 'Wele-Nzas'],
+  RW: ['Est', 'Kigali', 'Nord', 'Ouest', 'Sud'],
+  BI: ['Bubanza', 'Bujumbura Mairie', 'Bujumbura Rural', 'Bururi', 'Cankuzo', 'Cibitoke', 'Gitega', 'Karuzi', 'Kayanza', 'Kirundo', 'Makamba', 'Muramvya', 'Muyinga', 'Mwaro', 'Ngozi', 'Rumonge', 'Rutana', 'Ruyigi'],
+  MG: ['Antananarivo', 'Antsiranana', 'Fianarantsoa', 'Mahajanga', 'Toamasina', 'Toliara'],
+  MU: ['Black River', 'Flacq', 'Grand Port', 'Moka', 'Pamplemousses', 'Plaines Wilhems', 'Port Louis', 'Rivière du Rempart', 'Savanne'],
+  SC: ['Anse aux Pins', 'Anse Boileau', 'Anse Etoile', 'Anse Royale', 'Baie Lazare', 'Baie Sainte Anne', 'Beau Vallon', 'Bel Air', 'Bel Ombre', 'Cascade', 'Glacis', 'Grand Anse Mahe', 'Grand Anse Praslin', 'La Digue', 'La Rivière Anglaise', 'Les Mamelles', 'Mont Buxton', 'Mont Fleuri', 'Plaisance', 'Pointe La Rue', 'Port Glaud', 'Roche Caïman', 'Saint Louis', 'Takamaka'],
+  KM: ['Anjouan', 'Grande Comore', 'Mohéli'],
+  DJ: ['Ali Sabieh', 'Arta', 'Dikhil', 'Djibouti', 'Obock', 'Tadjourah'],
+};
+
+const citiesPerCountry: Record<string, string[]> = {
+  CM: ['Douala', 'Yaoundé', 'Bamenda', 'Bafoussam', 'Garoua', 'Maroua', 'Ngaoundéré', 'Bertoua', 'Ebolowa', 'Buea', 'Limbe', 'Kribi', 'Kumba', 'Nkongsamba', 'Edéa', 'Dschang', 'Foumban', 'Loum', 'Kumbo', 'Mbalmayo'],
+  SN: ['Dakar', 'Pikine', 'Touba', 'Thiès', 'Rufisque', 'Kaolack', 'Saint-Louis', 'Mbour', 'Ziguinchor', 'Diourbel', 'Louga', 'Tambacounda', 'Richard-Toll', 'Kolda', 'Mbacké'],
+  CI: ['Abidjan', 'Bouaké', 'Daloa', 'Yamoussoukro', 'Korhogo', 'San-Pédro', 'Man', 'Divo', 'Gagnoa', 'Abengourou', 'Anyama', 'Agboville', 'Grand-Bassam', 'Dabou', 'Séguéla'],
+  GA: ['Libreville', 'Port-Gentil', 'Franceville', 'Oyem', 'Moanda', 'Mouila', 'Lambaréné', 'Tchibanga', 'Koulamoutou', 'Makokou'],
+  CG: ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Impfondo', 'Ouésso', 'Madingou', 'Owando', 'Sibiti', 'Loutété'],
+  CD: ['Kinshasa', 'Lubumbashi', 'Mbuji-Mayi', 'Kananga', 'Kisangani', 'Bukavu', 'Tshikapa', 'Kolwezi', 'Likasi', 'Goma', 'Kikwit', 'Uvira', 'Bunia', 'Kalemie', 'Matadi'],
+  BJ: ['Cotonou', 'Porto-Novo', 'Parakou', 'Djougou', 'Bohicon', 'Kandi', 'Abomey', 'Natitingou', 'Lokossa', 'Ouidah'],
+  TG: ['Lomé', 'Sokodé', 'Kara', 'Kpalimé', 'Atakpamé', 'Bassar', 'Tsévié', 'Aného', 'Mango', 'Dapaong'],
+  BF: ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Banfora', 'Ouahigouya', 'Pouytenga', 'Kaya', 'Tenkodogo', 'Fada N\'Gourma', 'Dédougou'],
+  ML: ['Bamako', 'Sikasso', 'Mopti', 'Koutiala', 'Kayes', 'Ségou', 'Gao', 'Kati', 'San', 'Kolokani'],
+  GN: ['Conakry', 'Nzérékoré', 'Kankan', 'Kindia', 'Labé', 'Guéckédou', 'Kissidougou', 'Mamou', 'Kamsar', 'Siguiri'],
+  NE: ['Niamey', 'Zinder', 'Maradi', 'Agadez', 'Tahoua', 'Dosso', 'Diffa', 'Arlit', 'Tessaoua', 'Gaya'],
+  TD: ['N\'Djamena', 'Moundou', 'Abéché', 'Sarh', 'Kélo', 'Koumra', 'Pala', 'Am Timan', 'Bongor', 'Mongo'],
+  CF: ['Bangui', 'Bimbo', 'Berbérati', 'Carnot', 'Bambari', 'Bouar', 'Bossangoa', 'Bria', 'Bangassou', 'Nola'],
+  GQ: ['Malabo', 'Bata', 'Ebebiyín', 'Aconibe', 'Añisok', 'Luba', 'Evinayong', 'Mongomo', 'Micomeseng'],
+  RW: ['Kigali', 'Butare', 'Gitarama', 'Ruhengeri', 'Gisenyi', 'Byumba', 'Cyangugu', 'Nyanza', 'Kibungo', 'Kibuye'],
+  BI: ['Bujumbura', 'Gitega', 'Muyinga', 'Ngozi', 'Ruyigi', 'Bururi', 'Makamba', 'Kayanza', 'Muramvya', 'Cibitoke'],
+  MG: ['Antananarivo', 'Toamasina', 'Antsirabe', 'Fianarantsoa', 'Mahajanga', 'Toliara', 'Antsiranana', 'Ambovombe', 'Ihosy', 'Morondava'],
+  MU: ['Port Louis', 'Beau Bassin-Rose Hill', 'Vacoas-Phoenix', 'Curepipe', 'Quatre Bornes', 'Triolet', 'Goodlands', 'Centre de Flacq', 'Mahébourg', 'Saint Pierre'],
+  SC: ['Victoria', 'Anse Boileau', 'Beau Vallon', 'Anse Royale', 'Cascade', 'Takamaka', 'Baie Lazare', 'Port Glaud', 'Grand Anse Mahe'],
+  KM: ['Moroni', 'Mutsamudu', 'Fomboni', 'Domoni', 'Tsimbeo', 'Sima', 'Ouani', 'Mirontsi', 'Mkazi'],
+  DJ: ['Djibouti', 'Ali Sabieh', 'Tadjoura', 'Obock', 'Dikhil', 'Arta'],
+};
+
 const professionOptions = [
-  'Étudiant(e)', 'Sans emploi',
+  'Étudiant·e', 'Sans emploi',
   'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
   'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Scientifique des données',
   'Enseignant', 'Professeur d\'université', 'Formateur professionnel', 'Éducateur spécialisé', 'Conseiller pédagogique',
@@ -821,14 +872,50 @@ function Signup() {
           {step === 1 && (
             <>
               <div>
-                <label className="block text-gray-700 mb-1">🏙️ Ville</label>
-                <input name="ville" value={data.ville} onChange={handleChange} placeholder="Ex: Douala" className={`w-full border ${errors.ville ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
-                {errors.ville && <div className="text-red-500 text-xs">{errors.ville}</div>}
+                <label className="block text-gray-700 mb-1">🌍 Pays</label>
+                <select name="pays" value={data.pays} onChange={(e) => {
+                  handleChange(e);
+                  // Reset city and region when country changes
+                  setData(prev => ({ ...prev, ville: '', region: '' }));
+                }} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
+                  <option value="">Sélectionner le pays</option>
+                  {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                </select>
+                {errors.pays && <div className="text-red-500 text-xs">{errors.pays}</div>}
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">🗺️ Région</label>
-                <input name="region" value={data.region} onChange={handleChange} placeholder="Entrer la région" className={`w-full border ${errors.region ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
+                <select
+                  name="region"
+                  value={data.region}
+                  onChange={handleChange}
+                  disabled={!data.pays}
+                  className={`w-full border ${errors.region ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none ${!data.pays ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                >
+                  <option value="">Sélectionner la région</option>
+                  {data.pays && regionsPerCountry[countryOptions.find(c => c.value === data.pays)?.code || '']?.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
                 {errors.region && <div className="text-red-500 text-xs">{errors.region}</div>}
+                {!data.pays && <div className="text-gray-500 text-xs mt-1">Veuillez d'abord sélectionner un pays</div>}
+              </div>
+              <div>
+                <label className="block text-gray-700 mb-1">🏙️ Ville</label>
+                <select
+                  name="ville"
+                  value={data.ville}
+                  onChange={handleChange}
+                  disabled={!data.pays}
+                  className={`w-full border ${errors.ville ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none ${!data.pays ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                >
+                  <option value="">Sélectionner la ville</option>
+                  {data.pays && citiesPerCountry[countryOptions.find(c => c.value === data.pays)?.code || '']?.map((city) => (
+                    <option key={city} value={city}>{city}</option>
+                  ))}
+                </select>
+                {errors.ville && <div className="text-red-500 text-xs">{errors.ville}</div>}
+                {!data.pays && <div className="text-gray-500 text-xs mt-1">Veuillez d'abord sélectionner un pays</div>}
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">🎂 Date de naissance</label>
@@ -841,17 +928,8 @@ function Signup() {
                   <option value="">Sélectionner</option>
                   <option value="male">👨 Homme</option>
                   <option value="female">👩 Femme</option>
-                  <option value="other">🧑 Autre</option>
                 </select>
                 {errors.sexe && <div className="text-red-500 text-xs">{errors.sexe}</div>}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-1">🌍 Pays</label>
-                <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
-                  <option value="">Sélectionner le pays</option>
-                  {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-                </select>
-                {errors.pays && <div className="text-red-500 text-xs">{errors.pays}</div>}
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">💼 Profession</label>

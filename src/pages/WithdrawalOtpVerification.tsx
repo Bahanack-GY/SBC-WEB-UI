@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
@@ -23,6 +24,7 @@ const WithdrawalOtpVerification: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [resendModal, setResendModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   
   // Get withdrawal details from navigation state
   const withdrawalState = location.state as WithdrawalOtpState | null;
@@ -93,7 +95,7 @@ const WithdrawalOtpVerification: React.FC = () => {
     setError('');
     try {
       // For now, just show a message. You can implement the actual resend logic
-      alert('OTP resent successfully. Please check your email/SMS.');
+      setResendModal({ show: true, message: 'OTP resent successfully. Please check your email/SMS.' });
     } catch (err) {
       setError('Failed to resend OTP. Please try again.');
     }
@@ -267,6 +269,43 @@ const WithdrawalOtpVerification: React.FC = () => {
             </ul>
           </div>
         </div>
+
+        {/* Resend OTP Success Modal */}
+        <AnimatePresence>
+          {resendModal.show && (
+            <motion.div
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setResendModal({ show: false, message: '' })}
+            >
+              <motion.div
+                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">Succès</h3>
+                  <p className="text-gray-600 mb-6">{resendModal.message}</p>
+                  <button
+                    onClick={() => setResendModal({ show: false, message: '' })}
+                    className="w-full bg-green-600 text-white py-2 px-4 rounded-xl font-medium hover:bg-green-700 transition-colors"
+                  >
+                    OK
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </ProtectedRoute>
   );

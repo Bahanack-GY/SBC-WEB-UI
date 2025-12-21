@@ -5,14 +5,18 @@ import BackButton from '../components/common/BackButton';
 import CurrencyConverterComponent from '../components/CurrencyConverterComponent';
 import UnifiedWithdrawalComponent from '../components/UnifiedWithdrawalComponent';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { FaWallet, FaExchangeAlt, FaChartLine, FaArrowDown } from 'react-icons/fa';
+import { FaWallet, FaExchangeAlt, FaArrowDown, FaGift, FaArrowUp, FaSpinner, FaCheck } from 'react-icons/fa';
 import { EXCHANGE_RATES } from '../utils/balanceHelpers';
+import { motion } from 'framer-motion';
+import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse } from '../utils/apiHelpers';
 
 function Money() {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, refreshUser } = useAuth();
     const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
     const [showUnifiedWithdrawal, setShowUnifiedWithdrawal] = useState(false);
+    const [showFundActivationModal, setShowFundActivationModal] = useState(false);
 
     const balance = user?.balance || 0;
     const usdBalance = user?.usdBalance || 0;
@@ -98,14 +102,31 @@ function Money() {
                         </button>
 
                         <button
-                            onClick={() => navigate('/wallet')}
-                            className="flex flex-col items-center justify-center bg-teal-500 hover:bg-teal-600 text-white p-6 rounded-2xl shadow-lg transition-colors"
+                            onClick={() => setShowFundActivationModal(true)}
+                            className="flex flex-col items-center justify-center bg-[#115CF6] hover:bg-blue-700 text-white p-6 rounded-2xl shadow-lg transition-colors"
                         >
-                            <FaChartLine size={32} className="mb-2" />
-                            <span className="font-semibold">Statistiques</span>
-                            <span className="text-xs opacity-80">Analytics</span>
+                            <FaArrowUp size={32} className="mb-2" />
+                            <span className="font-semibold">Alimenter</span>
+                            <span className="text-xs opacity-80">Solde Activation</span>
                         </button>
                     </div>
+
+                    {/* Navigation to Activation Balance */}
+                    <button
+                        onClick={() => navigate('/activation-balance')}
+                        className="w-full mt-4 flex items-center justify-between bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+                    >
+                        <div className="flex items-center gap-3">
+                            <div className="bg-blue-100 p-3 rounded-full">
+                                <FaGift size={24} className="text-[#115CF6]" />
+                            </div>
+                            <div className="text-left">
+                                <span className="font-semibold text-gray-900 block">Solde d'Activation</span>
+                                <span className="text-xs text-gray-500">Voir & sponsoriser vos filleuls</span>
+                            </div>
+                        </div>
+                        <span className="text-gray-400">→</span>
+                    </button>
                 </div>
 
                 {/* Balance Summary */}
@@ -146,8 +167,155 @@ function Money() {
                         // Just refresh user context, no page reload
                     }}
                 />
+
+                {/* Fund Activation Balance Modal */}
+                <FundActivationModal
+                    isOpen={showFundActivationModal}
+                    onClose={() => setShowFundActivationModal(false)}
+                    mainBalance={balance}
+                    onSuccess={() => {
+                        refreshUser();
+                    }}
+                />
             </div>
         </ProtectedRoute>
+    );
+}
+
+// ==================== FUND ACTIVATION MODAL ====================
+interface FundModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+    mainBalance: number;
+    onSuccess: () => void;
+}
+
+function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundModalProps) {
+    const [amount, setAmount] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [success, setSuccess] = useState(false);
+    const minimumAmount = 100; // Default minimum
+
+    const handleSubmit = async () => {
+        const amountNum = parseInt(amount);
+        if (isNaN(amountNum) || amountNum < minimumAmount) {
+            setError(`Le montant minimum est de ${minimumAmount.toLocaleString('fr-FR')} F`);
+            return;
+        }
+        if (amountNum > mainBalance) {
+            setError('Solde principal insuffisant');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const response = await sbcApiService.transferToActivationBalance(amountNum);
+            handleApiResponse(response);
+            setSuccess(true);
+            onSuccess();
+            setTimeout(() => {
+                onClose();
+                setAmount('');
+                setSuccess(false);
+            }, 2000);
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleClose = () => {
+        setAmount('');
+        setError('');
+        setSuccess(false);
+        onClose();
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={handleClose}
+        >
+            <motion.div
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                onClick={e => e.stopPropagation()}
+            >
+                {success ? (
+                    <div className="text-center py-6">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <FaCheck className="text-green-600" size={32} />
+                        </div>
+                        <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
+                        <p className="text-gray-600">Votre solde d'activation a été alimenté.</p>
+                    </div>
+                ) : (
+                    <>
+                        <h4 className="text-xl font-bold text-gray-900 mb-4">Alimenter le solde d'activation</h4>
+
+                        <div className="bg-gray-50 rounded-xl p-4 mb-4">
+                            <p className="text-sm text-gray-600">Solde principal disponible</p>
+                            <p className="text-2xl font-bold text-gray-900">{mainBalance.toLocaleString('fr-FR')} F</p>
+                        </div>
+
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Montant à transférer (min. {minimumAmount.toLocaleString('fr-FR')} F)
+                            </label>
+                            <input
+                                type="number"
+                                value={amount}
+                                onChange={(e) => {
+                                    setAmount(e.target.value);
+                                    setError('');
+                                }}
+                                placeholder="Ex: 5000"
+                                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+
+                        {error && (
+                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                                <p className="text-red-600 text-sm">{error}</p>
+                            </div>
+                        )}
+
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+                            <p className="text-xs text-yellow-700">
+                                ⚠️ Ce transfert est irréversible. Le solde d'activation ne peut être utilisé que pour sponsoriser vos filleuls.
+                            </p>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={handleClose}
+                                className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-semibold hover:bg-gray-300 transition-colors"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                onClick={handleSubmit}
+                                disabled={loading || !amount}
+                                className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            >
+                                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                            </button>
+                        </div>
+                    </>
+                )}
+            </motion.div>
+        </motion.div>
     );
 }
 
