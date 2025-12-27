@@ -107,6 +107,9 @@ function Wallet() {
   const { t } = useTranslation();
   const { user, refreshUser } = useAuth();
   const navigate = useNavigate();
+
+  // Check if user is admin or tester
+  const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
   const [chartData, setChartData] = useState<ChartDataPoint[]>([{ name: '', 'Dépôt': 0, 'Retrait': 0, 'Dépôt_count': 0, 'Retrait_count': 0 }]);
   const [chartTimeframe, setChartTimeframe] = useState<'daily' | 'weekly' | 'monthly'>('daily'); // New state for chart timeframe
 
@@ -905,7 +908,13 @@ function Wallet() {
             {/* Action Buttons */}
             <div className="flex gap-2 mb-6">
               <button
-                onClick={() => setShowFundActivationModal(true)}
+                onClick={() => {
+                  if (isAdminOrTester) {
+                    setShowFundActivationModal(true);
+                  } else {
+                    navigate('/activation-balance');
+                  }
+                }}
                 className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 shadow hover:bg-blue-800 transition-colors"
               >
                 <FaArrowUp size={20} className="mb-1" />

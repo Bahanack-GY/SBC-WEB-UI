@@ -20,9 +20,21 @@ function Money() {
     const balance = user?.balance || 0;
     const usdBalance = user?.usdBalance || 0;
 
+    // Check if user is admin or tester
+    const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
+
     // Handle activation balance button click - navigate to page with teaser overlay for non-admin/tester
     const handleActivationBalanceClick = () => {
         navigate('/activation-balance');
+    };
+
+    // Handle fund activation button click
+    const handleFundActivationClick = () => {
+        if (isAdminOrTester) {
+            setShowFundActivationModal(true);
+        } else {
+            navigate('/activation-balance');
+        }
     };
 
     return (
@@ -106,7 +118,7 @@ function Money() {
                         </button>
 
                         <button
-                            onClick={() => setShowFundActivationModal(true)}
+                            onClick={handleFundActivationClick}
                             className="flex flex-col items-center justify-center bg-[#115CF6] hover:bg-blue-700 text-white p-6 rounded-2xl shadow-lg transition-colors"
                         >
                             <FaArrowUp size={32} className="mb-2" />
