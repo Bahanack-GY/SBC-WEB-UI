@@ -58,6 +58,7 @@ function ActivationBalance() {
 
   const [activeTab, setActiveTab] = useState<'overview' | 'referrals' | 'history'>('overview');
   const [filter, setFilter] = useState<FilterType>('all');
+  const [referralTab, setReferralTab] = useState<'direct' | 'indirect'>('direct');
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
 
@@ -104,9 +105,9 @@ function ActivationBalance() {
     isFetchingNextPage,
     refetch: refetchReferrals,
   } = useInfiniteQuery({
-    queryKey: ['activation-referrals', filter, debouncedSearch],
+    queryKey: ['activation-referrals', filter, debouncedSearch, referralTab],
     queryFn: async ({ pageParam = 1 }) => {
-      const response = await sbcApiService.getActivationReferrals(filter, pageParam, 20);
+      const response = await sbcApiService.getActivationReferrals(filter, pageParam, 10, debouncedSearch || undefined, referralTab);
       return handleApiResponse(response);
     },
     getNextPageParam: (lastPage, allPages) => {
@@ -189,16 +190,11 @@ function ActivationBalance() {
   const sponsoredCount = balanceData?.sponsoredCount || 0;
   const mainBalance = user?.balance || 0;
 
-  const allReferrals: ActivationReferral[] = referralsData?.pages?.flatMap(page => page.referrals) || [];
+  const allReferrals: ActivationReferral[] = (referralsData?.pages?.flatMap(page => page.referrals) || []).filter(Boolean);
   const allHistory: ActivationTransaction[] = historyData?.pages?.flatMap(page => page.transactions || page.activations || []) || [];
 
-  // Filter referrals by search
-  const filteredReferrals = debouncedSearch
-    ? allReferrals.filter(r =>
-      r.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-      r.email.toLowerCase().includes(debouncedSearch.toLowerCase())
-    )
-    : allReferrals;
+  // Referrals are now filtered server-side via the search parameter
+  const filteredReferrals = allReferrals;
 
   const handleSponsorClick = (referral: ActivationReferral) => {
     setSelectedReferral(referral);
@@ -394,6 +390,30 @@ function ActivationBalance() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
               >
+                {/* Direct/Indirect Tab Selector */}
+                <div className="flex bg-gray-200 rounded-xl p-1 mb-4">
+                  <button
+                    onClick={() => setReferralTab('direct')}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      referralTab === 'direct'
+                        ? 'bg-white text-[#115CF6] shadow'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Directs (Niveau 1)
+                  </button>
+                  <button
+                    onClick={() => setReferralTab('indirect')}
+                    className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      referralTab === 'indirect'
+                        ? 'bg-white text-[#115CF6] shadow'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    Indirects (Niveaux 2 & 3)
+                  </button>
+                </div>
+
                 {/* Search & Filter */}
                 <div className="mb-4 space-y-3">
                   <div className="relative">

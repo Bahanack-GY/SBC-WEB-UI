@@ -1563,12 +1563,83 @@ export class SBCApiService extends ApiService {
 
   /**
    * Get referrals available for activation/sponsorship
+   * Uses /users/get-refered-users which supports search by name
    * @param filter - "all" | "activatable" | "upgradable"
    * @param page - Page number (default 1)
    * @param limit - Items per page (default 20)
+   * @param search - Optional search query for name
+   * @param referralType - "direct" | "indirect" to filter by relationship type
    */
-  async getActivationReferrals(filter: 'all' | 'activatable' | 'upgradable' = 'all', page: number = 1, limit: number = 20): Promise<ApiResponse> {
-    return await this.get(`/activation-balance/referrals?filter=${filter}&page=${page}&limit=${limit}`);
+  async getActivationReferrals(filter: 'all' | 'activatable' | 'upgradable' = 'all', page: number = 1, limit: number = 20, search?: string, referralType?: 'direct' | 'indirect'): Promise<ApiResponse> {
+    // Build params object matching MesFilleuls.tsx pattern
+    const params: Record<string, string | number> = {
+      type: referralType || 'direct', // Default to direct referrals, can be 'direct' or 'indirect'
+      page,
+      limit,
+    };
+
+    // Map filter to subType parameter
+    // activatable = users without subscription (subType=none)
+    // upgradable = users with CLASSIQUE only (subType=CLASSIQUE)
+    // all = all users (no subType filter)
+    if (filter === 'activatable') {
+      params.subType = 'none';
+    } else if (filter === 'upgradable') {
+      params.subType = 'CLASSIQUE';
+    }
+
+    // Add search by name if provided (same as MesFilleuls.tsx line 150-152)
+    if (search) {
+      params.name = search;
+    }
+
+    const response = await this.getReferredUsers(params);
+
+    // Transform response to match expected format for ActivationBalance page
+    // Response structure from getReferredUsers: { success, data: { referredUsers, totalPages, totalCount, page } }
+    // handleApiResponse returns response.body.data, so we need to add referrals inside data
+    if (response.isSuccessByStatusCode && response.body) {
+      // Handle both nested (data.referredUsers) and flat (referredUsers) response structures
+      const responseData = response.body.data || response.body;
+      const users = responseData.referredUsers || responseData.referrals || [];
+
+      const transformedReferrals = users
+        .filter((user: any) => user && user._id) // Filter out null/undefined users
+        .map((user: any) => ({
+          _id: user._id,
+          name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur',
+          email: user.email,
+          phoneNumber: user.phoneNumber,
+          avatar: user.avatar,
+          referralLevel: user.referralLevel || user.level || 1,
+          hasActiveSubscription: (user.activeSubscriptions?.length > 0) || (user.activeSubscriptionTypes?.length > 0),
+          currentSubscriptionType: user.activeSubscriptionTypes?.[0] || user.activeSubscriptions?.[0] || null,
+          canUpgrade: (user.activeSubscriptionTypes?.includes('CLASSIQUE') || user.activeSubscriptions?.includes('CLASSIQUE')) &&
+                      !(user.activeSubscriptionTypes?.includes('CIBLE') || user.activeSubscriptions?.includes('CIBLE')),
+          createdAt: user.createdAt
+        }));
+
+      // Add transformed data inside response.body.data so handleApiResponse picks it up
+      if (response.body.data) {
+        response.body.data = {
+          ...response.body.data,
+          referrals: transformedReferrals,
+          total: responseData.totalCount || responseData.total || transformedReferrals.length,
+          page: page,
+          pages: responseData.totalPages || Math.ceil((responseData.totalCount || transformedReferrals.length) / limit)
+        };
+      } else {
+        response.body = {
+          ...response.body,
+          referrals: transformedReferrals,
+          total: responseData.totalCount || responseData.total || transformedReferrals.length,
+          page: page,
+          pages: responseData.totalPages || Math.ceil((responseData.totalCount || transformedReferrals.length) / limit)
+        };
+      }
+    }
+
+    return response;
   }
 
   /**

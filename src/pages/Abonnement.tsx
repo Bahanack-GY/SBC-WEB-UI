@@ -5,6 +5,7 @@ import iconTwo from "../assets/icon/analyse.png";
 import iconContact from "../assets/icon/contact.png";
 import BackButton from "../components/common/BackButton";
 import { HiMiniMinusCircle } from "react-icons/hi2";
+import { FaWhatsapp } from "react-icons/fa";
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -16,15 +17,32 @@ import NegativeBalanceNotification from '../components/NegativeBalanceNotificati
 import { useAuth } from '../contexts/AuthContext';
 // import { useNavigate } from 'react-router-dom';
 
+// Supported payment countries (ISO 3166-1 alpha-2 codes)
+const SUPPORTED_PAYMENT_COUNTRIES = ['CM', 'SN', 'TG', 'BF', 'BJ', 'CG', 'CI'];
+
+interface Affiliator {
+    name: string;
+    email: string;
+    phoneNumber: string;
+    avatar?: string;
+    avatarId?: string;
+}
+
 function Abonnement() {
 
     const [purchasing, setPurchasing] = useState<string | null>(null);
     const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
+    const [affiliator, setAffiliator] = useState<Affiliator | null>(null);
+    const [affiliatorLoading, setAffiliatorLoading] = useState(false);
     const { user } = useAuth();
 
     // Get user balance for negative balance modal (already available from AuthContext)
     const balance = user?.balance || 0;
+
+    // Check if user's country is supported for payments
+    const userCountry = user?.country || '';
+    const isCountrySupported = SUPPORTED_PAYMENT_COUNTRIES.includes(userCountry);
 
     // Use cached API calls to prevent duplicate requests
     const {
@@ -84,7 +102,50 @@ function Abonnement() {
             // Show modal every time user logs in or signs up (no restrictions)
             setShowNegativeBalanceModal(true);
         }
-    }, [balance, user?.id, user?.balance]);
+    }, [balance, user?._id, user?.balance]);
+
+    // Fetch affiliator info for users in unsupported countries
+    useEffect(() => {
+        const fetchAffiliator = async () => {
+            if (!isCountrySupported && user) {
+                setAffiliatorLoading(true);
+                try {
+                    const response = await sbcApiService.getMyAffiliator();
+                    const result = handleApiResponse(response);
+                    setAffiliator(result);
+                } catch {
+                    setAffiliator(null);
+                } finally {
+                    setAffiliatorLoading(false);
+                }
+            }
+        };
+        fetchAffiliator();
+    }, [isCountrySupported, user]);
+
+    // Generate WhatsApp URL with predefined message
+    const getWhatsAppUrl = () => {
+        if (!affiliator?.phoneNumber) return null;
+
+        // Clean phone number (remove spaces, dashes, etc.)
+        let phone = affiliator.phoneNumber.replace(/[\s-]/g, '');
+        // Remove leading 0 if present and add country code if needed
+        if (phone.startsWith('0')) {
+            phone = phone.substring(1);
+        }
+        // If doesn't start with +, assume it needs country code (default to Cameroon 237)
+        if (!phone.startsWith('+') && !phone.startsWith('237')) {
+            phone = '237' + phone;
+        }
+        phone = phone.replace('+', '');
+
+        const userName = user?.name || 'un utilisateur';
+        const message = encodeURIComponent(
+            `Bonjour ${affiliator.name},\n\nJe suis ${userName}, votre filleul(e) sur SBC. Je suis dans un pays où le paiement n'est pas encore supporté. Pouvez-vous m'aider à activer mon compte s'il vous plaît ?\n\nMerci d'avance !`
+        );
+
+        return `https://wa.me/${phone}?text=${message}`;
+    };
 
     const handlePurchase = async (planType: string) => {
         try {
@@ -191,6 +252,75 @@ function Abonnement() {
                     <BackButton />
                     <h3 className="text-xl font-medium text-center w-full">Abonnement</h3>
                 </div>
+                {/* Unsupported Country Notice */}
+                {!isCountrySupported && !loading && (
+                    <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-xl p-4 mb-4 mt-3"
+                    >
+                        {/* Header */}
+                        <div className="flex items-center gap-2 mb-2">
+                            <div className="bg-amber-400 rounded-full p-1.5">
+                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
+                            </div>
+                            <h3 className="text-sm font-bold text-amber-800">
+                                Paiement non disponible
+                            </h3>
+                        </div>
+
+                        {/* Message */}
+                        <p className="text-amber-700 text-xs mb-3 leading-relaxed">
+                            Le paiement en ligne n'est pas encore disponible dans votre pays. Contactez votre parrain pour qu'il active votre compte à votre place.
+                        </p>
+
+                        {/* Affiliator Section */}
+                        {affiliatorLoading ? (
+                            <div className="flex items-center justify-center gap-2 text-amber-600 py-2">
+                                <div className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                                <span className="text-xs">Chargement...</span>
+                            </div>
+                        ) : affiliator ? (
+                            <div className="flex items-center gap-3 bg-white/80 rounded-lg p-2.5 border border-amber-100">
+                                {affiliator.avatar ? (
+                                    <img
+                                        src={affiliator.avatar}
+                                        alt={affiliator.name}
+                                        className="w-10 h-10 rounded-full object-cover ring-2 ring-green-400"
+                                    />
+                                ) : (
+                                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-green-600 flex items-center justify-center text-white font-bold text-sm">
+                                        {affiliator.name.charAt(0).toUpperCase()}
+                                    </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-gray-800 text-sm truncate">{affiliator.name}</p>
+                                    <p className="text-xs text-gray-500">Votre parrain</p>
+                                </div>
+                                {getWhatsAppUrl() && (
+                                    <a
+                                        href={getWhatsAppUrl()!}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1.5 bg-[#25D366] hover:bg-[#128C7E] text-white py-2 px-3 rounded-lg text-xs font-semibold transition-colors"
+                                    >
+                                        <FaWhatsapp className="w-4 h-4" />
+                                        <span>Contacter</span>
+                                    </a>
+                                )}
+                            </div>
+                        ) : (
+                            <div className="bg-white/80 rounded-lg p-3 border border-amber-100">
+                                <p className="text-gray-600 text-xs text-center">
+                                    Aucun parrain trouvé. Contactez le support SBC.
+                                </p>
+                            </div>
+                        )}
+                    </motion.div>
+                )}
+
                 {loading ? (
                     <div className="flex flex-col gap-4 mt-6">
                         <Skeleton height="h-28" rounded="rounded-2xl" />
