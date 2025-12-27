@@ -7,12 +7,14 @@ import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { FaWallet, FaCheck, FaSpinner, FaTimes, FaMobileAlt, FaBitcoin } from 'react-icons/fa';
+import { canCancelWithdrawal } from '../utils/transactionHelpers';
 
 interface WithdrawalOtpState {
   transactionId: string;
   withdrawalType: 'mobile_money' | 'crypto';
   amount: number;
   currency: string;
+  status?: string;
 }
 
 const WithdrawalOtpVerification: React.FC = () => {
@@ -74,16 +76,27 @@ const WithdrawalOtpVerification: React.FC = () => {
 
   const handleCancel = async () => {
     if (withdrawalState?.transactionId) {
+      // Check if cancellation is allowed based on status
+      // For OTP page, status should be 'pending_otp_verification' which IS cancellable
+      const status = withdrawalState.status || 'pending_otp_verification';
+
+      if (!canCancelWithdrawal(status)) {
+        setError('Cette transaction ne peut plus être annulée car elle est en cours de traitement par l\'administrateur.');
+        return;
+      }
+
+      setLoading(true);
       try {
         await sbcApiService.cancelWithdrawal(withdrawalState.transactionId);
-        navigate('/money', { 
-          state: { 
+        navigate('/money', {
+          state: {
             message: 'Withdrawal cancelled successfully',
             type: 'info'
           }
         });
       } catch (err) {
-        navigate('/money');
+        setError(err instanceof Error ? err.message : 'Échec de l\'annulation du retrait');
+        setLoading(false);
       }
     } else {
       navigate('/money');

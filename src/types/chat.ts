@@ -20,6 +20,13 @@ export interface ConversationParticipant {
   isOnline: boolean;
 }
 
+// Messaging status returned by backend for pending conversations
+export interface MessagingStatus {
+  canSend: boolean;
+  reason?: 'pending_limit_reached' | 'waiting_for_acceptance' | 'conversation_blocked' | 'conversation_reported';
+  messagesRemaining?: number;
+}
+
 export interface Conversation {
   _id: string;
   type: ConversationType;
@@ -34,7 +41,9 @@ export interface Conversation {
   statusId?: string;
   acceptanceStatus: ConversationAcceptanceStatus;
   initiatorId?: string;
+  isInitiator?: boolean; // Backend provides this directly
   messageCounts?: Record<string, number>;
+  messagingStatus?: MessagingStatus; // Backend provides messaging restrictions
   acceptedAt?: string;
   reportedAt?: string;
   reportedBy?: string;

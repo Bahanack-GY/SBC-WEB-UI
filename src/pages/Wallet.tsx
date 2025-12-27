@@ -20,7 +20,8 @@ import CurrencyConverterComponent from '../components/CurrencyConverterComponent
 import { useTranslation } from 'react-i18next';
 import {
   getStatusColor,
-  getStatusTranslationKey
+  getStatusTranslationKey,
+  canCancelWithdrawal
 } from '../utils/transactionHelpers';
 import TransactionApprovalInfo from '../components/TransactionApprovalInfo';
 
@@ -259,6 +260,12 @@ function Wallet() {
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
   const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
   const [showFundActivationModal, setShowFundActivationModal] = useState(false);
+  const [isSubmittingWithdrawal, setIsSubmittingWithdrawal] = useState(false); // Prevent double-clicks
+
+  // Handle activation balance button click - navigate to page with teaser overlay for non-admin/tester
+  const handleActivationBalanceClick = () => {
+    navigate('/activation-balance');
+  };
 
   // Calculate withdrawal fee and total deduction in real-time
   useEffect(() => {
@@ -313,7 +320,12 @@ function Wallet() {
   };
   const handleWithdrawSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // Prevent double-clicks
+    if (isSubmittingWithdrawal) return;
+
     if (withdrawAmount && Number(withdrawAmount) > 0 && !isNaN(Number(withdrawAmount))) {
+      setIsSubmittingWithdrawal(true);
       // Check if user has sufficient balance
       const currentBalance = selectedBalanceType === 'FCFA' ? balance : usdBalance;
       
@@ -424,6 +436,7 @@ function Wallet() {
                 setWithdrawalFee(0);
                 setTotalDeduction(0);
                 setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false);
                 refreshUser();
               } else {
                 // New crypto transaction - use same OTP flow as momo
@@ -446,6 +459,7 @@ function Wallet() {
                 setWithdrawalFee(0);
                 setTotalDeduction(0);
                 setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false);
               }
               return;
             } else {
@@ -460,6 +474,7 @@ function Wallet() {
               setTotalDeduction(0);
               setSelectedBalanceType('FCFA');
               setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false);
               refreshUser();
               return;
             }
@@ -494,7 +509,8 @@ function Wallet() {
               setWithdrawAmount(''); // Clear the input
               setWithdrawalFee(0); // Clear fee calculation
               setTotalDeduction(0); // Clear total deduction
-              setShowWithdrawForm(false); // Hide the form
+              setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false); // Hide the form
               refreshUser(); // Refresh user context
             } else {
               // This is a new transaction - proceed normally
@@ -516,7 +532,8 @@ function Wallet() {
               setWithdrawAmount(''); // Clear the input after initiating/re-sending OTP
               setWithdrawalFee(0); // Clear fee calculation
               setTotalDeduction(0); // Clear total deduction
-              setShowWithdrawForm(false); // Hide the form
+              setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false); // Hide the form
               refreshUser(); // Refresh user context if needed for balance update or other state
             }
           } else if (data.status === 'processing') {
@@ -531,7 +548,8 @@ function Wallet() {
               setWithdrawAmount(''); // Clear the input
               setWithdrawalFee(0); // Clear fee calculation
               setTotalDeduction(0); // Clear total deduction
-              setShowWithdrawForm(false); // Hide the form
+              setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false); // Hide the form
               refreshUser(); // Refresh user context
             } else {
               // This is a new transaction with processing status - navigate to OTP page
@@ -554,6 +572,7 @@ function Wallet() {
               setWithdrawalFee(0);
               setTotalDeduction(0);
               setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false);
               refreshUser(); // Refresh user context to reflect potential balance changes
             }
           } else if (data.status === 'pending') {
@@ -567,6 +586,7 @@ function Wallet() {
             setWithdrawalFee(0);
             setTotalDeduction(0);
             setShowWithdrawForm(false);
+              setIsSubmittingWithdrawal(false);
             refreshUser(); // Refresh in case the existing transaction details are updated
           } else {
             setModalContent({ type: 'error', message: data.message || 'Une erreur inattendue est survenue lors de l\'initiation du retrait. Veuillez réessayer.' });
@@ -622,7 +642,11 @@ function Wallet() {
           setModalContent({ type: 'error', message: errorMessage });
           setShowModal(true);
         }
-
+        setIsSubmittingWithdrawal(false); // Allow retry on error
+      } finally {
+        // Reset on navigation or other completion
+        // Note: setIsSubmittingWithdrawal(false) is done in catch for errors
+        // For successful navigations, component unmounts or form closes
       }
     } else {
       setModalContent({ type: 'error', message: "Veuillez entrer un montant de retrait valide." });
@@ -936,13 +960,6 @@ function Wallet() {
             </div>
             {showWithdrawForm && (
               <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col gap-3 bg-gray-50 rounded-2xl p-4 shadow">
-                <div className="mb-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <div className="text-xs text-blue-600 font-medium mb-1">Retrait Mobile Money</div>
-                  <div className="text-sm text-blue-700">
-                    Choisissez votre solde. Les USD seront automatiquement convertis en FCFA pour le Mobile Money.
-                  </div>
-                </div>
-                
                 {/* Balance Selection */}
                 <div className="mb-4">
                   <label className="text-gray-800 font-semibold mb-2 block">Solde à utiliser:</label>
@@ -1022,16 +1039,16 @@ function Wallet() {
                     disabled={((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))}
                     required
                   />
-                  <button 
-                    type="submit" 
-                    disabled={((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))}
+                  <button
+                    type="submit"
+                    disabled={isSubmittingWithdrawal || ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))}
                     className={`rounded-full p-3 font-bold shadow transition-colors ${
-                      ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
+                      isSubmittingWithdrawal || ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
                         ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                         : 'bg-[#115CF6] text-white hover:bg-blue-800'
                     }`}
                   >
-                    <FaMoneyBill1 size={24} />
+                    {isSubmittingWithdrawal ? <FaSpinner className="animate-spin" size={24} /> : <FaMoneyBill1 size={24} />}
                   </button>
                 </div>
 
@@ -1094,7 +1111,7 @@ function Wallet() {
             )}
             {/* Navigation to Activation Balance */}
             <button
-              onClick={() => navigate('/activation-balance')}
+              onClick={handleActivationBalanceClick}
               className="w-full mb-6 bg-gradient-to-r from-[#115CF6] to-blue-600 text-white p-4 rounded-2xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
@@ -1269,7 +1286,8 @@ function Wallet() {
                           </span>
                         )}
                       </div>
-                      {(tx.status === 'pending_otp_verification' || tx.status === 'pending_admin_approval') && tx.type === 'withdrawal' && (
+                      {/* Cancel button - only if cancellation is allowed */}
+                      {tx.type === 'withdrawal' && canCancelWithdrawal(tx.status) && (
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
@@ -1362,37 +1380,69 @@ function Wallet() {
                         </>
                       )}
                     </div>
-                    <div className="flex gap-3 mt-4">
-                      <button
-                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
-                        onClick={handleShare}
-                      >
-                        <FiShare2 className="inline mr-2" />Partager
-                      </button>
-                      {(selectedTx.status === 'pending_otp_verification' || selectedTx.status === 'pending_admin_approval') && selectedTx.type === 'withdrawal' && (
+                    <div className="flex flex-col gap-3 mt-4">
+                      {/* Continue OTP verification button - only for pending_otp_verification withdrawals */}
+                      {selectedTx.status === 'pending_otp_verification' && selectedTx.type === 'withdrawal' && (
                         <button
-                          className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                          className="w-full bg-green-500 text-white rounded-xl py-3 font-bold shadow hover:bg-green-600 transition-colors"
                           onClick={() => {
-                            setModalContent({
-                              type: 'confirm',
-                              message: 'Êtes-vous sûr de vouloir annuler cette transaction de retrait ?',
-                              onConfirm: () => {
-                                handleCancelTransaction(selectedTx.transactionId || selectedTx.id);
-                                closeModal();
+                            navigate('/otp', {
+                              state: {
+                                withdrawalId: selectedTx.transactionId || selectedTx.id,
+                                withdrawalAmount: selectedTx.amount,
+                                withdrawalCurrency: selectedTx.currency || 'XAF',
+                                flow: 'withdrawal'
                               }
                             });
-                            setShowModal(true);
+                            closeModal();
                           }}
                         >
-                          Annuler
+                          Continuer la vérification OTP
                         </button>
                       )}
-                      <button
-                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
-                        onClick={closeModal}
-                      >
-                        Fermer
-                      </button>
+
+                      <div className="flex gap-3">
+                        <button
+                          className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
+                          onClick={handleShare}
+                        >
+                          <FiShare2 className="inline mr-2" />Partager
+                        </button>
+                        {/* Cancel button - only if cancellation is allowed (pending or pending_otp_verification) */}
+                        {selectedTx.type === 'withdrawal' && canCancelWithdrawal(selectedTx.status) && (
+                          <button
+                            className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                            onClick={() => {
+                              setModalContent({
+                                type: 'confirm',
+                                message: 'Êtes-vous sûr de vouloir annuler cette transaction de retrait ?',
+                                onConfirm: () => {
+                                  handleCancelTransaction(selectedTx.transactionId || selectedTx.id);
+                                  closeModal();
+                                }
+                              });
+                              setShowModal(true);
+                            }}
+                          >
+                            Annuler
+                          </button>
+                        )}
+                        <button
+                          className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                          onClick={closeModal}
+                        >
+                          Fermer
+                        </button>
+                      </div>
+
+                      {/* Info message for non-cancellable transactions */}
+                      {selectedTx.type === 'withdrawal' && (selectedTx.status === 'pending_admin_approval' || selectedTx.status === 'processing') && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <p className="text-blue-700 text-sm text-center">
+                            Cette transaction est en cours de traitement et ne peut plus être annulée.
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 </motion.div>
@@ -1463,7 +1513,8 @@ function Wallet() {
                                   </span>
                                 )}
                               </div>
-                              {(tx.status === 'pending_otp_verification' || tx.status === 'pending_admin_approval') && tx.type === 'withdrawal' && (
+                              {/* Cancel button - only if cancellation is allowed */}
+                              {tx.type === 'withdrawal' && canCancelWithdrawal(tx.status) && (
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
@@ -1586,6 +1637,7 @@ function Wallet() {
             invalidateTransactions();
           }}
         />
+
       </div>
     </ProtectedRoute>
   )

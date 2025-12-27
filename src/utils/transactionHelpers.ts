@@ -90,9 +90,25 @@ export function isFinalState(status: string): boolean {
 
 /**
  * Check if the user can cancel a pending withdrawal
+ * Note: Users can ONLY cancel when OTP verification is pending
+ * Once admin starts processing (pending_admin_approval or processing), cancellation is NOT allowed
  */
 export function canCancelWithdrawal(status: string): boolean {
-  return ['pending', 'pending_otp_verification', 'pending_admin_approval'].includes(status);
+  return ['pending', 'pending_otp_verification'].includes(status);
+}
+
+/**
+ * Check if a withdrawal is being processed by admin (cannot be cancelled)
+ */
+export function isAdminProcessing(status: string): boolean {
+  return ['pending_admin_approval', 'processing'].includes(status);
+}
+
+/**
+ * Check if there's an ongoing withdrawal that blocks new withdrawals
+ */
+export function isOngoingWithdrawal(status: string): boolean {
+  return ['pending', 'pending_otp_verification', 'pending_admin_approval', 'processing'].includes(status);
 }
 
 /**

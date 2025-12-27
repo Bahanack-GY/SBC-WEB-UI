@@ -17,9 +17,13 @@ function Money() {
     const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
     const [showUnifiedWithdrawal, setShowUnifiedWithdrawal] = useState(false);
     const [showFundActivationModal, setShowFundActivationModal] = useState(false);
-
     const balance = user?.balance || 0;
     const usdBalance = user?.usdBalance || 0;
+
+    // Handle activation balance button click - navigate to page with teaser overlay for non-admin/tester
+    const handleActivationBalanceClick = () => {
+        navigate('/activation-balance');
+    };
 
     return (
         <ProtectedRoute>
@@ -113,7 +117,7 @@ function Money() {
 
                     {/* Navigation to Activation Balance */}
                     <button
-                        onClick={() => navigate('/activation-balance')}
+                        onClick={handleActivationBalanceClick}
                         className="w-full mt-4 flex items-center justify-between bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
                     >
                         <div className="flex items-center gap-3">

@@ -14,7 +14,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { formatDistanceToNow, format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Skeleton from '../common/Skeleton';
-import { needsAcceptance, getRemainingMessages, isInitiator } from '../../utils/conversationHelpers';
+import { needsAcceptance, getRemainingMessages, isInitiator, hasReachedMessageLimit } from '../../utils/conversationHelpers';
 
 interface ConversationListProps {
   onConversationClick?: (conversation: Conversation) => void;
@@ -770,22 +770,32 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                         {conv.lastMessage?.content || 'Aucun message'}
                       </p>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {/* Acceptance badge */}
+                        {/* Acceptance badge - shown to recipients who need to accept */}
                         {user && needsAcceptance(conv, user._id) && (
                           <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
                             À accepter
                           </span>
                         )}
-                        {/* Message limit badge */}
-                        {user && isInitiator(conv, user._id) && conv.acceptanceStatus === 'pending' && getRemainingMessages(conv, user._id) === 0 && (
-                          <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">
-                            En attente
+                        {/* Initiator waiting badge - shown to initiators waiting for acceptance */}
+                        {user && isInitiator(conv, user._id) && conv.acceptanceStatus === 'pending' && (
+                          <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
+                            hasReachedMessageLimit(conv, user._id)
+                              ? 'bg-orange-100 text-orange-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}>
+                            {hasReachedMessageLimit(conv, user._id) ? 'En attente' : `${getRemainingMessages(conv, user._id)} msg restant${getRemainingMessages(conv, user._id) > 1 ? 's' : ''}`}
                           </span>
                         )}
                         {/* Reported badge */}
                         {conv.acceptanceStatus === 'reported' && (
                           <span className="px-2 py-0.5 bg-red-100 text-red-800 text-xs font-medium rounded-full">
                             Signalée
+                          </span>
+                        )}
+                        {/* Blocked badge */}
+                        {conv.acceptanceStatus === 'blocked' && (
+                          <span className="px-2 py-0.5 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">
+                            Bloquée
                           </span>
                         )}
                         {/* Unread count */}
@@ -813,7 +823,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
 
       {/* User Search Modal */}
       {showUserSearchModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
             {/* Modal header */}
             <div className="p-4 border-b border-gray-200">
@@ -917,7 +927,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
 
       {/* Archive Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Archiver {selectedConversations.size > 1 ? 'les conversations' : 'la conversation'} ?
@@ -947,7 +957,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
 
       {/* Profile Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
@@ -1089,7 +1099,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
 
       {/* Archived Conversations Modal */}
       {showArchivedModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
             {/* Header */}
             <div className="p-4 border-b border-gray-200 flex items-center justify-between">

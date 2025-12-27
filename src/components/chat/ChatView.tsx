@@ -29,6 +29,7 @@ import {
   canSendMessage,
   getRemainingMessages,
   isInitiator,
+  hasReachedMessageLimit,
 } from '../../utils/conversationHelpers';
 
 interface ChatViewProps {
@@ -97,6 +98,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
   // Document upload
   const [uploadingDocument, setUploadingDocument] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   // Document URL refresh cache
   const [refreshedDocumentUrls, setRefreshedDocumentUrls] = useState<Map<string, string>>(new Map());
@@ -375,10 +377,12 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
     }, 3000);
   };
 
-  // Send message
+  // Send message (text or document with caption)
   const handleSendMessage = useCallback(async () => {
     const content = inputValue.trim();
-    if (!content || !user) return;
+
+    // Must have either content or a file to send
+    if (!user || (!content && !selectedFile)) return;
 
     // Check if user can send messages
     if (conversation && !canSendMessage(conversation, user._id)) {
@@ -386,6 +390,45 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
       return;
     }
 
+    // Stop typing indicator
+    if (isTyping) {
+      setIsTyping(false);
+      stopTyping(conversationId);
+    }
+
+    // If there's a selected file, upload it with the caption
+    if (selectedFile) {
+      const fileToUpload = selectedFile;
+      const caption = content;
+
+      // Clear states before upload
+      setSelectedFile(null);
+      setInputValue('');
+      setReplyToMessage(null);
+      shouldAutoScrollRef.current = true;
+
+      const success = await uploadDocumentWithMessage(fileToUpload, caption);
+
+      if (!success) {
+        // Restore states if upload failed
+        setSelectedFile(fileToUpload);
+        setInputValue(caption);
+      } else {
+        // Update local conversation message count
+        if (conversation) {
+          setConversation({
+            ...conversation,
+            messageCounts: {
+              ...conversation.messageCounts,
+              [user._id]: (conversation.messageCounts?.[user._id] || 0) + 1,
+            },
+          });
+        }
+      }
+      return;
+    }
+
+    // Regular text message flow
     // Generate unique temporary ID for optimistic message
     const tempId = `optimistic-${Date.now()}-${Math.random()}`;
 
@@ -418,12 +461,6 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
     setInputValue('');
     setReplyToMessage(null);
     shouldAutoScrollRef.current = true;
-
-    // Stop typing indicator
-    if (isTyping) {
-      setIsTyping(false);
-      stopTyping(conversationId);
-    }
 
     try {
       // Send via API
@@ -459,10 +496,10 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
       // Restore input
       setInputValue(content);
     }
-  }, [inputValue, conversationId, user, replyToMessage, isTyping, stopTyping, conversation]);
+  }, [inputValue, selectedFile, conversationId, user, replyToMessage, isTyping, stopTyping, conversation]);
 
-  // Handle document upload
-  const handleDocumentSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Handle document selection (just store the file, don't upload yet)
+  const handleDocumentSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -477,15 +514,37 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
     if (!allowedTypes.includes(file.type)) {
       alert('Type de fichier non supporté. Veuillez sélectionner un PDF ou un document Word/Excel.');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       alert('Le fichier est trop volumineux. Taille maximale : 10MB');
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
       return;
     }
 
+    // Store the file for later upload when send is clicked
+    setSelectedFile(file);
+
+    // Clear file input so the same file can be selected again if needed
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  // Remove selected file
+  const handleRemoveSelectedFile = () => {
+    setSelectedFile(null);
+  };
+
+  // Upload document with message
+  const uploadDocumentWithMessage = async (file: File, caption: string) => {
     try {
       setUploadingDocument(true);
       setUploadProgress(0);
@@ -495,25 +554,53 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         setUploadProgress(prev => Math.min(prev + 10, 90));
       }, 200);
 
-      const response = await sbcApiService.sendDocument(conversationId, file);
+      // Send document with optional caption (text message)
+      const response = await sbcApiService.sendDocument(conversationId, file, caption || undefined);
 
       clearInterval(progressInterval);
       setUploadProgress(100);
 
       if (response.body.success) {
-        // Message will be added via socket
+        // Add the message from API response immediately for real-time display
+        if (response.body.data) {
+          const newMessage = response.body.data as Message;
+          setMessages(prev => {
+            // Avoid duplicates (socket might also send this message)
+            if (prev.some(m => m._id === newMessage._id)) return prev;
+            return [...prev, newMessage];
+          });
+        }
         shouldAutoScrollRef.current = true;
+        return true;
       }
+      return false;
     } catch (error) {
       console.error('Failed to upload document:', error);
       alert('Échec de l\'envoi du document. Veuillez réessayer.');
+      return false;
     } finally {
       setUploadingDocument(false);
       setUploadProgress(0);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
     }
+  };
+
+  // Get file icon based on type
+  const getFileIcon = (mimeType: string) => {
+    if (mimeType === 'application/pdf') {
+      return '📄';
+    } else if (mimeType.includes('word') || mimeType.includes('document')) {
+      return '📝';
+    } else if (mimeType.includes('excel') || mimeType.includes('sheet')) {
+      return '📊';
+    }
+    return '📎';
+  };
+
+  // Format file size
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
   // Long press handlers
@@ -943,27 +1030,47 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
       case 'document':
         const documentUrl = getDocumentUrl(message);
+        const isSentMessage = message.senderId === user?._id;
         return (
-          <div className="flex items-center gap-3 p-3 bg-white bg-opacity-20 rounded-lg">
-            <div className="flex-shrink-0 w-10 h-10 bg-white bg-opacity-30 rounded-lg flex items-center justify-center">
-              <PaperClipIcon className="w-5 h-5" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-medium truncate">{message.documentName || 'Document'}</p>
-              {message.documentSize && (
-                <p className="text-xs opacity-80">
-                  {(message.documentSize / 1024).toFixed(0)} KB
-                </p>
+          <div className="space-y-2">
+            {/* Caption/text message if present */}
+            {message.content && message.content !== message.documentName && (
+              <p className="break-words whitespace-pre-wrap">{message.content}</p>
+            )}
+            {/* Document attachment */}
+            <div className={`flex items-center gap-3 p-3 rounded-lg ${
+              isSentMessage
+                ? 'bg-blue-500 bg-opacity-40'
+                : 'bg-gray-300 bg-opacity-50'
+            }`}>
+              <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center ${
+                isSentMessage
+                  ? 'bg-blue-400 bg-opacity-50'
+                  : 'bg-gray-400 bg-opacity-50'
+              }`}>
+                <PaperClipIcon className="w-5 h-5" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium truncate">{message.documentName || 'Document'}</p>
+                {message.documentSize && (
+                  <p className="text-xs opacity-80">
+                    {(message.documentSize / 1024).toFixed(0)} KB
+                  </p>
+                )}
+              </div>
+              {documentUrl && (
+                <button
+                  onClick={(e) => handleDocumentDownload(e, message)}
+                  className={`flex-shrink-0 p-2 rounded-full transition-colors ${
+                    isSentMessage
+                      ? 'hover:bg-blue-400 hover:bg-opacity-40'
+                      : 'hover:bg-gray-400 hover:bg-opacity-40'
+                  }`}
+                >
+                  <ArrowDownTrayIcon className="w-5 h-5" />
+                </button>
               )}
             </div>
-            {documentUrl && (
-              <button
-                onClick={(e) => handleDocumentDownload(e, message)}
-                className="flex-shrink-0 p-2 hover:bg-white hover:bg-opacity-20 rounded-full transition-colors"
-              >
-                <ArrowDownTrayIcon className="w-5 h-5" />
-              </button>
-            )}
           </div>
         );
 
@@ -1361,18 +1468,29 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
           </div>
         )}
 
-        {/* Message Limit Warning (for initiators) */}
+        {/* Initiator Waiting Bar - shown when initiator is waiting for recipient to accept */}
         {conversation && user && isInitiator(conversation, user._id) && conversation.acceptanceStatus === 'pending' && (
-          <div className="bg-blue-50 border-b border-blue-200 p-3">
+          <div className={`border-b p-3 ${hasReachedMessageLimit(conversation, user._id) ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <span className="text-sm text-blue-800">
-                {getRemainingMessages(conversation, user._id) > 0
-                  ? `Vous pouvez envoyer ${getRemainingMessages(conversation, user._id)} message${getRemainingMessages(conversation, user._id) > 1 ? 's' : ''} de plus avant que le destinataire ne réponde.`
-                  : 'Limite de messages atteinte. En attente de réponse du destinataire.'}
-              </span>
+              {hasReachedMessageLimit(conversation, user._id) ? (
+                <>
+                  <svg className="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm font-medium text-orange-800">
+                    En attente de réponse du destinataire. Vous ne pouvez plus envoyer de messages tant que cette personne n'a pas accepté la conversation.
+                  </span>
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                  </svg>
+                  <span className="text-sm text-blue-800">
+                    Conversation en attente d'acceptation. Vous pouvez envoyer {getRemainingMessages(conversation, user._id)} message{getRemainingMessages(conversation, user._id) > 1 ? 's' : ''} de plus.
+                  </span>
+                </>
+              )}
             </div>
           </div>
         )}
@@ -1457,6 +1575,29 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
         {/* Input area */}
         <div className="p-4 bg-white border-t border-gray-200">
+          {/* Selected file preview */}
+          {selectedFile && !uploadingDocument && (
+            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3 flex-1 min-w-0">
+                <span className="text-2xl">{getFileIcon(selectedFile.type)}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {selectedFile.name}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {formatFileSize(selectedFile.size)}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleRemoveSelectedFile}
+                className="p-1.5 hover:bg-blue-100 rounded-full transition-colors flex-shrink-0"
+              >
+                <XMarkIcon className="w-5 h-5 text-gray-500" />
+              </button>
+            </div>
+          )}
+
           {/* Reply preview */}
           {replyToMessage && (
             <div className="mb-3 p-3 bg-gray-100 rounded-lg flex items-center justify-between">
@@ -1524,7 +1665,9 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
               placeholder={
                 conversation && user && !canSendMessage(conversation, user._id)
                   ? "Vous ne pouvez pas envoyer de messages dans cette conversation"
-                  : "Écrivez un message..."
+                  : selectedFile
+                    ? "Ajouter un message (optionnel)..."
+                    : "Écrivez un message..."
               }
               rows={1}
               disabled={conversation && user ? !canSendMessage(conversation, user._id) : false}
@@ -1539,7 +1682,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
             {/* Send button */}
             <button
               onClick={handleSendMessage}
-              disabled={!inputValue.trim() || uploadingDocument || (conversation && user ? !canSendMessage(conversation, user._id) : false)}
+              disabled={(!inputValue.trim() && !selectedFile) || uploadingDocument || (conversation && user ? !canSendMessage(conversation, user._id) : false)}
               className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <PaperAirplaneIcon className="w-6 h-6" />
@@ -1550,7 +1693,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
       {/* Forward Modal */}
       {forwardModal.isOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
             {/* Modal header */}
             <div className="p-4 border-b border-gray-200">
@@ -1645,7 +1788,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Supprimer {selectedMessages.size > 1 ? 'les messages' : 'le message'} ?
@@ -1675,7 +1818,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
       {/* Profile Modal */}
       {showProfileModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 z-50 flex items-center justify-center p-4">
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
             <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">

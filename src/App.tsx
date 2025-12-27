@@ -129,20 +129,14 @@ function AppContent() {
       window.location.replace('/');
     }
 
-    // Prevent non-admin/tester users from accessing activation-balance page
-    if (isAuthenticated && location.pathname === '/activation-balance' && authUser?.role !== 'admin' && authUser?.role !== 'tester') {
-      window.location.replace('/');
-    }
+    // Activation balance page is now accessible to all users with teaser overlay for non-admin/tester
 
     // Prevent non-admin/tester users from accessing relance page
     if (isAuthenticated && location.pathname === '/relance' && authUser?.role !== 'admin' && authUser?.role !== 'tester') {
       window.location.replace('/');
     }
 
-    // Prevent non-admin/tester users from accessing chat page
-    if (isAuthenticated && location.pathname === '/chat' && authUser?.role !== 'admin' && authUser?.role !== 'tester') {
-      window.location.replace('/');
-    }
+    // Chat page is now accessible to all users with teaser overlay for non-admin/tester
   }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed, authUser?.role]);
 
   // Optionally, block rendering until subscription status is known

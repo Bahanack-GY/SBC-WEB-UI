@@ -5,7 +5,6 @@ import { FaWhatsapp } from 'react-icons/fa';
 import { HiChatBubbleLeftRight } from 'react-icons/hi2';
 import { useMemo } from 'react';
 import { useRelance } from '../../contexts/RelanceContext';
-import { useAuth } from '../../contexts/AuthContext';
 
 // WhatsApp-style status icon component
 const StatusIcon = ({ size = 24 }: { size?: number }) => (
@@ -15,31 +14,26 @@ const StatusIcon = ({ size = 24 }: { size?: number }) => (
   </svg>
 );
 
-const baseNavItems = [
-  { label: 'Publicité', icon: <MdDeviceHub size={24} />, path: '/ads-pack' },
-  { label: 'Accueil', icon: <MdHome size={24} />, path: '/' },
-  { label: 'Marketplace', icon: <MdShoppingBasket size={24} />, path: '/marketplace' },
-];
+interface NavItem {
+  label: string;
+  icon: React.ReactNode;
+  path: string;
+}
 
 function NavigationBar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { hasRelanceSubscription } = useRelance();
-  const { user } = useAuth();
 
   const navItems = useMemo(() => {
-    let items = [...baseNavItems];
-
-    // Add chat buttons for admin/tester users only
-    if (user?.role === 'admin' || user?.role === 'tester') {
-      items = [
-        { label: 'Publicité', icon: <MdDeviceHub size={24} />, path: '/ads-pack' },
-        { label: 'Messages', icon: <HiChatBubbleLeftRight size={24} />, path: '/chat' },
-        { label: 'Statuts', icon: <StatusIcon size={24} />, path: '/chat?view=status' },
-        { label: 'Accueil', icon: <MdHome size={24} />, path: '/' },
-        { label: 'Marketplace', icon: <MdShoppingBasket size={24} />, path: '/marketplace' },
-      ];
-    }
+    // Always include chat buttons for all users
+    let items: NavItem[] = [
+      { label: 'Publicité', icon: <MdDeviceHub size={24} />, path: '/ads-pack' },
+      { label: 'Messages', icon: <HiChatBubbleLeftRight size={24} />, path: '/chat' },
+      { label: 'Statuts', icon: <StatusIcon size={24} />, path: '/chat?view=status' },
+      { label: 'Accueil', icon: <MdHome size={24} />, path: '/' },
+      { label: 'Marketplace', icon: <MdShoppingBasket size={24} />, path: '/marketplace' },
+    ];
 
     // Add relance button if user has subscription
     if (hasRelanceSubscription) {
@@ -50,7 +44,7 @@ function NavigationBar() {
     }
 
     return items;
-  }, [hasRelanceSubscription, user?.role]);
+  }, [hasRelanceSubscription]);
 
   return (
     <motion.nav
@@ -58,7 +52,6 @@ function NavigationBar() {
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
       className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-[#d7f699] rounded-full flex px-3 py-3 shadow-lg gap-2 mt-3"
-
     >
       {navItems.map((item) => {
         // Handle chat page with query params
@@ -89,5 +82,3 @@ function NavigationBar() {
 }
 
 export default NavigationBar;
-
-

@@ -680,9 +680,24 @@ export class SBCApiService extends ApiService {
 
   /**
    * Cancel withdrawal (User-initiated as per withdrawal.md)
+   * Note: Can only cancel if status is 'pending' or 'pending_otp_verification'
+   * Cannot cancel if admin is processing (pending_admin_approval or processing)
    */
   async cancelWithdrawal(transactionId: string): Promise<ApiResponse> {
     return await this.delete(`/transactions/withdrawal/${transactionId}/cancel`); // Correct endpoint and method
+  }
+
+  /**
+   * Get ongoing/pending withdrawal transactions for the current user
+   * Returns transactions with status: pending, pending_otp_verification, pending_admin_approval, processing
+   */
+  async getPendingWithdrawals(): Promise<ApiResponse> {
+    return await this.get('/transactions/history', {
+      queryParameters: {
+        type: 'withdrawal',
+        status: 'pending,pending_otp_verification,pending_admin_approval,processing'
+      }
+    });
   }
 
   /**

@@ -52,6 +52,10 @@ type SubscriptionType = 'CLASSIQUE' | 'CIBLE' | 'UPGRADE';
 
 function ActivationBalance() {
   const { user, refreshUser } = useAuth();
+
+  // Check if user is admin or tester
+  const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
+
   const [activeTab, setActiveTab] = useState<'overview' | 'referrals' | 'history'>('overview');
   const [filter, setFilter] = useState<FilterType>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -207,7 +211,48 @@ function ActivationBalance() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gray-50">
+      <div className="min-h-screen bg-gray-50 relative">
+        {/* Teaser overlay for non-admin/tester users */}
+        {!isAdminOrTester && (
+          <>
+            {/* Blur overlay */}
+            <div className="absolute inset-0 z-40 backdrop-blur-md bg-white/30" />
+
+            {/* Teaser message - centered */}
+            <div className="absolute inset-0 z-50 flex items-center justify-center px-4">
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl p-8 max-w-md text-center shadow-xl border border-white/50"
+              >
+                <div className="text-6xl mb-4">🎁</div>
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                  Bientôt disponible !
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  La fonctionnalité Solde d'Activation sera disponible très prochainement.
+                  Sponsorisez vos filleuls et aidez-les à rejoindre la communauté.
+                </p>
+                <div className="bg-white rounded-xl p-4 mb-6">
+                  <p className="text-sm text-gray-500 mb-2">Fonctionnalités à venir :</p>
+                  <ul className="text-left text-sm text-gray-700 space-y-1">
+                    <li>✅ Alimenter votre solde d'activation</li>
+                    <li>✅ Sponsoriser vos filleuls (niveaux 1, 2 et 3)</li>
+                    <li>✅ Transférer du solde à d'autres utilisateurs</li>
+                    <li>✅ Historique des activations</li>
+                  </ul>
+                </div>
+                <button
+                  onClick={() => window.history.back()}
+                  className="w-full bg-blue-600 text-white py-3 px-4 rounded-xl font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  Retour
+                </button>
+              </motion.div>
+            </div>
+          </>
+        )}
+
         {/* Header */}
         <div className="bg-white shadow-sm sticky top-0 z-10">
           <div className="p-4 flex items-center">
