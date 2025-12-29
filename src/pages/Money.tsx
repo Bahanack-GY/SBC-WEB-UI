@@ -20,21 +20,14 @@ function Money() {
     const balance = user?.balance || 0;
     const usdBalance = user?.usdBalance || 0;
 
-    // Check if user is admin or tester
-    const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
-
-    // Handle activation balance button click - navigate to page with teaser overlay for non-admin/tester
+    // Handle activation balance button click
     const handleActivationBalanceClick = () => {
         navigate('/activation-balance');
     };
 
     // Handle fund activation button click
     const handleFundActivationClick = () => {
-        if (isAdminOrTester) {
-            setShowFundActivationModal(true);
-        } else {
-            navigate('/activation-balance');
-        }
+        setShowFundActivationModal(true);
     };
 
     return (
