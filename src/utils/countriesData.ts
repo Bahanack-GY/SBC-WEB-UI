@@ -125,7 +125,7 @@ export const momoCorrespondents: MomoCorrespondentsMap = {
     'currencies': ['NGN']
   },
   'SN': {
-    'operators': ['FREE_SEN', 'ORANGE_SEN'],
+    'operators': ['FREE_SEN', 'ORANGE_SEN', 'WAVE_SEN'],
     'currencies': ['XOF']
   },
   'CG': {
@@ -186,6 +186,7 @@ export const getMomoOperatorDisplayName = (operatorValue: string): string => {
     'AIRTEL_NGA': 'Airtel Nigeria',
     'FREE_SEN': 'Free Money Sénégal',
     'ORANGE_SEN': 'Orange Money Sénégal',
+    'WAVE_SEN': 'Wave Sénégal',
     'AIRTEL_COG': 'Airtel Congo',
     'MTN_MOMO_COG': 'MTN MoMo Congo',
     'AIRTEL_GAB': 'Airtel Gabon',
