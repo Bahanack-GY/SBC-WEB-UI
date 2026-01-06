@@ -137,7 +137,7 @@ export const momoCorrespondents: MomoCorrespondentsMap = {
     'currencies': ['XAF']
   },
   'CI': {
-    'operators': ['MTN_MOMO_CIV', 'ORANGE_CIV'],
+    'operators': ['MTN_MOMO_CIV', 'ORANGE_CIV', 'WAVE_CIV'],
     'currencies': ['XOF']
   },
   'ML': {
@@ -191,6 +191,7 @@ export const getMomoOperatorDisplayName = (operatorValue: string): string => {
     'AIRTEL_GAB': 'Airtel Gabon',
     'MTN_MOMO_CIV': 'MTN MoMo Côte d\'Ivoire',
     'ORANGE_CIV': 'Orange Money Côte d\'Ivoire',
+    'WAVE_CIV': 'Wave Côte d\'Ivoire',
     'ORANGE_MLI': 'Orange Money Mali',
     'MOOV_MLI': 'Moov Mali',
     'ORANGE_NER': 'Orange Money Niger',

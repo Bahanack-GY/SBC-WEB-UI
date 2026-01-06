@@ -551,7 +551,7 @@ function ModifierLeProfil() {
                 </div>
               )}
             </div>
-            
+
             {/* Crypto Wallet Section - Available for ALL countries */}
             <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
               <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
