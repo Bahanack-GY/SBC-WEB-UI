@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
-import LanguageSwitcher from '../components/common/LanguageSwitcher';
 import { sbcApiService } from '../services/SBCApiService';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
@@ -497,7 +496,6 @@ function RelancePage() {
         <div className="flex items-center mb-4 gap-2">
           <BackButton />
           <h3 className="text-xl font-medium text-center flex-1">{t('pages.relance.title', 'Relance')}</h3>
-          <LanguageSwitcher />
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -864,8 +862,6 @@ function RelancePage() {
                             {/* Meta info */}
                             <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
                               <span>Inscrit le {enteredDate}</span>
-                              <span>•</span>
-                              <span>{target.language === 'fr' ? 'FR' : 'EN'}</span>
                               {target.lastMessageSentAt && (
                                 <>
                                   <span>•</span>
