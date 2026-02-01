@@ -125,15 +125,68 @@ export interface MediaAttachment {
 }
 
 /**
+ * CTA button for email messages
+ */
+export interface MessageButton {
+  label: string;
+  url: string;
+  color?: string; // Hex color, defaults to #F59E0B
+}
+
+/**
  * Custom message template for a specific day
  */
 export interface CustomMessage {
   dayNumber: number; // 1-7
+  subject?: string; // Custom email subject line
   messageTemplate: {
     fr: string; // French message
     en: string; // English message
   };
   mediaUrls?: MediaAttachment[];
+  buttons?: MessageButton[];
+}
+
+/**
+ * Recent message from the API
+ */
+export interface RecentMessage {
+  day: number;
+  sentAt: string;
+  status: string;
+  errorMessage?: string;
+  referralUser?: PopulatedReferralUser;
+  campaignId?: string | null;
+  campaignName?: string | null;
+  renderedHtml?: string;
+}
+
+/**
+ * Campaign detail stats from admin endpoint
+ */
+export interface CampaignDetailStats {
+  campaign: {
+    _id: string;
+    name: string;
+    status: CampaignStatus;
+    type: CampaignType;
+    actualStartDate?: string;
+    actualEndDate?: string;
+  };
+  totalEnrolled: number;
+  activeTargets: number;
+  completedRelance: number;
+  totalMessagesSent: number;
+  totalMessagesDelivered: number;
+  totalMessagesFailed: number;
+  deliveryPercentage: number;
+  dayProgression: Array<{ day: number; count: number }>;
+  exitReasons: {
+    paid: number;
+    completed_7_days: number;
+    manual: number;
+    referrer_inactive: number;
+  };
 }
 
 /**
@@ -147,8 +200,8 @@ export interface CampaignFilter {
   professions?: string[];
   minAge?: number;
   maxAge?: number;
-  hasUnpaidReferrals?: boolean;
   excludeCurrentTargets?: boolean;     // Exclude already enrolled targets
+  subscriptionStatus?: 'subscribed' | 'non-subscribed' | 'all'; // Filter by payment status
 }
 
 /**

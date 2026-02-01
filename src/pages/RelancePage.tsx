@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog } from 'react-icons/fa';
+import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { sbcApiService } from '../services/SBCApiService';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { useTranslation } from 'react-i18next';
-import type { RelanceStatus, Campaign, CampaignFilter, SampleUser, CampaignStatus, DefaultRelanceStats, CustomMessage, RelanceTarget } from '../types/relance';
+import type { RelanceStatus, Campaign, CampaignFilter, SampleUser, CampaignStatus, DefaultRelanceStats, CustomMessage, RelanceTarget, CampaignDetailStats, RecentMessage, MessageButton } from '../types/relance';
 import { countryOptions } from '../utils/countriesData';
 
 function RelancePage() {
@@ -32,24 +32,43 @@ function RelancePage() {
   const [targets, setTargets] = useState<RelanceTarget[]>([]);
   const [loadingTargets, setLoadingTargets] = useState(false);
 
+  // Recent messages state
+  const [showRecentMessages, setShowRecentMessages] = useState(false);
+  const [recentMessages, setRecentMessages] = useState<RecentMessage[]>([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
+  // Campaign detail stats state
+  const [campaignStats, setCampaignStats] = useState<CampaignDetailStats | null>(null);
+  const [loadingCampaignStats, setLoadingCampaignStats] = useState(false);
+  const [campaignMessages, setCampaignMessages] = useState<RecentMessage[]>([]);
+  const [showCampaignMessages, setShowCampaignMessages] = useState(false);
+  const [loadingCampaignMessages, setLoadingCampaignMessages] = useState(false);
+
+  // Email preview state
+  const [showEmailPreview, setShowEmailPreview] = useState(false);
+  const [emailPreviewHtml, setEmailPreviewHtml] = useState('');
+  const [loadingPreview, setLoadingPreview] = useState(false);
+
   // Campaign creation wizard state
   const [campaignName, setCampaignName] = useState('');
   const [filters, setFilters] = useState<CampaignFilter>({
     countries: [],
     registrationDateFrom: undefined,
     registrationDateTo: undefined,
-    hasUnpaidReferrals: true,
     excludeCurrentTargets: true,
+    subscriptionStatus: 'non-subscribed',
   });
-  const [previewData, setPreviewData] = useState<{ estimatedCount: number; sampleUsers: SampleUser[] } | null>(null);
+  const [previewData, setPreviewData] = useState<{ totalCount: number; sampleUsers: SampleUser[] } | null>(null);
 
   // Custom messages state
   const [useCustomMessages, setUseCustomMessages] = useState(false);
   const [customMessages, setCustomMessages] = useState<CustomMessage[]>(
     Array.from({ length: 7 }, (_, i) => ({
       dayNumber: i + 1,
+      subject: '',
       messageTemplate: { fr: '', en: '' },
-      mediaUrls: []
+      mediaUrls: [],
+      buttons: []
     }))
   );
   const [activeMessageDay, setActiveMessageDay] = useState(1);
@@ -147,6 +166,12 @@ function RelancePage() {
         const campaignsData = campaignsResponse.body.data.campaigns || campaignsResponse.body.data;
         if (Array.isArray(campaignsData)) {
           setCampaigns(campaignsData);
+          // Sync selectedCampaignDetail if it's currently open
+          setSelectedCampaignDetail((prev) => {
+            if (!prev) return prev;
+            const updated = campaignsData.find((c: Campaign) => c._id === prev._id);
+            return updated || null;
+          });
         } else {
           setCampaigns([]);
         }
@@ -171,6 +196,78 @@ function RelancePage() {
       console.error('Error fetching targets:', err);
     } finally {
       setLoadingTargets(false);
+    }
+  };
+
+  const fetchRecentMessages = async () => {
+    setLoadingMessages(true);
+    try {
+      const response = await sbcApiService.relanceGetRecentMessages(10);
+      if (response.isSuccessByStatusCode && response.body?.data?.messages) {
+        setRecentMessages(response.body.data.messages);
+      }
+    } catch (err: any) {
+      console.error('Error fetching recent messages:', err);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
+  // Fetch campaign stats
+  const fetchCampaignStats = async (campaignId: string) => {
+    setLoadingCampaignStats(true);
+    setCampaignStats(null);
+    try {
+      const response = await sbcApiService.relanceGetCampaignStats(campaignId);
+      if (response.isSuccessByStatusCode && response.body?.data) {
+        setCampaignStats(response.body.data as CampaignDetailStats);
+      }
+    } catch (err: any) {
+      console.error('Error fetching campaign stats:', err);
+    } finally {
+      setLoadingCampaignStats(false);
+    }
+  };
+
+  // Fetch campaign messages
+  const fetchCampaignMessages = async (campaignId: string) => {
+    setLoadingCampaignMessages(true);
+    try {
+      const response = await sbcApiService.relanceGetCampaignMessages(campaignId, 10);
+      if (response.isSuccessByStatusCode && response.body?.data?.messages) {
+        setCampaignMessages(response.body.data.messages);
+      }
+    } catch (err: any) {
+      console.error('Error fetching campaign messages:', err);
+    } finally {
+      setLoadingCampaignMessages(false);
+    }
+  };
+
+  // Preview email
+  const handlePreviewEmail = async (dayNumber: number) => {
+    setLoadingPreview(true);
+    try {
+      const msg = customMessages[dayNumber - 1];
+      const response = await sbcApiService.relancePreviewMessage({
+        dayNumber,
+        subject: msg.subject || undefined,
+        messageTemplate: msg.messageTemplate,
+        mediaUrls: msg.mediaUrls,
+        buttons: msg.buttons,
+        recipientName: 'Jean Dupont',
+        referrerName: user?.name || 'Parrain',
+      });
+      if (response.isSuccessByStatusCode && response.body?.data?.html) {
+        setEmailPreviewHtml(response.body.data.html);
+        setShowEmailPreview(true);
+      } else {
+        showMessage('Erreur', 'Impossible de générer l\'aperçu', 'error');
+      }
+    } catch (err: any) {
+      showMessage('Erreur', err.message || 'Échec de la prévisualisation', 'error');
+    } finally {
+      setLoadingPreview(false);
     }
   };
 
@@ -201,7 +298,7 @@ function RelancePage() {
         await fetchStatus();
         showMessage(
           'Succès',
-          newPaused ? 'Inscription en pause' : 'Inscription reprise',
+          newPaused ? 'Ajout en pause' : 'Ajout repris',
           'success'
         );
       }
@@ -235,16 +332,18 @@ function RelancePage() {
       countries: [],
       registrationDateFrom: undefined,
       registrationDateTo: undefined,
-      hasUnpaidReferrals: true,
       excludeCurrentTargets: true,
+      subscriptionStatus: 'non-subscribed',
     });
     setPreviewData(null);
     setUseCustomMessages(false);
     setCustomMessages(
       Array.from({ length: 7 }, (_, i) => ({
         dayNumber: i + 1,
+        subject: '',
         messageTemplate: { fr: '', en: '' },
-        mediaUrls: []
+        mediaUrls: [],
+        buttons: []
       }))
     );
     setActiveMessageDay(1);
@@ -298,6 +397,7 @@ function RelancePage() {
     try {
       await sbcApiService.relanceStartCampaign(campaignId);
       await fetchCampaigns();
+      if (selectedCampaignDetail?._id === campaignId) fetchCampaignStats(campaignId);
       showMessage('Campagne démarrée', 'Les emails seront envoyés automatiquement.', 'success');
     } catch (err: any) {
       showMessage('Erreur', err.message || 'Échec du démarrage de la campagne', 'error');
@@ -308,6 +408,7 @@ function RelancePage() {
     try {
       await sbcApiService.relancePauseCampaign(campaignId);
       await fetchCampaigns();
+      if (selectedCampaignDetail?._id === campaignId) fetchCampaignStats(campaignId);
       showMessage('Campagne en pause', 'Aucun email ne sera envoyé pendant la pause.', 'success');
     } catch (err: any) {
       showMessage('Erreur', err.message || 'Échec de la mise en pause', 'error');
@@ -318,6 +419,7 @@ function RelancePage() {
     try {
       await sbcApiService.relanceResumeCampaign(campaignId);
       await fetchCampaigns();
+      if (selectedCampaignDetail?._id === campaignId) fetchCampaignStats(campaignId);
       showMessage('Campagne reprise', 'Les emails reprendront automatiquement.', 'success');
     } catch (err: any) {
       showMessage('Erreur', err.message || 'Échec de la reprise', 'error');
@@ -328,6 +430,7 @@ function RelancePage() {
     try {
       await sbcApiService.relanceCancelCampaign(campaignId, 'Utilisateur a annulé la campagne');
       await fetchCampaigns();
+      if (selectedCampaignDetail?._id === campaignId) fetchCampaignStats(campaignId);
       showMessage('Campagne annulée', 'Toutes les cibles actives ont été retirées.', 'success');
     } catch (err: any) {
       showMessage('Erreur', err.message || 'Échec de l\'annulation', 'error');
@@ -376,7 +479,7 @@ function RelancePage() {
       scheduled: { color: 'bg-blue-500', label: 'Programmé' },
       active: { color: 'bg-green-500', label: 'Actif' },
       paused: { color: 'bg-orange-500', label: 'En pause' },
-      completed: { color: 'bg-purple-500', label: 'Terminé' },
+      completed: { color: 'bg-green-500', label: 'Terminé' },
       cancelled: { color: 'bg-red-500', label: 'Annulé' },
     };
     const badge = badges[status] || badges.draft;
@@ -464,7 +567,7 @@ function RelancePage() {
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-8 max-w-md text-center shadow-lg"
+              className="bg-gradient-to-br from-blue-50 to-green-50 rounded-2xl p-8 max-w-md text-center shadow-lg"
             >
               <div className="text-6xl mb-4">📧</div>
               <h2 className="text-2xl font-bold text-gray-800 mb-3">Relance Automatique</h2>
@@ -510,7 +613,7 @@ function RelancePage() {
         {/* Status Card */}
         <div className={`relance-status-card rounded-2xl p-4 text-white mb-4 ${
           status?.enabled
-            ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
+            ? 'bg-gradient-to-r from-blue-500 to-green-500'
             : 'bg-gradient-to-r from-gray-500 to-gray-600'
         }`}>
           <div className="flex items-center justify-between">
@@ -548,8 +651,8 @@ function RelancePage() {
             {/* Pause Enrollment Toggle */}
             <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
               <div>
-                <div className="font-medium text-sm text-gray-800">Pause inscription</div>
-                <div className="text-xs text-gray-500">Arrêter l'inscription de nouvelles cibles</div>
+                <div className="font-medium text-sm text-gray-800">Pause ajout</div>
+                <div className="text-xs text-gray-500">Arrêter l'ajout de nouvelles cibles dans la boucle de relance</div>
               </div>
               <button
                 onClick={handleToggleEnrollmentPause}
@@ -605,19 +708,19 @@ function RelancePage() {
                 </div>
                 <div className="text-2xl font-bold text-green-700">{defaultStats.totalMessagesSent}</div>
               </div>
-              <div className="bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl p-4 border border-purple-200">
+              <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaCheckCircle className="text-purple-500" />
-                  <span className="text-xs text-purple-600">Taux de livraison</span>
+                  <FaCheckCircle className="text-orange-500" />
+                  <span className="text-xs text-orange-600">Taux de livraison</span>
                 </div>
-                <div className="text-2xl font-bold text-purple-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</div>
+                <div className="text-2xl font-bold text-orange-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</div>
               </div>
-              <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 rounded-xl p-4 border border-indigo-200">
+              <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaCheckCircle className="text-indigo-500" />
-                  <span className="text-xs text-indigo-600">Relance terminée</span>
+                  <FaCheckCircle className="text-green-500" />
+                  <span className="text-xs text-green-600">Relance terminée</span>
                 </div>
-                <div className="text-2xl font-bold text-indigo-700">{defaultStats.completedRelance}</div>
+                <div className="text-2xl font-bold text-green-700">{defaultStats.completedRelance}</div>
               </div>
             </div>
 
@@ -637,7 +740,7 @@ function RelancePage() {
                         <div className="flex-1">
                           <div className="w-full bg-gray-200 rounded-full h-2.5">
                             <div
-                              className="bg-gradient-to-r from-blue-500 to-indigo-500 h-2.5 rounded-full transition-all duration-300"
+                              className="bg-gradient-to-r from-blue-500 to-green-500 h-2.5 rounded-full transition-all duration-300"
                               style={{ width: `${percentage}%` }}
                             />
                           </div>
@@ -658,9 +761,20 @@ function RelancePage() {
                 setShowTargetsModal(true);
                 fetchTargets();
               }}
-              className="relance-targets-btn w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md flex items-center justify-center gap-2"
+              className="relance-targets-btn w-full bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-green-600 transition-all shadow-md flex items-center justify-center gap-2"
             >
               <FaUsers /> Voir les cibles actives
+            </button>
+
+            {/* Recent Messages Button */}
+            <button
+              onClick={() => {
+                setShowRecentMessages(true);
+                fetchRecentMessages();
+              }}
+              className="relance-recent-messages w-full mt-3 bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl font-medium hover:bg-blue-50 transition-all shadow-sm flex items-center justify-center gap-2"
+            >
+              <FaPaperPlane /> Derniers emails envoyés
             </button>
           </div>
         )}
@@ -737,8 +851,18 @@ function RelancePage() {
                         <motion.div
                           initial={{ height: 0, opacity: 0 }}
                           animate={{ height: 'auto', opacity: 1 }}
-                          className="border-t border-gray-200 pt-4 mt-2"
+                          className="border-t border-gray-200 pt-4 mt-2 space-y-3"
                         >
+                          <button
+                            onClick={() => {
+                              setSelectedCampaignDetail(campaign);
+                              setShowCampaignMessages(false);
+                              fetchCampaignStats(campaign._id);
+                            }}
+                            className="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-xl font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
+                          >
+                            <FaEye /> Voir les détails
+                          </button>
                           {getCampaignActions(campaign)}
                         </motion.div>
                       )}
@@ -825,7 +949,7 @@ function RelancePage() {
                               </div>
                               <span className={`text-xs px-2 py-1 rounded-full ${
                                 target.status === 'active' ? 'bg-green-100 text-green-700' :
-                                target.status === 'completed' ? 'bg-purple-100 text-purple-700' :
+                                target.status === 'completed' ? 'bg-green-100 text-green-700' :
                                 target.status === 'paused' ? 'bg-orange-100 text-orange-700' :
                                 'bg-gray-100 text-gray-700'
                               }`}>
@@ -874,6 +998,96 @@ function RelancePage() {
                         );
                       })}
                     </div>
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Recent Messages Modal */}
+        <AnimatePresence>
+          {showRecentMessages && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 flex items-end justify-center z-50"
+              onClick={() => setShowRecentMessages(false)}
+            >
+              <motion.div
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 30 }}
+                className="bg-white w-full rounded-t-3xl max-h-[85vh] overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold text-gray-800">Derniers emails envoyés</h3>
+                    <button onClick={() => setShowRecentMessages(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                      <FaTimes className="text-gray-600" size={20} />
+                    </button>
+                  </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4">
+                  {loadingMessages ? (
+                    <div className="text-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                      <p className="text-gray-500 mt-2">Chargement...</p>
+                    </div>
+                  ) : recentMessages.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <FaPaperPlane className="mx-auto text-4xl mb-3 text-gray-400" />
+                      <p>Aucun email envoyé récemment</p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {recentMessages.map((msg, index) => {
+                        const sentDate = new Date(msg.sentAt);
+                        const dateStr = sentDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+                        const timeStr = sentDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                        const isDelivered = msg.status === 'delivered';
+
+                        return (
+                          <div key={index} className="bg-gray-50 rounded-xl p-4">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDelivered ? 'bg-green-100' : 'bg-red-100'}`}>
+                                  <FaPaperPlane className={`text-xs ${isDelivered ? 'text-green-500' : 'text-red-500'}`} />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-gray-800 text-sm">
+                                    {msg.referralUser?.name || 'Utilisateur inconnu'}
+                                  </div>
+                                  {msg.referralUser?.email && (
+                                    <div className="text-xs text-gray-500">{msg.referralUser.email}</div>
+                                  )}
+                                </div>
+                              </div>
+                              <span className={`text-xs px-2 py-1 rounded-full ${
+                                isDelivered ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                              }`}>
+                                {isDelivered ? 'Livré' : 'Échoué'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs text-gray-400">
+                              <span>Jour {msg.day}/7</span>
+                              <span>•</span>
+                              <span>{dateStr} à {timeStr}</span>
+                              {msg.campaignName && (
+                                <>
+                                  <span>•</span>
+                                  <span className="text-blue-500">{msg.campaignName}</span>
+                                </>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -1004,17 +1218,39 @@ function RelancePage() {
                       </div>
                     </div>
 
+                    {/* Subscription Status Filter */}
+                    <div className="mb-4">
+                      <label className="block text-gray-700 mb-2 font-medium">💳 Statut d'abonnement</label>
+                      <div className="flex gap-2">
+                        {([
+                          { value: 'non-subscribed', label: 'Non abonnés', desc: 'Filleuls qui n\'ont pas encore payé' },
+                          { value: 'subscribed', label: 'Abonnés', desc: 'Filleuls avec abonnement actif (CLASSIQUE/CIBLE)' },
+                          { value: 'all', label: 'Tous', desc: 'Tous les filleuls' },
+                        ] as const).map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            className={`flex-1 px-3 py-2 rounded-xl border text-sm font-medium transition-colors ${
+                              filters.subscriptionStatus === option.value
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-blue-300'
+                            }`}
+                            onClick={() => setFilters({ ...filters, subscriptionStatus: option.value })}
+                            title={option.desc}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {filters.subscriptionStatus === 'non-subscribed' && 'Cible les filleuls qui n\'ont pas encore souscrit à un abonnement'}
+                        {filters.subscriptionStatus === 'subscribed' && 'Cible les filleuls avec un abonnement CLASSIQUE ou CIBLE actif'}
+                        {filters.subscriptionStatus === 'all' && 'Cible tous les filleuls, peu importe leur statut d\'abonnement'}
+                      </p>
+                    </div>
+
                     {/* Checkboxes */}
                     <div className="mb-4 space-y-3">
-                      <label className="flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={filters.hasUnpaidReferrals || false}
-                          onChange={(e) => setFilters({ ...filters, hasUnpaidReferrals: e.target.checked })}
-                          className="w-4 h-4"
-                        />
-                        <span className="text-sm">Seulement ceux avec des filleuls non-payants</span>
-                      </label>
                       <label className="flex items-center gap-2">
                         <input
                           type="checkbox"
@@ -1077,6 +1313,23 @@ function RelancePage() {
                         </div>
 
                         <div className="space-y-4">
+                          {/* Subject */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Objet de l'email (optionnel)</label>
+                            <input
+                              type="text"
+                              value={customMessages[activeMessageDay - 1]?.subject || ''}
+                              onChange={(e) => {
+                                const updatedMessages = [...customMessages];
+                                updatedMessages[activeMessageDay - 1] = { ...updatedMessages[activeMessageDay - 1], subject: e.target.value };
+                                setCustomMessages(updatedMessages);
+                              }}
+                              placeholder="Laissez vide pour utiliser l'objet par défaut"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                            />
+                          </div>
+
+                          {/* French Message */}
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Message en français *</label>
                             <textarea
@@ -1091,6 +1344,8 @@ function RelancePage() {
                               rows={4}
                             />
                           </div>
+
+                          {/* English Message */}
                           <div>
                             <label className="block text-sm font-semibold text-gray-700 mb-2">Message en anglais *</label>
                             <textarea
@@ -1105,6 +1360,84 @@ function RelancePage() {
                               rows={4}
                             />
                           </div>
+
+                          {/* Buttons (CTA) */}
+                          <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-2">Boutons CTA (optionnel, max 3)</label>
+                            <div className="space-y-2">
+                              {(customMessages[activeMessageDay - 1]?.buttons || []).map((btn: MessageButton, btnIdx: number) => (
+                                <div key={btnIdx} className="flex items-center gap-2 bg-gray-50 rounded-lg p-2">
+                                  <input
+                                    type="text"
+                                    value={btn.label}
+                                    onChange={(e) => {
+                                      const updatedMessages = [...customMessages];
+                                      const buttons = [...(updatedMessages[activeMessageDay - 1].buttons || [])];
+                                      buttons[btnIdx] = { ...buttons[btnIdx], label: e.target.value };
+                                      updatedMessages[activeMessageDay - 1] = { ...updatedMessages[activeMessageDay - 1], buttons };
+                                      setCustomMessages(updatedMessages);
+                                    }}
+                                    placeholder="Texte du bouton"
+                                    className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"
+                                  />
+                                  <input
+                                    type="url"
+                                    value={btn.url}
+                                    onChange={(e) => {
+                                      const updatedMessages = [...customMessages];
+                                      const buttons = [...(updatedMessages[activeMessageDay - 1].buttons || [])];
+                                      buttons[btnIdx] = { ...buttons[btnIdx], url: e.target.value };
+                                      updatedMessages[activeMessageDay - 1] = { ...updatedMessages[activeMessageDay - 1], buttons };
+                                      setCustomMessages(updatedMessages);
+                                    }}
+                                    placeholder="https://..."
+                                    className="flex-1 px-2 py-1.5 border border-gray-300 rounded text-sm"
+                                  />
+                                  <input
+                                    type="color"
+                                    value={btn.color || '#F59E0B'}
+                                    onChange={(e) => {
+                                      const updatedMessages = [...customMessages];
+                                      const buttons = [...(updatedMessages[activeMessageDay - 1].buttons || [])];
+                                      buttons[btnIdx] = { ...buttons[btnIdx], color: e.target.value };
+                                      updatedMessages[activeMessageDay - 1] = { ...updatedMessages[activeMessageDay - 1], buttons };
+                                      setCustomMessages(updatedMessages);
+                                    }}
+                                    className="w-8 h-8 rounded cursor-pointer border-0"
+                                    title="Couleur du bouton"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const updatedMessages = [...customMessages];
+                                      const buttons = [...(updatedMessages[activeMessageDay - 1].buttons || [])];
+                                      buttons.splice(btnIdx, 1);
+                                      updatedMessages[activeMessageDay - 1] = { ...updatedMessages[activeMessageDay - 1], buttons };
+                                      setCustomMessages(updatedMessages);
+                                    }}
+                                    className="text-red-500 hover:text-red-700 p-1"
+                                  >
+                                    <FaTimes size={12} />
+                                  </button>
+                                </div>
+                              ))}
+                              {(customMessages[activeMessageDay - 1]?.buttons?.length || 0) < 3 && (
+                                <button
+                                  onClick={() => {
+                                    const updatedMessages = [...customMessages];
+                                    const buttons = [...(updatedMessages[activeMessageDay - 1].buttons || [])];
+                                    buttons.push({ label: '', url: '', color: '#F59E0B' });
+                                    updatedMessages[activeMessageDay - 1] = { ...updatedMessages[activeMessageDay - 1], buttons };
+                                    setCustomMessages(updatedMessages);
+                                  }}
+                                  className="text-blue-600 text-sm font-medium hover:text-blue-700 flex items-center gap-1"
+                                >
+                                  <FaPlus size={10} /> Ajouter un bouton
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Variables Reference */}
                           <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                             <p className="text-xs font-semibold text-gray-700 mb-2">Variables disponibles :</p>
                             <div className="text-xs text-gray-600 space-y-1">
@@ -1113,6 +1446,15 @@ function RelancePage() {
                               <div><code className="bg-white px-2 py-0.5 rounded">{'{{day}}'}</code> - Numéro du jour (1-7)</div>
                             </div>
                           </div>
+
+                          {/* Preview Button */}
+                          <button
+                            onClick={() => handlePreviewEmail(activeMessageDay)}
+                            disabled={loadingPreview || (!customMessages[activeMessageDay - 1]?.messageTemplate.fr && !customMessages[activeMessageDay - 1]?.messageTemplate.en)}
+                            className="w-full bg-orange-500 text-white py-2.5 rounded-xl font-medium hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            <FaEye /> {loadingPreview ? 'Chargement...' : 'Aperçu de l\'email'}
+                          </button>
                         </div>
                       </div>
                     )}
@@ -1133,7 +1475,7 @@ function RelancePage() {
                   <div>
                     <div className="bg-green-50 border border-green-300 rounded-lg p-4 mb-4">
                       <p className="font-bold text-green-700 mb-2">✓ Filtres appliqués avec succès</p>
-                      <p className="text-sm text-gray-600">Total : {previewData.estimatedCount} utilisateurs</p>
+                      <p className="text-sm text-gray-600">Total : {previewData.totalCount} utilisateurs</p>
                     </div>
 
                     <h4 className="font-bold mb-3">Échantillon d'utilisateurs :</h4>
@@ -1199,6 +1541,8 @@ function RelancePage() {
                           onClick={() => {
                             setSelectedCampaignDetail(campaign);
                             setShowCampaignHistory(false);
+                            setShowCampaignMessages(false);
+                            fetchCampaignStats(campaign._id);
                           }}
                           className="flex items-center justify-between py-3 px-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg cursor-pointer"
                         >
@@ -1233,27 +1577,33 @@ function RelancePage() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-              onClick={() => setSelectedCampaignDetail(null)}
+              className="fixed inset-0 bg-black/50 z-50 flex items-end"
+              onClick={() => { setSelectedCampaignDetail(null); setShowCampaignMessages(false); setCampaignStats(null); }}
             >
               <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+                initial={{ y: '100%' }}
+                animate={{ y: 0 }}
+                exit={{ y: '100%' }}
+                transition={{ type: 'spring', damping: 30 }}
+                className="bg-white w-full rounded-t-3xl max-h-[90vh] overflow-hidden flex flex-col"
                 onClick={(e) => e.stopPropagation()}
               >
                 {(() => {
                   const campaign = selectedCampaignDetail;
-                  const completionRate = campaign.targetsEnrolled > 0 ? (campaign.targetsCompleted / campaign.targetsEnrolled) * 100 : 0;
-                  const deliveryRate = campaign.messagesSent > 0 ? (campaign.messagesDelivered / campaign.messagesSent) * 100 : 0;
+                  const stats = campaignStats;
+                  const completionRate = (stats?.totalEnrolled || campaign.targetsEnrolled) > 0
+                    ? ((stats?.completedRelance || campaign.targetsCompleted) / (stats?.totalEnrolled || campaign.targetsEnrolled)) * 100
+                    : 0;
+                  const deliveryRate = stats
+                    ? stats.deliveryPercentage
+                    : campaign.messagesSent > 0 ? (campaign.messagesDelivered / campaign.messagesSent) * 100 : 0;
 
                   return (
                     <>
-                      <div className="p-6 border-b border-gray-200 sticky top-0 bg-white rounded-t-2xl">
+                      <div className="p-4 border-b border-gray-200 sticky top-0 bg-white z-10 rounded-t-3xl">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
-                            <h3 className="text-xl font-bold text-gray-800 mb-2">{campaign.name}</h3>
+                            <h3 className="text-xl font-bold text-gray-800 mb-1">{campaign.name}</h3>
                             <div className="flex items-center gap-2">
                               {getStatusBadge(campaign.status)}
                               <span className="text-xs text-gray-500">
@@ -1261,61 +1611,228 @@ function RelancePage() {
                               </span>
                             </div>
                           </div>
-                          <button onClick={() => setSelectedCampaignDetail(null)} className="p-2 hover:bg-gray-100 rounded-full">
+                          <button onClick={() => { setSelectedCampaignDetail(null); setShowCampaignMessages(false); setCampaignStats(null); }} className="p-2 hover:bg-gray-100 rounded-full">
                             <FaTimes className="text-gray-600" size={20} />
                           </button>
                         </div>
                       </div>
 
-                      <div className="p-6">
-                        {/* Stats Grid */}
-                        <div className="grid grid-cols-2 gap-3 mb-6">
-                          <div className="bg-gray-50 rounded-xl p-4">
-                            <div className="text-xs text-gray-500 mb-1">Cibles inscrites</div>
-                            <div className="text-3xl font-bold text-gray-800">{campaign.targetsEnrolled}</div>
+                      <div className="flex-1 overflow-y-auto p-4">
+                        {loadingCampaignStats ? (
+                          <div className="text-center py-8">
+                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                            <p className="text-gray-500 mt-2">Chargement des statistiques...</p>
                           </div>
-                          <div className="bg-blue-50 rounded-xl p-4">
-                            <div className="text-xs text-blue-600 mb-1">Emails envoyés</div>
-                            <div className="text-3xl font-bold text-blue-700">{campaign.messagesSent}</div>
-                          </div>
-                          <div className="bg-green-50 rounded-xl p-4">
-                            <div className="text-xs text-green-600 mb-1">Taux de livraison</div>
-                            <div className="text-3xl font-bold text-green-700">{deliveryRate.toFixed(1)}%</div>
-                          </div>
-                          <div className="bg-purple-50 rounded-xl p-4">
-                            <div className="text-xs text-purple-600 mb-1">Terminés</div>
-                            <div className="text-3xl font-bold text-purple-700">{campaign.targetsCompleted}</div>
-                          </div>
-                        </div>
+                        ) : (
+                          <>
+                            {/* Stats Grid */}
+                            <div className="grid grid-cols-2 gap-3 mb-4">
+                              <div className="bg-gray-50 rounded-xl p-3">
+                                <div className="text-xs text-gray-500 mb-1">Cibles inscrites</div>
+                                <div className="text-2xl font-bold text-gray-800">{stats?.totalEnrolled ?? campaign.targetsEnrolled}</div>
+                              </div>
+                              <div className="bg-blue-50 rounded-xl p-3">
+                                <div className="text-xs text-blue-600 mb-1">Cibles actives</div>
+                                <div className="text-2xl font-bold text-blue-700">{stats?.activeTargets ?? '-'}</div>
+                              </div>
+                              <div className="bg-green-50 rounded-xl p-3">
+                                <div className="text-xs text-green-600 mb-1">Emails envoyés</div>
+                                <div className="text-2xl font-bold text-green-700">{stats?.totalMessagesSent ?? campaign.messagesSent}</div>
+                              </div>
+                              <div className="bg-orange-50 rounded-xl p-3">
+                                <div className="text-xs text-orange-600 mb-1">Taux de livraison</div>
+                                <div className="text-2xl font-bold text-orange-700">{deliveryRate.toFixed(1)}%</div>
+                              </div>
+                            </div>
 
-                        {/* Progress Bar */}
-                        <div className="bg-gray-50 rounded-xl p-4 mb-6">
-                          <div className="flex justify-between text-sm text-gray-600 mb-2">
-                            <span className="font-medium">Progression</span>
-                            <span className="font-bold">{completionRate.toFixed(0)}%</span>
-                          </div>
-                          <div className="w-full bg-gray-200 rounded-full h-4">
-                            <div
-                              className="bg-gradient-to-r from-blue-500 to-indigo-500 h-4 rounded-full"
-                              style={{ width: `${completionRate}%` }}
-                            />
-                          </div>
-                        </div>
+                            {/* Progress Bar */}
+                            <div className="bg-gray-50 rounded-xl p-3 mb-4">
+                              <div className="flex justify-between text-sm text-gray-600 mb-2">
+                                <span className="font-medium">Progression</span>
+                                <span className="font-bold">{completionRate.toFixed(0)}%</span>
+                              </div>
+                              <div className="w-full bg-gray-200 rounded-full h-3">
+                                <div
+                                  className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full"
+                                  style={{ width: `${completionRate}%` }}
+                                />
+                              </div>
+                            </div>
 
-                        {/* Actions */}
-                        <div className="flex gap-3">
-                          {getCampaignActions(campaign)}
-                          <button
-                            onClick={() => setSelectedCampaignDetail(null)}
-                            className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300"
-                          >
-                            Fermer
-                          </button>
-                        </div>
+                            {/* Day Progression */}
+                            {stats?.dayProgression && stats.dayProgression.length > 0 && (
+                              <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 mb-4">
+                                <h5 className="font-bold text-sm text-gray-700 mb-3">Distribution des cibles (7 jours)</h5>
+                                <div className="space-y-2">
+                                  {stats.dayProgression.map((dayStat) => {
+                                    const total = stats.activeTargets || 1;
+                                    const percentage = (dayStat.count / total) * 100;
+                                    return (
+                                      <div key={dayStat.day} className="flex items-center gap-3">
+                                        <div className="text-xs font-medium text-gray-600 w-12">Jour {dayStat.day}</div>
+                                        <div className="flex-1">
+                                          <div className="w-full bg-gray-200 rounded-full h-2">
+                                            <div
+                                              className="bg-gradient-to-r from-blue-500 to-green-500 h-2 rounded-full transition-all duration-300"
+                                              style={{ width: `${percentage}%` }}
+                                            />
+                                          </div>
+                                        </div>
+                                        <div className="text-xs font-bold text-gray-700 w-14 text-right">
+                                          {dayStat.count} ({percentage.toFixed(0)}%)
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Exit Reasons */}
+                            {stats?.exitReasons && (
+                              <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 mb-4">
+                                <h5 className="font-bold text-sm text-gray-700 mb-3">Raisons de sortie</h5>
+                                <div className="grid grid-cols-2 gap-2">
+                                  <div className="bg-green-50 rounded-lg p-2">
+                                    <div className="text-xs text-green-600">Payé</div>
+                                    <div className="text-lg font-bold text-green-700">{stats.exitReasons.paid}</div>
+                                  </div>
+                                  <div className="bg-blue-50 rounded-lg p-2">
+                                    <div className="text-xs text-blue-600">7 jours terminés</div>
+                                    <div className="text-lg font-bold text-blue-700">{stats.exitReasons.completed_7_days}</div>
+                                  </div>
+                                  <div className="bg-orange-50 rounded-lg p-2">
+                                    <div className="text-xs text-orange-600">Retrait manuel</div>
+                                    <div className="text-lg font-bold text-orange-700">{stats.exitReasons.manual}</div>
+                                  </div>
+                                  <div className="bg-gray-50 rounded-lg p-2">
+                                    <div className="text-xs text-gray-600">Parrain inactif</div>
+                                    <div className="text-lg font-bold text-gray-700">{stats.exitReasons.referrer_inactive}</div>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Campaign Messages Section */}
+                            <button
+                              onClick={() => {
+                                if (!showCampaignMessages) {
+                                  fetchCampaignMessages(campaign._id);
+                                }
+                                setShowCampaignMessages(!showCampaignMessages);
+                              }}
+                              className="w-full mb-4 bg-white border-2 border-blue-500 text-blue-600 py-2.5 rounded-xl font-medium hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
+                            >
+                              <FaPaperPlane /> {showCampaignMessages ? 'Masquer les emails' : 'Voir les derniers emails'}
+                            </button>
+
+                            {showCampaignMessages && (
+                              <div className="mb-4">
+                                {loadingCampaignMessages ? (
+                                  <div className="text-center py-4">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500 mx-auto"></div>
+                                    <p className="text-gray-500 mt-2 text-sm">Chargement...</p>
+                                  </div>
+                                ) : campaignMessages.length === 0 ? (
+                                  <div className="text-center py-4 text-gray-500 text-sm">
+                                    Aucun email envoyé pour cette campagne
+                                  </div>
+                                ) : (
+                                  <div className="space-y-2">
+                                    {campaignMessages.map((msg, index) => {
+                                      const sentDate = new Date(msg.sentAt);
+                                      const dateStr = sentDate.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+                                      const timeStr = sentDate.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+                                      const isDelivered = msg.status === 'delivered';
+
+                                      return (
+                                        <div key={index} className="bg-gray-50 rounded-xl p-3">
+                                          <div className="flex items-center justify-between mb-1">
+                                            <div className="flex items-center gap-2">
+                                              <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isDelivered ? 'bg-green-100' : 'bg-red-100'}`}>
+                                                <FaPaperPlane className={`text-[10px] ${isDelivered ? 'text-green-500' : 'text-red-500'}`} />
+                                              </div>
+                                              <div>
+                                                <div className="font-medium text-gray-800 text-sm">
+                                                  {msg.referralUser?.name || 'Utilisateur inconnu'}
+                                                </div>
+                                                {msg.referralUser?.email && (
+                                                  <div className="text-xs text-gray-500">{msg.referralUser.email}</div>
+                                                )}
+                                              </div>
+                                            </div>
+                                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                                              isDelivered ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                            }`}>
+                                              {isDelivered ? 'Livré' : 'Échoué'}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-2 text-xs text-gray-400 ml-8">
+                                            <span>Jour {msg.day}/7</span>
+                                            <span>•</span>
+                                            <span>{dateStr} à {timeStr}</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Actions */}
+                            <div className="flex gap-3">
+                              {getCampaignActions(campaign)}
+                              <button
+                                onClick={() => { setSelectedCampaignDetail(null); setShowCampaignMessages(false); setCampaignStats(null); }}
+                                className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-xl font-medium hover:bg-gray-300"
+                              >
+                                Fermer
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
                     </>
                   );
                 })()}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Email Preview Modal */}
+        <AnimatePresence>
+          {showEmailPreview && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 z-[60] flex items-center justify-center p-4"
+              onClick={() => setShowEmailPreview(false)}
+            >
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="bg-white rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+                  <h3 className="text-lg font-bold text-gray-800">Aperçu de l'email</h3>
+                  <button onClick={() => setShowEmailPreview(false)} className="p-2 hover:bg-gray-100 rounded-full">
+                    <FaTimes className="text-gray-600" size={18} />
+                  </button>
+                </div>
+                <div className="flex-1 overflow-auto p-1">
+                  <iframe
+                    srcDoc={emailPreviewHtml}
+                    sandbox="allow-same-origin"
+                    className="w-full border-0"
+                    style={{ minHeight: '500px', height: '100%' }}
+                    title="Aperçu email"
+                  />
+                </div>
               </motion.div>
             </motion.div>
           )}

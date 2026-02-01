@@ -1408,11 +1408,12 @@ export class SBCApiService extends ApiService {
       professions?: string[];
       minAge?: number;
       maxAge?: number;
-      hasUnpaidReferrals?: boolean;
       excludeCurrentTargets?: boolean;
+      subscriptionStatus?: 'subscribed' | 'non-subscribed' | 'all';
     };
     customMessages?: Array<{
       dayNumber: number;
+      subject?: string;
       messageTemplate: {
         fr: string;
         en: string;
@@ -1420,6 +1421,11 @@ export class SBCApiService extends ApiService {
       mediaUrls?: Array<{
         url: string;
         type: 'image' | 'video' | 'pdf';
+      }>;
+      buttons?: Array<{
+        label: string;
+        url: string;
+        color?: string;
       }>;
     }>;
     maxMessagesPerDay?: number;
@@ -1503,8 +1509,8 @@ export class SBCApiService extends ApiService {
     professions?: string[];
     minAge?: number;
     maxAge?: number;
-    hasUnpaidReferrals?: boolean;
     excludeCurrentTargets?: boolean;
+    subscriptionStatus?: 'subscribed' | 'non-subscribed' | 'all';
   }): Promise<ApiResponse> {
     return await this.post('/relance/campaigns/preview', { body: { targetFilter } });
   }
@@ -1528,6 +1534,50 @@ export class SBCApiService extends ApiService {
     return await this.get('/relance/campaigns/default/targets', {
       queryParameters: params
     });
+  }
+
+  /**
+   * Get recent messages sent across all relances/campaigns
+   * GET /api/relance/messages/recent
+   */
+  async relanceGetRecentMessages(limit?: number): Promise<ApiResponse> {
+    return await this.get('/relance/messages/recent', {
+      queryParameters: limit ? { limit } : undefined
+    });
+  }
+
+  /**
+   * Get detailed campaign statistics
+   * GET /api/relance/admin/campaigns/:id/stats
+   */
+  async relanceGetCampaignStats(campaignId: string): Promise<ApiResponse> {
+    return await this.get(`/relance/admin/campaigns/${campaignId}/stats`);
+  }
+
+  /**
+   * Get recent messages for a specific campaign
+   * GET /api/relance/admin/campaigns/:id/messages/recent
+   */
+  async relanceGetCampaignMessages(campaignId: string, limit?: number): Promise<ApiResponse> {
+    return await this.get(`/relance/admin/campaigns/${campaignId}/messages/recent`, {
+      queryParameters: limit ? { limit } : undefined
+    });
+  }
+
+  /**
+   * Preview an email template with sample data
+   * POST /api/relance/admin/messages/preview
+   */
+  async relancePreviewMessage(data: {
+    dayNumber: number;
+    subject?: string;
+    messageTemplate: { fr: string; en: string };
+    mediaUrls?: Array<{ url: string; type: string }>;
+    buttons?: Array<{ label: string; url: string; color?: string }>;
+    recipientName?: string;
+    referrerName?: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/relance/admin/messages/preview', { body: data });
   }
 
   // ==================== ACTIVATION BALANCE ====================
