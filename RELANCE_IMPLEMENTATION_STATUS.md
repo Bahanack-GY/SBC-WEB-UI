@@ -111,7 +111,7 @@
 - [x] Access from Profile Page
 - [x] Access from AdsPack (Winner Pack)
 - [x] Subscription Modal Display
-- [x] Price Display (1,000 XAF/2 mois)
+- [x] Price Display (2,000 XAF/mois)
 
 ---
 

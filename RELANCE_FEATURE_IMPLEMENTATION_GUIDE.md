@@ -36,7 +36,7 @@
 
 ### Subscription Model
 
-- **Price**: 1,000 XAF / 2 mois (2 months)
+- **Price**: 2,000 XAF / mois (per month)
 - **Access Control**: Requires both:
   - Admin role (`user.role === 'admin'`)
   - Active Relance subscription (`hasSubscription` via `GET /api/subscriptions/check/RELANCE`)
@@ -152,7 +152,7 @@ Shows when user without subscription tries to access:
 │ ✅ Campagnes ciblées                       │
 │ ✅ Statistiques détaillées                 │
 │                                             │
-│ Prix : 1 000 XAF/2 mois                    │
+│ Prix : 2 000 XAF/mois                       │
 │                                             │
 │ [Souscrire maintenant]  [Fermer]           │
 └─────────────────────────────────────────────┘
@@ -1327,7 +1327,7 @@ try {
 ### Scenario 1: New User Onboarding
 
 ```
-1. User subscribes to Relance (1000 XAF)
+1. User subscribes to Relance (2000 XAF)
    ✓ checkSubscription returns hasSubscription: true
 
 2. User navigates to /relance
