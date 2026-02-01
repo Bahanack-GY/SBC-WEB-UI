@@ -27,21 +27,36 @@ const TourContext = createContext<TourContextType>({
   hasSeenTour: false,
 });
 
+const TOUR_STORAGE_KEY = 'seenTours';
+
+const getSeenTours = (): string[] => {
+  try {
+    const stored = localStorage.getItem(TOUR_STORAGE_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const markTourSeen = (path: string) => {
+  const seen = getSeenTours();
+  if (!seen.includes(path)) {
+    seen.push(path);
+    localStorage.setItem(TOUR_STORAGE_KEY, JSON.stringify(seen));
+  }
+};
+
+const hasPageTourBeenSeen = (path: string): boolean => {
+  return getSeenTours().includes(path);
+};
+
 export const useTour = () => useContext(TourContext);
 
 export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [run, setRun] = useState(false);
-  const [hasSeenTour, setHasSeenTour] = useState(() => {
-    return localStorage.getItem('hasSeenTour') === 'true';
-  });
   const location = useLocation();
 
-  useEffect(() => {
-    // Start tour automatically if user hasn't seen it
-    if (!hasSeenTour && getTourSteps().length > 0) {
-      setRun(true);
-    }
-  }, [location.pathname, hasSeenTour]);
+  const hasSeenTour = hasPageTourBeenSeen(location.pathname);
 
   const getTourSteps = useCallback(() => {
     switch (location.pathname) {
@@ -71,14 +86,25 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [location.pathname]);
 
+  useEffect(() => {
+    // Stop any running tour when navigating
+    setRun(false);
+
+    // Auto-start tour if this page's tour hasn't been seen yet
+    const steps = getTourSteps();
+    if (steps.length > 0 && !hasPageTourBeenSeen(location.pathname)) {
+      // Small delay to let the page render its elements first
+      const timer = setTimeout(() => setRun(true), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [location.pathname, getTourSteps]);
+
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status } = data;
     if (status === STATUS.FINISHED || status === STATUS.SKIPPED) {
       setRun(false);
-      if (status === STATUS.FINISHED) {
-        setHasSeenTour(true);
-        localStorage.setItem('hasSeenTour', 'true');
-      }
+      // Mark as seen whether finished or skipped
+      markTourSeen(location.pathname);
     }
   };
 
@@ -131,4 +157,4 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
       />
     </TourContext.Provider>
   );
-}; 
+};
