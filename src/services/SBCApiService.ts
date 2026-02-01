@@ -1330,65 +1330,85 @@ export class SBCApiService extends ApiService {
     });
   }
 
-  // ==================== RELANCE (WhatsApp Campaign Follow-up) ====================
+  // ==================== RELANCE (Email Campaign Follow-up) ====================
 
-  // ===== WhatsApp Connection =====
-
-  /**
-   * Connect WhatsApp - Generate QR code for WhatsApp Web connection
-   */
-  async relanceConnect(): Promise<ApiResponse> {
-    return await this.post('/relance/connect', { body: {} });
-  }
+  // ===== Status & Settings =====
 
   /**
-   * Get Relance status - Check WhatsApp connection status and campaign settings
+   * Get Relance status - Check relance configuration and active targets count
+   * GET /api/relance/status
    */
   async relanceGetStatus(): Promise<ApiResponse> {
     return await this.get('/relance/status');
   }
 
   /**
-   * Disconnect WhatsApp - Logout WhatsApp session
-   * @param force - If true, completely deletes session (requires new QR). If false/undefined, preserves session for auto-reconnect
+   * Update relance settings (enabled, enrollment/sending paused)
+   * PUT /api/relance/settings
    */
-  async relanceDisconnect(force?: boolean): Promise<ApiResponse> {
-    return await this.delete('/relance/disconnect', {
-      body: force ? { force: true } : undefined
-    });
+  async relanceUpdateSettings(settings: {
+    enabled?: boolean;
+    enrollmentPaused?: boolean;
+    sendingPaused?: boolean;
+  }): Promise<ApiResponse> {
+    return await this.put('/relance/settings', { body: settings });
+  }
+
+  /**
+   * Update relance configuration
+   * PATCH /api/relance/config
+   */
+  async relanceUpdateConfig(config: {
+    maxMessagesPerDay?: number;
+    enabled?: boolean;
+  }): Promise<ApiResponse> {
+    return await this.patch('/relance/config', { body: config });
+  }
+
+  // ===== Targets =====
+
+  /**
+   * Get Relance targets - Get user's active referrals in the relance loop
+   * GET /api/relance/targets
+   */
+  async relanceGetTargets(params?: {
+    page?: number;
+    limit?: number;
+    status?: string;
+  }): Promise<ApiResponse> {
+    return await this.get('/relance/targets', { queryParameters: params });
   }
 
   // ===== Campaign Management =====
 
   /**
-   * Preview filter results with sample users (5 users shown)
+   * Get all user's campaigns
+   * GET /api/relance/campaigns
    */
-  async relancePreviewFilters(targetFilter: {
-    countries?: string[];
-    gender?: string;
-    professions?: string[];
-    minAge?: number;
-    maxAge?: number;
-    registrationDateFrom?: string;
-    registrationDateTo?: string;
-    excludeCurrentTargets?: boolean;
+  async relanceGetCampaigns(params?: {
+    status?: string;
+    page?: number;
+    limit?: number;
   }): Promise<ApiResponse> {
-    return await this.post('/relance/campaigns/preview', { body: { targetFilter } });
+    return await this.get('/relance/campaigns', { queryParameters: params });
   }
 
   /**
    * Create a new campaign
+   * POST /api/relance/campaigns
    */
   async relanceCreateCampaign(campaignData: {
     name: string;
+    type?: 'default' | 'filtered';
     targetFilter: {
       countries?: string[];
+      registrationDateFrom?: string;
+      registrationDateTo?: string;
       gender?: string;
       professions?: string[];
       minAge?: number;
       maxAge?: number;
-      registrationDateFrom?: string;
-      registrationDateTo?: string;
+      hasUnpaidReferrals?: boolean;
       excludeCurrentTargets?: boolean;
     };
     customMessages?: Array<{
@@ -1403,58 +1423,22 @@ export class SBCApiService extends ApiService {
       }>;
     }>;
     maxMessagesPerDay?: number;
-    scheduledStartDate?: string | null;
-    runAfterCampaignId?: string;
+    scheduledStartDate?: string;
   }): Promise<ApiResponse> {
     return await this.post('/relance/campaigns', { body: campaignData });
   }
 
   /**
-   * Get all user's FILTERED campaigns (excludes default relance)
-   * Default relance is NOT a campaign - it's a background system
-   */
-  async relanceGetCampaigns(filters?: {
-    status?: string;
-  }): Promise<ApiResponse> {
-    return await this.get('/relance/campaigns', { queryParameters: filters });
-  }
-
-  /**
-   * Get default relance statistics
-   * Default relance doesn't have a Campaign document - it's tracked via RelanceConfig
-   */
-  async relanceGetDefaultStats(): Promise<ApiResponse> {
-    return await this.get('/relance/campaigns/default/stats');
-  }
-
-  /**
-   * Get default relance targets (targets with campaignId: null)
-   */
-  async relanceGetDefaultTargets(params?: {
-    page?: number;
-    limit?: number;
-  }): Promise<ApiResponse> {
-    return await this.get('/relance/campaigns/default/targets', {
-      queryParameters: params
-    });
-  }
-
-  /**
-   * Get campaign details by ID (for FILTERED campaigns only)
-   */
-  async relanceGetCampaignDetails(campaignId: string): Promise<ApiResponse> {
-    return await this.get(`/relance/campaigns/${campaignId}`);
-  }
-
-  /**
-   * Get campaign by ID (alias for relanceGetCampaignDetails)
+   * Get campaign details by ID
+   * GET /api/relance/campaigns/:id
    */
   async relanceGetCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.get(`/relance/campaigns/${campaignId}`);
   }
 
   /**
-   * Get campaign targets (enrolled referrals for FILTERED campaigns)
+   * Get campaign targets
+   * GET /api/relance/campaigns/:id/targets
    */
   async relanceGetCampaignTargets(campaignId: string, params?: {
     page?: number;
@@ -1466,63 +1450,84 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Start a campaign
+   * Start a draft campaign
+   * POST /api/relance/campaigns/:id/start
    */
   async relanceStartCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.post(`/relance/campaigns/${campaignId}/start`, { body: {} });
   }
 
   /**
-   * Pause a campaign
+   * Pause an active campaign
+   * POST /api/relance/campaigns/:id/pause
    */
   async relancePauseCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.post(`/relance/campaigns/${campaignId}/pause`, { body: {} });
   }
 
   /**
-   * Resume a campaign
+   * Resume a paused campaign
+   * POST /api/relance/campaigns/:id/resume
    */
   async relanceResumeCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.post(`/relance/campaigns/${campaignId}/resume`, { body: {} });
   }
 
   /**
-   * Delete a campaign
-   * Can only delete campaigns with status: DRAFT, SCHEDULED, COMPLETED, or CANCELLED
-   * Cannot delete ACTIVE or PAUSED campaigns (must cancel first)
+   * Cancel a campaign
+   * POST /api/relance/campaigns/:id/cancel
+   */
+  async relanceCancelCampaign(campaignId: string, reason?: string): Promise<ApiResponse> {
+    return await this.post(`/relance/campaigns/${campaignId}/cancel`, {
+      body: reason ? { reason } : {}
+    });
+  }
+
+  /**
+   * Delete a draft campaign
+   * DELETE /api/relance/campaigns/:id
    */
   async relanceDeleteCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.delete(`/relance/campaigns/${campaignId}`);
   }
 
   /**
-   * Cancel a campaign
+   * Preview filter results before creating campaign
+   * POST /api/relance/campaigns/preview
    */
-  async relanceCancelCampaign(campaignId: string, reason: string): Promise<ApiResponse> {
-    return await this.post(`/relance/campaigns/${campaignId}/cancel`, { body: { reason } });
-  }
-
-  // ===== Configuration =====
-
-  /**
-   * Update campaign configuration settings
-   */
-  async relanceUpdateConfig(config: {
-    allowSimultaneousCampaigns?: boolean;
-    maxMessagesPerDay?: number;
-    maxTargetsPerCampaign?: number;
-    defaultCampaignPaused?: boolean;
+  async relancePreviewFilters(targetFilter: {
+    countries?: string[];
+    registrationDateFrom?: string;
+    registrationDateTo?: string;
+    gender?: string;
+    professions?: string[];
+    minAge?: number;
+    maxAge?: number;
+    hasUnpaidReferrals?: boolean;
+    excludeCurrentTargets?: boolean;
   }): Promise<ApiResponse> {
-    return await this.patch('/relance/config', { body: config });
+    return await this.post('/relance/campaigns/preview', { body: { targetFilter } });
   }
 
-  // ===== Targets =====
+  /**
+   * Get default relance statistics
+   * GET /api/relance/campaigns/default/stats
+   */
+  async relanceGetDefaultStats(): Promise<ApiResponse> {
+    return await this.get('/relance/campaigns/default/stats');
+  }
 
   /**
-   * Get Relance targets - Get user's active referrals in campaigns
+   * Get default relance targets
+   * GET /api/relance/campaigns/default/targets
    */
-  async relanceGetTargets(): Promise<ApiResponse> {
-    return await this.get('/relance/targets');
+  async relanceGetDefaultTargets(params?: {
+    page?: number;
+    limit?: number;
+  }): Promise<ApiResponse> {
+    return await this.get('/relance/campaigns/default/targets', {
+      queryParameters: params
+    });
   }
 
   // ==================== ACTIVATION BALANCE ====================
@@ -1833,6 +1838,13 @@ export class SBCApiService extends ApiService {
    */
   async reportConversation(conversationId: string): Promise<ApiResponse> {
     return await this.post(`/chat/conversations/${conversationId}/report`);
+  }
+
+  /**
+   * Block a conversation
+   */
+  async blockConversation(conversationId: string): Promise<ApiResponse> {
+    return await this.post(`/chat/conversations/${conversationId}/block`);
   }
 
   /**

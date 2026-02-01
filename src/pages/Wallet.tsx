@@ -337,24 +337,26 @@ function Wallet() {
           message: `Impossible d'effectuer un retrait avec un solde ${selectedBalanceType} négatif. Votre solde actuel est de ${selectedBalanceType === 'FCFA' ? `${currentBalance.toLocaleString('fr-FR')} F` : `$${currentBalance.toFixed(2)}`}.`
         });
         setShowModal(true);
+        setIsSubmittingWithdrawal(false);
         return;
       }
       
       const requiredAmount = totalDeduction; // Always use totalDeduction (amount + fee) for balance check
       
       if (currentBalance < requiredAmount) {
-        const balanceText = selectedBalanceType === 'FCFA' 
+        const balanceText = selectedBalanceType === 'FCFA'
           ? `${currentBalance.toLocaleString('fr-FR')} F`
           : `$${currentBalance.toFixed(2)}`;
         const requiredText = selectedBalanceType === 'FCFA'
           ? `${requiredAmount.toLocaleString('fr-FR')} F (montant + frais de 2.5%)`
           : `$${requiredAmount.toFixed(2)}`;
-          
+
         setModalContent({
           type: 'error',
           message: `Solde ${selectedBalanceType} insuffisant. Vous avez ${balanceText} mais il faut ${requiredText}.`
         });
         setShowModal(true);
+        setIsSubmittingWithdrawal(false);
         return;
       }
       try {
@@ -388,6 +390,7 @@ function Wallet() {
               onConfirm: () => navigate('/modifier-le-profil')
             });
             setShowModal(true);
+            setIsSubmittingWithdrawal(false);
             return;
           }
           
@@ -395,16 +398,18 @@ function Wallet() {
           try {
             const limitsResponse = await sbcApiService.checkCryptoWithdrawalLimitsV2(Number(withdrawAmount), 'USD');
             const limitsData = handleApiResponse(limitsResponse);
-            
+
             if (!limitsData?.allowed) {
               setModalContent({
                 type: 'error',
                 message: `Retrait USD non autorisé: ${limitsData?.reason || 'Limite atteinte'}`
               });
               setShowModal(true);
+              setIsSubmittingWithdrawal(false);
               return;
             }
           } catch (err) {
+            // Continue even if limit check fails
           }
         }
         
@@ -494,6 +499,7 @@ function Wallet() {
               onConfirm: () => navigate('/modifier-le-profil')
             });
             setShowModal(true);
+            setIsSubmittingWithdrawal(false);
             return;
           }
 
@@ -592,6 +598,7 @@ function Wallet() {
           } else {
             setModalContent({ type: 'error', message: data.message || 'Une erreur inattendue est survenue lors de l\'initiation du retrait. Veuillez réessayer.' });
             setShowModal(true);
+            setIsSubmittingWithdrawal(false);
           }
         } else {
           // This block is for cases where handleApiResponse doesn't throw but response.isOverallSuccess is false
@@ -612,6 +619,7 @@ function Wallet() {
             setModalContent({ type: 'error', message: errorMessage });
             setShowModal(true);
           }
+          setIsSubmittingWithdrawal(false);
         }
 
       } catch (err) {
@@ -652,6 +660,7 @@ function Wallet() {
     } else {
       setModalContent({ type: 'error', message: "Veuillez entrer un montant de retrait valide." });
       setShowModal(true);
+      setIsSubmittingWithdrawal(false);
     }
   };
 

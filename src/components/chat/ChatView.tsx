@@ -19,6 +19,9 @@ import {
   DocumentDuplicateIcon,
   TrashIcon,
   ArrowDownTrayIcon,
+  EllipsisVerticalIcon,
+  FlagIcon,
+  NoSymbolIcon,
 } from '@heroicons/react/24/outline';
 import { CheckIcon as CheckIconSolid } from '@heroicons/react/24/solid';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
@@ -49,6 +52,7 @@ interface ForwardModalData {
 
 export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) => {
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const {
     joinConversation,
     leaveConversation,
@@ -81,6 +85,10 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set());
   const longPressTimerRef = useRef<number | null>(null);
   const longPressDurationMs = 500;
+
+  // Header menu
+  const [showHeaderMenu, setShowHeaderMenu] = useState(false);
+  const headerMenuRef = useRef<HTMLDivElement>(null);
 
   // Reply
   const [replyToMessage, setReplyToMessage] = useState<Message | null>(null);
@@ -385,7 +393,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
     if (!user || (!content && !selectedFile)) return;
 
     // Check if user can send messages
-    if (conversation && !canSendMessage(conversation, user._id)) {
+    if (conversation && !isAdmin && !canSendMessage(conversation, user._id)) {
       alert('Vous ne pouvez pas envoyer plus de messages dans cette conversation.');
       return;
     }
@@ -769,12 +777,49 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         reportedBy: user._id,
       });
 
+      setShowHeaderMenu(false);
       alert('Conversation signalée');
     } catch (error) {
       console.error('Failed to report conversation:', error);
       alert('Échec du signalement de la conversation. Veuillez réessayer.');
     }
   };
+
+  const handleBlockConversation = async () => {
+    if (!conversation || !user) return;
+
+    if (!confirm('Êtes-vous sûr de vouloir bloquer cette conversation ? Vous ne recevrez plus de messages de cet utilisateur.')) {
+      return;
+    }
+
+    try {
+      await sbcApiService.blockConversation(conversation._id);
+
+      setConversation({
+        ...conversation,
+        acceptanceStatus: 'blocked',
+      });
+
+      setShowHeaderMenu(false);
+      alert('Conversation bloquée');
+    } catch (error) {
+      console.error('Failed to block conversation:', error);
+      alert('Échec du blocage. Veuillez réessayer.');
+    }
+  };
+
+  // Close header menu on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (headerMenuRef.current && !headerMenuRef.current.contains(e.target as Node)) {
+        setShowHeaderMenu(false);
+      }
+    };
+    if (showHeaderMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showHeaderMenu]);
 
   // Swipe to reply handlers
   const handleSwipeStart = (e: React.TouchEvent | React.MouseEvent, messageId: string) => {
@@ -1424,13 +1469,41 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                     )}
                   </button>
 
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 cursor-pointer" onClick={handleProfileClick}>
                     <h2 className="font-semibold text-gray-900 truncate">
                       {getConversationName()}
                     </h2>
                     <p className="text-xs text-gray-500">
                       {isOtherParticipantOnline() ? 'En ligne' : 'Hors ligne'}
                     </p>
+                  </div>
+
+                  {/* 3-dot menu */}
+                  <div className="relative" ref={headerMenuRef}>
+                    <button
+                      onClick={() => setShowHeaderMenu(!showHeaderMenu)}
+                      className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    >
+                      <EllipsisVerticalIcon className="w-5 h-5 text-gray-600" />
+                    </button>
+                    {showHeaderMenu && (
+                      <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 w-48">
+                        <button
+                          onClick={handleReportConversation}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                        >
+                          <FlagIcon className="w-4 h-4 text-orange-500" />
+                          Signaler
+                        </button>
+                        <button
+                          onClick={handleBlockConversation}
+                          className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <NoSymbolIcon className="w-4 h-4" />
+                          Bloquer
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </>
               )}
@@ -1439,7 +1512,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         </div>
 
         {/* Acceptance Bar (for recipients) */}
-        {conversation && user && needsAcceptance(conversation, user._id) && (
+        {conversation && user && !isAdmin && needsAcceptance(conversation, user._id) && (
           <div className="bg-yellow-50 border-b border-yellow-200 p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-1">
@@ -1469,7 +1542,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         )}
 
         {/* Initiator Waiting Bar - shown when initiator is waiting for recipient to accept */}
-        {conversation && user && isInitiator(conversation, user._id) && conversation.acceptanceStatus === 'pending' && (
+        {conversation && user && !isAdmin && isInitiator(conversation, user._id) && conversation.acceptanceStatus === 'pending' && (
           <div className={`border-b p-3 ${hasReachedMessageLimit(conversation, user._id) ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
             <div className="flex items-center gap-2">
               {hasReachedMessageLimit(conversation, user._id) ? (
@@ -1663,14 +1736,14 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                 }
               }}
               placeholder={
-                conversation && user && !canSendMessage(conversation, user._id)
+                conversation && user && !isAdmin && !canSendMessage(conversation, user._id)
                   ? "Vous ne pouvez pas envoyer de messages dans cette conversation"
                   : selectedFile
                     ? "Ajouter un message (optionnel)..."
                     : "Écrivez un message..."
               }
               rows={1}
-              disabled={conversation && user ? !canSendMessage(conversation, user._id) : false}
+              disabled={conversation && user && !isAdmin ? !canSendMessage(conversation, user._id) : false}
               className="flex-1 px-4 py-2 bg-gray-100 border-none rounded-full focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none max-h-32 disabled:opacity-60 disabled:cursor-not-allowed"
               style={{
                 minHeight: '40px',
@@ -1682,7 +1755,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
             {/* Send button */}
             <button
               onClick={handleSendMessage}
-              disabled={(!inputValue.trim() && !selectedFile) || uploadingDocument || (conversation && user ? !canSendMessage(conversation, user._id) : false)}
+              disabled={(!inputValue.trim() && !selectedFile) || uploadingDocument || (conversation && user && !isAdmin ? !canSendMessage(conversation, user._id) : false)}
               className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <PaperAirplaneIcon className="w-6 h-6" />

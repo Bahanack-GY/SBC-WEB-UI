@@ -32,6 +32,7 @@ interface UserSearchResult {
 export const ConversationList: React.FC<ConversationListProps> = ({ onConversationClick }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const { onNewMessage, onMessageStatus, onUserOnline, onUserOffline, onlineUsers, isConnected } = useSocket();
 
   // State management
@@ -771,13 +772,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                       </p>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {/* Acceptance badge - shown to recipients who need to accept */}
-                        {user && needsAcceptance(conv, user._id) && (
+                        {user && !isAdmin && needsAcceptance(conv, user._id) && (
                           <span className="px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">
                             À accepter
                           </span>
                         )}
                         {/* Initiator waiting badge - shown to initiators waiting for acceptance */}
-                        {user && isInitiator(conv, user._id) && conv.acceptanceStatus === 'pending' && (
+                        {user && !isAdmin && isInitiator(conv, user._id) && conv.acceptanceStatus === 'pending' && (
                           <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${
                             hasReachedMessageLimit(conv, user._id)
                               ? 'bg-orange-100 text-orange-800'

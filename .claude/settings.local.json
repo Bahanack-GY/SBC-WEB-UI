@@ -9,7 +9,8 @@
       "Read(/C:\\Users\\LENOVO\\Desktop\\projects\\Flutter Dev projects\\Costumer projects\\SBC-WEB-UI\\src/**)",
       "Bash(npm run build)",
       "Read(//c/Users/LENOVO/**)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(npx tsc:*)"
     ],
     "deny": [],
     "ask": []
