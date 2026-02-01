@@ -151,7 +151,7 @@ function AdsPack() {
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
                                         <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
-                                        <span>Connexion via WhatsApp Web (QR Code)</span>
+                                        <span>Emails personnalisés avec campagnes ciblées</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
                                         <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
