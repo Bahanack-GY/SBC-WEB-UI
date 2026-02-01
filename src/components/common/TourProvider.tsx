@@ -11,7 +11,8 @@ import {
   contactsTour,
   adsPackTour,
   subscriptionTour,
-  productManagementTour
+  productManagementTour,
+  relanceTour
 } from '../../config/tours';
 
 interface TourContextType {
@@ -63,6 +64,8 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return subscriptionTour;
       case '/mes-produits':
         return productManagementTour;
+      case '/relance':
+        return relanceTour;
       default:
         return [];
     }
@@ -116,10 +119,13 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
           },
         }}
         locale={{
-          last: 'Terminer',
-          skip: 'Passer',
-          next: 'Suivant',
           back: 'Précédent',
+          close: 'Fermer',
+          last: 'Terminer',
+          next: 'Suivant',
+          nextLabelWithProgress: 'Suivant ({step}/{steps})',
+          open: 'Ouvrir',
+          skip: 'Passer',
         }}
         callback={handleJoyrideCallback}
       />

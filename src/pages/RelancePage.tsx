@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
+import TourButton from '../components/common/TourButton';
 import { sbcApiService } from '../services/SBCApiService';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
@@ -507,7 +508,7 @@ function RelancePage() {
         </div>
 
         {/* Status Card */}
-        <div className={`rounded-2xl p-4 text-white mb-4 ${
+        <div className={`relance-status-card rounded-2xl p-4 text-white mb-4 ${
           status?.enabled
             ? 'bg-gradient-to-r from-blue-500 to-indigo-500'
             : 'bg-gradient-to-r from-gray-500 to-gray-600'
@@ -526,7 +527,7 @@ function RelancePage() {
             </div>
             <button
               onClick={handleToggleEnabled}
-              className={`px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
+              className={`relance-toggle-btn px-4 py-2 rounded-lg text-sm font-bold transition-colors ${
                 status?.enabled
                   ? 'bg-white text-red-500 hover:bg-gray-100'
                   : 'bg-white text-green-600 hover:bg-gray-100'
@@ -538,7 +539,7 @@ function RelancePage() {
         </div>
 
         {/* Controls Card */}
-        <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mb-6">
+        <div className="relance-controls bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mb-6">
           <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
             <FaCog className="text-gray-600" />
             Contrôles
@@ -584,7 +585,7 @@ function RelancePage() {
 
         {/* Statistics Cards - Default Relance only */}
         {defaultStats && (
-          <div className="mb-6">
+          <div className="relance-stats mb-6">
             <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
               <FaPaperPlane className="text-blue-500" />
               Statistiques (Relance par défaut)
@@ -657,7 +658,7 @@ function RelancePage() {
                 setShowTargetsModal(true);
                 fetchTargets();
               }}
-              className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md flex items-center justify-center gap-2"
+              className="relance-targets-btn w-full bg-gradient-to-r from-blue-500 to-indigo-500 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-indigo-600 transition-all shadow-md flex items-center justify-center gap-2"
             >
               <FaUsers /> Voir les cibles actives
             </button>
@@ -665,12 +666,12 @@ function RelancePage() {
         )}
 
         {/* Campaigns Section */}
-        <div className="mb-4">
+        <div className="relance-campaigns mb-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-bold">Campagnes</h3>
             <button
               onClick={handleOpenWizard}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-500 text-white hover:bg-blue-600"
+              className="relance-new-campaign flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-500 text-white hover:bg-blue-600"
             >
               <FaPlus /> Nouvelle Campagne
             </button>
@@ -1393,6 +1394,7 @@ function RelancePage() {
             </motion.div>
           )}
         </AnimatePresence>
+        <TourButton />
       </div>
     </ProtectedRoute>
   );

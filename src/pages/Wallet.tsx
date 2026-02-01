@@ -863,7 +863,7 @@ function Wallet() {
         ) : (
           <>
             {/* Balance Card */}
-            <div className="rounded-2xl bg-gradient-to-r from-blue-500 to-green-600 p-5 mb-6 shadow-lg">
+            <div className="wallet-balance rounded-2xl bg-gradient-to-r from-blue-500 to-green-600 p-5 mb-6 shadow-lg">
               <div className="text-sm opacity-80">Vos soldes</div>
               <div className="flex flex-col gap-2 mb-3">
                 <div className="flex justify-between items-center">
@@ -1139,8 +1139,8 @@ function Wallet() {
             </button>
 
             {/* Bar Chart */}
-            <div className="bg-white rounded-2xl p-4 mb-6 shadow text-gray-800 relative">
-              <div className="flex items-center justify-between mb-2">
+            <div className="transaction-chart bg-white rounded-2xl p-4 mb-6 shadow text-gray-800 relative">
+              <div className="filter-options flex items-center justify-between mb-2">
                 <div className="font-semibold text-[#115CF6]">Résumé des transactions</div>
                 <div className="flex bg-gray-100 rounded-full p-1 gap-1">
                   <button
@@ -1258,7 +1258,7 @@ function Wallet() {
               </div>
             </div>
             {/* Recent Transactions */}
-            <div className="bg-[#192040] rounded-2xl p-4 shadow">
+            <div className="transaction-list bg-[#192040] rounded-2xl p-4 shadow">
               <div className="font-semibold mb-2 text-white">Transactions récentes</div>
               {!transactions || transactions.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
