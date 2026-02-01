@@ -865,7 +865,7 @@ function RelancePage() {
                             <div className="flex items-center gap-3 mt-2 text-xs text-gray-400">
                               <span>Inscrit le {enteredDate}</span>
                               <span>•</span>
-                              <span>{target.language === 'fr' ? '🇫🇷 FR' : '🇬🇧 EN'}</span>
+                              <span>{target.language === 'fr' ? 'FR' : 'EN'}</span>
                               {target.lastMessageSentAt && (
                                 <>
                                   <span>•</span>
