@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaPhone, FaWhatsapp } from "react-icons/fa";
+import { FaBook, FaEnvelope, FaPhone } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
 import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
@@ -248,7 +248,7 @@ function Home() {
                 <HomeButtons icon={<FaCartShopping size={30} />} title="Marketplace" onClick={() => navigate("/marketplace")} />
                 <HomeButtons icon={<FaPhone size={30} />} title="Contacts" onClick={() => navigate("/contacts")} />
                 <HomeButtons
-                  icon={<FaWhatsapp size={30} />}
+                  icon={<FaEnvelope size={30} />}
                   title="Relance"
                   badge="Bientôt"
                   onClick={() => {
@@ -310,11 +310,11 @@ function Home() {
               transition={{ type: 'spring', bounce: 0.2 }}
             >
               <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <FaWhatsapp className="text-[#25D366]" size={24} />
-                Relance WhatsApp
+                <FaEnvelope className="text-[#115CF6]" size={24} />
+                Relance par email
               </h4>
               <p className="text-gray-700 mb-4">
-                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non-payants via WhatsApp pendant 7 jours.
+                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non-payants par email pendant 7 jours.
               </p>
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
                 <p className="text-sm text-gray-600 mb-2">✅ Messages automatiques quotidiens</p>

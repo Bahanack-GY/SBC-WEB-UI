@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { FiEdit2, FiMail, FiPhone, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle, FiLoader, FiGift } from 'react-icons/fi';
-import { FaWhatsapp } from 'react-icons/fa';
+import { FaEnvelope, FaWhatsapp } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -71,7 +71,7 @@ function Profile() {
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
     ...baseActions.slice(0, 7), // Up to "Mes Contacts"
-    { label: 'Relance WhatsApp', icon: <FaWhatsapp className="text-[#25D366]" />, to: '/relance', badge: 'Bientôt', requiresRelance: true },
+    { label: 'Relance par email', icon: <FaEnvelope className="text-[#115CF6]" />, to: '/relance', badge: 'Bientôt', requiresRelance: true },
     ...baseActions.slice(7), // Rest of the actions
   ];
 
@@ -576,11 +576,11 @@ function Profile() {
               transition={{ type: 'spring', bounce: 0.2 }}
             >
               <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <FaWhatsapp className="text-[#25D366]" size={24} />
-                Relance WhatsApp
+                <FaEnvelope className="text-[#115CF6]" size={24} />
+                Relance par email
               </h4>
               <p className="text-gray-700 mb-4">
-                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non-payants via WhatsApp pendant 7 jours.
+                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non-payants par email pendant 7 jours.
               </p>
               <div className="bg-gray-50 p-4 rounded-lg mb-4">
                 <p className="text-sm text-gray-600 mb-2">✅ Messages automatiques quotidiens</p>

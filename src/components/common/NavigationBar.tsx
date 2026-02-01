@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { MdDeviceHub, MdHome, MdShoppingBasket } from 'react-icons/md';
-import { FaWhatsapp } from 'react-icons/fa';
+import { FaEnvelope } from 'react-icons/fa';
 import { HiChatBubbleLeftRight } from 'react-icons/hi2';
 import { useMemo } from 'react';
 import { useRelance } from '../../contexts/RelanceContext';
@@ -39,7 +39,7 @@ function NavigationBar() {
     if (hasRelanceSubscription) {
       items = [
         ...items,
-        { label: 'Relance', icon: <FaWhatsapp size={24} />, path: '/relance' },
+        { label: 'Relance', icon: <FaEnvelope size={24} />, path: '/relance' },
       ];
     }
 
