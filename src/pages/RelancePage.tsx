@@ -48,6 +48,8 @@ function RelancePage() {
   const [showEmailPreview, setShowEmailPreview] = useState(false);
   const [emailPreviewHtml, setEmailPreviewHtml] = useState('');
   const [loadingPreview, setLoadingPreview] = useState(false);
+  const [loadingPreviewFilters, setLoadingPreviewFilters] = useState(false);
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
 
   // Campaign creation wizard state
   const [campaignName, setCampaignName] = useState('');
@@ -352,6 +354,7 @@ function RelancePage() {
   };
 
   const handlePreviewFilters = async () => {
+    setLoadingPreviewFilters(true);
     try {
       const response = await sbcApiService.relancePreviewFilters(filters);
       if (response.isSuccessByStatusCode && response.body?.data) {
@@ -360,10 +363,13 @@ function RelancePage() {
       }
     } catch (err: any) {
       showMessage('Erreur', err.message || 'Échec de l\'aperçu des filtres', 'error');
+    } finally {
+      setLoadingPreviewFilters(false);
     }
   };
 
   const handleCreateCampaign = async () => {
+    setCreatingCampaign(true);
     try {
       const filteredCustomMessages = useCustomMessages
         ? customMessages.filter(
@@ -382,13 +388,34 @@ function RelancePage() {
       if (response.isSuccessByStatusCode && response.body?.data) {
         const newCampaign = response.body.data;
         setShowCampaignWizard(false);
+
+        // Fetch campaigns first to show the new campaign immediately
         await fetchCampaigns();
+
+        // Try to auto-start the campaign (it may already be running from backend)
+        try {
+          const startResponse = await sbcApiService.relanceStartCampaign(newCampaign._id);
+          if (startResponse.isSuccessByStatusCode) {
+            // Refresh to get updated status
+            await fetchCampaigns();
+          }
+        } catch (startErr: any) {
+          // Campaign might already be running, just log it
+          console.log('Auto-start note:', startErr.message || 'Campaign may already be active');
+        }
+
         showMessage('Campagne créée', `Campagne "${campaignName}" créée avec succès !`, 'success');
-        // Auto-start
-        await handleStartCampaign(newCampaign._id);
+      } else {
+        // Handle non-success response from API
+        const errorMessage = response.body?.message || response.body?.error || 'Échec de la création de la campagne';
+        showMessage('Erreur', errorMessage, 'error');
       }
     } catch (err: any) {
-      showMessage('Erreur', err.message || 'Échec de la création de la campagne', 'error');
+      // Handle network or other errors
+      const errorMessage = err.response?.data?.message || err.message || 'Échec de la création de la campagne';
+      showMessage('Erreur', errorMessage, 'error');
+    } finally {
+      setCreatingCampaign(false);
     }
   };
 
@@ -1463,8 +1490,18 @@ function RelancePage() {
                       <button onClick={() => setWizardStep(2)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
                         Retour
                       </button>
-                      <button onClick={handlePreviewFilters} className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">
-                        Aperçu des résultats
+                      <button
+                        onClick={handlePreviewFilters}
+                        disabled={loadingPreviewFilters}
+                        className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {loadingPreviewFilters && (
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        )}
+                        {loadingPreviewFilters ? 'Chargement...' : 'Aperçu des résultats'}
                       </button>
                     </div>
                   </div>
@@ -1492,8 +1529,18 @@ function RelancePage() {
                       <button onClick={() => setWizardStep(3)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
                         Retour
                       </button>
-                      <button onClick={handleCreateCampaign} className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600">
-                        Créer la campagne
+                      <button
+                        onClick={handleCreateCampaign}
+                        disabled={creatingCampaign}
+                        className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {creatingCampaign && (
+                          <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                        )}
+                        {creatingCampaign ? 'Création en cours...' : 'Créer la campagne'}
                       </button>
                     </div>
                   </div>
