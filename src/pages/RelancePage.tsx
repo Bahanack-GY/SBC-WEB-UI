@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye } from 'react-icons/fa';
+import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye, FaChartBar, FaMousePointer, FaEnvelopeOpen } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -81,6 +81,7 @@ function RelancePage() {
   const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
   const [showCampaignHistory, setShowCampaignHistory] = useState(false);
   const [selectedCampaignDetail, setSelectedCampaignDetail] = useState<Campaign | null>(null);
+  const [showEngagementStats, setShowEngagementStats] = useState(false);
 
   // Message modal state
   const [messageModal, setMessageModal] = useState<{ show: boolean; title: string; message: string; type: 'success' | 'error' | 'info' }>({
@@ -724,7 +725,7 @@ function RelancePage() {
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
                 <div className="flex items-center gap-2 mb-1">
                   <FaUsers className="text-blue-500" />
-                  <span className="text-xs text-blue-600">Cibles actives</span>
+                  <span className="text-xs text-blue-600">En cours de relance</span>
                 </div>
                 <div className="text-2xl font-bold text-blue-700">{defaultStats.activeTargets}</div>
               </div>
@@ -745,10 +746,104 @@ function RelancePage() {
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
                   <FaCheckCircle className="text-green-500" />
-                  <span className="text-xs text-green-600">Relance terminée</span>
+                  <span className="text-xs text-green-600">Conversions (Payés)</span>
                 </div>
-                <div className="text-2xl font-bold text-green-700">{defaultStats.completedRelance}</div>
+                <div className="text-2xl font-bold text-green-700">{defaultStats.targetsConverted || 0}</div>
               </div>
+            </div>
+
+            {/* Email Engagement Stats - Collapsible */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+              <button
+                onClick={() => setShowEngagementStats(!showEngagementStats)}
+                className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <FaChartBar className="text-purple-500" />
+                  <span className="font-bold text-sm text-gray-700">Engagement des emails</span>
+                  {defaultStats.totalMessagesOpened === undefined && (
+                    <span className="text-xs text-gray-400 italic">(En attente de données)</span>
+                  )}
+                </div>
+                <FaChevronRight className={`transition-transform text-gray-600 ${showEngagementStats ? 'rotate-90' : ''}`} />
+              </button>
+
+              {showEngagementStats && (
+                defaultStats.totalMessagesOpened !== undefined ? (
+                  <div className="p-4 pt-0 border-t border-gray-100">
+                    {/* Key Engagement Metrics */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="bg-blue-50 rounded-lg p-3 text-center">
+                        <FaEnvelopeOpen className="text-blue-500 mx-auto mb-1" />
+                        <div className="text-xs text-blue-600 mb-1">Taux d'ouverture</div>
+                        <div className="text-xl font-bold text-blue-700">{defaultStats.openRate?.toFixed(1) || 0}%</div>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-3 text-center">
+                        <FaMousePointer className="text-purple-500 mx-auto mb-1" />
+                        <div className="text-xs text-purple-600 mb-1">Taux de clic</div>
+                        <div className="text-xl font-bold text-purple-700">{defaultStats.clickRate?.toFixed(1) || 0}%</div>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3 text-center">
+                        <FaCheckCircle className="text-green-500 mx-auto mb-1" />
+                        <div className="text-xs text-green-600 mb-1">CTR</div>
+                        <div className="text-xl font-bold text-green-700">{defaultStats.clickThroughRate?.toFixed(1) || 0}%</div>
+                      </div>
+                    </div>
+
+                    {/* Visual Bar Chart */}
+                    <div className="space-y-3">
+                      <div>
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>Emails ouverts (uniques)</span>
+                          <span className="font-bold">{defaultStats.totalMessagesOpened || 0} / {defaultStats.totalMessagesDelivered}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-blue-500 h-2 rounded-full transition-all"
+                            style={{ width: `${defaultStats.openRate || 0}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>Emails cliqués (uniques)</span>
+                          <span className="font-bold">{defaultStats.totalMessagesClicked || 0} / {defaultStats.totalMessagesDelivered}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2">
+                          <div
+                            className="bg-purple-500 h-2 rounded-full transition-all"
+                            style={{ width: `${defaultStats.clickRate || 0}%` }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Total Events */}
+                      <div className="pt-2 border-t border-gray-100">
+                        <div className="text-xs text-gray-500 mb-2">Événements totaux</div>
+                        <div className="flex gap-4 text-xs">
+                          <div>
+                            <span className="text-gray-600">Ouvertures: </span>
+                            <span className="font-bold text-blue-600">{defaultStats.totalOpens || 0}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Clics: </span>
+                            <span className="font-bold text-purple-600">{defaultStats.totalClicks || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-4 pt-0 border-t border-gray-100">
+                    <div className="text-center py-6 text-gray-500">
+                      <FaChartBar className="mx-auto text-3xl mb-2 text-gray-300" />
+                      <p className="text-sm">Les données d'engagement seront disponibles une fois que les emails commencent à être suivis.</p>
+                      <p className="text-xs mt-1 text-gray-400">Le suivi des ouvertures et clics sera automatique.</p>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
 
             {/* Day Progression - only show if there are active targets */}
@@ -1675,12 +1770,22 @@ function RelancePage() {
                             {/* Stats Grid */}
                             <div className="grid grid-cols-2 gap-3 mb-4">
                               <div className="bg-gray-50 rounded-xl p-3">
-                                <div className="text-xs text-gray-500 mb-1">Cibles inscrites</div>
+                                <div className="text-xs text-gray-500 mb-1">Total inscrits</div>
                                 <div className="text-2xl font-bold text-gray-800">{stats?.totalEnrolled ?? campaign.targetsEnrolled}</div>
                               </div>
                               <div className="bg-blue-50 rounded-xl p-3">
-                                <div className="text-xs text-blue-600 mb-1">Cibles actives</div>
+                                <div className="text-xs text-blue-600 mb-1">En cours de relance</div>
                                 <div className="text-2xl font-bold text-blue-700">{stats?.activeTargets ?? '-'}</div>
+                              </div>
+                              <div className="bg-green-50 rounded-xl p-3">
+                                <div className="text-xs text-green-600 mb-1">Conversions (Payés)</div>
+                                <div className="text-2xl font-bold text-green-700">{stats?.targetsConverted ?? 0}</div>
+                              </div>
+                              <div className="bg-purple-50 rounded-xl p-3">
+                                <div className="text-xs text-purple-600 mb-1">Taux de conversion</div>
+                                <div className="text-2xl font-bold text-purple-700">
+                                  {stats?.totalEnrolled ? ((stats.targetsConverted || 0) / stats.totalEnrolled * 100).toFixed(1) : 0}%
+                                </div>
                               </div>
                               <div className="bg-green-50 rounded-xl p-3">
                                 <div className="text-xs text-green-600 mb-1">Emails envoyés</div>
@@ -1734,6 +1839,70 @@ function RelancePage() {
                                 </div>
                               </div>
                             )}
+
+                            {/* Email Engagement Stats */}
+                            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 shadow-sm border border-purple-100 mb-4">
+                              <div className="flex items-center gap-2 mb-3">
+                                <FaChartBar className="text-purple-500" />
+                                <h5 className="font-bold text-sm text-gray-700">Engagement des emails</h5>
+                                {stats?.totalMessagesOpened === undefined && (
+                                  <span className="text-xs text-gray-400 italic">(En attente)</span>
+                                )}
+                              </div>
+
+                              {stats?.totalMessagesOpened !== undefined ? (
+                                <>
+
+                                {/* Key Metrics Row */}
+                                <div className="grid grid-cols-3 gap-2 mb-3">
+                                  <div className="bg-white/80 rounded-lg p-2 text-center">
+                                    <div className="text-2xl font-bold text-blue-600">{stats.openRate?.toFixed(1) || 0}%</div>
+                                    <div className="text-xs text-gray-600">Ouverture</div>
+                                  </div>
+                                  <div className="bg-white/80 rounded-lg p-2 text-center">
+                                    <div className="text-2xl font-bold text-purple-600">{stats.clickRate?.toFixed(1) || 0}%</div>
+                                    <div className="text-xs text-gray-600">Clic</div>
+                                  </div>
+                                  <div className="bg-white/80 rounded-lg p-2 text-center">
+                                    <div className="text-2xl font-bold text-green-600">{stats.clickThroughRate?.toFixed(1) || 0}%</div>
+                                    <div className="text-xs text-gray-600">CTR</div>
+                                  </div>
+                                </div>
+
+                                {/* Detailed Bars */}
+                                <div className="space-y-2 text-xs">
+                                  <div>
+                                    <div className="flex justify-between text-gray-600 mb-1">
+                                      <span><FaEnvelopeOpen className="inline mr-1" />Ouverts (uniques)</span>
+                                      <span className="font-bold">{stats.totalMessagesOpened || 0} / {stats.totalMessagesDelivered}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${stats.openRate || 0}%` }} />
+                                    </div>
+                                  </div>
+
+                                  <div>
+                                    <div className="flex justify-between text-gray-600 mb-1">
+                                      <span><FaMousePointer className="inline mr-1" />Cliqués (uniques)</span>
+                                      <span className="font-bold">{stats.totalMessagesClicked || 0} / {stats.totalMessagesDelivered}</span>
+                                    </div>
+                                    <div className="w-full bg-gray-200 rounded-full h-1.5">
+                                      <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: `${stats.clickRate || 0}%` }} />
+                                    </div>
+                                  </div>
+
+                                  <div className="flex gap-3 pt-2 border-t border-purple-200 text-gray-600">
+                                    <span>Total ouvertures: <strong className="text-blue-600">{stats.totalOpens || 0}</strong></span>
+                                    <span>Total clics: <strong className="text-purple-600">{stats.totalClicks || 0}</strong></span>
+                                  </div>
+                                </div>
+                                </>
+                              ) : (
+                                <div className="text-center py-4 text-gray-500">
+                                  <p className="text-xs">Données d'engagement en attente</p>
+                                </div>
+                              )}
+                            </div>
 
                             {/* Exit Reasons */}
                             {stats?.exitReasons && (

@@ -176,10 +176,21 @@ export interface CampaignDetailStats {
   totalEnrolled: number;
   activeTargets: number;
   completedRelance: number;
+  targetsConverted: number;      // NEW: Users who paid during campaign
+  targetsExited: number;          // Only manual/referrer_inactive exits
+  targetsCompleted: number;       // Legacy field (backward compatibility)
   totalMessagesSent: number;
   totalMessagesDelivered: number;
   totalMessagesFailed: number;
   deliveryPercentage: number;
+  // Email engagement tracking
+  totalMessagesOpened?: number;      // Unique emails opened at least once
+  totalMessagesClicked?: number;     // Unique emails with at least one click
+  totalOpens?: number;               // Total open events (includes multiple opens)
+  totalClicks?: number;              // Total click events (includes multiple clicks)
+  openRate?: number;                 // Percentage of delivered emails opened
+  clickRate?: number;                // Percentage of delivered emails clicked
+  clickThroughRate?: number;         // Percentage of opened emails that were clicked
   dayProgression: Array<{ day: number; count: number }>;
   exitReasons: {
     paid: number;
@@ -369,9 +380,20 @@ export interface DefaultRelanceStats {
   totalEnrolled: number;
   activeTargets: number;
   completedRelance: number;
+  targetsConverted: number;      // NEW: Users who paid during campaign
+  targetsExited: number;          // Only manual/referrer_inactive exits
+  targetsCompleted: number;       // Legacy field (backward compatibility)
   totalMessagesSent: number;
   totalMessagesDelivered: number;
   deliveryPercentage: number;
+  // Email engagement tracking
+  totalMessagesOpened?: number;      // Unique emails opened at least once
+  totalMessagesClicked?: number;     // Unique emails with at least one click
+  totalOpens?: number;               // Total open events (includes multiple opens)
+  totalClicks?: number;              // Total click events (includes multiple clicks)
+  openRate?: number;                 // Percentage of delivered emails opened
+  clickRate?: number;                // Percentage of delivered emails clicked
+  clickThroughRate?: number;         // Percentage of opened emails that were clicked
   dayProgression: Array<{
     day: number;
     count: number;
