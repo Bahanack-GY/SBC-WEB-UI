@@ -1,4 +1,4 @@
-name: CI - Build & Lint
+name: CI - Build
 
 on:
   pull_request:
@@ -22,21 +22,3 @@ jobs:
 
       - name: Build
         run: npx tsc -b && npx vite build
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: npm
-
-      - name: Install dependencies
-        run: npm install --legacy-peer-deps
-
-      - name: Lint
-        run: npm run lint

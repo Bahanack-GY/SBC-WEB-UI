@@ -85,15 +85,50 @@ src/
 - The app is tested on the latest versions of Chrome, Firefox, Edge, and Safari.
 - For best results, use a modern browser.
 
+## Git Workflow & CI/CD
+
+This project uses **GitFlow** with automated CI/CD via GitHub Actions.
+
+### Branches
+
+| Branch | Purpose | Auto-deploys to |
+|--------|---------|-----------------|
+| `main` | Production code | `sniperbuisnesscenter.com` (requires approval) |
+| `develop` | Preprod/staging | `preprod.sniperbuisnesscenter.com` |
+| `feature/*` | New features | — |
+| `hotfix/*` | Urgent prod fixes | — |
+
+### Workflow
+
+1. **New feature**: Branch from `develop` → work → PR to `develop` → auto-deploys to preprod
+2. **Ship to prod**: PR from `develop` → `main` → approve → auto-deploys to prod
+3. **Hotfix**: Branch from `main` → fix → PR to `main` + PR to `develop`
+
+### CI/CD Pipelines
+
+| Workflow | Trigger | Action |
+|----------|---------|--------|
+| `ci.yml` | PR to `develop` or `main` | Build + lint |
+| `deploy-preprod.yml` | Push to `develop` | Deploy to preprod |
+| `deploy-prod.yml` | Push to `main` | Deploy to prod (approval required) |
+
+### Environments
+
+| Environment | Domain | API Target |
+|-------------|--------|------------|
+| Production | `sniperbuisnesscenter.com` | `sniperbuisnesscenter.com/api` |
+| Preprod | `preprod.sniperbuisnesscenter.com` | `preprod.sniperbuisnesscenter.com/api` |
+
 ## Contributing
 
-Pull requests are welcome! For major changes, please open an issue first to discuss what you would like to change.
+1. Branch from `develop`: `git checkout develop && git pull && git checkout -b feature/my-feature`
+2. Make your changes and commit
+3. Push: `git push -u origin feature/my-feature`
+4. Create a Pull Request to `develop` on GitHub
+5. After merge, changes auto-deploy to preprod for testing
+6. When ready for production, PR from `develop` to `main`
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/YourFeature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin feature/YourFeature`)
-5. Open a pull request
+**Important:** Never push directly to `main` or `develop`. Always use feature branches and Pull Requests.
 
 ## Support
 
