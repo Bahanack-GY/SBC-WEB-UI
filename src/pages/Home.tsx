@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaEnvelope, FaPhone } from "react-icons/fa";
+import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
 import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
@@ -288,6 +288,41 @@ function Home() {
               >
                 Téléchargez le document de présentation de la SBC
               </a>
+            </div>
+
+            {/* Community Channels */}
+            <div className="mt-6">
+              <h2 className="text-2xl font-bold mb-4">Rejoignez-nous</h2>
+              <div className="flex flex-col gap-3">
+                <motion.a
+                  href="https://whatsapp.com/channel/0029Vav3mvCElah05C8QuT03"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
+                  style={{ backgroundColor: '#25D366' }}
+                >
+                  <FaWhatsapp size={32} />
+                  <div>
+                    <div className="font-bold text-base">WhatsApp</div>
+                    <div className="text-sm opacity-90">Rejoignez notre canal WhatsApp</div>
+                  </div>
+                </motion.a>
+                <motion.a
+                  href="https://t.me/sniperbusinesscenterafrica"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
+                  style={{ backgroundColor: '#0088cc' }}
+                >
+                  <FaTelegramPlane size={32} />
+                  <div>
+                    <div className="font-bold text-base">Telegram</div>
+                    <div className="text-sm opacity-90">Rejoignez notre groupe Telegram</div>
+                  </div>
+                </motion.a>
+              </div>
             </div>
           </>
         )}

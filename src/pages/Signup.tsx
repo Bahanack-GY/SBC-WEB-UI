@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiUser, FiMapPin, FiHeart, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiMapPin, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
 import { sbcApiService } from '../services/SBCApiService';
-import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
+import { handleApiResponse } from '../utils/apiHelpers';
 import { ApiResponse } from '../services/ApiResponse';
 import { useQuery } from '@tanstack/react-query';
 import { clearSignupCache } from '../utils/signupHelpers';
@@ -18,14 +18,10 @@ interface SignupData {
   password?: string;
   confirmPassword?: string;
   whatsapp: string;
-  ville: string;
   region: string;
   naissance: string;
   sexe: string;
   pays: string;
-  profession: string;
-  langue: string;
-  interets: string[];
   parrain: string;
   cgu: boolean;
   notificationPreference: 'email' | 'whatsapp';
@@ -37,14 +33,10 @@ interface SignupErrors {
   password?: string;
   confirmPassword?: string;
   whatsapp?: string;
-  ville?: string;
   region?: string;
   naissance?: string;
   sexe?: string;
   pays?: string;
-  profession?: string;
-  langue?: string;
-  interets?: string;
   cgu?: string;
   general?: string;
   emailExists?: string;
@@ -67,20 +59,16 @@ const initialData: SignupData = {
   password: '',
   confirmPassword: '',
   whatsapp: '',
-  ville: '',
   region: '',
   naissance: '',
   sexe: '',
   pays: '',
-  profession: '',
-  langue: '',
-  interets: [],
   parrain: '',
   cgu: false,
   notificationPreference: 'email',
 };
 
-const icons = [<FiUser size={48} className="text-[#115CF6] mx-auto" />, <FiMapPin size={48} className="text-[#115CF6] mx-auto" />, <FiHeart size={48} className="text-[#115CF6] mx-auto" />];
+const icons = [<FiUser size={48} className="text-[#115CF6] mx-auto" />, <FiMapPin size={48} className="text-[#115CF6] mx-auto" />];
 
 
 // Regions and cities data per country
@@ -109,79 +97,6 @@ const regionsPerCountry: Record<string, string[]> = {
   DJ: ['Ali Sabieh', 'Arta', 'Dikhil', 'Djibouti', 'Obock', 'Tadjourah'],
 };
 
-const citiesPerCountry: Record<string, string[]> = {
-  CM: ['Douala', 'Yaoundé', 'Bamenda', 'Bafoussam', 'Garoua', 'Maroua', 'Ngaoundéré', 'Bertoua', 'Ebolowa', 'Buea', 'Limbe', 'Kribi', 'Kumba', 'Nkongsamba', 'Edéa', 'Dschang', 'Foumban', 'Loum', 'Kumbo', 'Mbalmayo'],
-  SN: ['Dakar', 'Pikine', 'Touba', 'Thiès', 'Rufisque', 'Kaolack', 'Saint-Louis', 'Mbour', 'Ziguinchor', 'Diourbel', 'Louga', 'Tambacounda', 'Richard-Toll', 'Kolda', 'Mbacké'],
-  CI: ['Abidjan', 'Bouaké', 'Daloa', 'Yamoussoukro', 'Korhogo', 'San-Pédro', 'Man', 'Divo', 'Gagnoa', 'Abengourou', 'Anyama', 'Agboville', 'Grand-Bassam', 'Dabou', 'Séguéla'],
-  GA: ['Libreville', 'Port-Gentil', 'Franceville', 'Oyem', 'Moanda', 'Mouila', 'Lambaréné', 'Tchibanga', 'Koulamoutou', 'Makokou'],
-  CG: ['Brazzaville', 'Pointe-Noire', 'Dolisie', 'Nkayi', 'Impfondo', 'Ouésso', 'Madingou', 'Owando', 'Sibiti', 'Loutété'],
-  CD: ['Kinshasa', 'Lubumbashi', 'Mbuji-Mayi', 'Kananga', 'Kisangani', 'Bukavu', 'Tshikapa', 'Kolwezi', 'Likasi', 'Goma', 'Kikwit', 'Uvira', 'Bunia', 'Kalemie', 'Matadi'],
-  BJ: ['Cotonou', 'Porto-Novo', 'Parakou', 'Djougou', 'Bohicon', 'Kandi', 'Abomey', 'Natitingou', 'Lokossa', 'Ouidah'],
-  TG: ['Lomé', 'Sokodé', 'Kara', 'Kpalimé', 'Atakpamé', 'Bassar', 'Tsévié', 'Aného', 'Mango', 'Dapaong'],
-  BF: ['Ouagadougou', 'Bobo-Dioulasso', 'Koudougou', 'Banfora', 'Ouahigouya', 'Pouytenga', 'Kaya', 'Tenkodogo', 'Fada N\'Gourma', 'Dédougou'],
-  ML: ['Bamako', 'Sikasso', 'Mopti', 'Koutiala', 'Kayes', 'Ségou', 'Gao', 'Kati', 'San', 'Kolokani'],
-  GN: ['Conakry', 'Nzérékoré', 'Kankan', 'Kindia', 'Labé', 'Guéckédou', 'Kissidougou', 'Mamou', 'Kamsar', 'Siguiri'],
-  NE: ['Niamey', 'Zinder', 'Maradi', 'Agadez', 'Tahoua', 'Dosso', 'Diffa', 'Arlit', 'Tessaoua', 'Gaya'],
-  TD: ['N\'Djamena', 'Moundou', 'Abéché', 'Sarh', 'Kélo', 'Koumra', 'Pala', 'Am Timan', 'Bongor', 'Mongo'],
-  CF: ['Bangui', 'Bimbo', 'Berbérati', 'Carnot', 'Bambari', 'Bouar', 'Bossangoa', 'Bria', 'Bangassou', 'Nola'],
-  GQ: ['Malabo', 'Bata', 'Ebebiyín', 'Aconibe', 'Añisok', 'Luba', 'Evinayong', 'Mongomo', 'Micomeseng'],
-  RW: ['Kigali', 'Butare', 'Gitarama', 'Ruhengeri', 'Gisenyi', 'Byumba', 'Cyangugu', 'Nyanza', 'Kibungo', 'Kibuye'],
-  BI: ['Bujumbura', 'Gitega', 'Muyinga', 'Ngozi', 'Ruyigi', 'Bururi', 'Makamba', 'Kayanza', 'Muramvya', 'Cibitoke'],
-  MG: ['Antananarivo', 'Toamasina', 'Antsirabe', 'Fianarantsoa', 'Mahajanga', 'Toliara', 'Antsiranana', 'Ambovombe', 'Ihosy', 'Morondava'],
-  MU: ['Port Louis', 'Beau Bassin-Rose Hill', 'Vacoas-Phoenix', 'Curepipe', 'Quatre Bornes', 'Triolet', 'Goodlands', 'Centre de Flacq', 'Mahébourg', 'Saint Pierre'],
-  SC: ['Victoria', 'Anse Boileau', 'Beau Vallon', 'Anse Royale', 'Cascade', 'Takamaka', 'Baie Lazare', 'Port Glaud', 'Grand Anse Mahe'],
-  KM: ['Moroni', 'Mutsamudu', 'Fomboni', 'Domoni', 'Tsimbeo', 'Sima', 'Ouani', 'Mirontsi', 'Mkazi'],
-  DJ: ['Djibouti', 'Ali Sabieh', 'Tadjoura', 'Obock', 'Dikhil', 'Arta'],
-};
-
-const professionOptions = [
-  'Étudiant·e', 'Sans emploi',
-  'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
-  'Ingénieur civil', 'Ingénieur en informatique', 'Développeur de logiciels', 'Architecte', 'Technicien en électronique', 'Scientifique des données',
-  'Enseignant', 'Professeur d\'université', 'Formateur professionnel', 'Éducateur spécialisé', 'Conseiller pédagogique',
-  'Artiste (peintre, sculpteur)', 'Designer graphique', 'Photographe', 'Musicien', 'Écrivain', 'Réalisateur',
-  'Responsable marketing', 'Vendeur/Vendeuse', 'Gestionnaire de produit', 'Analyste de marché', 'Consultant en stratégie',
-  'Avocat', 'Notaire', 'Juge', 'Huissier de justice',
-  'Chercheur scientifique', 'Biologiste', 'Chimiste', 'Physicien', 'Statisticien',
-  'Travailleur social', 'Conseiller en orientation', 'Animateur socioculturel', 'Médiateur familial',
-  'Maçon', 'Électricien', 'Plombier', 'Charpentier', 'Architecte d\'intérieur',
-  'Chef cuisinier', 'Serveur/Serveuse', 'Gestionnaire d\'hôtel', 'Barman/Barmane',
-  'Conducteur de train', 'Pilote d\'avion', 'Logisticien', 'Gestionnaire de chaîne d\'approvisionnement',
-  'Administrateur système', 'Spécialiste en cybersécurité', 'Ingénieur réseau', 'Consultant en technologies de l\'information',
-  'Journaliste', 'Rédacteur web', 'Chargé de communication', 'Gestionnaire de communauté',
-  'Comptable', 'Analyste financier', 'Auditeur interne', 'Conseiller fiscal',
-  'Agriculteur/Agricultrice', 'Ingénieur agronome', 'Écologiste', 'Gestionnaire de ressources naturelles',
-];
-
-// Base interest options without emojis (for data storage)
-const baseInteretOptions = [
-  'Football', 'Basketball', 'Course à pied', 'Natation', 'Yoga', 'Randonnée', 'Cyclisme',
-  'Musique (instruments, chant)', 'Danse', 'Peinture et dessin', 'Photographie', 'Théâtre', 'Cinéma',
-  'Programmation', 'Robotique', 'Sciences de la vie', 'Astronomie', 'Électronique',
-  'Découverte de nouvelles cultures', 'Randonnées en nature', 'Tourisme local et international',
-  'Cuisine du monde', 'Pâtisserie', 'Dégustation de vins', 'Aide aux personnes défavorisées',
-  'Protection de l\'environnement', 'Participation à des événements caritatifs', 'Lecture', 'Méditation',
-  'Apprentissage de nouvelles langues', 'Jeux vidéo', 'Jeux de société', 'Énigmes et casse-têtes',
-  'Stylisme', 'Décoration d\'intérieur', 'Artisanat', 'Fitness', 'Nutrition', 'Médecine alternative',
-];
-
-// Display interest options with emojis (for UI display)
-const interetOptions = [
-  '⚽ Football', '🏀 Basketball', '🏃 Course à pied', '🏊 Natation', '🧘 Yoga', '🥾 Randonnée', '🚴 Cyclisme',
-  '🎵 Musique (instruments, chant)', '💃 Danse', '🎨 Peinture et dessin', '📸 Photographie', '🎭 Théâtre', '🎬 Cinéma',
-  '💻 Programmation', '🤖 Robotique', '🔬 Sciences de la vie', '🌌 Astronomie', '⚡ Électronique',
-  '🌍 Découverte de nouvelles cultures', '🌿 Randonnées en nature', '✈️ Tourisme local et international',
-  '🍽️ Cuisine du monde', '🧁 Pâtisserie', '🍷 Dégustation de vins', '🤝 Aide aux personnes défavorisées',
-  '🌱 Protection de l\'environnement', '❤️ Participation à des événements caritatifs', '📚 Lecture', '🧘‍♀️ Méditation',
-  '🗣️ Apprentissage de nouvelles langues', '🎮 Jeux vidéo', '🎲 Jeux de société', '🧩 Énigmes et casse-têtes',
-  '👗 Stylisme', '🏠 Décoration d\'intérieur', '🎨 Artisanat', '💪 Fitness', '🥗 Nutrition', '🌿 Médecine alternative',
-];
-
-// Helper function to get base value without emoji
-const getInterestBaseValue = (displayValue: string): string => {
-  const index = interetOptions.indexOf(displayValue);
-  return index !== -1 ? baseInteretOptions[index] : displayValue.replace(/^[^\w\s]+\s*/, ''); // Remove emoji prefix
-};
 
 
 const DEBOUNCE_DELAY = 3000;
@@ -535,9 +450,6 @@ function Signup() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
-    if (name === 'interets') {
-      return;
-    }
     if (name === 'countryCodeSelect') {
       const code = africanCountryCodes.find(c => c.value === value) || africanCountryCodes[0];
       setSelectedCode(code);
@@ -562,19 +474,6 @@ function Signup() {
     if (errors[name as keyof SignupErrors] && name !== 'parrain') {
       setErrors(prev => ({ ...prev, [name]: undefined }));
     }
-  };
-
-  const handleInterestClick = (displayInterest: string) => {
-    // Convert display value (with emoji) to base value (without emoji) for storage
-    const baseInterest = getInterestBaseValue(displayInterest);
-
-    setData(prev => ({
-      ...prev,
-      interets: prev.interets.includes(baseInterest)
-        ? prev.interets.filter(i => i !== baseInterest)
-        : [...prev.interets, baseInterest]
-    }));
-    setErrors(prev => ({ ...prev, interets: undefined }));
   };
 
   // Helper function to render recovery status message
@@ -682,16 +581,10 @@ function Signup() {
       }
     }
     if (step === 1) {
-      if (!data.ville) { newErrors.ville = 'Ville requise'; valid = false; }
+      if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
       if (!data.region) { newErrors.region = 'Région requise'; valid = false; }
       if (!data.naissance) { newErrors.naissance = 'Date requise'; valid = false; }
       if (!data.sexe) { newErrors.sexe = 'Sexe requis'; valid = false; }
-      if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
-      if (!data.profession) { newErrors.profession = 'Profession requise'; valid = false; }
-    }
-    if (step === 2) {
-      if (!data.langue) { newErrors.langue = 'Langue requise'; valid = false; }
-      if (!data.interets || data.interets.length === 0) { newErrors.interets = 'Au moins un centre d\'intérêt requis'; valid = false; }
       if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
       else if (!isAffiliationCodeDisabled && !affiliateName) {
         newErrors.parrain = 'Code parrain invalide ou non vérifié.';
@@ -736,14 +629,10 @@ function Signup() {
           name: data.nom,
           phoneNumber: `${selectedCode.code}${data.whatsapp}`,
           referrerCode: data.parrain || undefined,
-          city: data.ville,
           region: data.region,
           country: countryCode,
           birthDate: data.naissance,
           sex: data.sexe,
-          profession: data.profession ? removeAccents(data.profession) : undefined,
-          language: data.langue,
-          interests: data.interets.length > 0 ? data.interets.map(i => removeAccents(i)) : undefined,
           notificationPreference: data.notificationPreference,
         };
 
@@ -875,8 +764,8 @@ function Signup() {
                 <label className="block text-gray-700 mb-1">🌍 Pays</label>
                 <select name="pays" value={data.pays} onChange={(e) => {
                   handleChange(e);
-                  // Reset city and region when country changes
-                  setData(prev => ({ ...prev, ville: '', region: '' }));
+                  // Reset region when country changes
+                  setData(prev => ({ ...prev, region: '' }));
                 }} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner le pays</option>
                   {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
@@ -901,23 +790,6 @@ function Signup() {
                 {!data.pays && <div className="text-gray-500 text-xs mt-1">Veuillez d'abord sélectionner un pays</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">🏙️ Ville</label>
-                <select
-                  name="ville"
-                  value={data.ville}
-                  onChange={handleChange}
-                  disabled={!data.pays}
-                  className={`w-full border ${errors.ville ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none ${!data.pays ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                >
-                  <option value="">Sélectionner la ville</option>
-                  {data.pays && citiesPerCountry[countryOptions.find(c => c.value === data.pays)?.code || '']?.map((city) => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-                {errors.ville && <div className="text-red-500 text-xs">{errors.ville}</div>}
-                {!data.pays && <div className="text-gray-500 text-xs mt-1">Veuillez d'abord sélectionner un pays</div>}
-              </div>
-              <div>
                 <label className="block text-gray-700 mb-1">🎂 Date de naissance</label>
                 <input name="naissance" type="date" value={data.naissance} onChange={handleChange} className={`w-full border ${errors.naissance ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.naissance && <div className="text-red-500 text-xs">{errors.naissance}</div>}
@@ -931,49 +803,8 @@ function Signup() {
                 </select>
                 {errors.sexe && <div className="text-red-500 text-xs">{errors.sexe}</div>}
               </div>
-              <div>
-                <label className="block text-gray-700 mb-1">💼 Profession</label>
-                <select name="profession" value={data.profession} onChange={handleChange} className={`w-full border ${errors.profession ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
-                  <option value="">Sélectionner la profession</option>
-                  {professionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
-                </select>
-                {errors.profession && <div className="text-red-500 text-xs">{errors.profession}</div>}
-              </div>
-            </>
-          )}
-          {step === 2 && (
-            <>
-              <div>
-                <label className="block text-gray-700 mb-1">🗣️ Langue</label>
-                <select name="langue" value={data.langue} onChange={handleChange} className={`w-full border ${errors.langue ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
-                  <option value="">Sélectionner la langue</option>
-                  <option value="fr">🇫🇷 Français</option>
-                  <option value="en">🇬🇧 Anglais</option>
-                </select>
-                {errors.langue && <div className="text-red-500 text-xs">{errors.langue}</div>}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-1">❤️ Centres d'intérêt</label>
-                <div className="flex flex-wrap gap-2">
-                  {interetOptions.map(displayInterest => {
-                    const baseInterest = getInterestBaseValue(displayInterest);
-                    const isSelected = data.interets.includes(baseInterest);
-                    return (
-                      <button
-                        key={displayInterest}
-                        type="button"
-                        className={`px-3 py-1 rounded-full border text-xs font-medium ${isSelected ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
-                        onClick={() => handleInterestClick(displayInterest)}
-                      >
-                        {displayInterest}
-                      </button>
-                    );
-                  })}
-                </div>
-                {errors.interets && <div className="text-red-500 text-xs">{errors.interets}</div>}
-              </div>
 
-              {/* NEW: Notification Preference Section */}
+              {/* Notification Preference */}
               <div>
                 <label className="block text-gray-700 mb-1">📬 Préférences de notification</label>
                 <div className="space-y-2">
@@ -1042,7 +873,7 @@ function Signup() {
             {step > 0 && (
               <button onClick={handlePrev} className="bg-gray-200 text-gray-700 font-bold rounded-xl px-6 py-2">Précédent</button>
             )}
-            {step < 2 && (
+            {step < 1 && (
               <button
                 onClick={handleNext}
                 disabled={checkingExistence || loading || !data.email || !data.whatsapp}
@@ -1051,7 +882,7 @@ function Signup() {
                 {checkingExistence ? 'Vérification...' : 'Suivant'}
               </button>
             )}
-            {step === 2 && (
+            {step === 1 && (
               <button
                 onClick={handleRegister}
                 disabled={loading || !data.cgu || affiliateLoading}
