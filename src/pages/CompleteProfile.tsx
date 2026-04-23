@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext';
 import { removeAccents } from '../utils/apiHelpers';
 import {
   professionOptions,
-  baseInterestOptions,
   predefinedInterestOptions,
   getInterestBaseValue,
 } from './ModifierLeProfil';
