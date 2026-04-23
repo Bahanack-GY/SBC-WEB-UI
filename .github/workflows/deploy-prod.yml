@@ -1,0 +1,34 @@
+name: Deploy Web UI to Production
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: deploy-web-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            echo "=== Web UI Production Deployment Started ==="
+            cd /var/www/SBC-WEB-UI
+            git fetch origin main
+            git reset --hard origin/main
+            npm install --legacy-peer-deps
+            npm run build
+            echo "=== Web UI Production Deployment Completed ==="

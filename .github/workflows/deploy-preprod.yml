@@ -1,0 +1,34 @@
+name: Deploy Web UI to Preprod
+
+on:
+  push:
+    branches: [develop]
+
+concurrency:
+  group: deploy-web-preprod
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Deploy to Preprod
+    runs-on: ubuntu-latest
+    environment: preprod
+
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script_stop: true
+          command_timeout: 10m
+          script: |
+            echo "=== Web UI Preprod Deployment Started ==="
+            cd /var/www/SBC-WEB-UI-preprod
+            git fetch origin develop
+            git reset --hard origin/develop
+            npm install --legacy-peer-deps
+            npm run build
+            echo "=== Web UI Preprod Deployment Completed ==="
