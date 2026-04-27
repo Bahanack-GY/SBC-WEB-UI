@@ -135,7 +135,7 @@ function Connexion() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
+    <div className="min-h-screen flex items-center justify-center bg-white py-8 px-4">
       <div className="w-full max-w-md p-8">
         <img src={logo} alt="logo" className=" mb-4 object-contain" />
         <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('pages.connexion.title')}</h1>
