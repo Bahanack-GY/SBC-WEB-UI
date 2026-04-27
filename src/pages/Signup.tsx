@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiUser, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiPhone, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
@@ -61,8 +61,11 @@ const initialData: SignupData = {
 
 const DEBOUNCE_DELAY = 3000;
 const STORAGE_KEY_DATA = 'signupFormData';
+const STORAGE_KEY_STEP = 'signupFormStep';
+const TOTAL_STEPS = 2;
 
 function Signup() {
+  const [step, setStep] = useState(0);
   const [data, setData] = useState<SignupData>(initialData);
   const [errors, setErrors] = useState<SignupErrors>({});
   const [showModal, setShowModal] = useState(false);
@@ -128,6 +131,7 @@ function Signup() {
       const countryFromUrl = urlParams.get('country');
       
       const savedData = localStorage.getItem(STORAGE_KEY_DATA);
+      const savedStep = localStorage.getItem(STORAGE_KEY_STEP);
       
       let dataToSet = { ...initialData };
 
@@ -194,6 +198,9 @@ function Signup() {
         setSelectedCode(africanCountryCodes[0]);
       }
 
+      if (savedStep) {
+        setStep(parseInt(savedStep, 10));
+      }
     } catch (error) {
     }
   }, []);
@@ -481,12 +488,23 @@ function Signup() {
     const newErrors: SignupErrors = {};
     setErrors(prev => ({ ...prev, general: undefined, emailExists: undefined, whatsappExists: undefined, parrain: undefined }));
 
+    if (step === 0) {
       if (!data.nom) { newErrors.nom = 'Nom complet requis'; valid = false; }
       if (!/\S+@\S+\.\S+$/.test(data.email)) { newErrors.email = 'Email invalide'; valid = false; }
       if (!data.password || data.password.length < 8) { newErrors.password = 'Mot de passe doit avoir au moins 8 caractères.'; valid = false; }
       if (data.password !== data.confirmPassword) { newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'; valid = false; }
-      if (!data.whatsapp) { newErrors.whatsapp = 'Numéro WhatsApp requis'; valid = false; }
+    }
 
+    if (step === 1) {
+      if (!data.whatsapp) { newErrors.whatsapp = 'Numéro WhatsApp requis'; valid = false; }
+      if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
+      if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
+      else if (!isAffiliationCodeDisabled && !affiliateName) {
+        newErrors.parrain = 'Code parrain invalide ou non vérifié.';
+        valid = false;
+      }
+
+      // Check email/whatsapp existence on final step
       if (valid && data.email && data.whatsapp && /\S+@\S+\.\S+$/.test(data.email)) {
         setCheckingExistence(true);
         let emailExists = false;
@@ -532,15 +550,31 @@ function Signup() {
           valid = false;
         }
       }
-      if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
-      if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
-      else if (!isAffiliationCodeDisabled && !affiliateName) {
-        newErrors.parrain = 'Code parrain invalide ou non vérifié.';
-        valid = false;
-      }
+    }
 
     setErrors(newErrors);
     return valid;
+  };
+
+  const handleNext = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const isValid = await validateStep();
+    if (isValid) {
+      const dataToSave = { ...data };
+      const fullWhatsapp = `${selectedCode.code}${data.whatsapp}`;
+      dataToSave.whatsapp = fullWhatsapp;
+      try {
+        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataToSave));
+        localStorage.setItem(STORAGE_KEY_STEP, (step + 1).toString());
+      } catch (error) {
+      }
+      setStep((s) => s + 1);
+    }
+  };
+
+  const handlePrev = (e: React.FormEvent) => {
+    e.preventDefault();
+    setStep((s) => s - 1);
   };
 
   const handleRegister = async (e: React.FormEvent) => {
@@ -587,14 +621,35 @@ function Signup() {
     }
   };
 
+  const stepIcons = [
+    <FiUser size={40} className="text-[#115CF6] mx-auto" />,
+    <FiPhone size={40} className="text-[#115CF6] mx-auto" />,
+  ];
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] py-8 px-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
-        <div className="mb-4"><FiUser size={48} className="text-[#115CF6] mx-auto" /></div>
+        {/* Progress indicator */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-300 ${
+                i <= step ? 'bg-[#115CF6] w-10' : 'bg-gray-200 w-6'
+              }`}
+            />
+          ))}
+        </div>
+
+        <div className="mb-4">{stepIcons[step]}</div>
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Créer un compte</h2>
-        <p className="text-center text-gray-500 mb-6">Créez un compte pour développer votre réseau et augmenter vos revenus</p>
+        <p className="text-center text-gray-500 mb-6">
+          {step === 0 ? 'Vos informations personnelles' : 'Contact et parrainage'}
+        </p>
 
         <form className="flex flex-col gap-4">
+          {step === 0 && (
+            <>
               <div>
                 <label className="block text-gray-700 mb-1">👤 Nom complet</label>
                 <input name="nom" value={data.nom} onChange={handleChange} placeholder="Ex: Jean Paul" className={`w-full border ${errors.nom ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
@@ -650,6 +705,11 @@ function Signup() {
                 </div>
                 {errors.confirmPassword && <div className="text-red-500 text-xs">{errors.confirmPassword}</div>}
               </div>
+              {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
+            </>
+          )}
+          {step === 1 && (
+            <>
               <div>
                 <label className="block text-gray-700 mb-1">📱 Numéro WhatsApp</label>
                 <div className="flex gap-2">
@@ -704,7 +764,21 @@ function Signup() {
                 <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-[#115CF6] underline bg-transparent">conditions d'utilisation</button></span>
               </div>
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
+            </>
+          )}
           <div className="flex justify-between mt-6 gap-2">
+            {step > 0 && (
+              <button onClick={handlePrev} className="bg-gray-200 text-gray-700 font-bold rounded-xl px-6 py-2">Précédent</button>
+            )}
+            {step < TOTAL_STEPS - 1 && (
+              <button
+                onClick={handleNext}
+                className="bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-2 ml-auto"
+              >
+                Suivant
+              </button>
+            )}
+            {step === TOTAL_STEPS - 1 && (
               <button
                 onClick={handleRegister}
                 disabled={loading || checkingExistence || !data.cgu || affiliateLoading}
@@ -712,6 +786,7 @@ function Signup() {
               >
                 {loading ? 'Inscription...' : checkingExistence ? 'Vérification...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
               </button>
+            )}
           </div>
         </form>
         <div className="text-center text-sm text-gray-500 mt-6">
