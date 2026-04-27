@@ -61,7 +61,6 @@ const initialData: SignupData = {
 
 const DEBOUNCE_DELAY = 3000;
 const STORAGE_KEY_DATA = 'signupFormData';
-const STORAGE_KEY_STEP = 'signupFormStep';
 const TOTAL_STEPS = 2;
 
 function Signup() {
@@ -131,7 +130,6 @@ function Signup() {
       const countryFromUrl = urlParams.get('country');
       
       const savedData = localStorage.getItem(STORAGE_KEY_DATA);
-      const savedStep = localStorage.getItem(STORAGE_KEY_STEP);
       
       let dataToSet = { ...initialData };
 
@@ -198,9 +196,6 @@ function Signup() {
         setSelectedCode(africanCountryCodes[0]);
       }
 
-      if (savedStep) {
-        setStep(parseInt(savedStep, 10));
-      }
     } catch (error) {
     }
   }, []);
@@ -528,6 +523,30 @@ function Signup() {
       if (!/\S+@\S+\.\S+$/.test(data.email)) { newErrors.email = 'Email invalide'; valid = false; }
       if (!data.password || data.password.length < 8) { newErrors.password = 'Mot de passe doit avoir au moins 8 caractères.'; valid = false; }
       if (data.password !== data.confirmPassword) { newErrors.confirmPassword = 'Les mots de passe ne correspondent pas'; valid = false; }
+
+      // Block if inline check already found email exists
+      if (errors.emailExists) { newErrors.emailExists = errors.emailExists; valid = false; }
+
+      // Also run a fresh check if no inline error yet
+      if (valid && data.email && /\S+@\S+\.\S+$/.test(data.email)) {
+        setCheckingExistence(true);
+        try {
+          const response = await sbcApiService.checkUserExistence({ email: data.email });
+          const result = handleApiResponse(response);
+          if (result?.exists) {
+            newErrors.emailExists = 'Cet email est déjà utilisé.';
+            valid = false;
+          }
+        } catch (error) {
+          let errorMessage = 'Erreur lors de la vérification de l\'email.';
+          if (error instanceof Error) { errorMessage = error.message; }
+          else if (error instanceof ApiResponse && error.body?.message) { errorMessage = error.body.message; }
+          newErrors.general = errorMessage;
+          valid = false;
+        } finally {
+          setCheckingExistence(false);
+        }
+      }
     }
 
     if (step === 1) {
@@ -600,7 +619,6 @@ function Signup() {
       dataToSave.whatsapp = fullWhatsapp;
       try {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataToSave));
-        localStorage.setItem(STORAGE_KEY_STEP, (step + 1).toString());
       } catch (error) {
       }
       setStep((s) => s + 1);
