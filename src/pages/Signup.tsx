@@ -588,7 +588,7 @@ function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
+    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] py-8 px-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
         <div className="mb-4"><FiUser size={48} className="text-[#115CF6] mx-auto" /></div>
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Créer un compte</h2>
