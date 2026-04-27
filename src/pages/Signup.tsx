@@ -437,6 +437,41 @@ function Signup() {
     }
   };
 
+  // Inline debounced email existence check
+  useEffect(() => {
+    if (!data.email || !/\S+@\S+\.\S+$/.test(data.email)) return;
+    const handler = setTimeout(async () => {
+      try {
+        const response = await sbcApiService.checkUserExistence({ email: data.email });
+        const result = handleApiResponse(response);
+        if (result?.exists) {
+          setErrors(prev => ({ ...prev, emailExists: 'Cet email est déjà utilisé.' }));
+        }
+      } catch {
+        // Silently fail — will be caught again on submit
+      }
+    }, 1000);
+    return () => clearTimeout(handler);
+  }, [data.email]);
+
+  // Inline debounced WhatsApp existence check
+  useEffect(() => {
+    if (!data.whatsapp) return;
+    const handler = setTimeout(async () => {
+      try {
+        const phoneNumber = `${selectedCode.code}${data.whatsapp}`;
+        const response = await sbcApiService.checkUserExistence({ phoneNumber });
+        const result = handleApiResponse(response);
+        if (result?.exists) {
+          setErrors(prev => ({ ...prev, whatsappExists: 'Ce numéro WhatsApp est déjà utilisé.' }));
+        }
+      } catch {
+        // Silently fail
+      }
+    }, 1000);
+    return () => clearTimeout(handler);
+  }, [data.whatsapp, selectedCode.code]);
+
   // Helper function to render recovery status message
   const renderRecoveryStatusMessage = (type: 'email' | 'phone') => {
     const status = recoveryStatus[type];
