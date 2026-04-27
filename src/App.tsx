@@ -41,6 +41,7 @@ import { TourProvider } from './components/common/TourProvider'
 import { RelanceProvider } from './contexts/RelanceContext'
 import { SocketProvider } from './contexts/SocketContext'
 import Chat from './pages/Chat'
+import CompleteProfile from './pages/CompleteProfile'
 
 // Add this type definition at the top (after imports)
 type SubscriptionData = {
@@ -114,7 +115,7 @@ function AppContent() {
     }
 
     // Handle subscription redirects
-    const allowed = ['/connexion', '/signup', '/splash-screen', '/abonnement'];
+    const allowed = ['/connexion', '/signup', '/splash-screen', '/abonnement', '/complete-profile'];
     if (
       isAuthenticated &&
       !subscriptionLoading &&
@@ -129,6 +130,20 @@ function AppContent() {
       window.location.replace('/');
     }
 
+    // Redirect newly subscribed users to complete profile if they haven't done so
+    if (
+      isAuthenticated &&
+      isSubscribed &&
+      location.pathname === '/' &&
+      authUser &&
+      !authUser.profession &&
+      (!authUser.interests || authUser.interests.length === 0) &&
+      !localStorage.getItem('profileCompletionDone') &&
+      !localStorage.getItem('profileCompletionSkipped')
+    ) {
+      window.location.replace('/complete-profile');
+    }
+
     // Activation balance page is now accessible to all users with teaser overlay for non-admin/tester
 
     // Prevent non-admin/tester users from accessing relance page
@@ -137,7 +152,7 @@ function AppContent() {
     }
 
     // Chat page is now accessible to all users with teaser overlay for non-admin/tester
-  }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed, authUser?.role]);
+  }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed, authUser]);
 
   // Optionally, block rendering until subscription status is known
   if (isAuthenticated && subscriptionLoading) {
@@ -150,7 +165,7 @@ function AppContent() {
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/activation-balance' || isInChatConversation;
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || isInChatConversation;
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -194,6 +209,7 @@ function AppContent() {
         <Route path="/relance" element={<RelancePage />} />
         <Route path="/activation-balance" element={<ActivationBalance />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/complete-profile" element={<CompleteProfile />} />
       </Routes>
       {!hideNav && <NavigationBar />}
     </div>
