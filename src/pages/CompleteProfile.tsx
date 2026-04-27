@@ -8,16 +8,26 @@ import {
   predefinedInterestOptions,
   getInterestBaseValue,
 } from './ModifierLeProfil';
+import { countryOptions, regionsPerCountry } from '../utils/countriesData';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 
 function CompleteProfile() {
   const navigate = useNavigate();
-  const { updateProfile } = useAuth();
+  const { user, updateProfile } = useAuth();
+  const [region, setRegion] = useState('');
+  const [naissance, setNaissance] = useState('');
+  const [sexe, setSexe] = useState('');
   const [profession, setProfession] = useState('');
   const [langue, setLangue] = useState('');
   const [interests, setInterests] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+
+  // Get the user's country code for region lookup
+  const userCountryCode = user?.country
+    ? countryOptions.find(c => c.code === user.country || c.value === user.country)?.code || ''
+    : '';
+  const availableRegions = regionsPerCountry[userCountryCode] || [];
 
   const handleInterestClick = (displayInterest: string) => {
     const baseInterest = getInterestBaseValue(displayInterest);
@@ -38,6 +48,9 @@ function CompleteProfile() {
     setError('');
     try {
       const updates: Record<string, any> = {};
+      if (region) updates.region = region;
+      if (naissance) updates.birthDate = naissance;
+      if (sexe) updates.sex = sexe;
       if (profession) updates.profession = removeAccents(profession);
       if (langue) updates.language = langue;
       if (interests.length > 0) updates.interests = interests.map(i => removeAccents(i));
@@ -57,7 +70,7 @@ function CompleteProfile() {
     <ProtectedRoute>
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-4">
         <motion.div
-          className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8"
+          className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8 max-h-[90vh] overflow-y-auto"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
@@ -70,6 +83,48 @@ function CompleteProfile() {
           </p>
 
           <div className="flex flex-col gap-4">
+            {/* Region */}
+            {availableRegions.length > 0 && (
+              <div>
+                <label className="block text-gray-700 mb-1">🗺️ Région</label>
+                <select
+                  value={region}
+                  onChange={(e) => setRegion(e.target.value)}
+                  className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                >
+                  <option value="">Sélectionner la région</option>
+                  {availableRegions.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            {/* Birth date */}
+            <div>
+              <label className="block text-gray-700 mb-1">🎂 Date de naissance</label>
+              <input
+                type="date"
+                value={naissance}
+                onChange={(e) => setNaissance(e.target.value)}
+                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+              />
+            </div>
+
+            {/* Sex */}
+            <div>
+              <label className="block text-gray-700 mb-1">⚧️ Sexe</label>
+              <select
+                value={sexe}
+                onChange={(e) => setSexe(e.target.value)}
+                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+              >
+                <option value="">Sélectionner</option>
+                <option value="male">👨 Homme</option>
+                <option value="female">👩 Femme</option>
+              </select>
+            </div>
+
             {/* Profession */}
             <div>
               <label className="block text-gray-700 mb-1">💼 Profession</label>
@@ -94,8 +149,8 @@ function CompleteProfile() {
                 className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
               >
                 <option value="">Sélectionner la langue</option>
-                <option value="fr">🇫🇷 Français</option>
-                <option value="en">🇬🇧 Anglais</option>
+                <option value="fr">Français</option>
+                <option value="en">Anglais</option>
               </select>
             </div>
 

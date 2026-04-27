@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { FiUser, FiMapPin, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { FiUser, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
@@ -18,13 +18,9 @@ interface SignupData {
   password?: string;
   confirmPassword?: string;
   whatsapp: string;
-  region: string;
-  naissance: string;
-  sexe: string;
   pays: string;
   parrain: string;
   cgu: boolean;
-  notificationPreference: 'email' | 'whatsapp';
 }
 
 interface SignupErrors {
@@ -33,9 +29,6 @@ interface SignupErrors {
   password?: string;
   confirmPassword?: string;
   whatsapp?: string;
-  region?: string;
-  naissance?: string;
-  sexe?: string;
   pays?: string;
   cgu?: string;
   general?: string;
@@ -59,52 +52,17 @@ const initialData: SignupData = {
   password: '',
   confirmPassword: '',
   whatsapp: '',
-  region: '',
-  naissance: '',
-  sexe: '',
   pays: '',
   parrain: '',
   cgu: false,
-  notificationPreference: 'email',
-};
-
-const icons = [<FiUser size={48} className="text-[#115CF6] mx-auto" />, <FiMapPin size={48} className="text-[#115CF6] mx-auto" />];
-
-
-// Regions and cities data per country
-const regionsPerCountry: Record<string, string[]> = {
-  CM: ['Adamaoua', 'Centre', 'Est', 'Extrême-Nord', 'Littoral', 'Nord', 'Nord-Ouest', 'Ouest', 'Sud', 'Sud-Ouest'],
-  SN: ['Dakar', 'Diourbel', 'Fatick', 'Kaffrine', 'Kaolack', 'Kédougou', 'Kolda', 'Louga', 'Matam', 'Saint-Louis', 'Sédhiou', 'Tambacounda', 'Thiès', 'Ziguinchor'],
-  CI: ['Abidjan', 'Bas-Sassandra', 'Comoé', 'Denguélé', 'Gôh-Djiboua', 'Lacs', 'Lagunes', 'Montagnes', 'Sassandra-Marahoué', 'Savanes', 'Vallée du Bandama', 'Woroba', 'Yamoussoukro', 'Zanzan'],
-  GA: ['Estuaire', 'Haut-Ogooué', 'Moyen-Ogooué', 'Ngounié', 'Nyanga', 'Ogooué-Ivindo', 'Ogooué-Lolo', 'Ogooué-Maritime', 'Woleu-Ntem'],
-  CG: ['Bouenza', 'Brazzaville', 'Cuvette', 'Cuvette-Ouest', 'Kouilou', 'Lékoumou', 'Likouala', 'Niari', 'Plateaux', 'Pointe-Noire', 'Pool', 'Sangha'],
-  CD: ['Bas-Uele', 'Équateur', 'Haut-Katanga', 'Haut-Lomami', 'Haut-Uele', 'Ituri', 'Kasaï', 'Kasaï-Central', 'Kasaï-Oriental', 'Kinshasa', 'Kongo-Central', 'Kwango', 'Kwilu', 'Lomami', 'Lualaba', 'Mai-Ndombe', 'Maniema', 'Mongala', 'Nord-Kivu', 'Nord-Ubangi', 'Sankuru', 'Sud-Kivu', 'Sud-Ubangi', 'Tanganyika', 'Tshopo', 'Tshuapa'],
-  BJ: ['Alibori', 'Atacora', 'Atlantique', 'Borgou', 'Collines', 'Couffo', 'Donga', 'Littoral', 'Mono', 'Ouémé', 'Plateau', 'Zou'],
-  TG: ['Centrale', 'Kara', 'Maritime', 'Plateaux', 'Savanes'],
-  BF: ['Boucle du Mouhoun', 'Cascades', 'Centre', 'Centre-Est', 'Centre-Nord', 'Centre-Ouest', 'Centre-Sud', 'Est', 'Hauts-Bassins', 'Nord', 'Plateau-Central', 'Sahel', 'Sud-Ouest'],
-  ML: ['Bamako', 'Gao', 'Kayes', 'Kidal', 'Koulikoro', 'Mopti', 'Ségou', 'Sikasso', 'Tombouctou'],
-  GN: ['Boké', 'Conakry', 'Faranah', 'Kankan', 'Kindia', 'Labé', 'Mamou', 'Nzérékoré'],
-  NE: ['Agadez', 'Diffa', 'Dosso', 'Maradi', 'Niamey', 'Tahoua', 'Tillabéri', 'Zinder'],
-  TD: ['Batha', 'Borkou', 'Chari-Baguirmi', 'Ennedi-Est', 'Ennedi-Ouest', 'Guéra', 'Hadjer-Lamis', 'Kanem', 'Lac', 'Logone Occidental', 'Logone Oriental', 'Mandoul', 'Mayo-Kebbi Est', 'Mayo-Kebbi Ouest', 'Moyen-Chari', 'N\'Djamena', 'Ouaddaï', 'Salamat', 'Sila', 'Tandjilé', 'Tibesti', 'Wadi Fira'],
-  CF: ['Bamingui-Bangoran', 'Bangui', 'Basse-Kotto', 'Haute-Kotto', 'Haut-Mbomou', 'Kémo', 'Lobaye', 'Mambéré-Kadéï', 'Mbomou', 'Nana-Grébizi', 'Nana-Mambéré', 'Ombella-M\'Poko', 'Ouaka', 'Ouham', 'Ouham-Pendé', 'Sangha-Mbaéré', 'Vakaga'],
-  GQ: ['Annobón', 'Bioko Norte', 'Bioko Sur', 'Centro Sur', 'Djibloho', 'Kié-Ntem', 'Litoral', 'Wele-Nzas'],
-  RW: ['Est', 'Kigali', 'Nord', 'Ouest', 'Sud'],
-  BI: ['Bubanza', 'Bujumbura Mairie', 'Bujumbura Rural', 'Bururi', 'Cankuzo', 'Cibitoke', 'Gitega', 'Karuzi', 'Kayanza', 'Kirundo', 'Makamba', 'Muramvya', 'Muyinga', 'Mwaro', 'Ngozi', 'Rumonge', 'Rutana', 'Ruyigi'],
-  MG: ['Antananarivo', 'Antsiranana', 'Fianarantsoa', 'Mahajanga', 'Toamasina', 'Toliara'],
-  MU: ['Black River', 'Flacq', 'Grand Port', 'Moka', 'Pamplemousses', 'Plaines Wilhems', 'Port Louis', 'Rivière du Rempart', 'Savanne'],
-  SC: ['Anse aux Pins', 'Anse Boileau', 'Anse Etoile', 'Anse Royale', 'Baie Lazare', 'Baie Sainte Anne', 'Beau Vallon', 'Bel Air', 'Bel Ombre', 'Cascade', 'Glacis', 'Grand Anse Mahe', 'Grand Anse Praslin', 'La Digue', 'La Rivière Anglaise', 'Les Mamelles', 'Mont Buxton', 'Mont Fleuri', 'Plaisance', 'Pointe La Rue', 'Port Glaud', 'Roche Caïman', 'Saint Louis', 'Takamaka'],
-  KM: ['Anjouan', 'Grande Comore', 'Mohéli'],
-  DJ: ['Ali Sabieh', 'Arta', 'Dikhil', 'Djibouti', 'Obock', 'Tadjourah'],
 };
 
 
 
 const DEBOUNCE_DELAY = 3000;
 const STORAGE_KEY_DATA = 'signupFormData';
-const STORAGE_KEY_STEP = 'signupFormStep';
 
 function Signup() {
-  const [step, setStep] = useState<number>(0);
   const [data, setData] = useState<SignupData>(initialData);
   const [errors, setErrors] = useState<SignupErrors>({});
   const [showModal, setShowModal] = useState(false);
@@ -170,7 +128,6 @@ function Signup() {
       const countryFromUrl = urlParams.get('country');
       
       const savedData = localStorage.getItem(STORAGE_KEY_DATA);
-      const savedStep = localStorage.getItem(STORAGE_KEY_STEP);
       
       let dataToSet = { ...initialData };
 
@@ -237,9 +194,6 @@ function Signup() {
         setSelectedCode(africanCountryCodes[0]);
       }
 
-      if (savedStep) {
-        setStep(parseInt(savedStep, 10));
-      }
     } catch (error) {
     }
   }, []);
@@ -459,7 +413,7 @@ function Signup() {
     }
     setData((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
 
-    if (step === 0 && (name === 'email' || name === 'whatsapp' || name === 'parrain')) {
+    if (name === 'email' || name === 'whatsapp' || name === 'parrain') {
       setErrors(prev => {
         const updated = { ...prev, general: undefined, emailExists: undefined, whatsappExists: undefined };
         if (name === 'parrain') {
@@ -527,7 +481,6 @@ function Signup() {
     const newErrors: SignupErrors = {};
     setErrors(prev => ({ ...prev, general: undefined, emailExists: undefined, whatsappExists: undefined, parrain: undefined }));
 
-    if (step === 0) {
       if (!data.nom) { newErrors.nom = 'Nom complet requis'; valid = false; }
       if (!/\S+@\S+\.\S+$/.test(data.email)) { newErrors.email = 'Email invalide'; valid = false; }
       if (!data.password || data.password.length < 8) { newErrors.password = 'Mot de passe doit avoir au moins 8 caractères.'; valid = false; }
@@ -579,42 +532,17 @@ function Signup() {
           valid = false;
         }
       }
-    }
-    if (step === 1) {
       if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
-      if (!data.region) { newErrors.region = 'Région requise'; valid = false; }
-      if (!data.naissance) { newErrors.naissance = 'Date requise'; valid = false; }
-      if (!data.sexe) { newErrors.sexe = 'Sexe requis'; valid = false; }
       if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
       else if (!isAffiliationCodeDisabled && !affiliateName) {
         newErrors.parrain = 'Code parrain invalide ou non vérifié.';
         valid = false;
       }
-    }
 
     setErrors(newErrors);
     return valid;
   };
 
-  const handleNext = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const isValid = await validateStep();
-    if (isValid) {
-      const dataToSave = { ...data };
-      const fullWhatsapp = `${selectedCode.code}${data.whatsapp}`;
-      dataToSave.whatsapp = fullWhatsapp;
-      try {
-        localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataToSave));
-        localStorage.setItem(STORAGE_KEY_STEP, (step + 1).toString());
-      } catch (error) {
-      }
-      setStep((s) => s + 1);
-    }
-  };
-  const handlePrev = (e: React.FormEvent) => {
-    e.preventDefault();
-    setStep((s) => s - 1);
-  };
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     const isValid = await validateStep();
@@ -629,11 +557,7 @@ function Signup() {
           name: data.nom,
           phoneNumber: `${selectedCode.code}${data.whatsapp}`,
           referrerCode: data.parrain || undefined,
-          region: data.region,
           country: countryCode,
-          birthDate: data.naissance,
-          sex: data.sexe,
-          notificationPreference: data.notificationPreference,
         };
 
         const result = await register(userData);
@@ -666,13 +590,11 @@ function Signup() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#f8fafc]">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
-        <div className="mb-4">{icons[step]}</div>
+        <div className="mb-4"><FiUser size={48} className="text-[#115CF6] mx-auto" /></div>
         <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Créer un compte</h2>
         <p className="text-center text-gray-500 mb-6">Créez un compte pour développer votre réseau et augmenter vos revenus</p>
-        
+
         <form className="flex flex-col gap-4">
-          {step === 0 && (
-            <>
               <div>
                 <label className="block text-gray-700 mb-1">👤 Nom complet</label>
                 <input name="nom" value={data.nom} onChange={handleChange} placeholder="Ex: Jean Paul" className={`w-full border ${errors.nom ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
@@ -689,13 +611,13 @@ function Signup() {
               <div>
                 <label className="block text-gray-700 mb-1">🔒 Mot de passe</label>
                 <div className="relative">
-                  <input 
-                    name="password" 
-                    type={showPassword ? 'text' : 'password'} 
-                    value={data.password} 
-                    onChange={handleChange} 
-                    placeholder="Mot de passe" 
-                    className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`} 
+                  <input
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    value={data.password}
+                    onChange={handleChange}
+                    placeholder="Mot de passe"
+                    className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
                   />
                   <button
                     type="button"
@@ -710,13 +632,13 @@ function Signup() {
               <div>
                 <label className="block text-gray-700 mb-1">🔐 Confirmer le mot de passe</label>
                 <div className="relative">
-                  <input 
-                    name="confirmPassword" 
-                    type={showConfirmPassword ? 'text' : 'password'} 
-                    value={data.confirmPassword} 
-                    onChange={handleChange} 
-                    placeholder="Confirmer mot de passe" 
-                    className={`w-full border ${errors.confirmPassword ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`} 
+                  <input
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    value={data.confirmPassword}
+                    onChange={handleChange}
+                    placeholder="Confirmer mot de passe"
+                    className={`w-full border ${errors.confirmPassword ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
                   />
                   <button
                     type="button"
@@ -755,99 +677,14 @@ function Signup() {
                 {renderRecoveryStatusMessage('phone')}
                 {renderConflictStatusMessage('phone')}
               </div>
-              {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
-            </>
-          )}
-          {step === 1 && (
-            <>
               <div>
                 <label className="block text-gray-700 mb-1">🌍 Pays</label>
-                <select name="pays" value={data.pays} onChange={(e) => {
-                  handleChange(e);
-                  // Reset region when country changes
-                  setData(prev => ({ ...prev, region: '' }));
-                }} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
+                <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner le pays</option>
                   {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
                 {errors.pays && <div className="text-red-500 text-xs">{errors.pays}</div>}
               </div>
-              <div>
-                <label className="block text-gray-700 mb-1">🗺️ Région</label>
-                <select
-                  name="region"
-                  value={data.region}
-                  onChange={handleChange}
-                  disabled={!data.pays}
-                  className={`w-full border ${errors.region ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none ${!data.pays ? 'bg-gray-100 cursor-not-allowed' : ''}`}
-                >
-                  <option value="">Sélectionner la région</option>
-                  {data.pays && regionsPerCountry[countryOptions.find(c => c.value === data.pays)?.code || '']?.map((r) => (
-                    <option key={r} value={r}>{r}</option>
-                  ))}
-                </select>
-                {errors.region && <div className="text-red-500 text-xs">{errors.region}</div>}
-                {!data.pays && <div className="text-gray-500 text-xs mt-1">Veuillez d'abord sélectionner un pays</div>}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-1">🎂 Date de naissance</label>
-                <input name="naissance" type="date" value={data.naissance} onChange={handleChange} className={`w-full border ${errors.naissance ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
-                {errors.naissance && <div className="text-red-500 text-xs">{errors.naissance}</div>}
-              </div>
-              <div>
-                <label className="block text-gray-700 mb-1">⚧️ Sexe</label>
-                <select name="sexe" value={data.sexe} onChange={handleChange} className={`w-full border ${errors.sexe ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
-                  <option value="">Sélectionner</option>
-                  <option value="male">👨 Homme</option>
-                  <option value="female">👩 Femme</option>
-                </select>
-                {errors.sexe && <div className="text-red-500 text-xs">{errors.sexe}</div>}
-              </div>
-
-              {/* Notification Preference */}
-              <div>
-                <label className="block text-gray-700 mb-1">📬 Préférences de notification</label>
-                <div className="space-y-2">
-                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="notificationPreference"
-                      value="email"
-                      checked={data.notificationPreference === 'email'}
-                      onChange={handleChange}
-                      className="text-blue-600 focus:ring-blue-500"
-                    />
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">📧</span>
-                      <div>
-                        <div className="font-medium text-gray-700 text-sm">Email</div>
-                        <div className="text-xs text-gray-500">Recevoir les codes OTP par email</div>
-                      </div>
-                    </div>
-                  </label>
-                  <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="notificationPreference"
-                      value="whatsapp"
-                      checked={data.notificationPreference === 'whatsapp'}
-                      onChange={handleChange}
-                      className="text-green-600 focus:ring-green-500"
-                    />
-                    <div className="flex items-center gap-2">
-                      <span className="text-xl">📱</span>
-                      <div>
-                        <div className="font-medium text-gray-700 text-sm">WhatsApp</div>
-                        <div className="text-xs text-gray-500">Recevoir les codes OTP via WhatsApp</div>
-                      </div>
-                    </div>
-                  </label>
-                </div>
-                <div className="mt-2 text-xs text-gray-500">
-                  💡 Vous pourrez modifier cette préférence plus tard
-                </div>
-              </div>
-
               <div>
                 <label className="block text-gray-700 mb-1">🔗 Code parrain</label>
                 <input
@@ -867,30 +704,14 @@ function Signup() {
                 <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-[#115CF6] underline bg-transparent">conditions d'utilisation</button></span>
               </div>
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
-            </>
-          )}
           <div className="flex justify-between mt-6 gap-2">
-            {step > 0 && (
-              <button onClick={handlePrev} className="bg-gray-200 text-gray-700 font-bold rounded-xl px-6 py-2">Précédent</button>
-            )}
-            {step < 1 && (
-              <button
-                onClick={handleNext}
-                disabled={checkingExistence || loading || !data.email || !data.whatsapp}
-                className="bg-[#115CF6] text-white font-bold rounded-xl px-6 py-2 ml-auto disabled:bg-blue-400 disabled:cursor-not-allowed"
-              >
-                {checkingExistence ? 'Vérification...' : 'Suivant'}
-              </button>
-            )}
-            {step === 1 && (
               <button
                 onClick={handleRegister}
-                disabled={loading || !data.cgu || affiliateLoading}
+                disabled={loading || checkingExistence || !data.cgu || affiliateLoading}
                 className="bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
-                {loading ? 'Inscription...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
+                {loading ? 'Inscription...' : checkingExistence ? 'Vérification...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
               </button>
-            )}
           </div>
         </form>
         <div className="text-center text-sm text-gray-500 mt-6">
