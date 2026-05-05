@@ -112,17 +112,17 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
                 onClick={togglePlay}
             />
 
-            {/* Overlay controls */}
-            <div className="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                {/* Central Play/Pause Button - always show in overlay for better UX */}
+            {/* Overlay controls — always visible when paused so mobile users see the play button */}
+            <div className={`absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity duration-300 ${isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
                 <button
                     onClick={togglePlay}
-                    className="p-3 rounded-full bg-white bg-opacity-80 text-gray-900 shadow-lg hover:bg-opacity-100 transition-colors"
+                    className="p-4 rounded-full bg-white bg-opacity-90 text-gray-900 shadow-lg hover:bg-opacity-100 transition-colors"
+                    aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                     {isPlaying ? (
-                        <PauseIcon className="w-7 h-7" />
+                        <PauseIcon className="w-8 h-8" />
                     ) : (
-                        <PlayIcon className="w-7 h-7" />
+                        <PlayIcon className="w-8 h-8" />
                     )}
                 </button>
             </div>
