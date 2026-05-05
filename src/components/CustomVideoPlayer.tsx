@@ -9,11 +9,18 @@ interface CustomVideoPlayerProps {
 
 const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, title }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const hideControlsTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(0.5);
     const [isMuted, setIsMuted] = useState(false);
     const [progress, setProgress] = useState(0);
     const [duration, setDuration] = useState(0);
+    const [showControls, setShowControls] = useState(true);
+
+    const scheduleHideControls = useCallback(() => {
+        if (hideControlsTimeout.current) clearTimeout(hideControlsTimeout.current);
+        hideControlsTimeout.current = setTimeout(() => setShowControls(false), 3000);
+    }, []);
 
     const togglePlay = useCallback(() => {
         if (videoRef.current) {
@@ -25,6 +32,30 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
             setIsPlaying(!isPlaying);
         }
     }, [isPlaying]);
+
+    const handleVideoTap = useCallback(() => {
+        // If controls hidden, show them. If shown, toggle play.
+        if (!showControls) {
+            setShowControls(true);
+            if (isPlaying) scheduleHideControls();
+        } else {
+            togglePlay();
+        }
+    }, [showControls, isPlaying, togglePlay, scheduleHideControls]);
+
+    // Auto-hide controls when playing
+    useEffect(() => {
+        if (isPlaying && showControls) {
+            scheduleHideControls();
+        }
+        if (!isPlaying) {
+            setShowControls(true);
+            if (hideControlsTimeout.current) clearTimeout(hideControlsTimeout.current);
+        }
+        return () => {
+            if (hideControlsTimeout.current) clearTimeout(hideControlsTimeout.current);
+        };
+    }, [isPlaying, showControls, scheduleHideControls]);
 
     const handleVolumeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
         const newVolume = parseFloat(e.target.value);
@@ -102,21 +133,23 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
     }, [handleTimeUpdate, handleLoadedMetadata]);
 
     return (
-        <div className="relative w-full rounded-xl overflow-hidden shadow-lg bg-black group">
+        <div className="relative w-full rounded-xl overflow-hidden shadow-lg bg-black">
             <video
                 ref={videoRef}
                 src={src}
                 poster={poster}
                 title={title}
                 className="w-full aspect-video object-contain"
-                onClick={togglePlay}
+                onClick={handleVideoTap}
             />
 
-            {/* Overlay controls — always visible when paused so mobile users see the play button */}
-            <div className={`absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity duration-300 ${isPlaying ? 'opacity-0 group-hover:opacity-100' : 'opacity-100'}`}>
+            {/* Center play/pause overlay */}
+            <div
+                className={`absolute inset-0 flex items-center justify-center bg-black/10 transition-opacity duration-300 pointer-events-none ${showControls ? 'opacity-100' : 'opacity-0'}`}
+            >
                 <button
                     onClick={togglePlay}
-                    className="p-4 rounded-full bg-white bg-opacity-90 text-gray-900 shadow-lg hover:bg-opacity-100 transition-colors"
+                    className="p-4 rounded-full bg-white bg-opacity-90 text-gray-900 shadow-lg hover:bg-opacity-100 transition-colors pointer-events-auto"
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                     {isPlaying ? (
@@ -128,7 +161,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
             </div>
 
             {/* Bottom controls */}
-            <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className={`absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-black/70 to-transparent transition-opacity duration-300 ${showControls ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <input
                     type="range"
                     min="0"
