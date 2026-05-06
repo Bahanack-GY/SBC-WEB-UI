@@ -186,6 +186,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
       // Clear sessionStorage to reset modal display logic for next login
       sessionStorage.clear();
+
+      // Clear profile completion flags so new users get prompted
+      localStorage.removeItem('profileCompletionDone');
+      localStorage.removeItem('profileCompletionSkipped');
     }
   };
 
