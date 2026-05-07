@@ -18,6 +18,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
 import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
+import RelancePacksModal from '../components/relance/RelancePacksModal';
+import { useRelance } from '../contexts/RelanceContext';
 
 // Define interfaces
 interface Formation {
@@ -65,7 +67,7 @@ function Home() {
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);
   const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
   const [showRelanceModal, setShowRelanceModal] = useState(false);
-  const [hasRelanceSubscription, setHasRelanceSubscription] = useState(false);
+  const { hasCredits: hasRelanceAccess } = useRelance();
 
   // Use React Query for API calls with optimized settings
   const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<TransactionStats>({
@@ -126,23 +128,6 @@ function Home() {
     refetchOnMount: false,
     retry: 2,
   });
-
-  // Check for Relance subscription
-  useEffect(() => {
-    const checkRelanceSubscription = async () => {
-      try {
-        const response = await sbcApiService.checkSubscription('RELANCE');
-        const hasSub = response?.body?.data?.hasSubscription || false;
-        setHasRelanceSubscription(hasSub);
-      } catch (error) {
-        setHasRelanceSubscription(false);
-      }
-    };
-
-    if (user) {
-      checkRelanceSubscription();
-    }
-  }, [user]);
 
   // Update subscription status when data changes
   useEffect(() => {
@@ -250,9 +235,8 @@ function Home() {
                 <HomeButtons
                   icon={<FaEnvelope size={30} />}
                   title="Relance"
-                  badge="Bientôt"
                   onClick={() => {
-                    if (hasRelanceSubscription && user?.role === 'admin') {
+                    if (hasRelanceAccess) {
                       navigate("/relance");
                     } else {
                       setShowRelanceModal(true);
@@ -328,59 +312,11 @@ function Home() {
         )}
       </div>
 
-      {/* Relance Modal */}
-      <AnimatePresence>
-        {showRelanceModal && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', bounce: 0.2 }}
-            >
-              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <FaEnvelope className="text-[#115CF6]" size={24} />
-                Relance par email
-              </h4>
-              <p className="text-gray-700 mb-4">
-                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non-payants par email pendant 7 jours.
-              </p>
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <p className="text-sm text-gray-600 mb-2">✅ Messages automatiques quotidiens</p>
-                <p className="text-sm text-gray-600 mb-2">✅ Suivi intelligent des filleuls</p>
-                <p className="text-sm text-gray-600 mb-2">✅ Augmente vos conversions</p>
-                <p className="text-sm font-bold text-[#25D366] mt-4">2 000 XAF/mois</p>
-              </div>
-              <p className="text-sm text-gray-500 mb-6">
-                Vous n'avez pas encore souscrit à la fonction Relance. Cliquez ci-dessous pour vous abonner.
-              </p>
-              <div className="flex gap-3">
-                <button
-                  className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
-                  onClick={() => setShowRelanceModal(false)}
-                >
-                  Fermer
-                </button>
-                <button
-                  className="flex-1 bg-[#25D366] text-white rounded-xl py-2 font-bold shadow hover:bg-[#1ea952] transition-colors"
-                  onClick={() => {
-                    setShowRelanceModal(false);
-                    navigate('/ads-pack');
-                  }}
-                >
-                  S'abonner
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Relance credit packs modal */}
+      <RelancePacksModal
+        isOpen={showRelanceModal}
+        onClose={() => setShowRelanceModal(false)}
+      />
 
       {/* Formations Modal */}
       <AnimatePresence>
