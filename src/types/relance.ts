@@ -402,3 +402,51 @@ export interface DefaultRelanceStats {
 
 // Legacy type aliases for backward compatibility
 export type RelanceTargetStatus = TargetStatus;
+
+// ==================== Credit packs (replaces monthly subscription) ====================
+
+export type PackType = 'email' | 'sms';
+
+export interface RelancePack {
+  id: string;
+  type: PackType;
+  credits: number;
+  priceXAF: number;
+  priceUSD?: number;
+  label?: string;
+}
+
+export interface RelancePacksResponse {
+  emailPacks: RelancePack[];
+  smsPacks: RelancePack[];
+}
+
+export interface RelanceBalance {
+  emailBalance: number;
+  smsBalance: number;
+}
+
+export interface PurchasePackResponse {
+  sessionId: string;
+  checkoutUrl: string;
+  pack: RelancePack;
+}
+
+// ==================== SMS day-by-day links ====================
+
+export type SmsLinkType = 'auto' | 'manual';
+
+/**
+ * SMS link template for a specific day.
+ * - `auto` covers J0-J7 (auto-sent SMS from the system)
+ * - `manual` covers Day 1-7 (links the user shares manually)
+ */
+export interface SmsLink {
+  type: SmsLinkType;
+  dayNumber: number; // 0-7 for auto, 1-7 for manual
+  link: string;
+}
+
+export interface SmsLinksResponse {
+  links: SmsLink[];
+}

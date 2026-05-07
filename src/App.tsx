@@ -33,6 +33,7 @@ import ChangePhoneNumber from './pages/ChangePhoneNumber'
 import PartnerSpace from './pages/PartnerSpace'
 import WithdrawalOtpVerification from './pages/WithdrawalOtpVerification'
 import RelancePage from './pages/RelancePage'
+import RelanceSmsLinks from './pages/RelanceSmsLinks'
 import ActivationBalance from './pages/ActivationBalance'
 import { useQuery } from '@tanstack/react-query'
 import { handleApiResponse } from './utils/apiHelpers'
@@ -146,10 +147,8 @@ function AppContent() {
 
     // Activation balance page is now accessible to all users with teaser overlay for non-admin/tester
 
-    // Prevent non-admin/tester users from accessing relance page
-    if (isAuthenticated && location.pathname === '/relance' && authUser?.role !== 'admin' && authUser?.role !== 'tester') {
-      window.location.replace('/');
-    }
+    // Relance page is accessible to all authenticated users — credit-pack model.
+    // Users without credits see the pack purchase UI on the page itself.
 
     // Chat page is now accessible to all users with teaser overlay for non-admin/tester
   }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed, authUser]);
@@ -165,7 +164,7 @@ function AppContent() {
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || isInChatConversation;
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || isInChatConversation;
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -207,6 +206,7 @@ function AppContent() {
         <Route path="/partenaire" element={<PartnerSpace />} />
         <Route path="/withdrawal-otp-verification" element={<WithdrawalOtpVerification />} />
         <Route path="/relance" element={<RelancePage />} />
+        <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
         <Route path="/activation-balance" element={<ActivationBalance />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/complete-profile" element={<CompleteProfile />} />

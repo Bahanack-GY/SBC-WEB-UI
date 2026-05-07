@@ -6,14 +6,20 @@ import TourButton from '../components/common/TourButton';
 import { sbcApiService } from '../services/SBCApiService';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
+import { useRelance } from '../contexts/RelanceContext';
 import { useTranslation } from 'react-i18next';
 import type { RelanceStatus, Campaign, CampaignFilter, SampleUser, CampaignStatus, DefaultRelanceStats, CustomMessage, RelanceTarget, CampaignDetailStats, RecentMessage, MessageButton } from '../types/relance';
 import { countryOptions } from '../utils/countriesData';
+import RelancePacksModal from '../components/relance/RelancePacksModal';
+import { useNavigate } from 'react-router-dom';
 
 function RelancePage() {
   const { user } = useAuth();
   const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { emailBalance, smsBalance, refreshBalance } = useRelance();
+  const [showPacksModal, setShowPacksModal] = useState(false);
 
   // Subscription state - let backend validate via /relance/status
   const [hasRelanceSubscription, setHasRelanceSubscription] = useState(true);
@@ -116,10 +122,11 @@ function RelancePage() {
     }
   };
 
-  // Fetch data on mount - backend will validate subscription
+  // Fetch data on mount - backend will validate access via balance
   useEffect(() => {
     fetchStatus();
     fetchCampaigns();
+    refreshBalance();
   }, []);
 
   const fetchStatus = async () => {
@@ -581,7 +588,7 @@ function RelancePage() {
     );
   }
 
-  // Show coming soon if no subscription (admin/tester always bypass)
+  // Show pack purchase UI if no credits (admin/tester always bypass)
   if (!hasRelanceSubscription && !isAdminOrTester) {
     return (
       <ProtectedRoute>
@@ -600,23 +607,31 @@ function RelancePage() {
               <div className="text-6xl mb-4">📧</div>
               <h2 className="text-2xl font-bold text-gray-800 mb-3">Relance Automatique</h2>
               <p className="text-gray-600 mb-6">
-                La fonctionnalité Relance vous permet de suivre automatiquement vos filleuls non payés par email.
+                Suivez automatiquement vos filleuls non payés par email (et SMS pour le Cameroun). Achetez des crédits, utilisez-les à votre rythme.
               </p>
               <div className="bg-white rounded-xl p-4 mb-6">
-                <p className="text-sm text-gray-500 mb-2">Fonctionnalités :</p>
+                <p className="text-sm text-gray-500 mb-2">Inclus :</p>
                 <ul className="text-left text-sm text-gray-700 space-y-1">
-                  <li>✅ Emails automatiques sur 7 jours</li>
+                  <li>✅ Messages automatiques sur 7 jours</li>
                   <li>✅ Campagnes personnalisées</li>
-                  <li>✅ Suivi intelligent des filleuls</li>
                   <li>✅ Statistiques détaillées</li>
+                  <li>✅ Pas d'abonnement — vous payez à l'usage</li>
                 </ul>
               </div>
-              <p className="text-sm text-gray-500">
-                Abonnez-vous pour accéder à cette fonctionnalité.
-              </p>
+              <button
+                onClick={() => setShowPacksModal(true)}
+                className="w-full bg-[#115CF6] text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors"
+              >
+                Acheter des crédits
+              </button>
             </motion.div>
           </div>
         </div>
+
+        <RelancePacksModal
+          isOpen={showPacksModal}
+          onClose={() => setShowPacksModal(false)}
+        />
       </ProtectedRoute>
     );
   }
@@ -636,6 +651,42 @@ function RelancePage() {
           >
             <FaSync className={`text-gray-600 ${refreshing ? 'animate-spin' : ''}`} size={20} />
           </button>
+        </div>
+
+        {/* Credit balance card */}
+        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white mb-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <div className="text-xs uppercase tracking-wide opacity-80 mb-1">Crédits Relance</div>
+              <div className="flex items-center gap-4">
+                <div>
+                  <div className="text-2xl font-bold">{emailBalance.toLocaleString('fr-FR')}</div>
+                  <div className="text-xs opacity-80">emails</div>
+                </div>
+                <div className="h-8 w-px bg-white/30" />
+                <div>
+                  <div className="text-2xl font-bold">{smsBalance.toLocaleString('fr-FR')}</div>
+                  <div className="text-xs opacity-80">SMS</div>
+                </div>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 items-end">
+              <button
+                onClick={() => setShowPacksModal(true)}
+                className="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors"
+              >
+                Recharger
+              </button>
+              {smsBalance > 0 && (
+                <button
+                  onClick={() => navigate('/relance/sms-links')}
+                  className="text-xs underline opacity-90 hover:opacity-100"
+                >
+                  Liens SMS
+                </button>
+              )}
+            </div>
+          </div>
         </div>
 
         {/* Status Card */}
@@ -2128,6 +2179,11 @@ function RelancePage() {
           )}
         </AnimatePresence>
         <TourButton />
+
+        <RelancePacksModal
+          isOpen={showPacksModal}
+          onClose={() => setShowPacksModal(false)}
+        />
       </div>
     </ProtectedRoute>
   );

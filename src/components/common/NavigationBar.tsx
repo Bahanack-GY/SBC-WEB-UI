@@ -23,7 +23,7 @@ interface NavItem {
 function NavigationBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { hasRelanceSubscription } = useRelance();
+  const { hasCredits } = useRelance();
 
   const navItems = useMemo(() => {
     // Always include chat buttons for all users
@@ -35,8 +35,8 @@ function NavigationBar() {
       { label: 'Marketplace', icon: <MdShoppingBasket size={24} />, path: '/marketplace' },
     ];
 
-    // Add relance button if user has subscription
-    if (hasRelanceSubscription) {
+    // Show Relance entry to users who have credits (or admin/tester via context)
+    if (hasCredits) {
       items = [
         ...items,
         { label: 'Relance', icon: <FaEnvelope size={24} />, path: '/relance' },
@@ -44,7 +44,7 @@ function NavigationBar() {
     }
 
     return items;
-  }, [hasRelanceSubscription]);
+  }, [hasCredits]);
 
   return (
     <motion.nav
