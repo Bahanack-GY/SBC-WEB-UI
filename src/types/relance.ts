@@ -460,9 +460,6 @@ export interface SmsLinksResponse {
 export interface SmsTemplate {
   type: SmsLinkType;
   dayNumber: number;
-  template: string;
-}
-
-export interface SmsTemplatesResponse {
-  templates: SmsTemplate[];
+  templateText: string;
+  active: boolean;
 }
