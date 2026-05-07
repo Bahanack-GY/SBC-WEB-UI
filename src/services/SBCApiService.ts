@@ -1332,6 +1332,54 @@ export class SBCApiService extends ApiService {
 
   // ==================== RELANCE (Email Campaign Follow-up) ====================
 
+  // ===== Credit packs & balance (replaces monthly subscription) =====
+
+  /**
+   * List all available credit packs (email + SMS)
+   * GET /api/relance/packs
+   */
+  async relanceGetPacks(): Promise<ApiResponse> {
+    return await this.get('/relance/packs');
+  }
+
+  /**
+   * Get current user's email & SMS credit balance
+   * GET /api/relance/balance
+   */
+  async relanceGetBalance(): Promise<ApiResponse> {
+    return await this.get('/relance/balance');
+  }
+
+  /**
+   * Purchase a credit pack — returns checkoutUrl to redirect user to
+   * POST /api/relance/packs/purchase
+   */
+  async relancePurchasePack(packId: string): Promise<ApiResponse> {
+    return await this.post('/relance/packs/purchase', { body: { packId } });
+  }
+
+  // ===== SMS day-by-day link templates =====
+
+  /**
+   * Get user's per-day SMS template links
+   * GET /api/relance/sms-links
+   */
+  async relanceGetSmsLinks(): Promise<ApiResponse> {
+    return await this.get('/relance/sms-links');
+  }
+
+  /**
+   * Update SMS link templates
+   * PUT /api/relance/sms-links
+   */
+  async relanceUpdateSmsLinks(links: Array<{
+    type: 'auto' | 'manual';
+    dayNumber: number;
+    link: string;
+  }>): Promise<ApiResponse> {
+    return await this.put('/relance/sms-links', { body: { links } });
+  }
+
   // ===== Status & Settings =====
 
   /**
