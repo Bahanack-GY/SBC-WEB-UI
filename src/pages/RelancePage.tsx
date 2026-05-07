@@ -109,11 +109,11 @@ function RelancePage() {
     setMessageModal({ show: true, title, message, type });
   };
 
-  // Refresh status and campaigns
+  // Refresh status, campaigns, and credit balance
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([fetchStatus(), fetchCampaigns()]);
+      await Promise.all([fetchStatus(), fetchCampaigns(), refreshBalance()]);
       showMessage('Actualisé', 'Données mises à jour', 'success');
     } catch (err: any) {
       showMessage('Erreur', 'Échec de l\'actualisation', 'error');
