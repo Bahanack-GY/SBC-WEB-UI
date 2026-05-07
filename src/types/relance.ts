@@ -450,3 +450,19 @@ export interface SmsLink {
 export interface SmsLinksResponse {
   links: SmsLink[];
 }
+
+/**
+ * Current SMS template (read-only, set by admin) shown to the user
+ * so they know which message goes with which link.
+ * - `auto` covers J0–J7 (J0 only exists in auto, sent ~15 min after enrollment)
+ * - `manual` covers J1–J7
+ */
+export interface SmsTemplate {
+  type: SmsLinkType;
+  dayNumber: number;
+  template: string;
+}
+
+export interface SmsTemplatesResponse {
+  templates: SmsTemplate[];
+}
