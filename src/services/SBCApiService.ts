@@ -1361,6 +1361,15 @@ export class SBCApiService extends ApiService {
   // ===== SMS day-by-day link templates =====
 
   /**
+   * Get current SMS templates (read-only) so the user knows which message
+   * each link goes with.
+   * GET /api/relance/sms-templates
+   */
+  async relanceGetSmsTemplates(): Promise<ApiResponse> {
+    return await this.get('/relance/sms-templates');
+  }
+
+  /**
    * Get user's per-day SMS template links
    * GET /api/relance/sms-links
    */

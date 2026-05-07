@@ -3,22 +3,33 @@ import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import type { SmsLink } from '../types/relance';
+import type { SmsLink, SmsLinkType, SmsTemplate } from '../types/relance';
 
-// Auto SMS days: J0 through J7 (system-sent)
+// Auto SMS days: J0 through J7 (J0 sent ~15 min after enrollment)
 const AUTO_DAYS = [0, 1, 2, 3, 4, 5, 6, 7];
-// Manual SMS days: Day 1 through Day 7 (user shares manually)
+// Manual SMS days: J1 through J7 (no J0 — exists in auto only)
 const MANUAL_DAYS = [1, 2, 3, 4, 5, 6, 7];
 
-const indexBy = (links: SmsLink[]) => {
+const dayLabel = (type: SmsLinkType, day: number) =>
+  type === 'auto' && day === 0 ? 'J0 (15 min)' : `J${day}`;
+
+const indexLinks = (links: SmsLink[]) => {
   const map: Record<string, string> = {};
   for (const l of links) map[`${l.type}:${l.dayNumber}`] = l.link;
+  return map;
+};
+
+const indexTemplates = (templates: SmsTemplate[]) => {
+  const map: Record<string, string> = {};
+  for (const t of templates) map[`${t.type}:${t.dayNumber}`] = t.template;
   return map;
 };
 
 export default function RelanceSmsLinks() {
   const [autoLinks, setAutoLinks] = useState<Record<number, string>>({});
   const [manualLinks, setManualLinks] = useState<Record<number, string>>({});
+  const [autoTemplates, setAutoTemplates] = useState<Record<number, string>>({});
+  const [manualTemplates, setManualTemplates] = useState<Record<number, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
@@ -26,18 +37,30 @@ export default function RelanceSmsLinks() {
 
   useEffect(() => {
     let cancelled = false;
-    sbcApiService.relanceGetSmsLinks()
-      .then(res => {
+    Promise.all([
+      sbcApiService.relanceGetSmsLinks(),
+      sbcApiService.relanceGetSmsTemplates(),
+    ])
+      .then(([linksRes, templatesRes]) => {
         if (cancelled) return;
-        const data = handleApiResponse(res);
-        const links: SmsLink[] = data?.links || [];
-        const idx = indexBy(links);
+
+        const linksData = handleApiResponse(linksRes);
+        const linkIdx = indexLinks(linksData?.links || []);
         const auto: Record<number, string> = {};
         const manual: Record<number, string> = {};
-        for (const day of AUTO_DAYS) auto[day] = idx[`auto:${day}`] || '';
-        for (const day of MANUAL_DAYS) manual[day] = idx[`manual:${day}`] || '';
+        for (const day of AUTO_DAYS) auto[day] = linkIdx[`auto:${day}`] || '';
+        for (const day of MANUAL_DAYS) manual[day] = linkIdx[`manual:${day}`] || '';
         setAutoLinks(auto);
         setManualLinks(manual);
+
+        const templatesData = handleApiResponse(templatesRes);
+        const tplIdx = indexTemplates(templatesData?.templates || []);
+        const autoTpl: Record<number, string> = {};
+        const manualTpl: Record<number, string> = {};
+        for (const day of AUTO_DAYS) autoTpl[day] = tplIdx[`auto:${day}`] || '';
+        for (const day of MANUAL_DAYS) manualTpl[day] = tplIdx[`manual:${day}`] || '';
+        setAutoTemplates(autoTpl);
+        setManualTemplates(manualTpl);
       })
       .catch((err: any) => {
         if (cancelled) return;
@@ -73,18 +96,27 @@ export default function RelanceSmsLinks() {
   };
 
   const renderRow = (
-    label: string,
+    type: SmsLinkType,
+    day: number,
+    template: string,
     value: string,
     onChange: (v: string) => void,
   ) => (
-    <div className="flex items-center gap-2">
-      <div className="w-16 text-sm font-bold text-gray-700 shrink-0">{label}</div>
+    <div className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+      <div className="flex items-center justify-between mb-1">
+        <div className="font-bold text-sm text-gray-700">{dayLabel(type, day)}</div>
+      </div>
+      {template && (
+        <div className="text-xs text-gray-600 mb-2 whitespace-pre-wrap break-words">
+          {template}
+        </div>
+      )}
       <input
         type="url"
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="https://..."
-        className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
       />
     </div>
   );
@@ -94,7 +126,7 @@ export default function RelanceSmsLinks() {
       <div className="p-3 bg-white relative pb-24 min-h-screen">
         <div className="flex items-center mb-4">
           <BackButton />
-          <h3 className="text-xl font-medium text-center flex-1">Liens SMS</h3>
+          <h3 className="text-xl font-medium text-center flex-1">Mes liens SMS</h3>
         </div>
 
         <p className="text-sm text-gray-600 mb-4">
@@ -112,12 +144,14 @@ export default function RelanceSmsLinks() {
         {!loading && (
           <>
             <section className="mb-6">
-              <h4 className="font-bold text-gray-800 mb-3">SMS automatiques (J0 – J7)</h4>
+              <h4 className="font-bold text-gray-800 mb-3">SMS automatiques</h4>
               <div className="space-y-2">
                 {AUTO_DAYS.map(day => (
                   <div key={`auto-${day}`}>
                     {renderRow(
-                      `J${day}`,
+                      'auto',
+                      day,
+                      autoTemplates[day] || '',
                       autoLinks[day] || '',
                       (v) => setAutoLinks(prev => ({ ...prev, [day]: v }))
                     )}
@@ -127,12 +161,14 @@ export default function RelanceSmsLinks() {
             </section>
 
             <section className="mb-6">
-              <h4 className="font-bold text-gray-800 mb-3">SMS manuels (Jour 1 – Jour 7)</h4>
+              <h4 className="font-bold text-gray-800 mb-3">SMS manuels</h4>
               <div className="space-y-2">
                 {MANUAL_DAYS.map(day => (
                   <div key={`manual-${day}`}>
                     {renderRow(
-                      `Jour ${day}`,
+                      'manual',
+                      day,
+                      manualTemplates[day] || '',
                       manualLinks[day] || '',
                       (v) => setManualLinks(prev => ({ ...prev, [day]: v }))
                     )}
