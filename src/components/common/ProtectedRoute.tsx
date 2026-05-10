@@ -20,7 +20,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // Redirect to login page with return url
+    // If the user just hit "log out" we want to drop them on /connexion
+    // immediately, not bounce them through the onboarding splash.
+    if (sessionStorage.getItem('justLoggedOut')) {
+      sessionStorage.removeItem('justLoggedOut');
+      return <Navigate to="/connexion" replace />;
+    }
+    // First-time / returning unauthenticated visitors see the onboarding.
     return <Navigate to="/splash-screen" state={{ from: location }} replace />;
   }
 

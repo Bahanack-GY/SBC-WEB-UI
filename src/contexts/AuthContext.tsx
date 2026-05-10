@@ -190,6 +190,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear profile completion flags so new users get prompted
       localStorage.removeItem('profileCompletionDone');
       localStorage.removeItem('profileCompletionSkipped');
+
+      // Mark this as an explicit logout so ProtectedRoute redirects to
+      // /connexion (not /splash-screen) for the brief window between
+      // auth state changing and the caller's navigate('/connexion').
+      sessionStorage.setItem('justLoggedOut', '1');
     }
   };
 
