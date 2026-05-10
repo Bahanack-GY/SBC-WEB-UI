@@ -11,6 +11,7 @@ import { clearSignupCache } from '../utils/signupHelpers';
 import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
 import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
 import { countryOptions, africanCountryCodes } from '../utils/countriesData';
+import PublicFooter from '../components/common/PublicFooter';
 
 interface SignupData {
   nom: string;
@@ -680,7 +681,7 @@ function Signup() {
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] py-8 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] py-8 px-4">
       <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-6">
@@ -846,6 +847,11 @@ function Signup() {
           Déjà un compte ? <a href="/connexion" className="text-[#115CF6] font-semibold hover:underline">Connexion</a>
         </div>
       </div>
+
+      <div className="w-full max-w-md px-4">
+        <PublicFooter />
+      </div>
+
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full p-6 relative animate-fadeIn">

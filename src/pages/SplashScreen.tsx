@@ -1,12 +1,13 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import splash1 from '../assets/img/splash-1.png';
 import splash2 from '../assets/img/splash-2.png';
 import splash3 from '../assets/img/splash-3.png';
 import splash4 from '../assets/img/splash-4.jpg';
 import logo from '../assets/img/logo-sbc.png';
+import PublicFooter from '../components/common/PublicFooter';
 
 const slides = [
   {
@@ -225,7 +226,20 @@ function SplashScreen() {
               </button>
             </>
           )}
+
+          {/* Public 'En savoir plus' link — points SES reviewers (and curious
+              visitors) to the company landing page without needing an account */}
+          <div className="text-center mt-2">
+            <Link
+              to="/a-propos"
+              className="text-sm font-semibold text-gray-500 hover:text-[#115CF6] hover:underline"
+            >
+              En savoir plus sur SBC
+            </Link>
+          </div>
         </div>
+
+        <PublicFooter />
       </div>
     </div>
   );
