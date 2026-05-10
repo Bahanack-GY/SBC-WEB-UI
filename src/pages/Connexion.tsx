@@ -10,6 +10,7 @@ import NegativeBalanceNotification from '../components/NegativeBalanceNotificati
 import logo from '../assets/img/logo-sbc.png';
 import { clearSignupCacheWithFeedback } from '../utils/signupHelpers';
 import { useTranslation } from 'react-i18next';
+import PublicFooter from '../components/common/PublicFooter';
 
 function Connexion() {
   const { t } = useTranslation();
@@ -135,7 +136,7 @@ function Connexion() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white py-8 px-4">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white py-8 px-4">
       <div className="w-full max-w-md p-8">
         <img src={logo} alt="logo" className=" mb-4 object-contain" />
         <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('pages.connexion.title')}</h1>
@@ -197,6 +198,10 @@ function Connexion() {
             {t('common.signup')}
           </button>
         </div>
+      </div>
+
+      <div className="w-full max-w-md px-4">
+        <PublicFooter />
       </div>
 
       {/* Recovery Modal */}
