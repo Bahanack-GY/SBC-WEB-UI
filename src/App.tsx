@@ -24,7 +24,7 @@ import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import VerifyOtp from './pages/VerifyOtp'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmailOtp from './pages/VerifyEmailOtp'
@@ -35,6 +35,9 @@ import WithdrawalOtpVerification from './pages/WithdrawalOtpVerification'
 import RelancePage from './pages/RelancePage'
 import RelanceSmsLinks from './pages/RelanceSmsLinks'
 import ActivationBalance from './pages/ActivationBalance'
+import PublicLanding from './pages/PublicLanding'
+import PublicTerms from './pages/PublicTerms'
+import PublicPrivacy from './pages/PublicPrivacy'
 import { useQuery } from '@tanstack/react-query'
 import { handleApiResponse } from './utils/apiHelpers'
 import { sbcApiService } from './services/SBCApiService'
@@ -55,7 +58,6 @@ type SubscriptionData = {
 function AppContent() {
   const location = useLocation();
   const { setAffiliationCode } = useAffiliation();
-  const [splashViewed, setSplashViewed] = useState(() => localStorage.getItem('splashViewed') === 'true');
   const { isAuthenticated, logout, user: authUser } = useAuth();
 
   // Fetch subscription status globally
@@ -91,19 +93,11 @@ function AppContent() {
       setAffiliationCode(affiliationCodeFromUrl);
     }
 
-    // If on splash screen and not yet marked as viewed, mark as viewed
-    if (location.pathname === '/splash-screen' && !splashViewed) {
-      localStorage.setItem('splashViewed', 'true');
-      setSplashViewed(true);
-    }
-
-    // Handle splash screen redirects
-    if (location.pathname === '/splash-screen' && splashViewed) {
-      if (!isAuthenticated) {
-        window.location.replace('/connexion');
-      } else if (isAuthenticated) {
-        window.location.replace('/');
-      }
+    // /splash-screen is the public landing for unauthenticated users — they
+    // walk through the onboarding carousel before reaching /connexion.
+    // Authenticated users have no business there, so push them to /.
+    if (location.pathname === '/splash-screen' && isAuthenticated) {
+      window.location.replace('/');
     }
 
     // Handle login page redirects
@@ -151,7 +145,7 @@ function AppContent() {
     // Users without credits see the pack purchase UI on the page itself.
 
     // Chat page is now accessible to all users with teaser overlay for non-admin/tester
-  }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed, authUser]);
+  }, [location, setAffiliationCode, isAuthenticated, subscriptionLoading, isSubscribed, authUser]);
 
   // Optionally, block rendering until subscription status is known
   if (isAuthenticated && subscriptionLoading) {
@@ -164,7 +158,7 @@ function AppContent() {
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || isInChatConversation;
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || isInChatConversation;
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -210,6 +204,9 @@ function AppContent() {
         <Route path="/activation-balance" element={<ActivationBalance />} />
         <Route path="/chat" element={<Chat />} />
         <Route path="/complete-profile" element={<CompleteProfile />} />
+        <Route path="/a-propos" element={<PublicLanding />} />
+        <Route path="/conditions" element={<PublicTerms />} />
+        <Route path="/confidentialite" element={<PublicPrivacy />} />
       </Routes>
       {!hideNav && <NavigationBar />}
     </div>

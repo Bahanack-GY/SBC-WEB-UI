@@ -59,10 +59,10 @@ const getWithdrawalTypes = (userCountrySupportsMomo: boolean): WithdrawalType[] 
       name: 'Mobile Money',
       icon: <FaMobileAlt size={24} />,
       description: 'Withdraw to your mobile money account',
-      minAmount: 500,
+      minAmount: 1500,
       currency: 'XAF',
       requirements: [
-        'Minimum: 500 XAF',
+        'Minimum: 1500 XAF',
         'Must be multiple of 5',
         'Uses saved mobile money details',
         'Available in your country'
