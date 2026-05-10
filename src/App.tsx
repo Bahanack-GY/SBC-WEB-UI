@@ -55,7 +55,7 @@ type SubscriptionData = {
 function AppContent() {
   const location = useLocation();
   const { setAffiliationCode } = useAffiliation();
-  const [splashViewed, setSplashViewed] = useState(() => localStorage.getItem('splashViewed') === 'true');
+  const [splashViewed] = useState(() => localStorage.getItem('splashViewed') === 'true');
   const { isAuthenticated, logout, user: authUser } = useAuth();
 
   // Fetch subscription status globally
@@ -91,13 +91,9 @@ function AppContent() {
       setAffiliationCode(affiliationCodeFromUrl);
     }
 
-    // If on splash screen and not yet marked as viewed, mark as viewed
-    if (location.pathname === '/splash-screen' && !splashViewed) {
-      localStorage.setItem('splashViewed', 'true');
-      setSplashViewed(true);
-    }
-
-    // Handle splash screen redirects
+    // Handle splash screen redirects — only redirect users who have already
+    // seen the splash. First-time visitors must walk through the carousel;
+    // SplashScreen marks splashViewed=true when the user clicks through.
     if (location.pathname === '/splash-screen' && splashViewed) {
       if (!isAuthenticated) {
         window.location.replace('/connexion');
