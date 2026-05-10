@@ -191,10 +191,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('profileCompletionDone');
       localStorage.removeItem('profileCompletionSkipped');
 
-      // Make sure the splash isn't shown after a logout. A user who reached
-      // an authenticated session has already seen everything they need; send
-      // them straight to /connexion next time they're unauthenticated.
-      localStorage.setItem('splashViewed', 'true');
+      // Drop the legacy permanent splash-viewed flag if a previous build wrote
+      // it: we only want logout to redirect to /connexion *briefly*, never to
+      // permanently suppress the onboarding splash on cold opens.
+      localStorage.removeItem('splashViewed');
+
+      // Timestamp the logout so ProtectedRoute can route the user to
+      // /connexion during the short window where auth state has cleared but
+      // the explicit navigate('/connexion') hasn't taken effect yet. Any later
+      // unauthenticated visit (refresh, reopen) lands on /splash-screen.
+      sessionStorage.setItem('justLoggedOutAt', String(Date.now()));
     }
   };
 
