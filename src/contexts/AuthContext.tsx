@@ -191,10 +191,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       localStorage.removeItem('profileCompletionDone');
       localStorage.removeItem('profileCompletionSkipped');
 
-      // Mark this as an explicit logout so ProtectedRoute redirects to
-      // /connexion (not /splash-screen) for the brief window between
-      // auth state changing and the caller's navigate('/connexion').
-      sessionStorage.setItem('justLoggedOut', '1');
+      // Make sure the splash isn't shown after a logout. A user who reached
+      // an authenticated session has already seen everything they need; send
+      // them straight to /connexion next time they're unauthenticated.
+      localStorage.setItem('splashViewed', 'true');
     }
   };
 
