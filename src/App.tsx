@@ -24,7 +24,7 @@ import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import VerifyOtp from './pages/VerifyOtp'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmailOtp from './pages/VerifyEmailOtp'
@@ -55,7 +55,6 @@ type SubscriptionData = {
 function AppContent() {
   const location = useLocation();
   const { setAffiliationCode } = useAffiliation();
-  const [splashViewed] = useState(() => localStorage.getItem('splashViewed') === 'true');
   const { isAuthenticated, logout, user: authUser } = useAuth();
 
   // Fetch subscription status globally
@@ -91,15 +90,11 @@ function AppContent() {
       setAffiliationCode(affiliationCodeFromUrl);
     }
 
-    // Handle splash screen redirects — only redirect users who have already
-    // seen the splash. First-time visitors must walk through the carousel;
-    // SplashScreen marks splashViewed=true when the user clicks through.
-    if (location.pathname === '/splash-screen' && splashViewed) {
-      if (!isAuthenticated) {
-        window.location.replace('/connexion');
-      } else if (isAuthenticated) {
-        window.location.replace('/');
-      }
+    // /splash-screen is the public landing for unauthenticated users — they
+    // walk through the onboarding carousel before reaching /connexion.
+    // Authenticated users have no business there, so push them to /.
+    if (location.pathname === '/splash-screen' && isAuthenticated) {
+      window.location.replace('/');
     }
 
     // Handle login page redirects
@@ -147,7 +142,7 @@ function AppContent() {
     // Users without credits see the pack purchase UI on the page itself.
 
     // Chat page is now accessible to all users with teaser overlay for non-admin/tester
-  }, [location, setAffiliationCode, splashViewed, isAuthenticated, subscriptionLoading, isSubscribed, authUser]);
+  }, [location, setAffiliationCode, isAuthenticated, subscriptionLoading, isSubscribed, authUser]);
 
   // Optionally, block rendering until subscription status is known
   if (isAuthenticated && subscriptionLoading) {
