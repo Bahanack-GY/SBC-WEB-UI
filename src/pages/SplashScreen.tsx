@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { FiArrowLeft } from 'react-icons/fi';
 import splash1 from '../assets/img/splash-1.png';
 import splash2 from '../assets/img/splash-2.png';
 import splash3 from '../assets/img/splash-3.png';
@@ -106,11 +107,21 @@ function SplashScreen() {
       <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-[#25D366]/10 blur-3xl" />
 
       <div className="relative z-10 flex min-h-screen flex-col px-5 py-6 max-w-md mx-auto">
-        {/* Top bar: logo + login */}
+        {/* Top bar: back button (when not on first slide) + logo + login */}
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
+            {step > 0 ? (
+              <button
+                onClick={goPrev}
+                aria-label="Précédent"
+                className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm hover:bg-white transition-colors"
+              >
+                <FiArrowLeft size={20} />
+              </button>
+            ) : (
+              <div className="h-9 w-9" /> /* placeholder to keep logo centered */
+            )}
             <img src={logo} alt="SBC" className="h-9 w-9 object-contain" />
-            <span className="font-bold text-gray-800">SBC</span>
           </div>
           <button
             onClick={handleLogin}
