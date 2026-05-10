@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { FiArrowLeft } from 'react-icons/fi';
 import splash1 from '../assets/img/splash-1.png';
 import splash2 from '../assets/img/splash-2.png';
@@ -227,16 +227,6 @@ function SplashScreen() {
             </>
           )}
 
-          {/* Public 'En savoir plus' link — points SES reviewers (and curious
-              visitors) to the company landing page without needing an account */}
-          <div className="text-center mt-2">
-            <Link
-              to="/a-propos"
-              className="text-sm font-semibold text-gray-500 hover:text-[#115CF6] hover:underline"
-            >
-              En savoir plus sur SBC
-            </Link>
-          </div>
         </div>
 
         <PublicFooter />
