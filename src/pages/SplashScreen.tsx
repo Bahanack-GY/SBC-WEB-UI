@@ -62,7 +62,10 @@ function SplashScreen() {
     if (step < steps.length - 1) setStep(step + 1);
   };
   const handleSkip = () => setStep(steps.length - 1);
-  const handleGetStarted = () => navigate('/connexion');
+  const handleGetStarted = () => {
+    localStorage.setItem('splashViewed', 'true');
+    navigate('/connexion');
+  };
 
   return (
     <div className="flex flex-col min-h-screen w-full bg-white">
