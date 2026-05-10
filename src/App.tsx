@@ -86,6 +86,15 @@ function AppContent() {
     (typeof subscriptionData?.totalCount === 'number' && subscriptionData.totalCount > 0)
   );
 
+  // One-time cleanup: a previous build wrote a permanent
+  // localStorage.splashViewed flag that incorrectly suppressed the splash on
+  // cold opens. Drop it so users always see onboarding again on fresh visits.
+  useEffect(() => {
+    if (localStorage.getItem('splashViewed')) {
+      localStorage.removeItem('splashViewed');
+    }
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const affiliationCodeFromUrl = params.get('affiliationCode');
