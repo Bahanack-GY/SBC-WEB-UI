@@ -79,14 +79,9 @@ function SplashScreen() {
     setStep(slides.length - 1);
   };
 
-  // Mark splash as viewed when the user explicitly leaves via a CTA. From
-  // then on ProtectedRoute will send unauthenticated users straight to
-  // /connexion instead of cycling them through onboarding again.
-  const markSplashViewed = () => localStorage.setItem('splashViewed', 'true');
-
-  const handleGetStarted = () => { markSplashViewed(); navigate('/connexion'); };
-  const handleSignup = () => { markSplashViewed(); navigate('/signup'); };
-  const handleLogin = () => { markSplashViewed(); navigate('/connexion'); };
+  const handleGetStarted = () => navigate('/connexion');
+  const handleSignup = () => navigate('/signup');
+  const handleLogin = () => navigate('/connexion');
 
   const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (info.offset.x < -SWIPE_THRESHOLD) {
