@@ -20,13 +20,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   }
 
   if (!isAuthenticated) {
-    // If the user just hit "log out" we want to drop them on /connexion
-    // immediately, not bounce them through the onboarding splash.
-    if (sessionStorage.getItem('justLoggedOut')) {
-      sessionStorage.removeItem('justLoggedOut');
+    // Show the onboarding splash only to users who have never explicitly
+    // moved past it. Once they hit a CTA on the splash (or log out from
+    // an authenticated session) we send them straight to /connexion.
+    const splashViewed = localStorage.getItem('splashViewed') === 'true';
+    if (splashViewed) {
       return <Navigate to="/connexion" replace />;
     }
-    // First-time / returning unauthenticated visitors see the onboarding.
     return <Navigate to="/splash-screen" state={{ from: location }} replace />;
   }
 
