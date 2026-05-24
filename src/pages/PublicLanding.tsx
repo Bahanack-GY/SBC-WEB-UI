@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { FaWhatsapp, FaTelegramPlane, FaFacebookF, FaInstagram, FaTiktok } from 'react-icons/fa';
+import { FaWhatsapp, FaTelegramPlane, FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa';
 import { FiMail, FiPhone, FiMapPin, FiArrowLeft } from 'react-icons/fi';
 import logo from '../assets/img/logo-sbc.png';
 import PublicFooter from '../components/common/PublicFooter';
@@ -97,6 +97,9 @@ export default function PublicLanding() {
             </a>
             <a href="https://t.me/sniperbusinesscenterafrica" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#0088cc] text-white hover:opacity-90">
               <FaTelegramPlane />
+            </a>
+            <a href="https://m.youtube.com/@SniperBusinessCenterSBC" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#FF0000] text-white hover:opacity-90">
+              <FaYoutube />
             </a>
             <a href="https://www.facebook.com/sniperbusinesscenter/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#1877F2] text-white hover:opacity-90">
               <FaFacebookF />
