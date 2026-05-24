@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane } from "react-icons/fa";
+import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
 import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
@@ -304,6 +304,20 @@ function Home() {
                   <div>
                     <div className="font-bold text-base">Telegram</div>
                     <div className="text-sm opacity-90">Rejoignez notre groupe Telegram</div>
+                  </div>
+                </motion.a>
+                <motion.a
+                  href="https://m.youtube.com/@SniperBusinessCenterSBC"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  whileTap={{ scale: 0.97 }}
+                  className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
+                  style={{ backgroundColor: '#FF0000' }}
+                >
+                  <FaYoutube size={32} />
+                  <div>
+                    <div className="font-bold text-base">YouTube</div>
+                    <div className="text-sm opacity-90">Abonnez-vous à notre chaîne YouTube</div>
                   </div>
                 </motion.a>
               </div>
