@@ -742,16 +742,20 @@ function RelancePage() {
             <div className="flex items-center gap-3">
               <FaEnvelope size={32} />
               <div>
-                <div className="font-bold text-lg">
-                  {status?.enabled ? '✅ Relance Activée' : '⏸️ Relance Désactivée'}
+                <div className="font-bold text-lg flex items-center gap-2 flex-wrap">
+                  <span>{status?.enabled ? '✅ Relance Activée' : '⏸️ Relance Désactivée'}</span>
+                  {status?.channel && (
+                    <span className="text-[10px] uppercase tracking-wide bg-white/20 px-2 py-0.5 rounded-full font-semibold">
+                      {status.channel}
+                    </span>
+                  )}
                 </div>
                 <div className="text-sm opacity-90">
                   {defaultStats?.activeTargets || 0} cibles actives
                   {' • '}
                   Emails aujourd'hui: {status?.messagesSentToday || 0}
                   {hasSmsAccess && (
-                    // TODO: render real SMS-today count once backend surfaces it in /relance/status
-                    <> {' • '} SMS: —</>
+                    <> {' • '} SMS: {defaultStats?.smsToday ?? '—'}</>
                   )}
                 </div>
               </div>
@@ -897,8 +901,7 @@ function RelancePage() {
                     </div>
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="text-xs text-green-700">SMS</span>
-                      {/* TODO: bind to defaultStats.smsSent once backend exposes it */}
-                      <span className="text-lg font-bold text-green-700">—</span>
+                      <span className="text-lg font-bold text-green-700">{defaultStats.smsSent ?? '—'}</span>
                     </div>
                   </div>
                 ) : (
@@ -918,8 +921,11 @@ function RelancePage() {
                     </div>
                     <div className="flex items-baseline justify-between gap-2">
                       <span className="text-xs text-orange-700">SMS</span>
-                      {/* TODO: bind to defaultStats.smsDeliveryRate once backend exposes it */}
-                      <span className="text-lg font-bold text-orange-700">—</span>
+                      <span className="text-lg font-bold text-orange-700">
+                        {typeof defaultStats.smsDeliveryRate === 'number'
+                          ? `${defaultStats.smsDeliveryRate.toFixed(1)}%`
+                          : '—'}
+                      </span>
                     </div>
                   </div>
                 ) : (
@@ -1380,6 +1386,9 @@ function RelancePage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-gray-400">
+                              <span aria-label={msg.channel === 'sms' ? 'SMS' : 'Email'}>
+                                {msg.channel === 'sms' ? '📱' : '📧'}
+                              </span>
                               <span>Jour {msg.day}/7</span>
                               <span>•</span>
                               <span>{dateStr} à {timeStr}</span>
@@ -2260,6 +2269,9 @@ function RelancePage() {
                                             </span>
                                           </div>
                                           <div className="flex items-center gap-2 text-xs text-gray-400 ml-8">
+                                            <span aria-label={msg.channel === 'sms' ? 'SMS' : 'Email'}>
+                                              {msg.channel === 'sms' ? '📱' : '📧'}
+                                            </span>
                                             <span>Jour {msg.day}/7</span>
                                             <span>•</span>
                                             <span>{dateStr} à {timeStr}</span>

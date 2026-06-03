@@ -42,6 +42,7 @@ export interface MessageDelivery {
   sentAt: string;
   status: string;                // 'delivered' | 'failed' etc.
   errorMessage?: string;
+  channel?: 'email' | 'sms';     // legacy rows may omit; treat undefined as 'email'
 }
 
 /**
@@ -99,7 +100,7 @@ export interface RelanceTarget {
  * Relance status response (flat shape from API)
  */
 export interface RelanceStatus {
-  channel: string;
+  channel?: string;                // Default-relance channel hint (optional — may be absent)
   enabled: boolean;
   enrollmentPaused: boolean;
   sendingPaused: boolean;
@@ -162,6 +163,7 @@ export interface RecentMessage {
   campaignId?: string | null;
   campaignName?: string | null;
   renderedHtml?: string;
+  channel?: 'email' | 'sms';     // undefined = legacy email row
 }
 
 /**
@@ -396,6 +398,10 @@ export interface DefaultRelanceStats {
   totalMessagesSent: number;
   totalMessagesDelivered: number;
   deliveryPercentage: number;
+  // SMS counters (optional — backend rolls these out separately)
+  smsSent?: number;
+  smsToday?: number;
+  smsDeliveryRate?: number;
   // Email engagement tracking
   totalMessagesOpened?: number;      // Unique emails opened at least once
   totalMessagesClicked?: number;     // Unique emails with at least one click
