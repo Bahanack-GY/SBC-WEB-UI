@@ -11,18 +11,15 @@ import { useTranslation } from 'react-i18next';
 import type { RelanceStatus, Campaign, CampaignFilter, SampleUser, CampaignStatus, DefaultRelanceStats, CustomMessage, RelanceTarget, CampaignDetailStats, RecentMessage, MessageButton } from '../types/relance';
 import { countryOptions } from '../utils/countriesData';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
-import { useNavigate } from 'react-router-dom';
+import RelanceLowBalanceBanner from '../components/relance/RelanceLowBalanceBanner';
+
+type PacksModalTab = false | 'all' | 'email' | 'sms';
 
 function RelancePage() {
   const { user } = useAuth();
-  const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { emailBalance, smsBalance, refreshBalance } = useRelance();
-  const [showPacksModal, setShowPacksModal] = useState(false);
-
-  // Subscription state - let backend validate via /relance/status
-  const [hasRelanceSubscription, setHasRelanceSubscription] = useState(true);
+  const { emailBalance, smsBalance, hasCredits, refreshBalance } = useRelance();
+  const [showPacksModal, setShowPacksModal] = useState<PacksModalTab>(false);
 
   // Relance status state
   const [status, setStatus] = useState<RelanceStatus | null>(null);
@@ -109,6 +106,10 @@ function RelancePage() {
     setMessageModal({ show: true, title, message, type });
   };
 
+  // SMS access: prefer backend admin flag, fall back to "user already owns SMS credits".
+  // The smsEnabled flag may be absent on older backends — see PR notes.
+  const hasSmsAccess = smsBalance > 0 || status?.smsEnabled === true;
+
   // Refresh status, campaigns, and credit balance
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -134,24 +135,9 @@ function RelancePage() {
       const response = await sbcApiService.relanceGetStatus();
       if (response.isSuccessByStatusCode && response.body?.data) {
         setStatus(response.body.data as RelanceStatus);
-        setHasRelanceSubscription(true);
-      } else {
-        // Check if it's a subscription error
-        const errorMessage = response.body?.message || '';
-        if (errorMessage.toLowerCase().includes('subscription') ||
-            errorMessage.toLowerCase().includes('abonnement') ||
-            response.statusCode === 403) {
-          setHasRelanceSubscription(false);
-        }
       }
     } catch (err: any) {
       console.error('Error fetching status:', err);
-      // Check if error is subscription related
-      const errorMessage = err?.message || '';
-      if (errorMessage.toLowerCase().includes('subscription') ||
-          errorMessage.toLowerCase().includes('abonnement')) {
-        setHasRelanceSubscription(false);
-      }
     } finally {
       setLoading(false);
     }
@@ -390,7 +376,6 @@ function RelancePage() {
         type: 'filtered',
         targetFilter: filters,
         customMessages: filteredCustomMessages,
-        maxMessagesPerDay: 30,
       });
 
       if (response.isSuccessByStatusCode && response.body?.data) {
@@ -588,8 +573,8 @@ function RelancePage() {
     );
   }
 
-  // Show pack purchase UI if no credits (admin/tester always bypass)
-  if (!hasRelanceSubscription && !isAdminOrTester) {
+  // Show pack purchase UI if no credits (admin/tester always bypass via hasCredits)
+  if (!hasCredits) {
     return (
       <ProtectedRoute>
         <div className="p-3 bg-white relative pb-20 min-h-screen">
@@ -619,7 +604,7 @@ function RelancePage() {
                 </ul>
               </div>
               <button
-                onClick={() => setShowPacksModal(true)}
+                onClick={() => setShowPacksModal('all')}
                 className="w-full bg-[#115CF6] text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors"
               >
                 Acheter des crédits
@@ -629,8 +614,10 @@ function RelancePage() {
         </div>
 
         <RelancePacksModal
-          isOpen={showPacksModal}
+          isOpen={showPacksModal !== false}
           onClose={() => setShowPacksModal(false)}
+          showEmail={showPacksModal !== 'sms'}
+          showSms={showPacksModal !== 'email' && hasSmsAccess}
         />
       </ProtectedRoute>
     );
@@ -653,6 +640,14 @@ function RelancePage() {
           </button>
         </div>
 
+        {/* Low-balance banners (above the fold) */}
+        <RelanceLowBalanceBanner
+          emailBalance={emailBalance}
+          smsBalance={smsBalance}
+          hasSmsAccess={hasSmsAccess}
+          onRecharge={(channel) => setShowPacksModal(channel)}
+        />
+
         {/* Credit balance card */}
         <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white mb-4">
           <div className="flex items-center justify-between gap-3">
@@ -672,19 +667,11 @@ function RelancePage() {
             </div>
             <div className="flex flex-col gap-2 items-end">
               <button
-                onClick={() => setShowPacksModal(true)}
-                className="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors"
+                onClick={() => setShowPacksModal('all')}
+                className="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors min-h-[44px]"
               >
                 Recharger
               </button>
-              {smsBalance > 0 && (
-                <button
-                  onClick={() => navigate('/relance/sms-links')}
-                  className="text-xs underline opacity-90 hover:opacity-100"
-                >
-                  Liens SMS
-                </button>
-              )}
             </div>
           </div>
         </div>
@@ -2181,8 +2168,10 @@ function RelancePage() {
         <TourButton />
 
         <RelancePacksModal
-          isOpen={showPacksModal}
+          isOpen={showPacksModal !== false}
           onClose={() => setShowPacksModal(false)}
+          showEmail={showPacksModal !== 'sms'}
+          showSms={showPacksModal !== 'email' && hasSmsAccess}
         />
       </div>
     </ProtectedRoute>

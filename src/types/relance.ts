@@ -105,6 +105,9 @@ export interface RelanceStatus {
   sendingPaused: boolean;
   messagesSentToday: number;
   maxMessagesPerDay: number;
+  smsEnabled?: boolean;            // Admin-gated SMS access flag (may be absent on older backends)
+  sendingPausedEmail?: boolean;    // Per-channel pause (optional, falls back to sendingPaused)
+  sendingPausedSms?: boolean;
 }
 
 /**

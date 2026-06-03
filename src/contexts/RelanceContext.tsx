@@ -9,10 +9,6 @@ interface RelanceContextType {
   hasCredits: boolean;            // true if either balance > 0 OR admin/tester
   isLoading: boolean;
   refreshBalance: () => Promise<void>;
-
-  // Backward compat aliases (read-only): older code may still call this name.
-  hasRelanceSubscription: boolean;
-  checkRelanceSubscription: () => Promise<void>;
 }
 
 const RelanceContext = createContext<RelanceContextType | undefined>(undefined);
@@ -58,9 +54,6 @@ export const RelanceProvider: React.FC<{ children: ReactNode }> = ({ children })
         hasCredits,
         isLoading,
         refreshBalance,
-        // Backward-compat aliases
-        hasRelanceSubscription: hasCredits,
-        checkRelanceSubscription: refreshBalance,
       }}
     >
       {children}

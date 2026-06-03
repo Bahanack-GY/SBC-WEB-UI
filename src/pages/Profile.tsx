@@ -20,7 +20,6 @@ type ActionItem = {
   to: string;
   external?: boolean;
   badge?: string;
-  requiresRelance?: boolean;
   requiresActivation?: boolean;
 };
 
@@ -73,7 +72,7 @@ function Profile() {
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
     ...baseActions.slice(0, 7), // Up to "Mes Contacts"
-    { label: 'Relance par email', icon: <FaEnvelope className="text-[#115CF6]" />, to: '/relance', badge: 'Bientôt', requiresRelance: true },
+    { label: 'Relance', icon: <FaEnvelope className="text-[#115CF6]" />, to: '/relance' },
     ...baseActions.slice(7), // Rest of the actions
   ];
 
