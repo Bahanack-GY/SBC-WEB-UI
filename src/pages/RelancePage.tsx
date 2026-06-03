@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye, FaChartBar, FaMousePointer, FaEnvelopeOpen } from 'react-icons/fa';
+import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye, FaChartBar, FaMousePointer, FaEnvelopeOpen, FaSms } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -12,6 +13,7 @@ import type { RelanceStatus, Campaign, CampaignFilter, SampleUser, CampaignStatu
 import { countryOptions } from '../utils/countriesData';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
 import RelanceLowBalanceBanner from '../components/relance/RelanceLowBalanceBanner';
+import RelancePacingCard from '../components/relance/RelancePacingCard';
 
 type PacksModalTab = false | 'all' | 'email' | 'sms';
 
@@ -56,6 +58,7 @@ function RelancePage() {
 
   // Campaign creation wizard state
   const [campaignName, setCampaignName] = useState('');
+  const [campaignChannel, setCampaignChannel] = useState<'email' | 'sms' | 'both'>('email');
   const [filters, setFilters] = useState<CampaignFilter>({
     countries: [],
     registrationDateFrom: undefined,
@@ -324,6 +327,7 @@ function RelancePage() {
   // Campaign wizard handlers
   const handleOpenWizard = () => {
     setCampaignName('');
+    setCampaignChannel('email');
     setFilters({
       countries: [],
       registrationDateFrom: undefined,
@@ -374,6 +378,7 @@ function RelancePage() {
       const response = await sbcApiService.relanceCreateCampaign({
         name: campaignName,
         type: 'filtered',
+        channel: campaignChannel,
         targetFilter: filters,
         customMessages: filteredCustomMessages,
       });
@@ -649,7 +654,7 @@ function RelancePage() {
         />
 
         {/* Credit balance card */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white mb-4">
+        <div className="relance-balance-card bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white mb-4" data-tour="balance-card">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1">
               <div className="text-xs uppercase tracking-wide opacity-80 mb-1">Crédits Relance</div>
@@ -665,15 +670,24 @@ function RelancePage() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2 items-end">
-              <button
-                onClick={() => setShowPacksModal('all')}
-                className="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors min-h-[44px]"
-              >
-                Recharger
-              </button>
-            </div>
+            <button
+              onClick={() => setShowPacksModal('all')}
+              data-tour="recharge"
+              className="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors min-h-[44px]"
+            >
+              Recharger
+            </button>
           </div>
+          {hasSmsAccess && (
+            <Link
+              to="/relance/sms-links"
+              data-tour="sms-links"
+              className="mt-3 flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm text-white text-sm font-semibold border border-white/20 hover:bg-white/20 active:bg-white/25 transition-colors"
+            >
+              <FaSms className="w-4 h-4" />
+              <span>Configurer vos liens SMS</span>
+            </Link>
+          )}
         </div>
 
         {/* Status Card */}
@@ -690,7 +704,13 @@ function RelancePage() {
                   {status?.enabled ? '✅ Relance Activée' : '⏸️ Relance Désactivée'}
                 </div>
                 <div className="text-sm opacity-90">
-                  {defaultStats?.activeTargets || 0} cibles actives • Emails aujourd'hui: {status?.messagesSentToday || 0}
+                  {defaultStats?.activeTargets || 0} cibles actives
+                  {' • '}
+                  Emails aujourd'hui: {status?.messagesSentToday || 0}
+                  {hasSmsAccess && (
+                    // TODO: render real SMS-today count once backend surfaces it in /relance/status
+                    <> {' • '} SMS: —</>
+                  )}
                 </div>
               </div>
             </div>
@@ -706,6 +726,12 @@ function RelancePage() {
             </button>
           </div>
         </div>
+
+        {/* Daily pacing setting */}
+        <RelancePacingCard
+          initialValue={status?.maxMessagesPerDay}
+          onSaved={() => fetchStatus()}
+        />
 
         {/* Controls Card */}
         <div className="relance-controls bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mb-6">
@@ -770,16 +796,44 @@ function RelancePage() {
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
                   <FaPaperPlane className="text-green-500" />
-                  <span className="text-xs text-green-600">Emails envoyés</span>
+                  <span className="text-xs text-green-600">Envoyés</span>
                 </div>
-                <div className="text-2xl font-bold text-green-700">{defaultStats.totalMessagesSent}</div>
+                {hasSmsAccess ? (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-green-700">Emails</span>
+                      <span className="text-lg font-bold text-green-700">{defaultStats.totalMessagesSent}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-green-700">SMS</span>
+                      {/* TODO: bind to defaultStats.smsSent once backend exposes it */}
+                      <span className="text-lg font-bold text-green-700">—</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold text-green-700">{defaultStats.totalMessagesSent}</div>
+                )}
               </div>
               <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
                 <div className="flex items-center gap-2 mb-1">
                   <FaCheckCircle className="text-orange-500" />
                   <span className="text-xs text-orange-600">Taux de livraison</span>
                 </div>
-                <div className="text-2xl font-bold text-orange-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</div>
+                {hasSmsAccess ? (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-orange-700">Emails</span>
+                      <span className="text-lg font-bold text-orange-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-orange-700">SMS</span>
+                      {/* TODO: bind to defaultStats.smsDeliveryRate once backend exposes it */}
+                      <span className="text-lg font-bold text-orange-700">—</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold text-orange-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</div>
+                )}
               </div>
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
@@ -1275,7 +1329,7 @@ function RelancePage() {
               >
                 <h3 className="text-xl font-bold mb-4">Créer une campagne - Étape {wizardStep}/4</h3>
 
-                {/* Step 1: Campaign Name */}
+                {/* Step 1: Campaign Name & Channel */}
                 {wizardStep === 1 && (
                   <div>
                     <label className="block mb-2 font-medium">Nom de la campagne</label>
@@ -1284,16 +1338,55 @@ function RelancePage() {
                       value={campaignName}
                       onChange={(e) => setCampaignName(e.target.value)}
                       placeholder="Ex: Campagne Cameroun Janvier"
-                      className="w-full border border-gray-300 rounded-lg p-3 mb-4"
+                      className="w-full h-12 border border-gray-300 rounded-lg px-3 mb-5"
                     />
+
+                    <label className="block mb-2 font-medium">Canal d'envoi</label>
+                    <div role="radiogroup" aria-label="Canal d'envoi" className="grid grid-cols-3 gap-2 mb-1">
+                      {([
+                        { value: 'email', label: '📧 Email', smsRequired: false },
+                        { value: 'sms', label: '📱 SMS', smsRequired: true },
+                        { value: 'both', label: '📧📱 Les deux', smsRequired: true },
+                      ] as const).map((opt) => {
+                        const disabled = opt.smsRequired && !hasSmsAccess;
+                        const selected = campaignChannel === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            disabled={disabled}
+                            onClick={() => setCampaignChannel(opt.value)}
+                            className={`min-h-[48px] px-2 rounded-xl border-2 text-sm font-semibold transition-colors ${
+                              selected
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-800'
+                                : 'bg-white border-gray-300 text-gray-700 hover:border-emerald-300'
+                            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {!hasSmsAccess && (
+                      <p className="text-xs text-gray-500 mb-5">
+                        Contactez le support pour activer le SMS.
+                      </p>
+                    )}
+                    {hasSmsAccess && <div className="mb-5" />}
+
                     <div className="flex gap-2">
-                      <button onClick={() => setShowCampaignWizard(false)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
+                      <button
+                        onClick={() => setShowCampaignWizard(false)}
+                        className="flex-1 min-h-[44px] bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+                      >
                         Annuler
                       </button>
                       <button
                         onClick={() => setWizardStep(2)}
                         disabled={!campaignName.trim()}
-                        className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="flex-1 min-h-[44px] bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
                         Suivant
                       </button>

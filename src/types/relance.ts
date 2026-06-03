@@ -288,14 +288,21 @@ export interface Campaign {
 }
 
 /**
+ * Campaign channel
+ */
+export type CampaignChannel = 'email' | 'sms' | 'both';
+
+/**
  * Campaign creation request
  */
 export interface CreateCampaignRequest {
   name: string;
   type?: CampaignType;
+  channel?: CampaignChannel;
   targetFilter: CampaignFilter;
   customMessages?: CustomMessage[];
   maxMessagesPerDay?: number;
+  contactBatch?: { offset: number; limit: number };
   scheduledStartDate?: string;
   runAfterCampaignId?: string;
 }
