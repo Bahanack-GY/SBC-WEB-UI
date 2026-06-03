@@ -59,6 +59,8 @@ function RelancePage() {
   // Campaign creation wizard state
   const [campaignName, setCampaignName] = useState('');
   const [campaignChannel, setCampaignChannel] = useState<'email' | 'sms' | 'both'>('email');
+  const [contactOffset, setContactOffset] = useState<number>(0);
+  const [contactLimit, setContactLimit] = useState<string>('');  // empty string = "all"
   const [filters, setFilters] = useState<CampaignFilter>({
     countries: [],
     registrationDateFrom: undefined,
@@ -306,7 +308,7 @@ function RelancePage() {
     }
   };
 
-  // Toggle sending pause
+  // Toggle sending pause (legacy, single channel)
   const handleToggleSendingPause = async () => {
     try {
       const newPaused = !(status?.sendingPaused ?? false);
@@ -324,10 +326,43 @@ function RelancePage() {
     }
   };
 
+  // Per-channel pause derivation: prefer explicit per-channel flags from backend,
+  // otherwise fall back to the legacy global sendingPaused.
+  const emailSendingPaused = status?.sendingPausedEmail ?? status?.sendingPaused ?? false;
+  const smsSendingPaused = status?.sendingPausedSms ?? status?.sendingPaused ?? false;
+
+  const handleToggleSendingPauseChannel = async (channel: 'email' | 'sms') => {
+    const nextEmailPaused = channel === 'email' ? !emailSendingPaused : emailSendingPaused;
+    const nextSmsPaused = channel === 'sms' ? !smsSendingPaused : smsSendingPaused;
+    // Legacy sendingPaused = boolean OR (so older backends keep working until both
+    // channels are paused, which still maps to "all sending paused").
+    try {
+      const response = await sbcApiService.relanceUpdateSettings({
+        sendingPaused: nextEmailPaused && nextSmsPaused,
+        sendingPausedEmail: nextEmailPaused,
+        sendingPausedSms: nextSmsPaused,
+      });
+      if (response.isSuccessByStatusCode) {
+        await fetchStatus();
+        showMessage(
+          'Succès',
+          channel === 'email'
+            ? (nextEmailPaused ? 'Envoi emails en pause' : 'Envoi emails repris')
+            : (nextSmsPaused ? 'Envoi SMS en pause' : 'Envoi SMS repris'),
+          'success'
+        );
+      }
+    } catch (err: any) {
+      showMessage('Erreur', 'Échec de la mise à jour', 'error');
+    }
+  };
+
   // Campaign wizard handlers
   const handleOpenWizard = () => {
     setCampaignName('');
     setCampaignChannel('email');
+    setContactOffset(0);
+    setContactLimit('');
     setFilters({
       countries: [],
       registrationDateFrom: undefined,
@@ -375,12 +410,19 @@ function RelancePage() {
           )
         : undefined;
 
+      const parsedLimit = contactLimit.trim() === '' ? null : Number(contactLimit);
+      const contactBatch =
+        parsedLimit !== null && !Number.isNaN(parsedLimit) && parsedLimit > 0
+          ? { offset: Math.max(0, Math.floor(contactOffset)), limit: Math.floor(parsedLimit) }
+          : undefined;
+
       const response = await sbcApiService.relanceCreateCampaign({
         name: campaignName,
         type: 'filtered',
         channel: campaignChannel,
         targetFilter: filters,
         customMessages: filteredCustomMessages,
+        ...(contactBatch ? { contactBatch } : {}),
       });
 
       if (response.isSuccessByStatusCode && response.body?.data) {
@@ -758,23 +800,72 @@ function RelancePage() {
               </button>
             </div>
 
-            {/* Pause Sending Toggle */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <div>
-                <div className="font-medium text-sm text-gray-800">Pause envoi</div>
-                <div className="text-xs text-gray-500">Arrêter l'envoi des emails</div>
-              </div>
+            {/* Pause Sending Toggle(s) */}
+            {hasSmsAccess ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleToggleSendingPauseChannel('email')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl text-left min-h-[56px] active:bg-gray-100"
+                >
+                  <div>
+                    <div className="font-medium text-sm text-gray-800">Pause envoi emails</div>
+                    <div className="text-xs text-gray-500">Arrêter l'envoi des emails uniquement</div>
+                  </div>
+                  <span
+                    aria-hidden
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      emailSendingPaused ? 'bg-orange-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      emailSendingPaused ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleSendingPauseChannel('sms')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl text-left min-h-[56px] active:bg-gray-100"
+                >
+                  <div>
+                    <div className="font-medium text-sm text-gray-800">Pause envoi SMS</div>
+                    <div className="text-xs text-gray-500">Arrêter l'envoi des SMS uniquement</div>
+                  </div>
+                  <span
+                    aria-hidden
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      smsSendingPaused ? 'bg-orange-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      smsSendingPaused ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </span>
+                </button>
+              </>
+            ) : (
               <button
+                type="button"
                 onClick={handleToggleSendingPause}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  status?.sendingPaused ? 'bg-orange-500' : 'bg-gray-300'
-                }`}
+                className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl text-left min-h-[56px] active:bg-gray-100"
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  status?.sendingPaused ? 'translate-x-6' : 'translate-x-1'
-                }`} />
+                <div>
+                  <div className="font-medium text-sm text-gray-800">Pause envoi</div>
+                  <div className="text-xs text-gray-500">Arrêter l'envoi des emails</div>
+                </div>
+                <span
+                  aria-hidden
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    status?.sendingPaused ? 'bg-orange-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    status?.sendingPaused ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </span>
               </button>
-            </div>
+            )}
           </div>
         </div>
 
@@ -1751,14 +1842,68 @@ function RelancePage() {
                       ))}
                     </div>
 
+                    {/* contactBatch slicing */}
+                    {(() => {
+                      const total = previewData.totalCount || 0;
+                      const offsetNum = Math.max(0, Math.floor(contactOffset || 0));
+                      const limitTrim = contactLimit.trim();
+                      const limitNum = limitTrim === '' ? total - offsetNum : Math.max(0, Math.floor(Number(limitTrim) || 0));
+                      const from = total > 0 ? offsetNum + 1 : 0;
+                      const to = Math.min(offsetNum + limitNum, total);
+                      return (
+                        <div className="mb-4 border border-gray-200 rounded-xl p-3 bg-gray-50">
+                          <h5 className="font-semibold text-sm text-gray-800 mb-2">Combien de contacts ?</h5>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1" htmlFor="contact-offset">À partir de #</label>
+                              <input
+                                id="contact-offset"
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                max={Math.max(0, total - 1)}
+                                value={contactOffset}
+                                onChange={(e) => {
+                                  const n = Number(e.target.value);
+                                  setContactOffset(Number.isNaN(n) ? 0 : Math.max(0, n));
+                                }}
+                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1" htmlFor="contact-limit">Combien ?</label>
+                              <input
+                                id="contact-limit"
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                placeholder={`Tous (${total})`}
+                                value={contactLimit}
+                                onChange={(e) => setContactLimit(e.target.value)}
+                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-2">
+                            {total === 0
+                              ? 'Aucun contact ne correspond aux filtres.'
+                              : limitNum === 0
+                                ? 'Sélectionnez une quantité supérieure à 0.'
+                                : `Envoie aux contacts ${from}–${to} sur ${total}.`}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">Laisser « Combien ? » vide pour envoyer à tous.</p>
+                        </div>
+                      );
+                    })()}
+
                     <div className="flex gap-2">
-                      <button onClick={() => setWizardStep(3)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
+                      <button onClick={() => setWizardStep(3)} className="flex-1 min-h-[44px] bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
                         Retour
                       </button>
                       <button
                         onClick={handleCreateCampaign}
                         disabled={creatingCampaign}
-                        className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 min-h-[44px] bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {creatingCampaign && (
                           <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">

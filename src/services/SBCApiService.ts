@@ -1407,6 +1407,8 @@ export class SBCApiService extends ApiService {
     enabled?: boolean;
     enrollmentPaused?: boolean;
     sendingPaused?: boolean;
+    sendingPausedEmail?: boolean;
+    sendingPausedSms?: boolean;
   }): Promise<ApiResponse> {
     return await this.put('/relance/settings', { body: settings });
   }
