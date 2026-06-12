@@ -151,7 +151,10 @@ function AppContent() {
         </button>
       )}
       <Routes>
-        {/* Public — accessible to anyone (logged in or not). */}
+        {/* Public — accessible to anyone (logged in or not). Includes /otp
+            because it serves signup-OTP and login-OTP flows where no token
+            has been issued yet (along with the post-login withdrawal OTP
+            which is reached while authenticated — public is the union). */}
         <Route path="/splash-screen" element={<SplashScreen />} />
         <Route path="/connexion" element={<Connexion />} />
         <Route path="/signup" element={<Signup />} />
@@ -159,12 +162,13 @@ function AppContent() {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/verify-email-otp" element={<VerifyEmailOtp />} />
+        <Route path="/otp" element={<OTP />} />
         <Route path="/a-propos" element={<PublicLanding />} />
         <Route path="/conditions" element={<PublicTerms />} />
         <Route path="/confidentialite" element={<PublicPrivacy />} />
 
         {/* Auth required — accessible to unactivated users so they can pay,
-            update their profile, recover an OTP, etc. */}
+            update their profile, etc. */}
         <Route element={<RequireAuth />}>
           <Route path="/abonnement" element={<Abonnement />} />
           <Route path="/changer-abonnement" element={<Abonnement />} />
@@ -172,7 +176,6 @@ function AppContent() {
           <Route path="/change-password" element={<ChangePassword />} />
           <Route path="/modifier-email" element={<ChangeEmail />} />
           <Route path="/change-phone" element={<ChangePhoneNumber />} />
-          <Route path="/otp" element={<OTP />} />
           <Route path="/withdrawal-otp-verification" element={<WithdrawalOtpVerification />} />
           {/* /transaction-confirmation is the post-payment landing page. The
               user just paid; their subscription may not have propagated yet
