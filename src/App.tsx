@@ -38,6 +38,7 @@ import ActivationBalance from './pages/ActivationBalance'
 import PublicLanding from './pages/PublicLanding'
 import PublicTerms from './pages/PublicTerms'
 import PublicPrivacy from './pages/PublicPrivacy'
+import SsoAuthorize from './pages/SsoAuthorize'
 import { useQueryClient } from '@tanstack/react-query'
 import { TourProvider } from './components/common/TourProvider'
 import { RelanceProvider } from './contexts/RelanceContext'
@@ -87,7 +88,8 @@ function AppContent() {
   // Post-activation profile-completion nudge: subscribed users who haven't
   // filled in profession/interests land on /complete-profile once. The
   // paywall guards above keep unauthenticated and unsubscribed users from
-  // ever reaching '/' so this only runs in the right state.
+  // ever reaching '/' so this only runs in the right state. /sso/authorize
+  // is public and route-level — it doesn't need any whitelist entry here.
   useEffect(() => {
     if (
       isAuthenticated &&
@@ -139,7 +141,7 @@ function AppContent() {
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || isInChatConversation;
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || isInChatConversation;
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -166,6 +168,7 @@ function AppContent() {
         <Route path="/a-propos" element={<PublicLanding />} />
         <Route path="/conditions" element={<PublicTerms />} />
         <Route path="/confidentialite" element={<PublicPrivacy />} />
+        <Route path="/sso/authorize" element={<SsoAuthorize />} />
 
         {/* Auth required — accessible to unactivated users so they can pay,
             update their profile, etc. */}

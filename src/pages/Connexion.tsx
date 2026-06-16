@@ -111,6 +111,15 @@ function Connexion() {
             }
           });
         } else {
+          // SSO flow: if the user reached /connexion via /sso/authorize,
+          // bounce back to the consent screen with the original query
+          // params intact instead of landing on /.
+          const ssoReturnTo = sessionStorage.getItem('sso_return_to');
+          if (ssoReturnTo) {
+            sessionStorage.removeItem('sso_return_to');
+            window.location.replace(ssoReturnTo);
+            return;
+          }
           // Direct login success - redirect to home
           navigate('/');
         }
