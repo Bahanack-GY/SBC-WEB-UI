@@ -1407,6 +1407,8 @@ export class SBCApiService extends ApiService {
     enabled?: boolean;
     enrollmentPaused?: boolean;
     sendingPaused?: boolean;
+    sendingPausedEmail?: boolean;
+    sendingPausedSms?: boolean;
   }): Promise<ApiResponse> {
     return await this.put('/relance/settings', { body: settings });
   }
@@ -1457,6 +1459,7 @@ export class SBCApiService extends ApiService {
   async relanceCreateCampaign(campaignData: {
     name: string;
     type?: 'default' | 'filtered';
+    channel?: 'email' | 'sms' | 'both';
     targetFilter: {
       countries?: string[];
       registrationDateFrom?: string;
@@ -1486,6 +1489,7 @@ export class SBCApiService extends ApiService {
       }>;
     }>;
     maxMessagesPerDay?: number;
+    contactBatch?: { offset: number; limit: number };
     scheduledStartDate?: string;
   }): Promise<ApiResponse> {
     return await this.post('/relance/campaigns', { body: campaignData });
