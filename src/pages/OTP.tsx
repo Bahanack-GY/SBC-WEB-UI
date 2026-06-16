@@ -91,6 +91,15 @@ function OTP() {
       } else if (fromRegistration || fromLogin) { // Existing login/registration flow
         // For these flows, userId is indeed needed and comes from state
         await authVerifyOtp(actualUserId, otpCode);
+        // SSO flow: if the user reached /otp via /sso/authorize → /connexion
+        // (or via /signup), send them back to the consent screen with all
+        // the original query params instead of dropping them on /.
+        const ssoReturnTo = sessionStorage.getItem('sso_return_to');
+        if (ssoReturnTo) {
+          sessionStorage.removeItem('sso_return_to');
+          window.location.replace(ssoReturnTo);
+          return;
+        }
         navigate('/');
       } else {
         // Fallback for unknown contexts
