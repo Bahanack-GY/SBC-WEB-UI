@@ -241,15 +241,6 @@
       "comingSoon": "Coming soon",
       "presentation": "Presentation",
       "downloadPresentation": "Download the SBC presentation document",
-      "relanceModalTitle": "Follow-up Email",
-      "relanceDescription": "The Follow-up feature allows you to automatically follow up with your non-paying referrals via email for 7 days.",
-      "relanceFeature1": "Daily automated messages",
-      "relanceFeature2": "Intelligent referral tracking",
-      "relanceFeature3": "Increases your conversions",
-      "relancePrice": "2,000 XAF/month",
-      "relanceNotSubscribed": "You have not yet subscribed to the Follow-up feature. Click below to subscribe.",
-      "relanceClose": "Close",
-      "relanceSubscribe": "Subscribe",
       "formationsTitle": "Available Trainings",
       "formationsError": "Error loading trainings.",
       "formationsEmpty": "No trainings available at the moment.",
@@ -276,7 +267,6 @@
       "copyLink": "Copy link",
       "shareable": "Shareable",
       "viewAffiliator": "View my sponsor",
-      "relanceWhatsApp": "Follow-up Email",
       "comingSoon": "Coming soon",
       "logoutConfirm": "Are you sure you want to logout?",
       "logout": "Logout",
@@ -563,39 +553,7 @@
       "phoneVerified": "Phone number verified"
     },
     "relance": {
-      "title": "Follow-up",
-      "defaultCampaign": {
-        "title": "Default follow-up",
-        "paused": "Paused",
-        "active": "Active",
-        "inactive": "Inactive"
-      },
-      "campaigns": "Campaigns",
-      "createCampaign": "Create campaign",
-      "campaignStats": "Campaign stats",
-      "customMessages": {
-        "title": "Custom Messages",
-        "useCustomMessages": "Use custom messages",
-        "useDefaultMessages": "Use default messages",
-        "day": "Day",
-        "frenchMessage": "French Message",
-        "englishMessage": "English Message",
-        "frenchPlaceholder": "Enter your message in French...",
-        "englishPlaceholder": "Enter your message in English...",
-        "addMedia": "Add Media",
-        "removeMedia": "Remove Media",
-        "mediaType": "Media Type",
-        "mediaUrl": "Media URL",
-        "availableVariables": "Available Variables",
-        "variablesHelp": "You can use these variables in your messages:",
-        "varName": "{{name}} - Referral's name",
-        "varReferrerName": "{{referrerName}} - Referrer's name",
-        "varDay": "{{day}} - Day number (1-7)",
-        "messagePreview": "Message Preview",
-        "bothLanguagesRequired": "Both French and English messages are required",
-        "invalidDayNumber": "Day number must be between 1 and 7",
-        "customMessagesInfo": "Customize messages for each day of the campaign. If you don't define custom messages, default messages will be used."
-      }
+      "title": "Follow-up"
     }
   },
   "messages": {

@@ -42,6 +42,7 @@ export interface MessageDelivery {
   sentAt: string;
   status: string;                // 'delivered' | 'failed' etc.
   errorMessage?: string;
+  channel?: 'email' | 'sms';     // legacy rows may omit; treat undefined as 'email'
 }
 
 /**
@@ -99,12 +100,15 @@ export interface RelanceTarget {
  * Relance status response (flat shape from API)
  */
 export interface RelanceStatus {
-  channel: string;
+  channel?: string;                // Default-relance channel hint (optional — may be absent)
   enabled: boolean;
   enrollmentPaused: boolean;
   sendingPaused: boolean;
   messagesSentToday: number;
   maxMessagesPerDay: number;
+  smsEnabled?: boolean;            // Admin-gated SMS access flag (may be absent on older backends)
+  sendingPausedEmail?: boolean;    // Per-channel pause (optional, falls back to sendingPaused)
+  sendingPausedSms?: boolean;
 }
 
 /**
@@ -159,6 +163,7 @@ export interface RecentMessage {
   campaignId?: string | null;
   campaignName?: string | null;
   renderedHtml?: string;
+  channel?: 'email' | 'sms';     // undefined = legacy email row
 }
 
 /**
@@ -285,14 +290,21 @@ export interface Campaign {
 }
 
 /**
+ * Campaign channel
+ */
+export type CampaignChannel = 'email' | 'sms' | 'both';
+
+/**
  * Campaign creation request
  */
 export interface CreateCampaignRequest {
   name: string;
   type?: CampaignType;
+  channel?: CampaignChannel;
   targetFilter: CampaignFilter;
   customMessages?: CustomMessage[];
   maxMessagesPerDay?: number;
+  contactBatch?: { offset: number; limit: number };
   scheduledStartDate?: string;
   runAfterCampaignId?: string;
 }
@@ -386,6 +398,10 @@ export interface DefaultRelanceStats {
   totalMessagesSent: number;
   totalMessagesDelivered: number;
   deliveryPercentage: number;
+  // SMS counters (optional — backend rolls these out separately)
+  smsSent?: number;
+  smsToday?: number;
+  smsDeliveryRate?: number;
   // Email engagement tracking
   totalMessagesOpened?: number;      // Unique emails opened at least once
   totalMessagesClicked?: number;     // Unique emails with at least one click

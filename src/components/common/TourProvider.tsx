@@ -12,8 +12,9 @@ import {
   adsPackTour,
   subscriptionTour,
   productManagementTour,
-  relanceTour
+  buildRelanceTour
 } from '../../config/tours';
+import { useRelance } from '../../contexts/RelanceContext';
 
 interface TourContextType {
   startTour: () => void;
@@ -55,6 +56,12 @@ export const useTour = () => useContext(TourContext);
 export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [run, setRun] = useState(false);
   const location = useLocation();
+  const { smsBalance } = useRelance();
+  // Approximation: TourProvider only knows balances, not the admin smsEnabled flag
+  // (which lives on /relance/status fetched in RelancePage). Once the user has any
+  // SMS credit, the SMS-links step appears. The admin-flag-only edge case (user has
+  // access but zero balance) is documented in the PR notes.
+  const hasSmsAccess = smsBalance > 0;
 
   const hasSeenTour = hasPageTourBeenSeen(location.pathname);
 
@@ -80,11 +87,11 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
       case '/mes-produits':
         return productManagementTour;
       case '/relance':
-        return relanceTour;
+        return buildRelanceTour({ hasSmsAccess });
       default:
         return [];
     }
-  }, [location.pathname]);
+  }, [location.pathname, hasSmsAccess]);
 
   useEffect(() => {
     // Stop any running tour when navigating
