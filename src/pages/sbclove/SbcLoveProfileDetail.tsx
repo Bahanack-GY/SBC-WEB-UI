@@ -70,7 +70,7 @@ function SbcLoveProfileDetail() {
                     <div className="p-4">
                         <p className="text-xl font-bold">{profile.displayName}</p>
                         <p className="text-sm text-gray-500">{[profile.ageBracket, profile.city, profile.country].filter(Boolean).join(' · ')}</p>
-                        <p className="mt-1 text-sm font-medium text-pink-600">
+                        <p className="mt-1 text-sm font-medium text-[#115CF6]">
                             {profile.intention === 'autre' ? profile.otherIntentionText : INTENTION_LABELS[profile.intention]}
                         </p>
                         <p className="mt-3 whitespace-pre-line text-gray-700">{profile.description}</p>
@@ -84,7 +84,7 @@ function SbcLoveProfileDetail() {
                                 },
                                 "Intérêt envoyé."
                             )}
-                            className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-pink-600 py-2.5 font-medium text-white disabled:opacity-40"
+                            className="mt-4 w-full flex items-center justify-center gap-2 rounded-xl bg-[#115CF6] hover:bg-blue-700 py-2.5 font-medium text-white disabled:opacity-40"
                         >
                             <FaHeart /> Manifester un intérêt
                         </button>

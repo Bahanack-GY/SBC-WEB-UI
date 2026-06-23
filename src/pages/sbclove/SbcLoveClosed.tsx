@@ -26,21 +26,21 @@ const SbcLoveClosed: React.FC<Props> = ({ nextOpenAt }) => {
 
     return (
         <div className="min-h-[70vh] flex flex-col items-center justify-center text-center p-6">
-            <div className="w-20 h-20 rounded-full bg-pink-100 flex items-center justify-center mb-5">
-                <FaHeart className="text-pink-500" size={36} />
+            <div className="w-20 h-20 rounded-full bg-blue-100 flex items-center justify-center mb-5">
+                <FaHeart className="text-[#115CF6]" size={36} />
             </div>
             <h1 className="text-2xl font-bold mb-2">SBC Love est fermé</h1>
             <p className="text-gray-600 max-w-sm mb-4">
                 Le module SBC Love est ouvert une fois par semaine, chaque mercredi de 18h00 à 21h00.
             </p>
             {next && (
-                <p className="flex items-center gap-2 text-pink-700 font-medium mb-6">
+                <p className="flex items-center gap-2 text-[#115CF6] font-medium mb-6">
                     <FaRegClock /> Prochaine ouverture : {next}
                 </p>
             )}
             <button
                 onClick={() => navigate('/')}
-                className="rounded-xl bg-pink-600 px-6 py-2.5 font-medium text-white"
+                className="rounded-xl bg-[#115CF6] hover:bg-blue-700 px-6 py-2.5 font-medium text-white"
             >
                 Retour à l'accueil
             </button>

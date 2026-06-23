@@ -37,7 +37,7 @@ function SbcLoveMatches() {
             <div className="flex items-center gap-3 mb-4">
                 <BackButton />
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <FaHeart className="text-pink-600" /> Mes matchs
+                    <FaHeart className="text-[#115CF6]" /> Mes matchs
                 </h1>
             </div>
 
@@ -53,7 +53,7 @@ function SbcLoveMatches() {
                             <div className="flex-1 min-w-0">
                                 <p className="font-semibold truncate">{m.displayName}</p>
                                 <p className="text-xs text-gray-500 truncate">{[m.ageBracket, m.city].filter(Boolean).join(' · ')}</p>
-                                {m.intention && <p className="text-xs text-pink-600 truncate">{INTENTION_LABELS[m.intention]}</p>}
+                                {m.intention && <p className="text-xs text-[#115CF6] truncate">{INTENTION_LABELS[m.intention]}</p>}
 
                                 {m.contactUnlocked ? (
                                     <p className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-green-700">
@@ -68,7 +68,7 @@ function SbcLoveMatches() {
                                         <button
                                             disabled={pending === m.matchId + 'wants_contact'}
                                             onClick={() => choose(m, 'wants_contact')}
-                                            className="flex items-center gap-1 rounded-lg bg-pink-600 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
+                                            className="flex items-center gap-1 rounded-lg bg-[#115CF6] hover:bg-blue-700 px-3 py-1.5 text-xs font-medium text-white disabled:opacity-40"
                                         >
                                             <FaCheck size={11} /> Je souhaite être contacté(e)
                                         </button>

@@ -112,7 +112,7 @@ function SbcLoveProfile() {
             <div className="flex items-center gap-3 mb-4">
                 <BackButton />
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <FaHeart className="text-pink-600" /> Mon profil SBC Love
+                    <FaHeart className="text-[#115CF6]" /> Mon profil SBC Love
                 </h1>
             </div>
 
@@ -144,7 +144,7 @@ function SbcLoveProfile() {
                     <button
                         onClick={() => fileRef.current?.click()}
                         disabled={uploading}
-                        className="h-24 w-24 rounded-xl border-2 border-dashed border-pink-300 flex items-center justify-center text-pink-400 disabled:opacity-50"
+                        className="h-24 w-24 rounded-xl border-2 border-dashed border-blue-300 flex items-center justify-center text-blue-300 disabled:opacity-50"
                     >
                         <FaPlus size={20} />
                     </button>
@@ -198,7 +198,7 @@ function SbcLoveProfile() {
             <button
                 onClick={save}
                 disabled={saving || !description.trim()}
-                className="w-full rounded-xl bg-pink-600 py-3 font-semibold text-white disabled:opacity-40"
+                className="w-full rounded-xl bg-[#115CF6] hover:bg-blue-700 py-3 font-semibold text-white disabled:opacity-40"
             >
                 {saving ? 'Enregistrement…' : profile ? 'Mettre à jour' : 'Créer mon profil'}
             </button>

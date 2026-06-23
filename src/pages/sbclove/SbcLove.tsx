@@ -66,20 +66,20 @@ function SbcLove() {
             <div className="flex items-center gap-3 mb-4">
                 <BackButton />
                 <h1 className="text-2xl font-bold flex items-center gap-2">
-                    <FaHeart className="text-pink-600" /> SBC Love
+                    <FaHeart className="text-[#115CF6]" /> SBC Love
                 </h1>
             </div>
 
             <div className="flex gap-3 mb-4">
                 <button
                     onClick={() => navigate('/sbclove/profil')}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-pink-50 py-2 font-medium text-pink-700"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2 font-medium text-[#115CF6]"
                 >
                     <FaUserEdit /> {myProfile ? 'Mon profil' : 'Créer mon profil'}
                 </button>
                 <button
                     onClick={() => navigate('/sbclove/matchs')}
-                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-pink-200 bg-pink-50 py-2 font-medium text-pink-700"
+                    className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 py-2 font-medium text-[#115CF6]"
                 >
                     <FaCommentDots /> Mes matchs
                 </button>
@@ -122,13 +122,13 @@ function SbcLove() {
                                 <p className="text-xs text-gray-500 truncate">
                                     {[p.ageBracket, p.city].filter(Boolean).join(' · ')}
                                 </p>
-                                <p className="text-xs text-pink-600 mt-1 truncate">
+                                <p className="text-xs text-[#115CF6] mt-1 truncate">
                                     {p.intention === 'autre' ? p.otherIntentionText : INTENTION_LABELS[p.intention]}
                                 </p>
                                 <button
                                     disabled={!hasApprovedProfile || pendingId === p.id}
                                     onClick={() => expressInterest(p)}
-                                    className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg bg-pink-600 py-1.5 text-sm font-medium text-white disabled:opacity-40"
+                                    className="mt-2 w-full flex items-center justify-center gap-2 rounded-lg bg-[#115CF6] hover:bg-blue-700 py-1.5 text-sm font-medium text-white disabled:opacity-40"
                                 >
                                     <FaHeart size={12} /> {pendingId === p.id ? '...' : "Manifester un intérêt"}
                                 </button>
