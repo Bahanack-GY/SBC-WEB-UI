@@ -22,6 +22,10 @@ interface User {
   [key: string]: any;
 }
 
+// The API returns the user with `_id` (Mongo) but the app keys on `user.id`
+// (subscription guard, caches, etc.). Normalize so `id` is always present.
+const withId = (u: any): any => (u ? { ...u, id: u.id ?? u._id } : u);
+
 interface AuthContextType {
   user: User | null;
   loading: boolean;
@@ -106,7 +110,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (data.user) {
-        setUser(data.user);
+        setUser(withId(data.user));
         
         // Check for negative balance and recovery options
         if (data.user.balance && data.user.balance < 0) {
@@ -229,7 +233,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       if (data.user) {
-        setUser(data.user);
+        setUser(withId(data.user));
       } else if (data.token) {
         await refreshUser();
       }
@@ -250,7 +254,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = handleApiResponse(response);
 
       if (data.user) {
-        setUser(data.user);
+        setUser(withId(data.user));
       } else {
         // Refresh user data to get updated info
         await refreshUser();
@@ -264,7 +268,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const response = await sbcApiService.getUserProfile();
       const userData = handleApiResponse(response);
-      setUser(userData);
+      setUser(withId(userData));
       // Invalidate specific caches used by Home.tsx after user data is refreshed
       invalidateApiCache(['transaction-stats', 'referral-stats', 'current-subscription', 'formations']);
     } catch (error: any) {
