@@ -2109,6 +2109,97 @@ export class SBCApiService extends ApiService {
       body: { content }
     });
   }
+
+  // ===================== SBCLOVE (community matchmaking) =====================
+
+  /** GET /api/sbclove/status - module availability (kill-switch + weekly window) */
+  async sbcloveGetStatus(): Promise<ApiResponse> {
+    return await this.get('/sbclove/status', { skipDeduplication: true });
+  }
+
+  /** GET /api/sbclove/profiles/me - the caller's own SBCLOVE profile */
+  async sbcloveGetMyProfile(): Promise<ApiResponse> {
+    return await this.get('/sbclove/profiles/me');
+  }
+
+  /** POST /api/sbclove/profiles - create the caller's profile */
+  async sbcloveCreateProfile(body: {
+    displayName?: string;
+    intention: string;
+    otherIntentionText?: string;
+    description: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/sbclove/profiles', { body });
+  }
+
+  /** PUT /api/sbclove/profiles/me - update the caller's profile */
+  async sbcloveUpdateProfile(body: {
+    displayName?: string;
+    intention?: string;
+    otherIntentionText?: string;
+    description?: string;
+  }): Promise<ApiResponse> {
+    return await this.put('/sbclove/profiles/me', { body });
+  }
+
+  /** POST /api/sbclove/profiles/me/photos - upload 1..N photos (multipart) */
+  async sbcloveUploadPhotos(files: File[]): Promise<ApiResponse> {
+    return await this.uploadFiles({
+      endpoint: '/sbclove/profiles/me/photos',
+      files,
+      fieldName: 'photos',
+    });
+  }
+
+  /** DELETE /api/sbclove/profiles/me/photos/:fileId */
+  async sbcloveDeletePhoto(fileId: string): Promise<ApiResponse> {
+    return await this.delete(`/sbclove/profiles/me/photos/${fileId}`);
+  }
+
+  /** PATCH /api/sbclove/profiles/me/photos/order - reorder by fileId */
+  async sbcloveReorderPhotos(order: string[]): Promise<ApiResponse> {
+    return await this.patch('/sbclove/profiles/me/photos/order', { body: { order } });
+  }
+
+  /** GET /api/sbclove/profiles - browse approved profiles (window-gated) */
+  async sbcloveBrowse(page = 1, limit = 20): Promise<ApiResponse> {
+    return await this.get('/sbclove/profiles', { queryParameters: { page, limit } });
+  }
+
+  /** GET /api/sbclove/profiles/:id - view a single profile (window-gated) */
+  async sbcloveGetProfile(id: string): Promise<ApiResponse> {
+    return await this.get(`/sbclove/profiles/${id}`);
+  }
+
+  /** POST /api/sbclove/profiles/:id/interest - express interest (window-gated) */
+  async sbcloveExpressInterest(profileId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/interest`);
+  }
+
+  /** GET /api/sbclove/interests/me - interests sent + remaining weekly quota */
+  async sbcloveGetMyInterests(page = 1, limit = 50): Promise<ApiResponse> {
+    return await this.get('/sbclove/interests/me', { queryParameters: { page, limit } });
+  }
+
+  /** GET /api/sbclove/matches/me - the "Mes matchs" space */
+  async sbcloveGetMyMatches(page = 1, limit = 50): Promise<ApiResponse> {
+    return await this.get('/sbclove/matches/me', { queryParameters: { page, limit } });
+  }
+
+  /** POST /api/sbclove/matches/:id/contact-choice - double opt-in choice */
+  async sbcloveSetContactChoice(matchId: string, choice: 'wants_contact' | 'declined'): Promise<ApiResponse> {
+    return await this.post(`/sbclove/matches/${matchId}/contact-choice`, { body: { choice } });
+  }
+
+  /** POST /api/sbclove/profiles/:id/report */
+  async sbcloveReportProfile(profileId: string, reason: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/report`, { body: { reason } });
+  }
+
+  /** POST /api/sbclove/profiles/:id/block */
+  async sbcloveBlockProfile(profileId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/block`);
+  }
 }
 
 // Create and export singleton instance

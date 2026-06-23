@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube } from "react-icons/fa";
+import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube, FaHeart } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
 import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
@@ -20,6 +20,7 @@ import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
 import { useRelance } from '../contexts/RelanceContext';
+import { useSbcloveStatus } from '../hooks/useSbcloveStatus';
 
 // Define interfaces
 interface Formation {
@@ -68,6 +69,8 @@ function Home() {
   const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
   const [showRelanceModal, setShowRelanceModal] = useState(false);
   const { hasCredits: hasRelanceAccess } = useRelance();
+  // SBCLOVE entry point is only shown during the weekly session window.
+  const { isOpen: isSbcloveOpen } = useSbcloveStatus(!!user);
 
   // Use React Query for API calls with optimized settings
   const { data: statsData, isLoading: statsLoading, error: statsError } = useQuery<TransactionStats>({
@@ -243,6 +246,14 @@ function Home() {
                     }
                   }}
                 />
+                {/* SBC Love — only available during the weekly Wednesday session window */}
+                {isSbcloveOpen && (
+                  <HomeButtons
+                    icon={<FaHeart size={30} />}
+                    title="SBC Love"
+                    onClick={() => navigate("/sbclove")}
+                  />
+                )}
               </div>
             </div>
             <div className="balance-card">

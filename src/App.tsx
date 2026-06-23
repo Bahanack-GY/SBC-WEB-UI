@@ -45,6 +45,10 @@ import { RelanceProvider } from './contexts/RelanceContext'
 import { SocketProvider } from './contexts/SocketContext'
 import Chat from './pages/Chat'
 import CompleteProfile from './pages/CompleteProfile'
+import SbcLove from './pages/sbclove/SbcLove'
+import SbcLoveProfile from './pages/sbclove/SbcLoveProfile'
+import SbcLoveProfileDetail from './pages/sbclove/SbcLoveProfileDetail'
+import SbcLoveMatches from './pages/sbclove/SbcLoveMatches'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
 
 function AppContent() {
@@ -206,6 +210,10 @@ function AppContent() {
           <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
           <Route path="/activation-balance" element={<ActivationBalance />} />
           <Route path="/chat" element={<Chat />} />
+          <Route path="/sbclove" element={<SbcLove />} />
+          <Route path="/sbclove/profil" element={<SbcLoveProfile />} />
+          <Route path="/sbclove/profil/:id" element={<SbcLoveProfileDetail />} />
+          <Route path="/sbclove/matchs" element={<SbcLoveMatches />} />
         </Route>
       </Routes>
       {!hideNav && <NavigationBar />}
