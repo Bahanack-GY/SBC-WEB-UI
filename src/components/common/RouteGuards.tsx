@@ -15,7 +15,7 @@ export function useSubscriptionStatus() {
   const { user, isAuthenticated } = useAuth();
 
   const { data, isLoading, isFetching } = useQuery<unknown>({
-    queryKey: ['current-subscription', user?.id],
+    queryKey: ['current-subscription', user?._id],
     queryFn: async () => {
       try {
         const response = await sbcApiService.getCurrentSubscription();
@@ -27,7 +27,7 @@ export function useSubscriptionStatus() {
         return null;
       }
     },
-    enabled: isAuthenticated && !!user?.id,
+    enabled: isAuthenticated && !!user?._id,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
@@ -52,9 +52,9 @@ export function useSubscriptionStatus() {
       subscriptionData.totalCount > 0)
   );
 
-  // Loading is only meaningful when authenticated — for unauthenticated callers
-  // the query is disabled and we shouldn't block the guard chain on it.
-  const loading = isAuthenticated && (isLoading || isFetching);
+  // Only block on the initial load (no data yet). Background refetches
+  // (isFetching without isLoading) should never show the paywall spinner.
+  const loading = isAuthenticated && isLoading;
 
   return { isSubscribed, isLoading: loading };
 }

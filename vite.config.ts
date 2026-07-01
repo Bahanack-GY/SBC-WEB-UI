@@ -9,7 +9,15 @@ export default defineConfig({
     port: 5173,
     host: true,
     proxy: {
-      '/api': 'https://sniperbuisnesscenter.com/api'
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true,
+      },
+      '/socket.io': {
+        target: 'http://localhost:3008',
+        changeOrigin: true,
+        ws: true,
+      }
     }
   },
 })

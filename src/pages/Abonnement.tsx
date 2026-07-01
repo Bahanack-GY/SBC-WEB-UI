@@ -14,7 +14,8 @@ import { useApiCache } from '../hooks/useApiCache';
 import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import { useAuth } from '../contexts/AuthContext';
-// import { useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { useSubscriptionStatus } from '../components/common/RouteGuards';
 
 function Abonnement() {
 
@@ -22,6 +23,14 @@ function Abonnement() {
     const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const { isSubscribed, isLoading: subLoading } = useSubscriptionStatus();
+
+    useEffect(() => {
+        if (!subLoading && isSubscribed) {
+            navigate('/home', { replace: true });
+        }
+    }, [isSubscribed, subLoading, navigate]);
 
     // Get user balance for negative balance modal (already available from AuthContext)
     const balance = user?.balance || 0;

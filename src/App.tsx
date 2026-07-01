@@ -64,12 +64,12 @@ function AppContent() {
   // briefly skip the paywall on a shared device.
   const lastUserIdRef = useRef<string | null>(null);
   useEffect(() => {
-    const currentId = authUser?.id ?? null;
+    const currentId = authUser?._id ?? null;
     if (lastUserIdRef.current !== currentId) {
       queryClient.clear();
       lastUserIdRef.current = currentId;
     }
-  }, [authUser?.id, queryClient]);
+  }, [authUser?._id, queryClient]);
 
   // One-time cleanup: a previous build wrote a permanent
   // localStorage.splashViewed flag that incorrectly suppressed the splash on

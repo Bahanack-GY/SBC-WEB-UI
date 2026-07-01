@@ -152,7 +152,7 @@ function Home() {
   useEffect(() => {
     if (!loading && !error && balance < 0) {
       // Check if this is the first page load for this user session (login)
-      const sessionKey = `first-home-visit-${user?.id || 'anonymous'}`;
+      const sessionKey = `first-home-visit-${user?._id || 'anonymous'}`;
       const isFirstVisit = !sessionStorage.getItem(sessionKey);
 
       // Show modal only on first visit of the session (login)
@@ -163,7 +163,7 @@ function Home() {
         sessionStorage.setItem(sessionKey, 'true');
 
         // Also track globally to prevent showing again after logout/login
-        const modalShownKey = `negative-balance-modal-shown-${user?.id || 'anonymous'}`;
+        const modalShownKey = `negative-balance-modal-shown-${user?._id || 'anonymous'}`;
         localStorage.setItem(modalShownKey, Date.now().toString());
       }
 
@@ -178,7 +178,7 @@ function Home() {
       }
       */
     }
-  }, [loading, error, balance, user?.id]);
+  }, [loading, error, balance, user?._id]);
 
   const fetchHomeData = () => {
     // Invalidate and refetch all queries
