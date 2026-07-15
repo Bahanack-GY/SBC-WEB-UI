@@ -22,10 +22,48 @@ import RelancePacksModal from '../components/relance/RelancePacksModal';
 import { useRelance } from '../contexts/RelanceContext';
 
 // Define interfaces
+type FormationDecoration = 'orange' | 'gold' | 'new';
+
 interface Formation {
   _id: string;
   title: string;
   link: string;
+  requiredSubscriptionType?: 'CLASSIQUE' | 'CIBLE';
+  decoration?: FormationDecoration | string;
+}
+
+// Visual variants for the decoration field. Backend filters by tier server-side;
+// this is purely presentational. Unknown decoration values fall through to default.
+function getFormationCardVariant(decoration?: string): {
+  container: string;
+  title: string;
+  badge?: string;
+} {
+  switch (decoration) {
+    case 'orange':
+      return {
+        container:
+          'border-2 border-orange-500 bg-gradient-to-br from-orange-50 to-white shadow-[0_0_0_4px_rgba(249,115,22,0.12)]',
+        title: 'text-orange-600',
+      };
+    case 'gold':
+      return {
+        container:
+          'border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-white shadow-[0_0_0_4px_rgba(251,191,36,0.15)]',
+        title: 'text-amber-700',
+      };
+    case 'new':
+      return {
+        container: 'border border-gray-200 hover:bg-gray-50',
+        title: 'text-blue-700',
+        badge: 'NEW',
+      };
+    default:
+      return {
+        container: 'border border-gray-200 hover:bg-gray-50',
+        title: 'text-blue-700',
+      };
+  }
 }
 
 interface TransactionStats {
@@ -359,17 +397,25 @@ function Home() {
                 </div>
               ) : formations && formations.length > 0 ? (
                 <div className="flex flex-col gap-3">
-                  {formations.map((formation) => (
-                    <a
-                      key={formation._id}
-                      href={formation.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block p-3 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors"
-                    >
-                      <p className="font-semibold text-blue-700">{formation.title}</p>
-                    </a>
-                  ))}
+                  {formations.map((formation) => {
+                    const variant = getFormationCardVariant(formation.decoration);
+                    return (
+                      <a
+                        key={formation._id}
+                        href={formation.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className={`relative block p-3 rounded-xl transition-colors ${variant.container}`}
+                      >
+                        {variant.badge && (
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                            {variant.badge}
+                          </span>
+                        )}
+                        <p className={`font-semibold ${variant.title}`}>{formation.title}</p>
+                      </a>
+                    );
+                  })}
                 </div>
               ) : (
                 <div className="text-gray-500 text-center py-8">
