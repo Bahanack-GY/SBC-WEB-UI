@@ -26,11 +26,25 @@ export class ApiService {
    */
   private async handleHttpResponse(response: Response): Promise<ApiResponse> {
     const contentType = response.headers.get('content-type');
-    const isJson = contentType?.includes('application/json') ?? false;
+    const isJsonHeader = contentType?.includes('application/json') ?? false;
 
     const responseText = await response.text();
 
-    if (isJson) {
+    // 304 Not Modified frequently omits Content-Type per RFC 7232, even though
+    // the browser cache serves the original JSON body. Treat any 304 with a
+    // non-empty body that parses as JSON as a JSON response, so callers get
+    // the real payload instead of the file-response placeholder.
+    let treatAsJson = isJsonHeader;
+    if (!treatAsJson && response.status === 304 && responseText.trim().length > 0) {
+      try {
+        JSON.parse(responseText);
+        treatAsJson = true;
+      } catch {
+        // fall through to file-response branch
+      }
+    }
+
+    if (treatAsJson) {
       return ApiResponse.fromHttpResponse(response, responseText, response.url);
     } else {
       // For non-JSON responses (like files)
