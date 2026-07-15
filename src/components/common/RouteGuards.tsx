@@ -59,20 +59,6 @@ export function useSubscriptionStatus() {
       subscriptionData.totalCount > 0)
   );
 
-  // TEMP DEBUG — remove after paywall 304 issue confirmed fixed
-  if (typeof window !== 'undefined') {
-    console.log('[SBC DEBUG useSubscriptionStatus]', {
-      isAuthenticated,
-      userId: user?.id,
-      isLoading,
-      isFetching,
-      dataType: typeof data,
-      dataKeys: data && typeof data === 'object' ? Object.keys(data as object) : null,
-      dataPreview: data,
-      isSubscribed,
-    });
-  }
-
   // Loading is only meaningful when authenticated — for unauthenticated callers
   // the query is disabled and we shouldn't block the guard chain on it.
   const loading = isAuthenticated && (isLoading || isFetching);
