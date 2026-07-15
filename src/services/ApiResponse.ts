@@ -55,7 +55,12 @@ export class ApiResponse {
       apiSuccess = false;
     }
 
-    const successByStatusCode = response.status >= 200 && response.status < 300;
+    // 304 Not Modified is a success from the caller's point of view — the
+    // browser serves the cached body to fetch, so response.body is populated
+    // just like a 200. Without this, ETag/If-None-Match roundtrips on stable
+    // endpoints (e.g. /subscriptions) look like errors to the app.
+    const successByStatusCode =
+      (response.status >= 200 && response.status < 300) || response.status === 304;
 
     if (!message && successByStatusCode && apiSuccess) {
       message = 'Operation successful.';
