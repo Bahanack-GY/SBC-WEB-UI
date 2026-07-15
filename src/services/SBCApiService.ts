@@ -1407,6 +1407,8 @@ export class SBCApiService extends ApiService {
     enabled?: boolean;
     enrollmentPaused?: boolean;
     sendingPaused?: boolean;
+    sendingPausedEmail?: boolean;
+    sendingPausedSms?: boolean;
   }): Promise<ApiResponse> {
     return await this.put('/relance/settings', { body: settings });
   }
@@ -1457,6 +1459,7 @@ export class SBCApiService extends ApiService {
   async relanceCreateCampaign(campaignData: {
     name: string;
     type?: 'default' | 'filtered';
+    channel?: 'email' | 'sms' | 'both';
     targetFilter: {
       countries?: string[];
       registrationDateFrom?: string;
@@ -1486,6 +1489,7 @@ export class SBCApiService extends ApiService {
       }>;
     }>;
     maxMessagesPerDay?: number;
+    contactBatch?: { offset: number; limit: number };
     scheduledStartDate?: string;
   }): Promise<ApiResponse> {
     return await this.post('/relance/campaigns', { body: campaignData });
@@ -1635,6 +1639,27 @@ export class SBCApiService extends ApiService {
     referrerName?: string;
   }): Promise<ApiResponse> {
     return await this.post('/relance/admin/messages/preview', { body: data });
+  }
+
+  // ==================== SSO (Login with SBC) ====================
+
+  /**
+   * Grant an authorization code to a third-party app the user just consented to.
+   * Used by the /sso/authorize consent screen.
+   *
+   * POST /api/sso/grant-code
+   * Body: { client_id, redirect_uri, scopes }
+   * Returns: { success, data: { code, expiresAt, grantedScopes } }
+   *
+   * 400 -> backend rejected the client_id / redirect_uri / scopes
+   * 401 -> session expired (handled by the standard ApiService 401 path)
+   */
+  async ssoGrantCode(payload: {
+    client_id: string;
+    redirect_uri: string;
+    scopes: string[];
+  }): Promise<ApiResponse> {
+    return await this.post('/sso/grant-code', { body: payload });
   }
 
   // ==================== ACTIVATION BALANCE ====================

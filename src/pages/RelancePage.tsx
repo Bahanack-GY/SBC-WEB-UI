@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye, FaChartBar, FaMousePointer, FaEnvelopeOpen } from 'react-icons/fa';
+import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye, FaChartBar, FaMousePointer, FaEnvelopeOpen, FaSms } from 'react-icons/fa';
+import { Link } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -11,18 +12,16 @@ import { useTranslation } from 'react-i18next';
 import type { RelanceStatus, Campaign, CampaignFilter, SampleUser, CampaignStatus, DefaultRelanceStats, CustomMessage, RelanceTarget, CampaignDetailStats, RecentMessage, MessageButton } from '../types/relance';
 import { countryOptions } from '../utils/countriesData';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
-import { useNavigate } from 'react-router-dom';
+import RelanceLowBalanceBanner from '../components/relance/RelanceLowBalanceBanner';
+import RelancePacingCard from '../components/relance/RelancePacingCard';
+
+type PacksModalTab = false | 'all' | 'email' | 'sms';
 
 function RelancePage() {
   const { user } = useAuth();
-  const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { emailBalance, smsBalance, refreshBalance } = useRelance();
-  const [showPacksModal, setShowPacksModal] = useState(false);
-
-  // Subscription state - let backend validate via /relance/status
-  const [hasRelanceSubscription, setHasRelanceSubscription] = useState(true);
+  const { emailBalance, smsBalance, hasCredits, refreshBalance } = useRelance();
+  const [showPacksModal, setShowPacksModal] = useState<PacksModalTab>(false);
 
   // Relance status state
   const [status, setStatus] = useState<RelanceStatus | null>(null);
@@ -59,6 +58,9 @@ function RelancePage() {
 
   // Campaign creation wizard state
   const [campaignName, setCampaignName] = useState('');
+  const [campaignChannel, setCampaignChannel] = useState<'email' | 'sms' | 'both'>('email');
+  const [contactOffset, setContactOffset] = useState<number>(0);
+  const [contactLimit, setContactLimit] = useState<string>('');  // empty string = "all"
   const [filters, setFilters] = useState<CampaignFilter>({
     countries: [],
     registrationDateFrom: undefined,
@@ -109,6 +111,10 @@ function RelancePage() {
     setMessageModal({ show: true, title, message, type });
   };
 
+  // SMS access: prefer backend admin flag, fall back to "user already owns SMS credits".
+  // The smsEnabled flag may be absent on older backends — see PR notes.
+  const hasSmsAccess = smsBalance > 0 || status?.smsEnabled === true;
+
   // Refresh status, campaigns, and credit balance
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -134,24 +140,9 @@ function RelancePage() {
       const response = await sbcApiService.relanceGetStatus();
       if (response.isSuccessByStatusCode && response.body?.data) {
         setStatus(response.body.data as RelanceStatus);
-        setHasRelanceSubscription(true);
-      } else {
-        // Check if it's a subscription error
-        const errorMessage = response.body?.message || '';
-        if (errorMessage.toLowerCase().includes('subscription') ||
-            errorMessage.toLowerCase().includes('abonnement') ||
-            response.statusCode === 403) {
-          setHasRelanceSubscription(false);
-        }
       }
     } catch (err: any) {
       console.error('Error fetching status:', err);
-      // Check if error is subscription related
-      const errorMessage = err?.message || '';
-      if (errorMessage.toLowerCase().includes('subscription') ||
-          errorMessage.toLowerCase().includes('abonnement')) {
-        setHasRelanceSubscription(false);
-      }
     } finally {
       setLoading(false);
     }
@@ -317,7 +308,7 @@ function RelancePage() {
     }
   };
 
-  // Toggle sending pause
+  // Toggle sending pause (legacy, single channel)
   const handleToggleSendingPause = async () => {
     try {
       const newPaused = !(status?.sendingPaused ?? false);
@@ -335,9 +326,43 @@ function RelancePage() {
     }
   };
 
+  // Per-channel pause derivation: prefer explicit per-channel flags from backend,
+  // otherwise fall back to the legacy global sendingPaused.
+  const emailSendingPaused = status?.sendingPausedEmail ?? status?.sendingPaused ?? false;
+  const smsSendingPaused = status?.sendingPausedSms ?? status?.sendingPaused ?? false;
+
+  const handleToggleSendingPauseChannel = async (channel: 'email' | 'sms') => {
+    const nextEmailPaused = channel === 'email' ? !emailSendingPaused : emailSendingPaused;
+    const nextSmsPaused = channel === 'sms' ? !smsSendingPaused : smsSendingPaused;
+    // Legacy sendingPaused = boolean OR (so older backends keep working until both
+    // channels are paused, which still maps to "all sending paused").
+    try {
+      const response = await sbcApiService.relanceUpdateSettings({
+        sendingPaused: nextEmailPaused && nextSmsPaused,
+        sendingPausedEmail: nextEmailPaused,
+        sendingPausedSms: nextSmsPaused,
+      });
+      if (response.isSuccessByStatusCode) {
+        await fetchStatus();
+        showMessage(
+          'Succès',
+          channel === 'email'
+            ? (nextEmailPaused ? 'Envoi emails en pause' : 'Envoi emails repris')
+            : (nextSmsPaused ? 'Envoi SMS en pause' : 'Envoi SMS repris'),
+          'success'
+        );
+      }
+    } catch (err: any) {
+      showMessage('Erreur', 'Échec de la mise à jour', 'error');
+    }
+  };
+
   // Campaign wizard handlers
   const handleOpenWizard = () => {
     setCampaignName('');
+    setCampaignChannel('email');
+    setContactOffset(0);
+    setContactLimit('');
     setFilters({
       countries: [],
       registrationDateFrom: undefined,
@@ -385,12 +410,19 @@ function RelancePage() {
           )
         : undefined;
 
+      const parsedLimit = contactLimit.trim() === '' ? null : Number(contactLimit);
+      const contactBatch =
+        parsedLimit !== null && !Number.isNaN(parsedLimit) && parsedLimit > 0
+          ? { offset: Math.max(0, Math.floor(contactOffset)), limit: Math.floor(parsedLimit) }
+          : undefined;
+
       const response = await sbcApiService.relanceCreateCampaign({
         name: campaignName,
         type: 'filtered',
+        channel: campaignChannel,
         targetFilter: filters,
         customMessages: filteredCustomMessages,
-        maxMessagesPerDay: 30,
+        ...(contactBatch ? { contactBatch } : {}),
       });
 
       if (response.isSuccessByStatusCode && response.body?.data) {
@@ -588,8 +620,8 @@ function RelancePage() {
     );
   }
 
-  // Show pack purchase UI if no credits (admin/tester always bypass)
-  if (!hasRelanceSubscription && !isAdminOrTester) {
+  // Show pack purchase UI if no credits (admin/tester always bypass via hasCredits)
+  if (!hasCredits) {
     return (
       <ProtectedRoute>
         <div className="p-3 bg-white relative pb-20 min-h-screen">
@@ -619,7 +651,7 @@ function RelancePage() {
                 </ul>
               </div>
               <button
-                onClick={() => setShowPacksModal(true)}
+                onClick={() => setShowPacksModal('all')}
                 className="w-full bg-[#115CF6] text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors"
               >
                 Acheter des crédits
@@ -629,8 +661,10 @@ function RelancePage() {
         </div>
 
         <RelancePacksModal
-          isOpen={showPacksModal}
+          isOpen={showPacksModal !== false}
           onClose={() => setShowPacksModal(false)}
+          showEmail={showPacksModal !== 'sms'}
+          showSms={showPacksModal !== 'email' && hasSmsAccess}
         />
       </ProtectedRoute>
     );
@@ -653,8 +687,16 @@ function RelancePage() {
           </button>
         </div>
 
+        {/* Low-balance banners (above the fold) */}
+        <RelanceLowBalanceBanner
+          emailBalance={emailBalance}
+          smsBalance={smsBalance}
+          hasSmsAccess={hasSmsAccess}
+          onRecharge={(channel) => setShowPacksModal(channel)}
+        />
+
         {/* Credit balance card */}
-        <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white mb-4">
+        <div className="relance-balance-card bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-4 text-white mb-4" data-tour="balance-card">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1">
               <div className="text-xs uppercase tracking-wide opacity-80 mb-1">Crédits Relance</div>
@@ -670,23 +712,24 @@ function RelancePage() {
                 </div>
               </div>
             </div>
-            <div className="flex flex-col gap-2 items-end">
-              <button
-                onClick={() => setShowPacksModal(true)}
-                className="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors"
-              >
-                Recharger
-              </button>
-              {smsBalance > 0 && (
-                <button
-                  onClick={() => navigate('/relance/sms-links')}
-                  className="text-xs underline opacity-90 hover:opacity-100"
-                >
-                  Liens SMS
-                </button>
-              )}
-            </div>
+            <button
+              onClick={() => setShowPacksModal('all')}
+              data-tour="recharge"
+              className="bg-white text-indigo-700 font-bold px-4 py-2 rounded-lg text-sm hover:bg-gray-100 transition-colors min-h-[44px]"
+            >
+              Recharger
+            </button>
           </div>
+          {hasSmsAccess && (
+            <Link
+              to="/relance/sms-links"
+              data-tour="sms-links"
+              className="mt-3 flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm text-white text-sm font-semibold border border-white/20 hover:bg-white/20 active:bg-white/25 transition-colors"
+            >
+              <FaSms className="w-4 h-4" />
+              <span>Configurer vos liens SMS</span>
+            </Link>
+          )}
         </div>
 
         {/* Status Card */}
@@ -699,11 +742,21 @@ function RelancePage() {
             <div className="flex items-center gap-3">
               <FaEnvelope size={32} />
               <div>
-                <div className="font-bold text-lg">
-                  {status?.enabled ? '✅ Relance Activée' : '⏸️ Relance Désactivée'}
+                <div className="font-bold text-lg flex items-center gap-2 flex-wrap">
+                  <span>{status?.enabled ? '✅ Relance Activée' : '⏸️ Relance Désactivée'}</span>
+                  {status?.channel && (
+                    <span className="text-[10px] uppercase tracking-wide bg-white/20 px-2 py-0.5 rounded-full font-semibold">
+                      {status.channel}
+                    </span>
+                  )}
                 </div>
                 <div className="text-sm opacity-90">
-                  {defaultStats?.activeTargets || 0} cibles actives • Emails aujourd'hui: {status?.messagesSentToday || 0}
+                  {defaultStats?.activeTargets || 0} cibles actives
+                  {' • '}
+                  Emails aujourd'hui: {status?.messagesSentToday || 0}
+                  {hasSmsAccess && (
+                    <> {' • '} SMS: {defaultStats?.smsToday ?? '—'}</>
+                  )}
                 </div>
               </div>
             </div>
@@ -719,6 +772,12 @@ function RelancePage() {
             </button>
           </div>
         </div>
+
+        {/* Daily pacing setting */}
+        <RelancePacingCard
+          initialValue={status?.maxMessagesPerDay}
+          onSaved={() => fetchStatus()}
+        />
 
         {/* Controls Card */}
         <div className="relance-controls bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mb-6">
@@ -745,23 +804,72 @@ function RelancePage() {
               </button>
             </div>
 
-            {/* Pause Sending Toggle */}
-            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-              <div>
-                <div className="font-medium text-sm text-gray-800">Pause envoi</div>
-                <div className="text-xs text-gray-500">Arrêter l'envoi des emails</div>
-              </div>
+            {/* Pause Sending Toggle(s) */}
+            {hasSmsAccess ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => handleToggleSendingPauseChannel('email')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl text-left min-h-[56px] active:bg-gray-100"
+                >
+                  <div>
+                    <div className="font-medium text-sm text-gray-800">Pause envoi emails</div>
+                    <div className="text-xs text-gray-500">Arrêter l'envoi des emails uniquement</div>
+                  </div>
+                  <span
+                    aria-hidden
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      emailSendingPaused ? 'bg-orange-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      emailSendingPaused ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleSendingPauseChannel('sms')}
+                  className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl text-left min-h-[56px] active:bg-gray-100"
+                >
+                  <div>
+                    <div className="font-medium text-sm text-gray-800">Pause envoi SMS</div>
+                    <div className="text-xs text-gray-500">Arrêter l'envoi des SMS uniquement</div>
+                  </div>
+                  <span
+                    aria-hidden
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                      smsSendingPaused ? 'bg-orange-500' : 'bg-gray-300'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      smsSendingPaused ? 'translate-x-6' : 'translate-x-1'
+                    }`} />
+                  </span>
+                </button>
+              </>
+            ) : (
               <button
+                type="button"
                 onClick={handleToggleSendingPause}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                  status?.sendingPaused ? 'bg-orange-500' : 'bg-gray-300'
-                }`}
+                className="w-full flex items-center justify-between p-3 bg-gray-50 rounded-xl text-left min-h-[56px] active:bg-gray-100"
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  status?.sendingPaused ? 'translate-x-6' : 'translate-x-1'
-                }`} />
+                <div>
+                  <div className="font-medium text-sm text-gray-800">Pause envoi</div>
+                  <div className="text-xs text-gray-500">Arrêter l'envoi des emails</div>
+                </div>
+                <span
+                  aria-hidden
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    status?.sendingPaused ? 'bg-orange-500' : 'bg-gray-300'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                    status?.sendingPaused ? 'translate-x-6' : 'translate-x-1'
+                  }`} />
+                </span>
               </button>
-            </div>
+            )}
           </div>
         </div>
 
@@ -783,16 +891,46 @@ function RelancePage() {
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
                   <FaPaperPlane className="text-green-500" />
-                  <span className="text-xs text-green-600">Emails envoyés</span>
+                  <span className="text-xs text-green-600">Envoyés</span>
                 </div>
-                <div className="text-2xl font-bold text-green-700">{defaultStats.totalMessagesSent}</div>
+                {hasSmsAccess ? (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-green-700">Emails</span>
+                      <span className="text-lg font-bold text-green-700">{defaultStats.totalMessagesSent}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-green-700">SMS</span>
+                      <span className="text-lg font-bold text-green-700">{defaultStats.smsSent ?? '—'}</span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold text-green-700">{defaultStats.totalMessagesSent}</div>
+                )}
               </div>
               <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
                 <div className="flex items-center gap-2 mb-1">
                   <FaCheckCircle className="text-orange-500" />
                   <span className="text-xs text-orange-600">Taux de livraison</span>
                 </div>
-                <div className="text-2xl font-bold text-orange-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</div>
+                {hasSmsAccess ? (
+                  <div className="space-y-1">
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-orange-700">Emails</span>
+                      <span className="text-lg font-bold text-orange-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2">
+                      <span className="text-xs text-orange-700">SMS</span>
+                      <span className="text-lg font-bold text-orange-700">
+                        {typeof defaultStats.smsDeliveryRate === 'number'
+                          ? `${defaultStats.smsDeliveryRate.toFixed(1)}%`
+                          : '—'}
+                      </span>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-2xl font-bold text-orange-700">{defaultStats.deliveryPercentage?.toFixed(1) || 0}%</div>
+                )}
               </div>
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
@@ -1248,6 +1386,9 @@ function RelancePage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-3 text-xs text-gray-400">
+                              <span aria-label={msg.channel === 'sms' ? 'SMS' : 'Email'}>
+                                {msg.channel === 'sms' ? '📱' : '📧'}
+                              </span>
                               <span>Jour {msg.day}/7</span>
                               <span>•</span>
                               <span>{dateStr} à {timeStr}</span>
@@ -1288,7 +1429,7 @@ function RelancePage() {
               >
                 <h3 className="text-xl font-bold mb-4">Créer une campagne - Étape {wizardStep}/4</h3>
 
-                {/* Step 1: Campaign Name */}
+                {/* Step 1: Campaign Name & Channel */}
                 {wizardStep === 1 && (
                   <div>
                     <label className="block mb-2 font-medium">Nom de la campagne</label>
@@ -1297,16 +1438,55 @@ function RelancePage() {
                       value={campaignName}
                       onChange={(e) => setCampaignName(e.target.value)}
                       placeholder="Ex: Campagne Cameroun Janvier"
-                      className="w-full border border-gray-300 rounded-lg p-3 mb-4"
+                      className="w-full h-12 border border-gray-300 rounded-lg px-3 mb-5"
                     />
+
+                    <label className="block mb-2 font-medium">Canal d'envoi</label>
+                    <div role="radiogroup" aria-label="Canal d'envoi" className="grid grid-cols-3 gap-2 mb-1">
+                      {([
+                        { value: 'email', label: '📧 Email', smsRequired: false },
+                        { value: 'sms', label: '📱 SMS', smsRequired: true },
+                        { value: 'both', label: '📧📱 Les deux', smsRequired: true },
+                      ] as const).map((opt) => {
+                        const disabled = opt.smsRequired && !hasSmsAccess;
+                        const selected = campaignChannel === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            disabled={disabled}
+                            onClick={() => setCampaignChannel(opt.value)}
+                            className={`min-h-[48px] px-2 rounded-xl border-2 text-sm font-semibold transition-colors ${
+                              selected
+                                ? 'bg-emerald-500/20 border-emerald-500 text-emerald-800'
+                                : 'bg-white border-gray-300 text-gray-700 hover:border-emerald-300'
+                            } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          >
+                            {opt.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {!hasSmsAccess && (
+                      <p className="text-xs text-gray-500 mb-5">
+                        Contactez le support pour activer le SMS.
+                      </p>
+                    )}
+                    {hasSmsAccess && <div className="mb-5" />}
+
                     <div className="flex gap-2">
-                      <button onClick={() => setShowCampaignWizard(false)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
+                      <button
+                        onClick={() => setShowCampaignWizard(false)}
+                        className="flex-1 min-h-[44px] bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300"
+                      >
                         Annuler
                       </button>
                       <button
                         onClick={() => setWizardStep(2)}
                         disabled={!campaignName.trim()}
-                        className="flex-1 bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                        className="flex-1 min-h-[44px] bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600 disabled:bg-gray-300 disabled:cursor-not-allowed"
                       >
                         Suivant
                       </button>
@@ -1671,14 +1851,68 @@ function RelancePage() {
                       ))}
                     </div>
 
+                    {/* contactBatch slicing */}
+                    {(() => {
+                      const total = previewData.totalCount || 0;
+                      const offsetNum = Math.max(0, Math.floor(contactOffset || 0));
+                      const limitTrim = contactLimit.trim();
+                      const limitNum = limitTrim === '' ? total - offsetNum : Math.max(0, Math.floor(Number(limitTrim) || 0));
+                      const from = total > 0 ? offsetNum + 1 : 0;
+                      const to = Math.min(offsetNum + limitNum, total);
+                      return (
+                        <div className="mb-4 border border-gray-200 rounded-xl p-3 bg-gray-50">
+                          <h5 className="font-semibold text-sm text-gray-800 mb-2">Combien de contacts ?</h5>
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1" htmlFor="contact-offset">À partir de #</label>
+                              <input
+                                id="contact-offset"
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                max={Math.max(0, total - 1)}
+                                value={contactOffset}
+                                onChange={(e) => {
+                                  const n = Number(e.target.value);
+                                  setContactOffset(Number.isNaN(n) ? 0 : Math.max(0, n));
+                                }}
+                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-xs text-gray-600 mb-1" htmlFor="contact-limit">Combien ?</label>
+                              <input
+                                id="contact-limit"
+                                type="number"
+                                inputMode="numeric"
+                                min={0}
+                                placeholder={`Tous (${total})`}
+                                value={contactLimit}
+                                onChange={(e) => setContactLimit(e.target.value)}
+                                className="w-full h-12 border border-gray-300 rounded-lg px-3 text-sm bg-white"
+                              />
+                            </div>
+                          </div>
+                          <p className="text-xs text-gray-600 mt-2">
+                            {total === 0
+                              ? 'Aucun contact ne correspond aux filtres.'
+                              : limitNum === 0
+                                ? 'Sélectionnez une quantité supérieure à 0.'
+                                : `Envoie aux contacts ${from}–${to} sur ${total}.`}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">Laisser « Combien ? » vide pour envoyer à tous.</p>
+                        </div>
+                      );
+                    })()}
+
                     <div className="flex gap-2">
-                      <button onClick={() => setWizardStep(3)} className="flex-1 bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
+                      <button onClick={() => setWizardStep(3)} className="flex-1 min-h-[44px] bg-gray-200 text-gray-700 py-2 rounded-lg hover:bg-gray-300">
                         Retour
                       </button>
                       <button
                         onClick={handleCreateCampaign}
                         disabled={creatingCampaign}
-                        className="flex-1 bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="flex-1 min-h-[44px] bg-green-500 text-white py-2 rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {creatingCampaign && (
                           <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -2035,6 +2269,9 @@ function RelancePage() {
                                             </span>
                                           </div>
                                           <div className="flex items-center gap-2 text-xs text-gray-400 ml-8">
+                                            <span aria-label={msg.channel === 'sms' ? 'SMS' : 'Email'}>
+                                              {msg.channel === 'sms' ? '📱' : '📧'}
+                                            </span>
                                             <span>Jour {msg.day}/7</span>
                                             <span>•</span>
                                             <span>{dateStr} à {timeStr}</span>
@@ -2181,8 +2418,10 @@ function RelancePage() {
         <TourButton />
 
         <RelancePacksModal
-          isOpen={showPacksModal}
+          isOpen={showPacksModal !== false}
           onClose={() => setShowPacksModal(false)}
+          showEmail={showPacksModal !== 'sms'}
+          showSms={showPacksModal !== 'email' && hasSmsAccess}
         />
       </div>
     </ProtectedRoute>

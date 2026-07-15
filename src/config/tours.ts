@@ -216,41 +216,73 @@ export const productManagementTour: Step[] = [
   }
 ];
 
-export const relanceTour: Step[] = [
-  {
-    target: '.relance-status-card',
-    content: 'Voici le tableau de bord de votre Relance. Il affiche l\'état actuel, le nombre de cibles actives et les emails envoyés aujourd\'hui.',
-    placement: 'bottom',
-    disableBeacon: true,
-  },
-  {
-    target: '.relance-toggle-btn',
-    content: 'Activez ou désactivez la Relance ici. Quand elle est active, vos filleuls non payés reçoivent des emails automatiques sur 7 jours.',
-    placement: 'left',
-  },
-  {
-    target: '.relance-controls',
-    content: 'Contrôlez finement la Relance : mettez en pause l\'inscription de nouvelles cibles ou l\'envoi des emails sans tout désactiver.',
-    placement: 'bottom',
-  },
-  {
-    target: '.relance-stats',
-    content: 'Suivez vos performances : cibles actives, emails envoyés, taux de livraison et progression jour par jour.',
-    placement: 'top',
-  },
-  {
-    target: '.relance-targets-btn',
-    content: 'Consultez la liste de vos cibles actives avec leur progression dans la séquence de 7 jours.',
-    placement: 'top',
-  },
-  {
-    target: '.relance-campaigns',
-    content: 'Les campagnes vous permettent de cibler des groupes spécifiques de filleuls avec des filtres (pays, date, etc.).',
-    placement: 'top',
-  },
-  {
-    target: '.relance-new-campaign',
-    content: 'Créez une nouvelle campagne en définissant vos filtres et messages personnalisés.',
-    placement: 'bottom',
-  },
-]; 
+interface RelanceTourOptions {
+  hasSmsAccess: boolean;
+}
+
+export function buildRelanceTour({ hasSmsAccess }: RelanceTourOptions): Step[] {
+  const steps: Step[] = [
+    {
+      target: '[data-tour="balance-card"]',
+      content: 'Vos crédits Relance : emails à gauche, SMS à droite. Chaque message envoyé en consomme un.',
+      placement: 'bottom',
+      disableBeacon: true,
+    },
+    {
+      target: '[data-tour="recharge"]',
+      content: 'Achetez des packs de crédits ici — pas d\'abonnement, vous payez à l\'usage.',
+      placement: 'left',
+    },
+  ];
+
+  if (hasSmsAccess) {
+    steps.push({
+      target: '[data-tour="sms-links"]',
+      content: 'Configurez le lien à inclure dans chaque SMS automatique et manuel (Cameroun +237 uniquement).',
+      placement: 'bottom',
+    });
+  }
+
+  steps.push(
+    {
+      target: '.relance-status-card',
+      content: 'Tableau de bord : état actuel, nombre de cibles actives et messages envoyés aujourd\'hui.',
+      placement: 'bottom',
+    },
+    {
+      target: '.relance-toggle-btn',
+      content: 'Activez ou désactivez la Relance. Quand elle est active, vos filleuls non payés reçoivent des messages automatiques sur 7 jours.',
+      placement: 'left',
+    },
+    {
+      target: '.relance-controls',
+      content: 'Mettez en pause l\'inscription de nouvelles cibles ou l\'envoi par canal sans tout désactiver.',
+      placement: 'bottom',
+    },
+    {
+      target: '.relance-stats',
+      content: 'Suivez vos performances : cibles actives, messages envoyés, taux de livraison et conversions.',
+      placement: 'top',
+    },
+    {
+      target: '.relance-targets-btn',
+      content: 'Consultez la liste de vos cibles actives avec leur progression dans la séquence de 7 jours.',
+      placement: 'top',
+    },
+    {
+      target: '.relance-campaigns',
+      content: 'Les campagnes vous permettent de cibler des groupes spécifiques de filleuls avec des filtres (pays, date, etc.).',
+      placement: 'top',
+    },
+    {
+      target: '.relance-new-campaign',
+      content: 'Créez une nouvelle campagne en définissant le canal, les filtres et les messages personnalisés.',
+      placement: 'bottom',
+    }
+  );
+
+  return steps;
+}
+
+/** @deprecated Use buildRelanceTour({ hasSmsAccess }) — kept temporarily for callers that import the static export. */
+export const relanceTour: Step[] = buildRelanceTour({ hasSmsAccess: false });
