@@ -58,14 +58,19 @@ function AppContent() {
   // logout, account switch). Without this, the previous user's "active"
   // subscription state could linger for up to gcTime and let the next user
   // briefly skip the paywall on a shared device.
+  // Mongoose objects use _id; some endpoints add an `id` virtual, some don't.
+  // Cover both so the effect actually fires on login/logout.
+  const authUserId =
+    (authUser as { id?: string; _id?: string } | null)?.id ??
+    (authUser as { id?: string; _id?: string } | null)?._id ??
+    null;
   const lastUserIdRef = useRef<string | null>(null);
   useEffect(() => {
-    const currentId = authUser?.id ?? null;
-    if (lastUserIdRef.current !== currentId) {
+    if (lastUserIdRef.current !== authUserId) {
       queryClient.clear();
-      lastUserIdRef.current = currentId;
+      lastUserIdRef.current = authUserId;
     }
-  }, [authUser?.id, queryClient]);
+  }, [authUserId, queryClient]);
 
   // One-time cleanup: a previous build wrote a permanent
   // localStorage.splashViewed flag that incorrectly suppressed the splash on
