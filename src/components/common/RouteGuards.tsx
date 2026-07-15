@@ -13,9 +13,16 @@ import { handleApiResponse } from '../../utils/apiHelpers';
  */
 export function useSubscriptionStatus() {
   const { user, isAuthenticated } = useAuth();
+  // Backend user objects come from Mongoose so the primary key is _id; a
+  // virtual `id` sometimes exists, sometimes not (depends on the endpoint).
+  // Fall back through both, then to localStorage.userId set at login time.
+  const scopedUserId =
+    (user as { id?: string; _id?: string })?.id ||
+    (user as { id?: string; _id?: string })?._id ||
+    (typeof window !== 'undefined' ? localStorage.getItem('userId') || undefined : undefined);
 
   const { data, isLoading, isFetching } = useQuery<unknown>({
-    queryKey: ['current-subscription', user?.id],
+    queryKey: ['current-subscription', scopedUserId ?? 'anonymous'],
     queryFn: async () => {
       try {
         const response = await sbcApiService.getCurrentSubscription();
@@ -27,7 +34,7 @@ export function useSubscriptionStatus() {
         return null;
       }
     },
-    enabled: isAuthenticated && !!user?.id,
+    enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
     refetchOnWindowFocus: true,
