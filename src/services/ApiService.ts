@@ -34,7 +34,8 @@ export class ApiService {
       return ApiResponse.fromHttpResponse(response, responseText, response.url);
     } else {
       // For non-JSON responses (like files)
-      const success = response.status >= 200 && response.status < 300;
+      const success =
+        (response.status >= 200 && response.status < 300) || response.status === 304;
       const mockJson = success
         ? '{"data": "File content type, not JSON. Handled by caller.", "message": "File retrieval successful."}'
         : '{"message": "File retrieval failed."}';
