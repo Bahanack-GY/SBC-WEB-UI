@@ -30,6 +30,17 @@ export class ApiService {
 
     const responseText = await response.text();
 
+    // TEMP DEBUG — remove after paywall 304 issue confirmed fixed
+    if (response.url.includes('/subscriptions')) {
+      console.log('[SBC DEBUG /subscriptions]', {
+        status: response.status,
+        contentType,
+        isJsonHeader,
+        bodyLength: responseText.length,
+        bodyPreview: responseText.slice(0, 200),
+      });
+    }
+
     // 304 Not Modified frequently omits Content-Type per RFC 7232, even though
     // the browser cache serves the original JSON body. Treat any 304 with a
     // non-empty body that parses as JSON as a JSON response, so callers get
