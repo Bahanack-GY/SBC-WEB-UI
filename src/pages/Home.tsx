@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube } from "react-icons/fa";
+import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube, FaLock } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
 import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
@@ -27,9 +27,10 @@ type FormationDecoration = 'orange' | 'gold' | 'new';
 interface Formation {
   _id: string;
   title: string;
-  link: string;
+  link: string;                                        // '' when locked
   requiredSubscriptionType?: 'CLASSIQUE' | 'CIBLE';
   decoration?: FormationDecoration | string;
+  locked?: boolean;
 }
 
 // Visual variants for the decoration field. Backend filters by tier server-side;
@@ -103,6 +104,7 @@ function Home() {
   const queryClient = useQueryClient();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Non abonné');
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);
+  const [lockedFormation, setLockedFormation] = useState<Formation | null>(null);
   const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
   const [showRelanceModal, setShowRelanceModal] = useState(false);
   const { hasCredits: hasRelanceAccess } = useRelance();
@@ -399,6 +401,39 @@ function Home() {
                 <div className="flex flex-col gap-3">
                   {formations.map((formation) => {
                     const variant = getFormationCardVariant(formation.decoration);
+                    const locked = !!formation.locked;
+                    const tier = formation.requiredSubscriptionType;
+
+                    // Locked cards render as buttons (open upgrade modal) instead
+                    // of anchors — link is empty when locked, don't expose it.
+                    if (locked) {
+                      return (
+                        <button
+                          key={formation._id}
+                          type="button"
+                          onClick={() => setLockedFormation(formation)}
+                          className={`relative block w-full text-left p-3 rounded-xl transition-colors ${variant.container} opacity-70`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <p className={`font-semibold ${variant.title} pr-2`}>{formation.title}</p>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {tier && (
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                                  🔒 {tier}
+                                </span>
+                              )}
+                              <FaLock className="text-gray-500" />
+                            </div>
+                          </div>
+                          {variant.badge && (
+                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                              {variant.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    }
+
                     return (
                       <a
                         key={formation._id}
@@ -428,6 +463,64 @@ function Home() {
               >
                 Fermer
               </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Locked-formation upgrade modal */}
+      <AnimatePresence>
+        {lockedFormation && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setLockedFormation(null)}
+          >
+            <motion.div
+              className="bg-white rounded-2xl p-6 w-full max-w-sm text-gray-900 shadow-lg"
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              transition={{ type: 'spring', bounce: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex justify-center mb-3">
+                <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
+                  <FaLock className="text-purple-600 text-xl" />
+                </div>
+              </div>
+              <h4 className="text-lg font-bold text-center mb-1">Contenu réservé</h4>
+              <p className="text-sm text-purple-700 font-semibold text-center mb-3 break-words">
+                {lockedFormation.title}
+              </p>
+              <p className="text-sm text-gray-600 text-center mb-5">
+                Cette formation est disponible uniquement avec l'abonnement{' '}
+                <strong>{lockedFormation.requiredSubscriptionType ?? 'CIBLE'}</strong>. Passez à{' '}
+                {lockedFormation.requiredSubscriptionType ?? 'CIBLE'} pour y accéder.
+              </p>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const tier = lockedFormation.requiredSubscriptionType ?? 'CIBLE';
+                    const title = encodeURIComponent(lockedFormation.title);
+                    setLockedFormation(null);
+                    navigate(`/abonnement?fromFormation=${title}&tier=${tier}`);
+                  }}
+                  className="w-full min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl"
+                >
+                  Passer à {lockedFormation.requiredSubscriptionType ?? 'CIBLE'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLockedFormation(null)}
+                  className="w-full min-h-[44px] bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold rounded-xl"
+                >
+                  Plus tard
+                </button>
+              </div>
             </motion.div>
           </motion.div>
         )}

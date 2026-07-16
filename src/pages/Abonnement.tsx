@@ -14,7 +14,8 @@ import { useApiCache } from '../hooks/useApiCache';
 import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import { useAuth } from '../contexts/AuthContext';
-// import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
+import { FaLock } from 'react-icons/fa';
 
 function Abonnement() {
 
@@ -22,6 +23,13 @@ function Abonnement() {
     const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const { user } = useAuth();
+    const location = useLocation();
+
+    // When arriving from a locked formation card, show a contextual banner so
+    // the user remembers why they're on this page.
+    const searchParams = new URLSearchParams(location.search);
+    const fromFormationTitle = searchParams.get('fromFormation');
+    const fromFormationTier = searchParams.get('tier');
 
     // Get user balance for negative balance modal (already available from AuthContext)
     const balance = user?.balance || 0;
@@ -191,6 +199,21 @@ function Abonnement() {
                     <BackButton />
                     <h3 className="text-xl font-medium text-center w-full">Abonnement</h3>
                 </div>
+
+                {fromFormationTitle && (
+                    <div className="mt-2 mb-3 bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-start gap-2">
+                        <FaLock className="text-purple-600 mt-0.5 shrink-0" />
+                        <div className="text-sm">
+                            <p className="text-purple-900 font-semibold break-words">
+                                Débloquer&nbsp;: {decodeURIComponent(fromFormationTitle)}
+                            </p>
+                            <p className="text-xs text-purple-700 mt-0.5">
+                                Cette formation est incluse avec l'abonnement{' '}
+                                <strong>{fromFormationTier ?? 'CIBLE'}</strong>.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {loading ? (
                     <div className="flex flex-col gap-4 mt-6">
