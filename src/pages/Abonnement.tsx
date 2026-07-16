@@ -261,6 +261,18 @@ function Abonnement() {
 
                                         {/* Custom features based on subscription type */}
                                         <ul className="mt-3 mb-2 space-y-1">
+                                            {/* Contextual bullet when user arrived from a locked formation
+                                                targeting this plan tier — highlight the exact formation they
+                                                clicked so the CTA lands intuitively. */}
+                                            {fromFormationTitle &&
+                                                (fromFormationTier ?? 'CIBLE') === plan.type && (
+                                                    <li className="flex items-center text-xs gap-2 bg-white/25 border border-white/40 rounded-lg px-2 py-1.5 mb-1">
+                                                        <HiMiniMinusCircle className="text-white w-3 h-3 flex-shrink-0" />
+                                                        <span className="text-white font-bold">
+                                                            {decodeURIComponent(fromFormationTitle)}
+                                                        </span>
+                                                    </li>
+                                                )}
                                             {plan.type === 'CLASSIQUE' ? (
                                                 <>
                                                     <li className="flex items-center text-white text-xs gap-2">
