@@ -504,10 +504,8 @@ function Home() {
                 <button
                   type="button"
                   onClick={() => {
-                    const tier = lockedFormation.requiredSubscriptionType ?? 'CIBLE';
-                    const title = encodeURIComponent(lockedFormation.title);
                     setLockedFormation(null);
-                    navigate(`/abonnement?fromFormation=${title}&tier=${tier}`);
+                    navigate('/abonnement');
                   }}
                   className="w-full min-h-[48px] bg-purple-600 hover:bg-purple-700 text-white font-bold rounded-xl"
                 >

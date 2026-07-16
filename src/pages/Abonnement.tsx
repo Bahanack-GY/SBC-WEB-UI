@@ -14,8 +14,6 @@ import { useApiCache } from '../hooks/useApiCache';
 import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import { useAuth } from '../contexts/AuthContext';
-import { useLocation } from 'react-router-dom';
-import { FaLock } from 'react-icons/fa';
 
 function Abonnement() {
 
@@ -23,13 +21,6 @@ function Abonnement() {
     const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const { user } = useAuth();
-    const location = useLocation();
-
-    // When arriving from a locked formation card, show a contextual banner so
-    // the user remembers why they're on this page.
-    const searchParams = new URLSearchParams(location.search);
-    const fromFormationTitle = searchParams.get('fromFormation');
-    const fromFormationTier = searchParams.get('tier');
 
     // Get user balance for negative balance modal (already available from AuthContext)
     const balance = user?.balance || 0;
@@ -200,21 +191,6 @@ function Abonnement() {
                     <h3 className="text-xl font-medium text-center w-full">Abonnement</h3>
                 </div>
 
-                {fromFormationTitle && (
-                    <div className="mt-2 mb-3 bg-purple-50 border border-purple-200 rounded-xl p-3 flex items-start gap-2">
-                        <FaLock className="text-purple-600 mt-0.5 shrink-0" />
-                        <div className="text-sm">
-                            <p className="text-purple-900 font-semibold break-words">
-                                Débloquer&nbsp;: {decodeURIComponent(fromFormationTitle)}
-                            </p>
-                            <p className="text-xs text-purple-700 mt-0.5">
-                                Cette formation est incluse avec l'abonnement{' '}
-                                <strong>{fromFormationTier ?? 'CIBLE'}</strong>.
-                            </p>
-                        </div>
-                    </div>
-                )}
-
                 {loading ? (
                     <div className="flex flex-col gap-4 mt-6">
                         <Skeleton height="h-28" rounded="rounded-2xl" />
@@ -261,18 +237,6 @@ function Abonnement() {
 
                                         {/* Custom features based on subscription type */}
                                         <ul className="mt-3 mb-2 space-y-1">
-                                            {/* Contextual bullet when user arrived from a locked formation
-                                                targeting this plan tier — highlight the exact formation they
-                                                clicked so the CTA lands intuitively. */}
-                                            {fromFormationTitle &&
-                                                (fromFormationTier ?? 'CIBLE') === plan.type && (
-                                                    <li className="flex items-center text-xs gap-2 bg-white/25 border border-white/40 rounded-lg px-2 py-1.5 mb-1">
-                                                        <HiMiniMinusCircle className="text-white w-3 h-3 flex-shrink-0" />
-                                                        <span className="text-white font-bold">
-                                                            {decodeURIComponent(fromFormationTitle)}
-                                                        </span>
-                                                    </li>
-                                                )}
                                             {plan.type === 'CLASSIQUE' ? (
                                                 <>
                                                     <li className="flex items-center text-white text-xs gap-2">
@@ -341,6 +305,10 @@ function Abonnement() {
                                                     <li className="flex items-center text-white text-xs gap-2">
                                                         <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Contacts WhatsApp</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Formation SBC IA CREATOR</span>
                                                     </li>
                                                 </>
                                             )}
