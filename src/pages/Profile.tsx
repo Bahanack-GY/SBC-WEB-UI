@@ -50,7 +50,7 @@ function Profile() {
     level2Count: number;
     level3Count: number;
   } | null>(null);
-  const [affiliator, setAffiliator] = useState<{ name: string; email: string; phoneNumber: string; avatar?: string; avatarId?: string; } | null>(null);
+  const [affiliator, setAffiliator] = useState<{ name: string; email: string; phoneNumber: string; avatar?: string; avatarId?: string; whatsappGroupLink?: string; } | null>(null);
   const [affiliatorLoading, setAffiliatorLoading] = useState(true);
 
   // New states for the change referral code modal
@@ -159,12 +159,32 @@ function Profile() {
         ? sbcApiService.generateSettingsFileUrl(affiliator.avatarId)
         : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360';
 
+      // Escape user-provided strings before injecting into the HTML template —
+      // affiliator.name / whatsappGroupLink come from a Mongo user document but
+      // still flow through dangerouslySetInnerHTML.
+      const escape = (s: string) =>
+        s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      const groupLink = affiliator.whatsappGroupLink?.trim();
+      const contactBlock = groupLink
+        ? `
+          <a
+            href="${escape(groupLink)}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="inline-flex items-center justify-center gap-2 w-full min-h-[48px] mt-2 px-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-sm"
+          >
+            📱 Rejoindre le groupe WhatsApp
+          </a>
+        `
+        : `
+          <p class="text-sm text-gray-500 mt-2 italic text-center">Ce parrain n'a pas encore configuré son groupe WhatsApp.</p>
+        `;
       setAffiliatorModalContent(`
         <div class="flex flex-col items-center justify-center p-4">
-          <img src="${avatarUrl}" alt="avatar" class="w-20 h-20 rounded-full object-cover mb-4 border-2 border-gray-200"/>
-          <p class="text-lg font-bold mb-1">${affiliator.name}</p>
-          <p class="text-sm text-gray-600 mb-1">Email: ${affiliator.email}</p>
-          <p class="text-sm text-gray-600">WhatsApp: ${affiliator.phoneNumber}</p>
+          <img src="${escape(avatarUrl)}" alt="avatar" class="w-20 h-20 rounded-full object-cover mb-4 border-2 border-gray-200"/>
+          <p class="text-lg font-bold mb-1">${escape(affiliator.name)}</p>
+          <p class="text-sm text-gray-600 mb-1">${escape(affiliator.email)}</p>
+          ${contactBlock}
         </div>
       `);
     } else {

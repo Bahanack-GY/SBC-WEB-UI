@@ -99,6 +99,7 @@ function ModifierLeProfil() {
     sex: '',
     momoNumber: '',
     momoOperator: '',
+    whatsappGroupLink: '',
     cryptoWalletAddress: '',
     cryptoWalletCurrency: '',
     referralCode: '',
@@ -195,6 +196,7 @@ function ModifierLeProfil() {
           sex: user.sex || '',
           momoNumber: localMomoNumber, // Set the local part of the MoMo number (without country code)
           momoOperator: momoOperatorToSet,
+          whatsappGroupLink: user.whatsappGroupLink || '',
           cryptoWalletAddress: user.cryptoWalletAddress || '',
           cryptoWalletCurrency: user.cryptoWalletCurrency || '',
           referralCode: user.referralCode || '',
@@ -330,6 +332,7 @@ function ModifierLeProfil() {
         sex: formData.sex,
         momoNumber: fullMomoNumber, // Use the normalized MoMo number
         momoOperator: formData.momoOperator,
+        whatsappGroupLink: formData.whatsappGroupLink.trim(),
         referralCode: formData.referralCode,
         notificationPreference: formData.notificationPreference,
       };
@@ -450,6 +453,21 @@ function ModifierLeProfil() {
                 onChange={handleChange}
                 className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
               />
+            </div>
+            <div>
+              <label className="block text-gray-700 mb-1">💬 Lien de votre groupe WhatsApp</label>
+              <input
+                name="whatsappGroupLink"
+                type="url"
+                inputMode="url"
+                placeholder="https://chat.whatsapp.com/..."
+                value={formData.whatsappGroupLink}
+                onChange={handleChange}
+                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+              />
+              <div className="text-xs text-gray-500 mt-1">
+                Ce lien remplace votre numéro personnel dans le profil de vos filleuls. Évite les bans WhatsApp.
+              </div>
             </div>
             <div>
               <label className="block text-gray-700 mb-1">🎂 Date de naissance</label>
