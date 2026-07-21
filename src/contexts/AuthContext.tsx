@@ -15,6 +15,7 @@ interface User {
   referralCode?: string;
   momoNumber?: string;
   momoOperator?: string;
+  whatsappGroupLink?: string;
   balance?: number;
   usdBalance?: number;
   cryptoWalletAddress?: string;
