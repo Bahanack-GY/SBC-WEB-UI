@@ -2109,6 +2109,152 @@ export class SBCApiService extends ApiService {
       body: { content }
     });
   }
+
+  // ==================== SBC ADS NETWORK ====================
+  // Annonceurs pay to get a creative onto diffuseurs' WhatsApp statuses;
+  // diffuseurs are paid per verified view. Served by advertising-service.
+
+  /** What a given budget buys, before any money moves. */
+  async getAdsQuote(amount: number): Promise<ApiResponse> {
+    return await this.get('/advertising/campaigns/quote', {
+      queryParameters: { amount }
+    });
+  }
+
+  async createAdsCampaign(body: {
+    title: string;
+    description?: string;
+    mediaFileId: string;
+    mediaType: 'image' | 'video';
+    mediaMimeType?: string;
+    suggestedCaption?: string;
+    contactWhatsapp?: string;
+    contactPhone?: string;
+    websiteUrl?: string;
+    targeting?: Record<string, unknown>;
+    amount: number;
+  }): Promise<ApiResponse> {
+    return await this.post('/advertising/campaigns', { body });
+  }
+
+  async getMyAdsCampaigns(filters?: Record<string, unknown>): Promise<ApiResponse> {
+    return await this.get('/advertising/campaigns', { queryParameters: filters });
+  }
+
+  async getAdsCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.get(`/advertising/campaigns/${campaignId}`);
+  }
+
+  async getAdsCampaignPerformance(campaignId: string): Promise<ApiResponse> {
+    return await this.get(`/advertising/campaigns/${campaignId}/performance`);
+  }
+
+  /** Only a draft or a rejected campaign can be edited. */
+  async updateAdsCampaign(campaignId: string, body: Record<string, unknown>): Promise<ApiResponse> {
+    return await this.patch(`/advertising/campaigns/${campaignId}`, { body });
+  }
+
+  /** Sends the creative to moderation. Nothing is diffused before an admin approves. */
+  async submitAdsCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/submit`);
+  }
+
+  /**
+   * Opens the payment session. Returns a sessionId; build the payment page URL
+   * with generatePaymentUrl(), same as subscriptions.
+   */
+  async payAdsCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/pay`);
+  }
+
+  /** An unfilled campaign: bank the unspent budget as credit, or keep waiting. */
+  async decideAdsCampaign(campaignId: string, decision: 'bank' | 'wait'): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/decide`, {
+      body: { decision }
+    });
+  }
+
+  async getAdsLeaderboard(filters?: Record<string, unknown>): Promise<ApiResponse> {
+    return await this.get('/advertising/campaigns/leaderboard', { queryParameters: filters });
+  }
+
+  // --- Diffuseur side ---
+
+  /** Eligibility plus the list of profile fields still missing. */
+  async getDiffuseurEligibility(): Promise<ApiResponse> {
+    return await this.get('/advertising/diffuseurs/eligibility');
+  }
+
+  async enrollAsDiffuseur(declaredAverageViews: number): Promise<ApiResponse> {
+    return await this.post('/advertising/diffuseurs/enroll', {
+      body: { declaredAverageViews }
+    });
+  }
+
+  /** 404 here means "not a diffuseur yet", not an error. */
+  async getMyDiffuseurProfile(): Promise<ApiResponse> {
+    return await this.get('/advertising/diffuseurs/me');
+  }
+
+  async getMyParticipations(filters?: Record<string, unknown>): Promise<ApiResponse> {
+    return await this.get('/advertising/diffuseurs/me/participations', {
+      queryParameters: filters
+    });
+  }
+
+  /** First to accept wins, so this can legitimately fail on a live offer. */
+  async acceptParticipation(participationId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/diffuseurs/participations/${participationId}/accept`);
+  }
+
+  async declineParticipation(participationId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/diffuseurs/participations/${participationId}/decline`);
+  }
+
+  /**
+   * Self-declared "I posted it". Not proof — it starts the 24h clock so we can
+   * remind them to verify before the status expires.
+   */
+  async markParticipationPosted(participationId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/diffuseurs/participations/${participationId}/mark-posted`);
+  }
+
+  // --- WhatsApp verification ---
+
+  /** Free verification slots. 0 means every session is busy; try later. */
+  async getVerificationCapacity(): Promise<ApiResponse> {
+    return await this.get('/advertising/verification/capacity');
+  }
+
+  /**
+   * Opens a WhatsApp link session. Answers 503 with Retry-After when all slots
+   * are taken — that is a queue signal, not a failure.
+   */
+  async startVerification(participationId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/verification/participations/${participationId}/start`);
+  }
+
+  /** Poll for the QR code, then for the verdict. */
+  async getVerificationSession(sessionId: string): Promise<ApiResponse> {
+    return await this.get(`/advertising/verification/sessions/${sessionId}`, {
+      skipDeduplication: true
+    });
+  }
+
+  async cancelVerification(sessionId: string): Promise<ApiResponse> {
+    return await this.delete(`/advertising/verification/sessions/${sessionId}`);
+  }
+
+  // --- Advertising balance (user-service) ---
+
+  async getAdvertisingBalance(): Promise<ApiResponse> {
+    return await this.get('/advertising-balance');
+  }
+
+  /** The only way out of the advertising balance: transfer to the main balance. */
+  async transferAdvertisingBalance(amount: number): Promise<ApiResponse> {
+    return await this.post('/advertising-balance/transfer', { body: { amount } });
+  }
 }
 
 // Create and export singleton instance

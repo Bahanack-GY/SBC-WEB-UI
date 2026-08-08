@@ -45,6 +45,12 @@ import { RelanceProvider } from './contexts/RelanceContext'
 import { SocketProvider } from './contexts/SocketContext'
 import Chat from './pages/Chat'
 import CompleteProfile from './pages/CompleteProfile'
+import AdsNetwork from './pages/AdsNetwork'
+import AdsNetworkDiffuseurOnboarding from './pages/AdsNetworkDiffuseurOnboarding'
+import AdsNetworkDiffuseur from './pages/AdsNetworkDiffuseur'
+import AdsNetworkAnnonceurOnboarding from './pages/AdsNetworkAnnonceurOnboarding'
+import AdsNetworkAnnonceur from './pages/AdsNetworkAnnonceur'
+import AdsNetworkCampaignForm from './pages/AdsNetworkCampaignForm'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
 
 function AppContent() {
@@ -146,7 +152,7 @@ function AppContent() {
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || isInChatConversation;
+  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || isInChatConversation;
   return (
     <div className="bg-white relative">
       {showLogout && (
@@ -211,6 +217,14 @@ function AppContent() {
           <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
           <Route path="/activation-balance" element={<ActivationBalance />} />
           <Route path="/chat" element={<Chat />} />
+          {/* SBC Ads Network. Paywalled like the rest of the member area: both
+              roles pay out or spend money against an SBC account. */}
+          <Route path="/ads-network" element={<AdsNetwork />} />
+          <Route path="/ads-network/diffuseur/onboarding" element={<AdsNetworkDiffuseurOnboarding />} />
+          <Route path="/ads-network/diffuseur" element={<AdsNetworkDiffuseur />} />
+          <Route path="/ads-network/annonceur/onboarding" element={<AdsNetworkAnnonceurOnboarding />} />
+          <Route path="/ads-network/annonceur/nouvelle-campagne" element={<AdsNetworkCampaignForm />} />
+          <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
         </Route>
       </Routes>
       {!hideNav && <NavigationBar />}
