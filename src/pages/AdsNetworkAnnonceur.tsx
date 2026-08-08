@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
+import { AdsCardSkeleton } from '../components/ads/AdsScreen';
 import { sbcApiService } from '../services/SBCApiService';
 
 type CampaignStatus =
@@ -163,7 +164,7 @@ function AdsNetworkAnnonceur() {
         )}
 
         {isLoading ? (
-          <div className="flex justify-center py-10"><FaSpinner className="animate-spin text-[#115CF6]" size={24} /></div>
+          <div className="mt-5"><AdsCardSkeleton rows={2} /></div>
         ) : !campaigns?.length ? (
           <div className="text-center text-gray-500 py-12">
             <p>Vous n'avez pas encore d'annonce.</p>

@@ -1,8 +1,9 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
-import BackButton from '../components/common/BackButton';
+import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
 
 /** Labels for the profile fields targeting runs on. Raw field names mean nothing to a user. */
@@ -22,6 +23,7 @@ const FIELD_LABELS: Record<string, string> = {
  */
 function AdsNetworkDiffuseurOnboarding() {
   const navigate = useNavigate();
+  const { roles, isResolved } = useAdsRoles();
   const [declaredViews, setDeclaredViews] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,15 +63,22 @@ function AdsNetworkDiffuseurOnboarding() {
     }
   };
 
-  // Already enrolled: onboarding has nothing to add. Redirect in an effect, not
-  // during render.
-  useEffect(() => {
-    if (eligibility?.hasProfile) navigate('/ads-network/diffuseur', { replace: true });
-  }, [eligibility?.hasProfile, navigate]);
+  // Gate before rendering, not after. Redirecting from an effect means onboarding
+  // paints first and is yanked away a second later — the flash Sterling saw.
+  if (isResolved && (roles.isDiffuseur || eligibility?.hasProfile)) {
+    return <Navigate to="/ads-network/diffuseur" replace />;
+  }
+
+  if (!isResolved) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 pt-8">
+        <div className="max-w-2xl mx-auto"><AdsCardSkeleton rows={2} /></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white p-4 pb-24">
-      <BackButton />
 
       <div className="max-w-2xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mt-2">Devenir diffuseur</h1>

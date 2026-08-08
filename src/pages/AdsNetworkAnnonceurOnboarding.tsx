@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FaBullhorn, FaShieldAlt, FaSpinner, FaArrowRight } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
+import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
 
 const MIN_AMOUNT = 6000;
@@ -17,6 +19,7 @@ const MIN_AMOUNT = 6000;
  */
 function AdsNetworkAnnonceurOnboarding() {
   const navigate = useNavigate();
+  const { roles, isResolved } = useAdsRoles();
   const [amount, setAmount] = useState(String(MIN_AMOUNT));
 
   const parsed = Number(amount);
@@ -38,6 +41,20 @@ function AdsNetworkAnnonceurOnboarding() {
     },
     enabled: validAmount,
   });
+
+  // An annonceur with campaigns already knows the pitch; send them to their
+  // dashboard before anything paints.
+  if (isResolved && roles.isAnnonceur) {
+    return <Navigate to="/ads-network/annonceur" replace />;
+  }
+
+  if (!isResolved) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-4 pt-8">
+        <div className="max-w-2xl mx-auto"><AdsCardSkeleton rows={2} /></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white p-4 pb-24">
