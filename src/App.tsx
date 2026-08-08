@@ -48,6 +48,9 @@ import CompleteProfile from './pages/CompleteProfile'
 import AdsNetwork from './pages/AdsNetwork'
 import AdsNetworkDiffuseurOnboarding from './pages/AdsNetworkDiffuseurOnboarding'
 import AdsNetworkDiffuseur from './pages/AdsNetworkDiffuseur'
+import AdsNetworkAnnonceurOnboarding from './pages/AdsNetworkAnnonceurOnboarding'
+import AdsNetworkAnnonceur from './pages/AdsNetworkAnnonceur'
+import AdsNetworkCampaignForm from './pages/AdsNetworkCampaignForm'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
 
 function AppContent() {
@@ -219,6 +222,9 @@ function AppContent() {
           <Route path="/ads-network" element={<AdsNetwork />} />
           <Route path="/ads-network/diffuseur/onboarding" element={<AdsNetworkDiffuseurOnboarding />} />
           <Route path="/ads-network/diffuseur" element={<AdsNetworkDiffuseur />} />
+          <Route path="/ads-network/annonceur/onboarding" element={<AdsNetworkAnnonceurOnboarding />} />
+          <Route path="/ads-network/annonceur/nouvelle-campagne" element={<AdsNetworkCampaignForm />} />
+          <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
         </Route>
       </Routes>
       {!hideNav && <NavigationBar />}
