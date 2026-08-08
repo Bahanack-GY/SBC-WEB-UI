@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -7,6 +7,8 @@ import {
   FaTimes, FaWallet, FaDownload,
 } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
+import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
 
 interface DaySchedule {
@@ -65,7 +67,7 @@ const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleString('fr-FR'
  * only in onboarding.
  */
 function AdsNetworkDiffuseur() {
-  const navigate = useNavigate();
+  const { roles, isResolved } = useAdsRoles();
   const [acting, setActing] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [sharing, setSharing] = useState<Participation | null>(null);
@@ -96,18 +98,17 @@ function AdsNetworkDiffuseur() {
     },
   });
 
-  // Not enrolled: onboarding is the only sensible destination.
-  useEffect(() => {
-    if (!profileLoading && profile === null) {
-      navigate('/ads-network/diffuseur/onboarding', { replace: true });
-    }
-  }, [profile, profileLoading, navigate]);
-
   const refreshAll = useCallback(() => {
     refetchParts();
     refetchProfile();
     refetchBalance();
   }, [refetchParts, refetchProfile, refetchBalance]);
+
+  // Redirect during render rather than from an effect, so the dashboard is never
+  // painted for someone who is not a diffuseur.
+  if (isResolved && !roles.isDiffuseur && !profileLoading && !profile) {
+    return <Navigate to="/ads-network/diffuseur/onboarding" replace />;
+  }
 
   const handleAccept = async (p: Participation) => {
     setActing(p._id);
@@ -177,7 +178,7 @@ function AdsNetworkDiffuseur() {
         </div>
 
         {partsLoading ? (
-          <div className="flex justify-center py-10"><FaSpinner className="animate-spin text-[#115CF6]" size={24} /></div>
+          <div className="mt-6"><AdsCardSkeleton rows={2} /></div>
         ) : (
           <>
             {/* Offers */}
