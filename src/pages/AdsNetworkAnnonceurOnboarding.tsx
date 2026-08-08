@@ -31,6 +31,8 @@ function AdsNetworkAnnonceurOnboarding() {
         uniqueViews: number;
         repeatViews: number;
         totalViews: number;
+        availableCredit: number;
+        amountDue: number;
         message: string;
       } | undefined;
     },
@@ -111,6 +113,12 @@ function AdsNetworkAnnonceurOnboarding() {
                   <p className="text-xs text-gray-500 mt-1">
                     Soit {quote.totalViews.toLocaleString('fr-FR')} vues au total sur 3 jours.
                   </p>
+                  {quote.availableCredit > 0 && (
+                    <p className="text-xs text-green-700 mt-2">
+                      Vous disposez de {quote.availableCredit.toLocaleString('fr-FR')} F de crédit.
+                      À payer : {quote.amountDue.toLocaleString('fr-FR')} F.
+                    </p>
+                  )}
                 </>
               ) : null}
             </div>

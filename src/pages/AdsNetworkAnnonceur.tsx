@@ -95,9 +95,16 @@ function AdsNetworkAnnonceur() {
     setError(null);
     try {
       const res = await sbcApiService.payAdsCampaign(c._id);
-      const sessionId = res.body?.data?.sessionId;
-      if (!res.isSuccessByStatusCode || !sessionId) {
+      if (!res.isSuccessByStatusCode) {
         setError(res.body?.message || "Le paiement n'a pas pu être ouvert.");
+        return;
+      }
+
+      // A null sessionId is the success case where banked credit covered the whole
+      // budget: the campaign is already live and there is nothing to pay.
+      const sessionId = res.body?.data?.sessionId;
+      if (!sessionId) {
+        refetch();
         return;
       }
       window.location.href = sbcApiService.generatePaymentUrl(sessionId);
