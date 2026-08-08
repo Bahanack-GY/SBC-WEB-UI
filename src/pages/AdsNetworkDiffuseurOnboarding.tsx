@@ -3,6 +3,8 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { AdsHero, AdsStep, AdsWarning } from '../components/ads/AdsSteps';
+import heroDiffuseur from '../assets/icon/ads-diffuseur.jpg';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
 
@@ -81,50 +83,69 @@ function AdsNetworkDiffuseurOnboarding() {
     <div className="min-h-screen bg-white p-4 pb-24">
 
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Devenir diffuseur</h1>
-        <p className="text-gray-600 mt-2">
-          Vous publiez la campagne d'un annonceur sur votre statut WhatsApp et vous
-          êtes payé selon le nombre de personnes qui l'ont réellement vue.
+        <AdsHero src={heroDiffuseur} alt="" />
+
+        <h1 className="text-2xl font-bold text-gray-900 text-center">Devenir diffuseur</h1>
+        <p className="text-gray-600 mt-2 text-center">
+          Publiez l'annonce d'un annonceur sur votre statut WhatsApp. Vous êtes payé
+          selon le nombre de personnes qui l'ont vraiment vue.
         </p>
 
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mt-5">
-          <h2 className="font-semibold text-gray-900 mb-3">Comment ça marche</h2>
-          <ol className="space-y-3 text-sm text-gray-700 list-decimal list-inside">
-            <li>
-              Une campagne vous est proposée. Elle est proposée à plusieurs
-              diffuseurs à la fois : <strong>les premiers à accepter l'obtiennent</strong>.
-            </li>
-            <li>
-              Après avoir accepté, vous avez <strong>24 heures</strong> pour publier le
-              jour 1. Passé ce délai, la place est rendue à un autre diffuseur.
-            </li>
-            <li>
-              Une campagne se publie sur <strong>3 jours</strong>, à au moins 24 h
-              d'intervalle. Vous disposez de <strong>3 jours de report</strong> au total
-              pour terminer.
-            </li>
-            <li>
-              Après chaque publication, vous connectez votre WhatsApp sur SBC pour
-              que nous comptions les vues. <strong>À faire avant l'expiration du
-              statut</strong> — une fois expiré, les vues de la journée sont perdues et
-              ne peuvent pas être récupérées.
-            </li>
-            <li>
-              À la fin des 3 jours, vos gains sont crédités sur votre solde
-              publicitaire, transférable vers votre solde principal.
-            </li>
-          </ol>
+        <div className="grid grid-cols-3 gap-2 mt-5 text-center">
+          {[
+            { value: '3 jours', label: 'de publication' },
+            { value: '24 h', label: 'pour le jour 1' },
+            { value: '3 jours', label: 'de report' },
+          ].map(stat => (
+            <div key={stat.label} className="bg-green-50 border border-green-200 rounded-xl py-3">
+              <p className="font-bold text-green-800">{stat.value}</p>
+              <p className="text-[11px] text-green-700 leading-tight mt-0.5">{stat.label}</p>
+            </div>
+          ))}
         </div>
 
-        <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 mt-4 text-sm text-amber-900">
-          <p className="flex items-start gap-2">
-            <FaExclamationTriangle className="mt-0.5 shrink-0" />
-            <span>
-              Ne modifiez jamais le texte proposé, et surtout pas le lien qu'il
-              contient. Sans ce lien, votre publication ne peut pas être vérifiée et
-              la journée ne sera pas payée.
-            </span>
-          </p>
+        <h2 className="font-semibold text-gray-900 mt-6 mb-3">Comment ça marche</h2>
+        <div className="space-y-3">
+          <AdsStep index={1} title="Une campagne vous est proposée" accent="green">
+            Elle part à plusieurs diffuseurs en même temps : les premiers à accepter
+            l'obtiennent.
+          </AdsStep>
+          <AdsStep index={2} title="Vous publiez le jour 1 sous 24 h" accent="green">
+            Passé ce délai, la place est rendue à un autre diffuseur.
+          </AdsStep>
+          <AdsStep index={3} title="Puis les jours 2 et 3" accent="green">
+            Une journée toutes les 24 h. Vous disposez de 3 jours de report au total
+            pour terminer la campagne.
+          </AdsStep>
+          <AdsStep index={4} title="Vous vérifiez chaque publication" accent="green">
+            Connectez votre WhatsApp sur SBC après chaque publication pour que vos
+            vues soient comptées.
+          </AdsStep>
+          <AdsStep index={5} title="Vous êtes payé" accent="green">
+            Vos gains arrivent sur votre solde publicitaire, transférable vers votre
+            solde principal.
+          </AdsStep>
+        </div>
+
+        <div className="mt-4 space-y-3">
+          <AdsWarning>
+            <p className="font-medium flex items-start gap-2">
+              <FaExclamationTriangle className="mt-0.5 shrink-0" />
+              Vérifiez avant l'expiration de votre statut.
+            </p>
+            <p className="mt-1">
+              Un statut WhatsApp dure 24 h. Une fois expiré, les vues de cette journée
+              sont perdues et ne peuvent pas être récupérées.
+            </p>
+          </AdsWarning>
+
+          <AdsWarning>
+            <p className="font-medium">Ne modifiez jamais le texte proposé.</p>
+            <p className="mt-1">
+              Surtout pas le lien qu'il contient : sans lui, votre publication ne peut
+              pas être vérifiée et la journée ne sera pas payée.
+            </p>
+          </AdsWarning>
         </div>
 
         {isLoading ? (

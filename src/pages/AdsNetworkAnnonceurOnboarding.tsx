@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FaBullhorn, FaShieldAlt, FaSpinner, FaArrowRight } from 'react-icons/fa';
+import { FaSpinner, FaArrowRight } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { AdsHero, AdsStep } from '../components/ads/AdsSteps';
+import heroAnnonceur from '../assets/icon/ads-annonceur.jpg';
+import illustrationReview from '../assets/icon/ads-review.jpg';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
 
@@ -61,43 +64,42 @@ function AdsNetworkAnnonceurOnboarding() {
       <BackButton />
 
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Devenir annonceur</h1>
-        <p className="text-gray-600 mt-2">
+        <AdsHero src={heroAnnonceur} alt="" />
+
+        <h1 className="text-2xl font-bold text-gray-900 text-center">Devenir annonceur</h1>
+        <p className="text-gray-600 mt-2 text-center">
           Votre annonce est publiée sur le statut WhatsApp de membres SBC réels,
-          choisis selon le public que vous visez. Vous ne payez que les vues
-          effectivement vérifiées.
+          choisis selon le public que vous visez.
         </p>
 
-        <div className="bg-gray-50 border border-gray-200 rounded-2xl p-4 mt-5">
-          <h2 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
-            <FaBullhorn className="text-[#115CF6]" /> Comment ça marche
-          </h2>
-          <ol className="space-y-3 text-sm text-gray-700 list-decimal list-inside">
-            <li>Vous créez votre annonce : visuel, texte et moyen de contact.</li>
-            <li>
-              Notre équipe la vérifie. Rien n'est diffusé sans validation — c'est
-              le statut personnel de nos membres.
-            </li>
-            <li>Une fois validée, vous payez et la campagne est proposée aux diffuseurs.</li>
-            <li>
-              Chaque diffuseur publie pendant <strong>3 jours</strong>. Seules les vues du
-              premier jour vous sont facturées ; les rediffusions des jours 2 et 3
-              sont offertes.
-            </li>
-            <li>
-              Vous suivez en direct les vues et les clics générés, diffuseur par
-              diffuseur.
-            </li>
-          </ol>
+        <h2 className="font-semibold text-gray-900 mt-6 mb-3">Comment ça marche</h2>
+        <div className="space-y-3">
+          <AdsStep index={1} title="Vous créez votre annonce">
+            Un visuel, un texte, et le moyen de contact par lequel vos prospects
+            vous joindront.
+          </AdsStep>
+          <AdsStep index={2} title="Notre équipe la vérifie">
+            Rien n'est diffusé sans validation : c'est le statut personnel de nos
+            membres.
+          </AdsStep>
+          <AdsStep index={3} title="Vous payez, la campagne part">
+            Elle est proposée aux diffuseurs dont l'audience correspond à votre
+            ciblage.
+          </AdsStep>
+          <AdsStep index={4} title="Chaque diffuseur publie 3 jours">
+            Seules les vues du premier jour vous sont facturées. Les rediffusions des
+            jours 2 et 3 sont offertes.
+          </AdsStep>
+          <AdsStep index={5} title="Vous suivez les résultats en direct">
+            Vues et clics générés, diffuseur par diffuseur.
+          </AdsStep>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 mt-4 text-sm text-blue-900">
-          <p className="flex items-start gap-2">
-            <FaShieldAlt className="mt-0.5 shrink-0" />
-            <span>
-              Chaque annonce est relue avant diffusion. Comptez un court délai de
-              validation entre l'envoi et le paiement.
-            </span>
+        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-3 mt-4">
+          <img src={illustrationReview} alt="" aria-hidden="true" className="w-20 shrink-0" />
+          <p className="text-sm text-blue-900">
+            <span className="font-medium">Chaque annonce est relue avant diffusion.</span>{' '}
+            Comptez un court délai de validation entre l'envoi et le paiement.
           </p>
         </div>
 

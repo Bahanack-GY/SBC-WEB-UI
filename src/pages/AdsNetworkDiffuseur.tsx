@@ -9,6 +9,9 @@ import {
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton } from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';
+import illustrationShare from '../assets/icon/ads-share.jpg';
+import illustrationVerify from '../assets/icon/ads-verify.jpg';
+import illustrationEmpty from '../assets/icon/ads-empty.jpg';
 import { sbcApiService } from '../services/SBCApiService';
 
 interface DaySchedule {
@@ -286,10 +289,12 @@ function AdsNetworkDiffuseur() {
             )}
 
             {offers.length === 0 && active.length === 0 && (
-              <div className="text-center text-gray-500 py-10">
-                <p>Aucune campagne pour le moment.</p>
-                <p className="text-xs mt-2">
+              <div className="text-center text-gray-500 py-8">
+                <img src={illustrationEmpty} alt="" aria-hidden="true" className="w-44 mx-auto" />
+                <p className="font-medium text-gray-700">Aucune campagne pour le moment.</p>
+                <p className="text-xs mt-2 max-w-xs mx-auto">
                   Les campagnes vous sont proposées selon votre profil et votre audience.
+                  Vous serez prévenu par email.
                 </p>
               </div>
             )}
@@ -429,6 +434,8 @@ function ShareSheet({
           <h2 className="font-bold text-lg text-gray-900">Publier sur votre statut</h2>
           <button onClick={onClose} className="text-gray-400"><FaTimes /></button>
         </div>
+
+        <img src={illustrationShare} alt="" aria-hidden="true" className="w-40 mx-auto -mt-2 mb-1" />
 
         <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 mb-4">
           <p className="flex items-start gap-2 font-medium">
@@ -610,7 +617,8 @@ function VerifySheet({
             </p>
           </div>
         ) : (
-          <div className="py-10 text-center text-gray-500">
+          <div className="py-6 text-center text-gray-500">
+            <img src={illustrationVerify} alt="" aria-hidden="true" className="w-40 mx-auto mb-2" />
             <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={24} />
             <p className="text-sm mt-3">
               {state === 'reading' ? 'Lecture de vos statuts…' : 'Préparation de la connexion…'}
