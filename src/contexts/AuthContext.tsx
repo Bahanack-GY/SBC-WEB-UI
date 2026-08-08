@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { sbcApiService } from '../services/SBCApiService';
+import { clearAdsRolesCache } from '../hooks/useAdsRoles';
 import { handleApiResponse, setToken, removeToken, getToken } from '../utils/apiHelpers';
 import { invalidateApiCache } from '../hooks/useApiCache';
 import type { ReactNode } from 'react';
@@ -191,6 +192,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear profile completion flags so new users get prompted
       localStorage.removeItem('profileCompletionDone');
       localStorage.removeItem('profileCompletionSkipped');
+
+      // Ads Network role cache. Left behind, the next account to log in on this
+      // device is routed by the previous account's roles.
+      clearAdsRolesCache();
 
       // Drop the legacy permanent splash-viewed flag if a previous build wrote
       // it: we only want logout to redirect to /connexion *briefly*, never to

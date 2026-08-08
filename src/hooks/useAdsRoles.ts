@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { sbcApiService } from '../services/SBCApiService';
+import { useAuth } from '../contexts/AuthContext';
 
 export interface AdsRoles {
     isDiffuseur: boolean;
@@ -10,15 +11,27 @@ export interface AdsRoles {
  * Remembered from the last visit, so a returning user routes to their dashboard
  * on the first frame instead of watching onboarding for a second.
  *
+ * Keyed per user. An unkeyed cache survives logout and hands the next account
+ * the previous one's roles — on a shared device that means being shown a
+ * dashboard for a role you do not hold.
+ *
  * Only two booleans, and only ever used to pick a screen — never to grant
  * anything. Every endpoint behind these screens re-checks server-side, so a
  * stale or hand-edited value costs a wrong redirect and nothing more.
  */
-const CACHE_KEY = 'sbc.adsRoles';
+const PREFIX = 'sbc.adsRoles';
 
-const readCache = (): AdsRoles | null => {
+const keyFor = (userId: string | null) => `${PREFIX}.${userId ?? 'anonymous'}`;
+
+const currentUserId = (user: unknown): string | null =>
+    (user as { id?: string; _id?: string })?.id ||
+    (user as { id?: string; _id?: string })?._id ||
+    (typeof window !== 'undefined' ? localStorage.getItem('userId') : null) ||
+    null;
+
+const readCache = (userId: string | null): AdsRoles | null => {
     try {
-        const raw = localStorage.getItem(CACHE_KEY);
+        const raw = localStorage.getItem(keyFor(userId));
         if (!raw) return null;
         const parsed = JSON.parse(raw);
         if (typeof parsed?.isDiffuseur !== 'boolean' || typeof parsed?.isAnnonceur !== 'boolean') return null;
@@ -28,17 +41,20 @@ const readCache = (): AdsRoles | null => {
     }
 };
 
-const writeCache = (roles: AdsRoles) => {
+const writeCache = (userId: string | null, roles: AdsRoles) => {
     try {
-        localStorage.setItem(CACHE_KEY, JSON.stringify(roles));
+        localStorage.setItem(keyFor(userId), JSON.stringify(roles));
     } catch {
         // Private browsing or a full quota. Losing the cache costs a redirect, not correctness.
     }
 };
 
+/** Called on logout. Drops every user's entry, including pre-keying leftovers. */
 export const clearAdsRolesCache = () => {
     try {
-        localStorage.removeItem(CACHE_KEY);
+        Object.keys(localStorage)
+            .filter(k => k === PREFIX || k.startsWith(`${PREFIX}.`))
+            .forEach(k => localStorage.removeItem(k));
     } catch { /* nothing to do */ }
 };
 
@@ -46,15 +62,17 @@ export const clearAdsRolesCache = () => {
  * Which Ads Network roles the current user holds.
  *
  * `isResolved` is the flag every screen must gate on. Rendering onboarding while
- * this is false is what produced the "onboarding flashes for five seconds, then
- * jumps to the dashboard" behaviour — the redirect was correct, it just ran after
- * the wrong screen had already painted.
+ * this is false is what produced the "onboarding flashes, then jumps to the
+ * dashboard" behaviour — the redirect was correct, it just ran after the wrong
+ * screen had already painted.
  */
 export function useAdsRoles() {
-    const cached = readCache();
+    const { user } = useAuth();
+    const userId = currentUserId(user);
+    const cached = readCache(userId);
 
     const { data, isFetching, isError } = useQuery<AdsRoles>({
-        queryKey: ['ads-roles'],
+        queryKey: ['ads-roles', userId ?? 'anonymous'],
         queryFn: async () => {
             // One round trip each, in parallel: a sequential pair doubles the wait
             // on exactly the screen the user is staring at.
@@ -68,12 +86,17 @@ export function useAdsRoles() {
                 isDiffuseur: profileRes.isSuccessByStatusCode && Boolean(profileRes.body?.data),
                 isAnnonceur: Boolean(campaignRes.body?.pagination?.total),
             };
-            writeCache(roles);
+            writeCache(userId, roles);
             return roles;
         },
-        // The cached value renders immediately; the query still refreshes behind it.
+        // Render the remembered value immediately...
         initialData: cached ?? undefined,
+        // ...but treat it as already stale, so a refetch starts on mount and a
+        // role that changed server-side corrects itself. Without this, staleTime
+        // applies to the cached value and the screen can stay wrong indefinitely.
+        initialDataUpdatedAt: 0,
         staleTime: 30_000,
+        refetchOnMount: 'always',
         retry: false,
     });
 
