@@ -16,7 +16,7 @@ export const AdsScreen: React.FC<{
 }> = ({ title, subtitle, accent = 'blue', children }) => (
     <div className="min-h-screen bg-gray-50">
         <div
-            className={`px-4 pt-4 pb-10 text-white bg-gradient-to-br ${accent === 'green'
+            className={`px-4 pt-4 pb-6 text-white bg-gradient-to-br ${accent === 'green'
                 ? 'from-green-600 to-emerald-500'
                 : 'from-[#115CF6] to-blue-500'
                 }`}
@@ -30,7 +30,7 @@ export const AdsScreen: React.FC<{
             </div>
         </div>
 
-        <div className="max-w-2xl mx-auto px-4 -mt-6 pb-28">
+        <div className="max-w-2xl mx-auto px-4 pt-5 pb-28">
             <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
                 {children}
             </motion.div>

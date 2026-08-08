@@ -268,7 +268,7 @@ function Home() {
             </div>
             <div className="quick-actions flex flex-col gap-4">
               <h2 className="text-2xl font-bold">Nos services</h2>
-              <div className="flex justify-between overflow-x-auto gap-4">
+              <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 sm:gap-4">
                 <HomeButtons icon={<FaBook size={30} />} title="Formations" onClick={() => setIsFormationsModalOpen(true)} />
                 <HomeButtons icon={<FaCartShopping size={30} />} title="Marketplace" onClick={() => navigate("/marketplace")} />
                 <HomeButtons icon={<FaBullhorn size={30} />} title="Ads Network" onClick={() => navigate("/ads-network")} />
