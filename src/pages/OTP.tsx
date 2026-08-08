@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
+import { useOtpInput } from '../hooks/useOtpInput';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Security from '../assets/icon/Data-security.png';
 import BackButton from '../components/common/BackButton';
@@ -8,10 +9,9 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import { motion } from 'framer-motion';
 
 function OTP() {
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const { otp, inputs, handleChange, handleKeyDown, handlePaste, code: otpCode } = useOtpInput();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const inputs = useRef<(HTMLInputElement | null)[]>([]);
   const location = useLocation();
   const navigate = useNavigate();
   const { verifyOtp: authVerifyOtp } = useAuth();
@@ -32,31 +32,8 @@ function OTP() {
     }
   }, [actualUserId, currentEmail, withdrawalId, flow, navigate]);
 
-  const handleChange = (i: number, val: string) => {
-    if (!/^[a-zA-Z0-9]?$/.test(val)) return;
-    const newOtp = [...otp];
-    newOtp[i] = val;
-    setOtp(newOtp);
-    if (val && i < 5) {
-      inputs.current[i + 1]?.focus();
-    }
-  };
-  const handleKeyDown = (i: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace' && !otp[i] && i > 0) {
-      inputs.current[i - 1]?.focus();
-    }
-  };
-  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
-    const paste = e.clipboardData.getData('text').slice(0, 6).split('');
-    setOtp(paste.concat(Array(6 - paste.length).fill('')));
-    setTimeout(() => {
-      const next = paste.length < 6 ? paste.length : 5;
-      inputs.current[next]?.focus();
-    }, 10);
-  };
   const handleVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    const otpCode = otp.join('');
 
     if (otpCode.length !== 6) {
       setError('Veuillez entrer le code complet');
@@ -198,10 +175,11 @@ function OTP() {
                 type="text"
                 inputMode="text"
                 maxLength={1}
+                autoComplete="one-time-code"
                 value={val}
                 onChange={e => handleChange(i, e.target.value)}
                 onKeyDown={e => handleKeyDown(i, e)}
-                onPaste={handlePaste}
+                onPaste={e => handlePaste(i, e)}
                 className="w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#115CF6] bg-white font-mono"
                 autoFocus={i === 0}
               />
@@ -220,7 +198,7 @@ function OTP() {
           </div>
           <button
             type="submit"
-            disabled={loading || otp.join('').length !== 6}
+            disabled={loading || otpCode.length !== 6}
             className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-bold shadow hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors text-lg"
           >
             {loading ? 'Vérification...' : 'Vérifier'}
