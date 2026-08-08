@@ -20,7 +20,6 @@ type ActionItem = {
   to: string;
   external?: boolean;
   badge?: string;
-  requiresActivation?: boolean;
 };
 
 const baseActions: ActionItem[] = [
@@ -29,7 +28,7 @@ const baseActions: ActionItem[] = [
   { label: 'Changer le numéro de téléphone', icon: <FiPhone className="text-[#115CF6]" />, to: '/change-phone' },
   { label: 'Modifier mon mot de passe', icon: <FiLock className="text-[#115CF6]" />, to: '/change-password' },
   { label: 'Mon Abonnement', icon: <FiCreditCard className="text-[#115CF6]" />, to: '/changer-abonnement' },
-  { label: 'Solde d\'Activation', icon: <FiGift className="text-amber-500" />, to: '/activation-balance', badge: 'Bientôt', requiresActivation: true },
+  { label: 'Solde d\'Activation', icon: <FiGift className="text-amber-500" />, to: '/activation-balance' },
   { label: 'Mes Contacts', icon: <FiPhone className="text-[#115CF6]" />, to: '/contacts' },
   { label: 'Mes filleuls', icon: <FiUsers className="text-[#115CF6]" />, to: '/filleuls' },
   { label: 'Mon Parrain', icon: <FiUserCheck className="text-[#115CF6]" />, to: '/parrain' },
@@ -67,7 +66,6 @@ function Profile() {
   const [showRelanceModal, setShowRelanceModal] = useState(false);
 
   // Activation balance modal state
-  const [showActivationModal, setShowActivationModal] = useState(false);
 
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
@@ -211,13 +209,6 @@ function Profile() {
           navigate(to);
         } else {
           setShowRelanceModal(true);
-        }
-      } else if (to === '/activation-balance') {
-        // Only admins and testers can access activation balance for now
-        if (user?.role === 'admin' || user?.role === 'tester') {
-          navigate(to);
-        } else {
-          setShowActivationModal(true);
         }
       } else {
         navigate(to);
@@ -577,50 +568,6 @@ function Profile() {
         onClose={() => setShowRelanceModal(false)}
       />
 
-      {/* Activation Balance Modal */}
-      <AnimatePresence>
-        {showActivationModal && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', bounce: 0.2 }}
-            >
-              <h4 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <FiGift className="text-amber-500" size={24} />
-                Solde d'Activation
-              </h4>
-              <p className="text-gray-700 mb-4">
-                La fonctionnalité Solde d'Activation vous permettra d'activer facilement le compte de vos filleuls en utilisant un solde dédié.
-              </p>
-              <div className="bg-gray-50 p-4 rounded-lg mb-4">
-                <p className="text-sm text-gray-600 mb-2">✅ Activez le compte de vos filleuls directement</p>
-                <p className="text-sm text-gray-600 mb-2">✅ Transférez du solde à d'autres utilisateurs</p>
-                <p className="text-sm text-gray-600 mb-2">✅ Historique complet des transactions</p>
-                <p className="text-sm text-gray-600">✅ Gestion simplifiée de vos parrainages</p>
-              </div>
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-6">
-                <p className="text-sm text-amber-700 font-medium text-center">
-                  🚀 Cette fonctionnalité sera bientôt disponible !
-                </p>
-              </div>
-              <button
-                className="w-full bg-gray-200 text-gray-700 rounded-xl py-3 font-bold shadow hover:bg-gray-300 transition-colors"
-                onClick={() => setShowActivationModal(false)}
-              >
-                Fermer
-              </button>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
 
       </div>
     </ProtectedRoute>
