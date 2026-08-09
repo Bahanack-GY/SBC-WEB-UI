@@ -115,11 +115,18 @@ export const AdsDayPips: React.FC<{
     awaitingDay?: number;
 }> = ({ total, currentDay, completed, awaitingDay }) => (
     <div className="flex items-center gap-1.5" role="list" aria-label="Progression des journées">
+        {/*
+            The day being worked on is the one awaiting verification, if there is
+            one. `currentDay` from the service is the next *unposted* day — which
+            becomes day 2 the moment day 1 is posted — so using it directly lit
+            day 2 blue while day 1 was still open and unverified.
+        */}
         {Array.from({ length: total }, (_, i) => {
             const day = i + 1;
+            const inProgress = awaitingDay ?? currentDay;
             const done = day <= completed;
             const awaiting = day === awaitingDay;
-            const active = day === currentDay && !done;
+            const active = day === inProgress && !done && !awaiting;
 
             return (
                 <span
