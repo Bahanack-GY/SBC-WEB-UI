@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { FaBullhorn, FaShareAlt, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { AdsScreen, AdsCardSkeleton, adsItemMotion } from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';
+import illustrationNetwork from '../assets/icon/ads-share.jpg';
 
 /**
  * SBC Ads Network — program entry point for signed-in users.
@@ -43,6 +44,7 @@ function AdsNetwork() {
         <AdsScreen
             title="SBC Ads Network"
             subtitle="Les annonceurs financent des campagnes, les diffuseurs les publient sur WhatsApp et sont payés pour les vues vérifiées."
+            illustration={illustrationNetwork}
         >
             {/* Until the roles are known, the cards would have to guess between
                 "Devenir" and "Mon espace" — and guessing wrong is the flash. */}

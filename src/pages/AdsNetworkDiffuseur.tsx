@@ -78,6 +78,7 @@ function AdsNetworkDiffuseur() {
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [sharing, setSharing] = useState<Participation | null>(null);
   const [verifying, setVerifying] = useState<Participation | null>(null);
+  const [offerDetail, setOfferDetail] = useState<Participation | null>(null);
 
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['ads-diffuseur-profile'],
@@ -218,7 +219,15 @@ function AdsNetworkDiffuseur() {
                 <div className="space-y-3">
                   {offers.map((p, i) => (
                     <motion.div key={p._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
-                      <div className="flex gap-3">
+                      {/* The card is the summary; the sheet is where the decision
+                          is made — accepting commits 3 days of posting, nobody
+                          should do that off a two-line blurb. */}
+                      <div
+                        className="flex gap-3 cursor-pointer"
+                        onClick={() => setOfferDetail(p)}
+                        role="button"
+                        aria-label="Voir les détails de la campagne"
+                      >
                         {p.campaign && (
                           <img
                             src={sbcApiService.generateSettingsFileUrl(p.campaign.mediaFileId)}
@@ -226,7 +235,7 @@ function AdsNetworkDiffuseur() {
                             className="w-20 h-20 object-cover rounded-xl bg-gray-100 shrink-0"
                           />
                         )}
-                        <div className="min-w-0">
+                        <div className="min-w-0 flex-1">
                           <p className="font-medium text-gray-900">{p.campaign?.title ?? 'Campagne'}</p>
                           {p.campaign?.description && (
                             <p className="text-sm text-gray-600 line-clamp-2">{p.campaign.description}</p>
@@ -234,6 +243,7 @@ function AdsNetworkDiffuseur() {
                           <p className="text-xs text-gray-500 mt-1">
                             3 jours de publication · environ {p.expectedViews ?? profile?.effectiveAverageViews ?? 0} vues
                           </p>
+                          <p className="text-xs text-[#115CF6] font-medium mt-1">Voir les détails →</p>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-3">
@@ -379,6 +389,95 @@ function AdsNetworkDiffuseur() {
       </div>
 
       <AnimatePresence>
+        {offerDetail && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setOfferDetail(null)}
+          >
+            <motion.div
+              className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-auto"
+              initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mt-3 sm:hidden" />
+              {offerDetail.campaign && (
+                offerDetail.campaign.mediaType === 'video' ? (
+                  <video
+                    src={sbcApiService.generateSettingsFileUrl(offerDetail.campaign.mediaFileId)}
+                    controls playsInline
+                    className="w-full max-h-72 object-contain bg-black sm:rounded-t-3xl mt-2"
+                  />
+                ) : (
+                  <img
+                    src={sbcApiService.generateSettingsFileUrl(offerDetail.campaign.mediaFileId)}
+                    alt={offerDetail.campaign.title}
+                    className="w-full max-h-72 object-contain bg-gray-50 sm:rounded-t-3xl mt-2"
+                  />
+                )
+              )}
+              <div className="p-5">
+                <h2 className="font-bold text-lg text-gray-900">{offerDetail.campaign?.title ?? 'Campagne'}</h2>
+                {offerDetail.campaign?.description && (
+                  <p className="text-sm text-gray-600 mt-2 whitespace-pre-line">{offerDetail.campaign.description}</p>
+                )}
+
+                <div className="grid grid-cols-3 gap-2 mt-4">
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold text-gray-900">3</p>
+                    <p className="text-[11px] text-gray-500">jours de publication</p>
+                  </div>
+                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold text-gray-900">
+                      ~{offerDetail.expectedViews ?? profile?.effectiveAverageViews ?? 0}
+                    </p>
+                    <p className="text-[11px] text-gray-500">vues estimées</p>
+                  </div>
+                  <div className="bg-green-50 border border-green-100 rounded-xl p-3 text-center">
+                    <p className="text-lg font-bold text-green-700">
+                      {offerDetail.ratePerView
+                        ? `~${formatFCFA((offerDetail.expectedViews ?? profile?.effectiveAverageViews ?? 0) * offerDetail.ratePerView)}`
+                        : '—'}
+                    </p>
+                    <p className="text-[11px] text-gray-500">gain estimé jour 1</p>
+                  </div>
+                </div>
+
+                {offerDetail.campaign?.suggestedCaption && (
+                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 mt-3">
+                    <p className="text-[11px] text-gray-500 mb-1">Légende suggérée</p>
+                    <p className="text-sm text-gray-700 whitespace-pre-line">{offerDetail.campaign.suggestedCaption}</p>
+                  </div>
+                )}
+
+                <p className="text-xs text-gray-500 mt-3">
+                  En acceptant, vous vous engagez à publier le statut 3 jours de suite,
+                  à raison d'une publication par jour, et à vérifier chaque publication.
+                </p>
+
+                <div className="flex gap-2 mt-4">
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={async () => { await handleAccept(offerDetail); setOfferDetail(null); }}
+                    disabled={acting === offerDetail._id}
+                    className="flex-1 bg-green-600 text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-400"
+                  >
+                    {acting === offerDetail._id ? 'Traitement…' : 'Accepter la campagne'}
+                  </motion.button>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={async () => { await handleDecline(offerDetail); setOfferDetail(null); }}
+                    disabled={acting === offerDetail._id}
+                    className="px-4 bg-gray-100 text-gray-700 rounded-xl py-3 text-sm"
+                  >
+                    Refuser
+                  </motion.button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
         {sharing && (
           <ShareSheet
             participation={sharing}
