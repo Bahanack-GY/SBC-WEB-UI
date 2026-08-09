@@ -3,6 +3,26 @@ import { motion } from 'framer-motion';
 import BackButton from '../common/BackButton';
 
 /**
+ * Motion shared across the Ads Network screens, matching the profile page: the
+ * header springs down, then items slide in from the right one after another.
+ *
+ * Kept in one place so a screen added later moves like the rest instead of
+ * inventing its own timing.
+ */
+export const adsHeaderMotion = {
+    initial: { opacity: 0, y: -30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.5, type: 'spring' as const },
+};
+
+/** Staggered by position, so a list arrives in order rather than all at once. */
+export const adsItemMotion = (index: number, base = 0.15) => ({
+    initial: { opacity: 0, x: 30 },
+    animate: { opacity: 1, x: 0 },
+    transition: { delay: base + index * 0.07, duration: 0.4, type: 'spring' as const },
+});
+
+/**
  * Shared chrome for the Ads Network screens.
  *
  * The header keeps its place while content loads, so arriving content settles in
@@ -15,7 +35,8 @@ export const AdsScreen: React.FC<{
     children: React.ReactNode;
 }> = ({ title, subtitle, accent = 'blue', children }) => (
     <div className="min-h-screen bg-gray-50">
-        <div
+        <motion.div
+            {...adsHeaderMotion}
             className={`px-4 pt-4 pb-6 text-white bg-gradient-to-br ${accent === 'green'
                 ? 'from-green-600 to-emerald-500'
                 : 'from-[#115CF6] to-blue-500'
@@ -28,10 +49,10 @@ export const AdsScreen: React.FC<{
                 <h1 className="text-2xl font-bold mt-2">{title}</h1>
                 {subtitle && <p className="text-white/80 text-sm mt-1">{subtitle}</p>}
             </div>
-        </div>
+        </motion.div>
 
         <div className="max-w-2xl mx-auto px-4 pt-5 pb-28">
-            <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }}>
+            <motion.div {...adsItemMotion(0)}>
                 {children}
             </motion.div>
         </div>
@@ -85,7 +106,8 @@ export const AdsStatCard: React.FC<{
     value: React.ReactNode;
     hint?: string;
     tone?: 'default' | 'green' | 'amber';
-}> = ({ label, value, hint, tone = 'default' }) => {
+    index?: number;
+}> = ({ label, value, hint, tone = 'default', index = 0 }) => {
     const tones = {
         default: 'bg-white border-gray-200 text-gray-900',
         green: 'bg-green-50 border-green-200 text-green-900',
@@ -93,11 +115,14 @@ export const AdsStatCard: React.FC<{
     } as const;
 
     return (
-        <div className={`border rounded-2xl p-3 text-center shadow-sm ${tones[tone]}`}>
+        <motion.div
+            {...adsItemMotion(index)}
+            className={`border rounded-2xl p-3 text-center shadow-sm ${tones[tone]}`}
+        >
             <p className="text-xl font-bold leading-tight">{value}</p>
             <p className="text-[11px] opacity-70 leading-tight mt-0.5">{label}</p>
             {hint && <p className="text-[10px] opacity-60 mt-0.5">{hint}</p>}
-        </div>
+        </motion.div>
     );
 };
 

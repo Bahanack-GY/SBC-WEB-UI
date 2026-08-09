@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { FaBullhorn, FaShareAlt, FaArrowRight, FaCheck } from 'react-icons/fa';
-import { AdsScreen, AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { AdsScreen, AdsCardSkeleton, adsItemMotion } from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 
 /**
@@ -50,10 +50,11 @@ function AdsNetwork() {
                 <AdsCardSkeleton rows={2} />
             ) : (
                 <div className="space-y-4">
-                    {cards.map(card => (
+                    {cards.map((card, i) => (
                         <motion.button
                             key={card.title}
                             onClick={() => navigate(card.to)}
+                            {...adsItemMotion(i)}
                             whileTap={{ scale: 0.98 }}
                             className={`w-full text-left text-white rounded-2xl p-5 shadow-lg ${card.className}`}
                         >

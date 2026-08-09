@@ -7,7 +7,9 @@ import {
   FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard,
 } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
-import { AdsCardSkeleton, AdsStatCard, AdsDayPips, relativeDate } from '../components/ads/AdsScreen';
+import {
+  AdsCardSkeleton, AdsStatCard, AdsDayPips, relativeDate, adsItemMotion, adsHeaderMotion,
+} from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import illustrationShare from '../assets/icon/ads-share.jpg';
 import illustrationVerify from '../assets/icon/ads-verify.jpg';
@@ -160,7 +162,7 @@ function AdsNetworkDiffuseur() {
         )}
 
         {/* Earnings */}
-        <div className="bg-[#115CF6] text-white rounded-2xl p-5 mt-4 shadow-lg">
+        <motion.div {...adsHeaderMotion} className="bg-[#115CF6] text-white rounded-2xl p-5 mt-4 shadow-lg">
           <div className="flex items-center gap-2 text-blue-100 text-sm">
             <FaWallet /> Solde publicitaire
           </div>
@@ -186,18 +188,19 @@ function AdsNetworkDiffuseur() {
               )}
             </div>
           )}
-        </div>
+        </motion.div>
 
         {profile && (
           <div className="grid grid-cols-3 gap-2 mt-3">
-            <AdsStatCard label="Campagnes terminées" value={profile.campaignsCompleted ?? 0} />
+            <AdsStatCard index={0} label="Campagnes terminées" value={profile.campaignsCompleted ?? 0} />
             <AdsStatCard
+              index={1}
               label="Vues par publication"
               value={profile.effectiveAverageViews ?? 0}
               hint={profile.hasCompletedTestCampaign ? 'mesurée' : 'déclarée'}
               tone={profile.hasCompletedTestCampaign ? 'green' : 'amber'}
             />
-            <AdsStatCard label="Score de confiance" value={profile.trustScore ?? 0} />
+            <AdsStatCard index={2} label="Score de confiance" value={profile.trustScore ?? 0} />
           </div>
         )}
 
@@ -213,8 +216,8 @@ function AdsNetworkDiffuseur() {
                   Proposées à plusieurs diffuseurs. Les premiers à accepter les obtiennent.
                 </p>
                 <div className="space-y-3">
-                  {offers.map((p) => (
-                    <div key={p._id} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+                  {offers.map((p, i) => (
+                    <motion.div key={p._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
                       <div className="flex gap-3">
                         {p.campaign && (
                           <img
@@ -249,7 +252,7 @@ function AdsNetworkDiffuseur() {
                           Refuser
                         </button>
                       </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </section>
@@ -260,7 +263,7 @@ function AdsNetworkDiffuseur() {
               <section className="mt-6">
                 <h2 className="font-semibold text-gray-900 mb-3">Campagne en cours</h2>
                 <div className="space-y-3">
-                  {active.map((p) => {
+                  {active.map((p, i) => {
                     const day = p.schedule?.currentDay;
                     // canPostNow is decided by the service: it knows a day with no
                     // window is closed, not unrestricted. Recomputing it here is
@@ -269,7 +272,7 @@ function AdsNetworkDiffuseur() {
                     const windowOpen = p.schedule?.canPostNow === true;
                     const awaiting = p.schedule?.awaitingVerification;
                     return (
-                      <div key={p._id} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <motion.div key={p._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
                         {/* The creative being published — the diffuseur should see
                             what is on their status without opening anything. */}
                         {p.campaign && (
@@ -332,7 +335,7 @@ function AdsNetworkDiffuseur() {
                             {p.totalViews} vues · {formatFCFA(p.totalEarned)}
                           </p>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   })}
                 </div>

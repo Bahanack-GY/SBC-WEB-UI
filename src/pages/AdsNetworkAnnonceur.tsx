@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
-import { AdsCardSkeleton, AdsStatCard } from '../components/ads/AdsScreen';
+import { AdsCardSkeleton, AdsStatCard, adsItemMotion } from '../components/ads/AdsScreen';
 import { sbcApiService } from '../services/SBCApiService';
 
 type CampaignStatus =
@@ -168,15 +168,18 @@ function AdsNetworkAnnonceur() {
         {!!campaigns?.length && (
           <div className="grid grid-cols-3 gap-2 mt-4">
             <AdsStatCard
+              index={0}
               label="Vues livrées"
               value={campaigns.reduce((n, c) => n + c.progress.totalViewsDelivered, 0).toLocaleString('fr-FR')}
             />
             <AdsStatCard
+              index={1}
               label="Clics reçus"
               value={campaigns.reduce((n, c) => n + c.clicksTotal, 0).toLocaleString('fr-FR')}
               tone="green"
             />
             <AdsStatCard
+              index={2}
               label="Campagnes actives"
               value={campaigns.filter(c => c.status === 'active').length}
             />
@@ -197,8 +200,8 @@ function AdsNetworkAnnonceur() {
           </div>
         ) : (
           <div className="space-y-3 mt-5">
-            {campaigns.map((c) => (
-              <div key={c._id} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+            {campaigns.map((c, i) => (
+              <motion.div key={c._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
                 <div className="flex items-start gap-3">
                   <img
                     src={sbcApiService.generateSettingsFileUrl(c.mediaFileId)}
@@ -309,7 +312,7 @@ function AdsNetworkAnnonceur() {
                     </a>
                   )}
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
