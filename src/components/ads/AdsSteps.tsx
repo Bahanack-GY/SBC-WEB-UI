@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { adsItemMotion } from './AdsScreen';
 
 /**
  * Onboarding building blocks.
@@ -32,7 +33,10 @@ export const AdsStep: React.FC<{
     children: React.ReactNode;
     accent?: 'blue' | 'green';
 }> = ({ index, title, children, accent = 'blue' }) => (
-    <div className="flex gap-3 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+    <motion.div
+        {...adsItemMotion(index - 1, 0.2)}
+        className="flex gap-3 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"
+    >
         <span
             className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-sm font-bold text-white ${accent === 'green' ? 'bg-green-600' : 'bg-[#115CF6]'
                 }`}
@@ -43,7 +47,7 @@ export const AdsStep: React.FC<{
             <p className="font-semibold text-gray-900">{title}</p>
             <p className="text-sm text-gray-600 mt-1">{children}</p>
         </div>
-    </div>
+    </motion.div>
 );
 
 /** For the one rule per screen that costs real money when ignored. */

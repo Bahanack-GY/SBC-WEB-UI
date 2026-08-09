@@ -1,8 +1,9 @@
 import { useState } from 'react';
+import { motion } from 'framer-motion';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
-import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { AdsCardSkeleton, adsItemMotion } from '../components/ads/AdsScreen';
 import { AdsHero, AdsStep, AdsWarning } from '../components/ads/AdsSteps';
 import heroDiffuseur from '../assets/icon/ads-diffuseur.jpg';
 import { useAdsRoles } from '../hooks/useAdsRoles';
@@ -95,11 +96,11 @@ function AdsNetworkDiffuseurOnboarding() {
             { value: '3 jours', label: 'de publication' },
             { value: '24 h', label: 'pour le jour 1' },
             { value: '3 jours', label: 'de report' },
-          ].map(stat => (
-            <div key={stat.label} className="bg-green-50 border border-green-200 rounded-xl py-3">
+          ].map((stat, i) => (
+            <motion.div key={stat.label} {...adsItemMotion(i)} className="bg-green-50 border border-green-200 rounded-xl py-3">
               <p className="font-bold text-green-800">{stat.value}</p>
               <p className="text-[11px] text-green-700 leading-tight mt-0.5">{stat.label}</p>
-            </div>
+            </motion.div>
           ))}
         </div>
 
