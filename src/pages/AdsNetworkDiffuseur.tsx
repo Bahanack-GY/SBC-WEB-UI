@@ -81,6 +81,7 @@ function AdsNetworkDiffuseur() {
   const [offerDetail, setOfferDetail] = useState<Participation | null>(null);
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
+  const [transferAmount, setTransferAmount] = useState('');
 
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['ads-diffuseur-profile'],
@@ -141,7 +142,7 @@ function AdsNetworkDiffuseur() {
   }
 
   const handleTransfer = async () => {
-    const amount = balance?.advertisingBalance ?? 0;
+    const amount = Number(transferAmount);
     setTransferring(true);
     setMessage(null);
     try {
@@ -214,7 +215,10 @@ function AdsNetworkDiffuseur() {
           </p>
           <motion.button
             whileTap={{ scale: 0.97 }}
-            onClick={() => setTransferOpen(true)}
+            onClick={() => {
+              setTransferAmount(String(Math.floor(balance?.advertisingBalance ?? 0)));
+              setTransferOpen(true);
+            }}
             className="w-full bg-white text-[#115CF6] rounded-xl py-2.5 text-sm font-semibold mt-3"
           >
             Transférer vers mon solde principal
@@ -507,49 +511,64 @@ function AdsNetworkDiffuseur() {
               onClick={(e) => e.stopPropagation()}
             >
               <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4 sm:hidden" />
-              {(balance?.advertisingBalance ?? 0) >= (balance?.minTransferAmount ?? 0) ? (
-                <>
-                  <h2 className="font-bold text-lg text-gray-900">Transférer vos gains ?</h2>
-                  <p className="text-sm text-gray-600 mt-2">
-                    {formatFCFA(balance?.advertisingBalance ?? 0)} seront transférés de votre solde
-                    publicitaire vers votre solde principal, d'où vous pourrez les retirer.
-                  </p>
-                  <div className="flex gap-2 mt-5">
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      onClick={() => setTransferOpen(false)}
-                      disabled={transferring}
-                      className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
-                    >
-                      Annuler
-                    </motion.button>
-                    <motion.button
-                      whileTap={{ scale: 0.97 }}
-                      onClick={handleTransfer}
-                      disabled={transferring}
-                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-400"
-                    >
-                      {transferring ? 'Transfert…' : 'Confirmer le transfert'}
-                    </motion.button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="font-bold text-lg text-gray-900">Montant insuffisant</h2>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Le transfert est possible à partir de {formatFCFA(balance?.minTransferAmount ?? 0)}.
-                    Il vous manque {formatFCFA(Math.max(0, (balance?.minTransferAmount ?? 0) - (balance?.advertisingBalance ?? 0)))} —
-                    terminez d'autres campagnes pour compléter vos gains.
-                  </p>
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => setTransferOpen(false)}
-                    className="w-full bg-[#115CF6] text-white rounded-xl py-3 text-sm font-medium mt-5"
-                  >
-                    Compris
-                  </motion.button>
-                </>
-              )}
+              {(() => {
+                const available = balance?.advertisingBalance ?? 0;
+                const minimum = balance?.minTransferAmount ?? 0;
+                const amount = Number(transferAmount);
+                const aboveBalance = Number.isFinite(amount) && amount > available;
+                const belowMinimum = Number.isFinite(amount) && amount > 0 && amount < minimum;
+                const valid = Number.isFinite(amount) && amount > 0 && !aboveBalance && !belowMinimum;
+                return (
+                  <>
+                    <h2 className="font-bold text-lg text-gray-900">Transférer vers mon solde principal</h2>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Disponible : <strong>{formatFCFA(available)}</strong> · minimum {formatFCFA(minimum)}
+                    </p>
+
+                    <label className="text-sm font-semibold text-gray-800 mt-4 block">Montant à transférer</label>
+                    <input
+                      type="number"
+                      inputMode="numeric"
+                      min="1"
+                      value={transferAmount}
+                      onChange={(e) => setTransferAmount(e.target.value)}
+                      className={`w-full rounded-xl border px-3 py-3 text-gray-900 text-center font-bold mt-2 ${aboveBalance ? 'border-red-300 bg-red-50' : belowMinimum ? 'border-amber-300 bg-amber-50' : 'border-gray-300'}`}
+                      placeholder="Montant en F"
+                    />
+
+                    {aboveBalance && (
+                      <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2 mt-2">
+                        ⚠️ Montant supérieur à votre solde publicitaire ({formatFCFA(available)} disponibles).
+                      </p>
+                    )}
+                    {!aboveBalance && belowMinimum && (
+                      <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+                        Le minimum est de {formatFCFA(minimum)} — il manque {formatFCFA(Math.max(0, minimum - amount))}.
+                        {available < minimum && ' Terminez d\'autres campagnes pour compléter vos gains.'}
+                      </p>
+                    )}
+
+                    <div className="flex gap-2 mt-5">
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setTransferOpen(false)}
+                        disabled={transferring}
+                        className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                      >
+                        Annuler
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={handleTransfer}
+                        disabled={transferring || !valid}
+                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-300"
+                      >
+                        {transferring ? 'Transfert…' : 'Confirmer le transfert'}
+                      </motion.button>
+                    </div>
+                  </>
+                );
+              })()}
             </motion.div>
           </motion.div>
         )}
