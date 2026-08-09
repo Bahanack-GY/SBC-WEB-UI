@@ -499,18 +499,19 @@ function AdsNetworkDiffuseur() {
 
       <AnimatePresence>
         {transferOpen && (
+          /* Centered, not a bottom sheet: the sheet form sits exactly where the
+             keyboard lands, and typing an amount is the whole point here. */
           <motion.div
-            className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => !transferring && setTransferOpen(false)}
           >
             <motion.div
-              className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5"
-              initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
-              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              className="bg-white w-full max-w-md rounded-3xl p-5"
+              initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 320 }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4 sm:hidden" />
               {(() => {
                 const available = balance?.advertisingBalance ?? 0;
                 const minimum = balance?.minTransferAmount ?? 0;
