@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaExclamationTriangle, FaSpinner, FaShareAlt, FaQrcode, FaCheckCircle,
@@ -82,6 +82,7 @@ function AdsNetworkDiffuseur() {
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
+  const [walletTab, setWalletTab] = useState<'in' | 'out'>('in');
 
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['ads-diffuseur-profile'],
@@ -110,26 +111,44 @@ function AdsNetworkDiffuseur() {
     },
   });
 
-  // Money in (campaign credits) and out (transfers to the main balance).
-  const { data: walletHistory, refetch: refetchHistory } = useQuery({
-    queryKey: ['ads-wallet-history'],
-    queryFn: async () => {
-      // includeActivation: the history endpoint excludes advertising_earnings
-      // from the default (main-wallet) view; without it the credits never show.
-      const [ins, outs] = await Promise.all([
-        sbcApiService.getTransactionHistory({ type: 'advertising_earnings', limit: 10, includeActivation: 'true' }),
-        sbcApiService.getTransactionHistory({ type: 'advertising_transfer_out', limit: 10, includeActivation: 'true' }),
-      ]);
+  // Money in (campaign credits, commissions) and out (transfers), one tab
+  // each, loading 10 at a time as the list is scrolled.
+  const {
+    data: walletPages,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    refetch: refetchHistory,
+  } = useInfiniteQuery({
+    queryKey: ['ads-wallet-history', walletTab],
+    initialPageParam: 1,
+    queryFn: async ({ pageParam }) => {
+      // includeActivation: the endpoint excludes advertising_earnings from the
+      // default (main-wallet) view; without it the credits never show.
+      const res = await sbcApiService.getTransactionHistory({
+        type: walletTab === 'in' ? 'advertising_earnings' : 'advertising_transfer_out',
+        limit: 10,
+        page: pageParam,
+        includeActivation: 'true',
+      });
+      const b = res.body;
       // The endpoint answers { transactions }, not { data }.
-      const parse = (r: any) => {
-        const b = r.body;
-        return (Array.isArray(b?.transactions) ? b.transactions : Array.isArray(b?.data) ? b.data : []) as any[];
-      };
-      return [...parse(ins), ...parse(outs)]
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        .slice(0, 10);
+      return (Array.isArray(b?.transactions) ? b.transactions : []) as any[];
     },
+    getNextPageParam: (last, all) => (last.length === 10 ? all.length + 1 : undefined),
   });
+  const walletHistory = walletPages?.pages.flat() ?? [];
+
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasNextPage && !isFetchingNextPage) fetchNextPage();
+    });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, walletTab]);
 
   const refreshAll = useCallback(() => {
     refetchParts();
@@ -492,20 +511,38 @@ function AdsNetworkDiffuseur() {
             )}
 
             {/* History */}
-            {(walletHistory?.length ?? 0) > 0 && (
-              <section className="mt-6">
-                <h2 className="font-semibold text-gray-900 mb-1">Mouvements du portefeuille</h2>
-                <p className="text-xs text-gray-500 mb-3">
-                  Entrées (gains de campagnes) et sorties (transferts vers le solde principal).
+            <section className="mt-6">
+              <h2 className="font-semibold text-gray-900 mb-2">Mouvements du portefeuille</h2>
+              <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
+                <button
+                  onClick={() => setWalletTab('in')}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${walletTab === 'in' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                >
+                  ↓ Entrées
+                </button>
+                <button
+                  onClick={() => setWalletTab('out')}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${walletTab === 'out' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                >
+                  ↑ Sorties
+                </button>
+              </div>
+
+              {walletHistory.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 text-center">
+                  {walletTab === 'in'
+                    ? 'Aucun gain pour le moment — vos campagnes créditées apparaîtront ici.'
+                    : 'Aucun transfert pour le moment.'}
                 </p>
+              ) : (
                 <div className="space-y-2">
-                  {walletHistory!.map((t: any, i: number) => {
-                    const isIn = t.type === 'advertising_earnings';
+                  {walletHistory.map((t: any, i: number) => {
+                    const isIn = walletTab === 'in';
                     const isCommission = isIn && /commission parrainage/i.test(t.description ?? '');
                     return (
                       <motion.div
                         key={t.transactionId ?? t._id ?? i}
-                        {...adsItemMotion(i, 0.05)}
+                        {...adsItemMotion(Math.min(i, 6), 0.02)}
                         className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#115CF6]'}`}>
@@ -523,9 +560,14 @@ function AdsNetworkDiffuseur() {
                       </motion.div>
                     );
                   })}
+                  {/* Scroll sentinel: crossing it loads the next page. */}
+                  <div ref={loadMoreRef} className="h-1" />
+                  {isFetchingNextPage && (
+                    <div className="flex justify-center py-3"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
+                  )}
                 </div>
-              </section>
-            )}
+              )}
+            </section>
 
             {past.length > 0 && (
               <section className="mt-8">
