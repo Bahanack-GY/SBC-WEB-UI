@@ -101,7 +101,9 @@ function AdsNetworkDiffuseur() {
     queryKey: ['ads-balance'],
     queryFn: async () => {
       const res = await sbcApiService.getAdvertisingBalance();
-      return res.body?.data as { balance: number; minimumTransfer: number } | undefined;
+      // user-service answers { advertisingBalance, minTransferAmount } — reading
+      // { balance, minimumTransfer } showed 0 F over a credited balance.
+      return res.body?.data as { advertisingBalance: number; minTransferAmount: number } | undefined;
     },
   });
 
@@ -167,9 +169,9 @@ function AdsNetworkDiffuseur() {
           <div className="flex items-center gap-2 text-blue-100 text-sm">
             <FaWallet /> Solde publicitaire
           </div>
-          <p className="text-3xl font-bold mt-1">{formatFCFA(balance?.balance ?? 0)}</p>
+          <p className="text-3xl font-bold mt-1">{formatFCFA(balance?.advertisingBalance ?? 0)}</p>
           <p className="text-xs text-blue-100 mt-1">
-            Transfert possible dès {formatFCFA(balance?.minimumTransfer ?? 0)}.
+            Transfert possible dès {formatFCFA(balance?.minTransferAmount ?? 0)}.
           </p>
           {profile && (
             <div className="mt-3 pt-3 border-t border-white/20">
