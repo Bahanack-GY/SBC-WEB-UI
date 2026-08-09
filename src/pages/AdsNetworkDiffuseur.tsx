@@ -114,13 +114,16 @@ function AdsNetworkDiffuseur() {
   const { data: walletHistory, refetch: refetchHistory } = useQuery({
     queryKey: ['ads-wallet-history'],
     queryFn: async () => {
+      // includeActivation: the history endpoint excludes advertising_earnings
+      // from the default (main-wallet) view; without it the credits never show.
       const [ins, outs] = await Promise.all([
-        sbcApiService.getTransactionHistory({ type: 'advertising_earnings', limit: 10 }),
-        sbcApiService.getTransactionHistory({ type: 'advertising_transfer_out', limit: 10 }),
+        sbcApiService.getTransactionHistory({ type: 'advertising_earnings', limit: 10, includeActivation: 'true' }),
+        sbcApiService.getTransactionHistory({ type: 'advertising_transfer_out', limit: 10, includeActivation: 'true' }),
       ]);
+      // The endpoint answers { transactions }, not { data }.
       const parse = (r: any) => {
-        const d = r.body?.data;
-        return (Array.isArray(d) ? d : d?.transactions ?? []) as any[];
+        const b = r.body;
+        return (Array.isArray(b?.transactions) ? b.transactions : Array.isArray(b?.data) ? b.data : []) as any[];
       };
       return [...parse(ins), ...parse(outs)]
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -255,6 +258,54 @@ function AdsNetworkDiffuseur() {
             />
             <AdsStatCard index={2} label="Score de confiance" value={profile.trustScore ?? 0} />
           </div>
+        )}
+
+        {/* Referral commission programme — the 100-campaign carrot, and its
+            state once earned. Backend pays 20% of SBC's margin on every
+            campaign launched by a direct filleul; the money lands in this same
+            solde publicitaire and shows as 💎 in the movements below. */}
+        {profile?.referral && (
+          <motion.div {...adsItemMotion(3)} className={`rounded-2xl p-4 mt-3 border ${profile.referral.tier === 'unlocked' ? 'bg-green-50 border-green-200' : profile.referral.suspended ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 shadow-sm'}`}>
+            {profile.referral.tier === 'unlocked' ? (
+              <>
+                <p className="font-semibold text-green-900">💎 Commission parrainage active</p>
+                <p className="text-sm text-green-800 mt-1">
+                  Vous gagnez {Math.round((profile.referral.commissionRate ?? 0.2) * 100)}% de la marge SBC sur
+                  chaque campagne lancée par vos filleuls directs. Les gains arrivent
+                  automatiquement dans votre solde publicitaire.
+                </p>
+              </>
+            ) : profile.referral.suspended ? (
+              <>
+                <p className="font-semibold text-amber-900">⚠️ Commission parrainage suspendue</p>
+                <p className="text-sm text-amber-800 mt-1">
+                  Terminez une campagne pour la réactiver — inutile de refaire les {profile.referral.campaignsToUnlock}.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-semibold text-gray-900">💎 Programme parrainage</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Atteignez {profile.referral.campaignsToUnlock} campagnes terminées et gagnez{' '}
+                  <strong>{Math.round((profile.referral.commissionRate ?? 0.2) * 100)}% de la marge SBC</strong>{' '}
+                  sur chaque campagne lancée par vos filleuls directs — à vie.
+                </p>
+                <div className="flex items-center gap-2 mt-3">
+                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex-1">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-[#115CF6] to-blue-400"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${Math.min(100, (profile.referral.campaignsCompleted / Math.max(1, profile.referral.campaignsToUnlock)) * 100)}%` }}
+                      transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
+                    />
+                  </div>
+                  <span className="text-[11px] font-semibold text-gray-600 tabular-nums">
+                    {profile.referral.campaignsCompleted}/{profile.referral.campaignsToUnlock}
+                  </span>
+                </div>
+              </>
+            )}
+          </motion.div>
         )}
 
         {partsLoading ? (
@@ -450,6 +501,7 @@ function AdsNetworkDiffuseur() {
                 <div className="space-y-2">
                   {walletHistory!.map((t: any, i: number) => {
                     const isIn = t.type === 'advertising_earnings';
+                    const isCommission = isIn && /commission parrainage/i.test(t.description ?? '');
                     return (
                       <motion.div
                         key={t.transactionId ?? t._id ?? i}
@@ -460,7 +512,9 @@ function AdsNetworkDiffuseur() {
                           {isIn ? '↓' : '↑'}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 truncate">{isIn ? 'Gains de campagne' : 'Transfert vers solde principal'}</p>
+                          <p className="text-gray-900 truncate">
+                            {isCommission ? '💎 Commission parrainage' : isIn ? 'Gains de campagne' : 'Transfert vers solde principal'}
+                          </p>
                           <p className="text-xs text-gray-500">{relativeDate(t.createdAt)}</p>
                         </div>
                         <p className={`font-semibold shrink-0 ${isIn ? 'text-green-700' : 'text-gray-900'}`}>
