@@ -68,38 +68,33 @@ function AdsNetworkAnnonceurOnboarding() {
 
         <h1 className="text-2xl font-bold text-gray-900 text-center">Devenir annonceur</h1>
         <p className="text-gray-600 mt-2 text-center">
-          Votre annonce est publiée sur le statut WhatsApp de membres SBC réels,
-          choisis selon le public que vous visez.
+          Votre annonce sur le statut WhatsApp de membres SBC, ciblés selon votre public.
         </p>
 
         <h2 className="font-semibold text-gray-900 mt-6 mb-3">Comment ça marche</h2>
         <div className="space-y-3">
           <AdsStep index={1} title="Vous créez votre annonce">
-            Un visuel, un texte, et le moyen de contact par lequel vos prospects
-            vous joindront.
+Visuel, texte et moyen de contact.
           </AdsStep>
           <AdsStep index={2} title="Notre équipe la vérifie">
-            Rien n'est diffusé sans validation : c'est le statut personnel de nos
-            membres.
+Rien n'est diffusé sans validation.
           </AdsStep>
           <AdsStep index={3} title="Vous payez, la campagne part">
-            Elle est proposée aux diffuseurs dont l'audience correspond à votre
-            ciblage.
+Elle part aux diffuseurs correspondant à votre ciblage.
           </AdsStep>
           <AdsStep index={4} title="Chaque diffuseur publie 3 jours">
-            Seules les vues du premier jour vous sont facturées. Les rediffusions des
-            jours 2 et 3 sont offertes.
+Seul le jour 1 est facturé. Les jours 2 et 3 sont offerts.
           </AdsStep>
           <AdsStep index={5} title="Vous suivez les résultats en direct">
-            Vues et clics générés, diffuseur par diffuseur.
+Vues et clics, diffuseur par diffuseur.
           </AdsStep>
         </div>
 
         <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-3 mt-4">
           <img src={illustrationReview} alt="" aria-hidden="true" className="w-20 shrink-0" />
           <p className="text-sm text-blue-900">
-            <span className="font-medium">Chaque annonce est relue avant diffusion.</span>{' '}
-            Comptez un court délai de validation entre l'envoi et le paiement.
+<span className="font-medium">Chaque annonce est relue avant diffusion.</span>{' '}
+            Comptez un court délai avant de pouvoir payer.
           </p>
         </div>
 
