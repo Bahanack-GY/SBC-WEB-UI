@@ -2,9 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer } from 'react-icons/fa';
+import {
+  FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer,
+  FaBullhorn, FaGift, FaUsers, FaTrophy,
+} from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
-import { AdsCardSkeleton, AdsStatCard, adsItemMotion } from '../components/ads/AdsScreen';
+import { AdsCardSkeleton, AdsStatCard, adsItemMotion, adsHeaderMotion } from '../components/ads/AdsScreen';
+import illustrationEmpty from '../assets/icon/ads-empty.jpg';
 import { sbcApiService } from '../services/SBCApiService';
 
 type CampaignStatus =
@@ -151,12 +155,13 @@ function AdsNetworkAnnonceur() {
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mt-2">
           <h1 className="text-2xl font-bold text-gray-900">Espace annonceur</h1>
-          <button
+          <motion.button
+            whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/ads-network/annonceur/nouvelle-campagne')}
-            className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-4 py-2 text-sm font-medium"
+            className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-4 py-2 text-sm font-medium shadow-md shadow-blue-200"
           >
             <FaPlus size={12} /> Nouvelle
-          </button>
+          </motion.button>
         </div>
 
         {error && (
@@ -166,73 +171,120 @@ function AdsNetworkAnnonceur() {
         {/* Totals across every campaign. An annonceur's first question is what
             their money bought, and it used to require adding up the cards. */}
         {!!campaigns?.length && (
-          <div className="grid grid-cols-3 gap-2 mt-4">
-            <AdsStatCard
-              index={0}
-              label="Vues livrées"
-              value={campaigns.reduce((n, c) => n + c.progress.totalViewsDelivered, 0).toLocaleString('fr-FR')}
-            />
-            <AdsStatCard
-              index={1}
-              label="Clics reçus"
-              value={campaigns.reduce((n, c) => n + c.clicksTotal, 0).toLocaleString('fr-FR')}
-              tone="green"
-            />
-            <AdsStatCard
-              index={2}
-              label="Campagnes actives"
-              value={campaigns.filter(c => c.status === 'active').length}
-            />
-          </div>
+          <>
+            <motion.div
+              {...adsHeaderMotion}
+              className="relative overflow-hidden bg-gradient-to-br from-[#115CF6] to-blue-500 text-white rounded-2xl p-5 mt-4 shadow-lg"
+            >
+              <FaBullhorn className="absolute -right-4 -bottom-4 text-white/10" size={110} />
+              <div className="flex items-center gap-2 text-blue-100 text-sm">
+                <FaBullhorn /> Investissement publicitaire
+              </div>
+              <p className="text-3xl font-bold mt-1">
+                {formatFCFA(campaigns.reduce((n, c) => n + c.amountPaid, 0))}
+              </p>
+              <p className="text-xs text-blue-100 mt-1">
+                {campaigns.filter(c => c.status === 'active').length} campagne(s) en diffusion ·{' '}
+                {campaigns.length} au total
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-3 gap-2 mt-3">
+              <AdsStatCard
+                index={0}
+                label="Vues livrées"
+                value={campaigns.reduce((n, c) => n + c.progress.totalViewsDelivered, 0).toLocaleString('fr-FR')}
+              />
+              <AdsStatCard
+                index={1}
+                label="Clics reçus"
+                value={campaigns.reduce((n, c) => n + c.clicksTotal, 0).toLocaleString('fr-FR')}
+                tone="green"
+              />
+              <AdsStatCard
+                index={2}
+                label="Campagnes actives"
+                value={campaigns.filter(c => c.status === 'active').length}
+              />
+            </div>
+          </>
         )}
 
         {isLoading ? (
           <div className="mt-5"><AdsCardSkeleton rows={2} /></div>
         ) : !campaigns?.length ? (
-          <div className="text-center text-gray-500 py-12">
-            <p>Vous n'avez pas encore d'annonce.</p>
-            <button
+          <motion.div {...adsItemMotion(0)} className="text-center py-10">
+            <img
+              src={illustrationEmpty}
+              alt=""
+              className="w-40 h-40 object-cover rounded-3xl mx-auto shadow-md"
+            />
+            <p className="text-gray-700 font-medium mt-4">Vous n'avez pas encore d'annonce.</p>
+            <p className="text-sm text-gray-500 mt-1">
+              Des centaines de statuts WhatsApp attendent votre produit.
+            </p>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/ads-network/annonceur/onboarding')}
-              className="text-[#115CF6] font-medium mt-2"
+              className="bg-[#115CF6] text-white rounded-xl px-6 py-3 text-sm font-medium mt-4 shadow-md shadow-blue-200"
             >
               Créer ma première annonce
-            </button>
-          </div>
+            </motion.button>
+          </motion.div>
         ) : (
           <div className="space-y-3 mt-5">
             {campaigns.map((c, i) => (
-              <motion.div key={c._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+              <motion.div key={c._id} {...adsItemMotion(i)} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
                 <div className="flex items-start gap-3">
                   <img
                     src={sbcApiService.generateSettingsFileUrl(c.mediaFileId)}
                     alt={c.title}
-                    className="w-16 h-16 object-cover rounded-xl bg-gray-100 shrink-0"
+                    className="w-20 h-20 object-cover rounded-xl bg-gray-100 shrink-0 ring-1 ring-gray-100"
                   />
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
-                      <p className="font-medium text-gray-900">{c.title}</p>
-                      <span className={`shrink-0 px-2 py-0.5 rounded-full text-xs ${STATUS_STYLES[c.status]}`}>
+                      <p className="font-semibold text-gray-900">{c.title}</p>
+                      <span className={`shrink-0 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_STYLES[c.status]}`}>
+                        {c.status === 'active' && (
+                          <span className="relative flex h-1.5 w-1.5">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-600" />
+                          </span>
+                        )}
                         {STATUS_LABELS[c.status]}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{formatFCFA(c.amountPaid)}</p>
+                    <p className="text-sm font-bold text-[#115CF6] mt-0.5">{formatFCFA(c.amountPaid)}</p>
 
                     {(c.status === 'active' || c.status === 'completed' || c.status === 'banked') && (
                       <>
-                        <div className="h-2 bg-gray-100 rounded-full mt-2 overflow-hidden">
-                          <div
-                            className="h-full bg-green-500"
-                            style={{ width: `${c.progress.percentComplete}%` }}
-                          />
+                        <div className="flex items-center gap-2 mt-2.5">
+                          <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex-1">
+                            <motion.div
+                              className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-500"
+                              initial={{ width: 0 }}
+                              animate={{ width: `${Math.max(c.progress.percentComplete, c.progress.percentComplete > 0 ? 4 : 0)}%` }}
+                              transition={{ delay: 0.3 + i * 0.07, duration: 0.8, ease: 'easeOut' }}
+                            />
+                          </div>
+                          <span className="text-[11px] font-semibold text-gray-600 tabular-nums">
+                            {Math.round(c.progress.percentComplete)}%
+                          </span>
                         </div>
-                        <p className="text-xs text-gray-600 mt-1">
-                          {c.progress.uniqueViewsDelivered.toLocaleString('fr-FR')} /{' '}
-                          {c.progress.targetUniqueViews.toLocaleString('fr-FR')} vues uniques
-                          {' · '}
-                          {c.progress.repeatViewsDelivered.toLocaleString('fr-FR')} vues offertes
-                          {' · '}
-                          {c.clicksTotal} clic(s)
-                        </p>
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
+                            <FaEye size={10} className="text-[#115CF6]" />
+                            {c.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}/{c.progress.targetUniqueViews.toLocaleString('fr-FR')} vues
+                          </span>
+                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
+                            <FaGift size={10} className="text-purple-500" />
+                            {c.progress.repeatViewsDelivered.toLocaleString('fr-FR')} offertes
+                          </span>
+                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
+                            <FaMousePointer size={10} className="text-green-600" />
+                            {c.clicksTotal} clic{c.clicksTotal > 1 ? 's' : ''}
+                          </span>
+                        </div>
                       </>
                     )}
                   </div>
@@ -278,28 +330,31 @@ function AdsNetworkAnnonceur() {
                   )}
                   {c.status === 'active' && (
                     <>
-                      <button
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => setDetail(c)}
-                        className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium"
+                        className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
                       >
-                        Voir les diffuseurs
-                      </button>
-                      <button
+                        <FaUsers size={13} /> Voir les diffuseurs
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => handleBank(c)}
                         disabled={acting === c._id}
-                        className="px-4 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm"
+                        className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
                       >
                         Clôturer
-                      </button>
+                      </motion.button>
                     </>
                   )}
                   {(c.status === 'completed' || c.status === 'banked') && (
-                    <button
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
                       onClick={() => setDetail(c)}
-                      className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium"
+                      className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
                     >
-                      Voir les résultats
-                    </button>
+                      <FaTrophy size={13} /> Voir les résultats
+                    </motion.button>
                   )}
                   {c.landingPageUrl && (
                     <a
@@ -329,53 +384,95 @@ function AdsNetworkAnnonceur() {
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl p-5 max-h-[92vh] overflow-auto"
-              initial={{ y: 40 }} animate={{ y: 0 }} exit={{ y: 40 }}
+              className="bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-auto"
+              initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg text-gray-900">{detail.title}</h2>
-                <button onClick={() => setDetail(null)} className="text-gray-400"><FaTimes /></button>
+              {/* Sheet header: the creative anchors which campaign this is. */}
+              <div className="sticky top-0 bg-white/95 backdrop-blur rounded-t-3xl px-5 pt-3 pb-3 border-b border-gray-100">
+                <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-3 sm:hidden" />
+                <div className="flex items-center gap-3">
+                  <img
+                    src={sbcApiService.generateSettingsFileUrl(detail.mediaFileId)}
+                    alt=""
+                    className="w-10 h-10 object-cover rounded-lg ring-1 ring-gray-100"
+                  />
+                  <h2 className="font-bold text-lg text-gray-900 flex-1 truncate">{detail.title}</h2>
+                  <button
+                    onClick={() => setDetail(null)}
+                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500"
+                  >
+                    <FaTimes size={13} />
+                  </button>
+                </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-500 flex items-center gap-1"><FaEye size={11} /> Vues livrées</p>
-                  <p className="text-lg font-semibold text-gray-900">
-                    {detail.progress.totalViewsDelivered.toLocaleString('fr-FR')}
-                  </p>
-                </div>
-                <div className="bg-gray-50 rounded-xl p-3">
-                  <p className="text-xs text-gray-500 flex items-center gap-1"><FaMousePointer size={11} /> Clics</p>
-                  <p className="text-lg font-semibold text-gray-900">{detail.clicksTotal}</p>
-                </div>
-              </div>
-
-              <h3 className="font-medium text-gray-900 mb-2">Par diffuseur</h3>
-              <p className="text-xs text-gray-500 mb-3">
-                Le taux de clic distingue ceux qui apportent des contacts de ceux qui
-                apportent seulement de la portée.
-              </p>
-
-              {perfLoading ? (
-                <div className="flex justify-center py-8"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
-              ) : !performance?.diffuseurs?.length ? (
-                <p className="text-sm text-gray-500">Aucun diffuseur n'a encore publié cette campagne.</p>
-              ) : (
-                <div className="space-y-2">
-                  {performance.diffuseurs.map((d) => (
-                    <div key={d.diffuseurUserId} className="flex items-center justify-between border border-gray-100 rounded-xl p-3 text-sm">
-                      <div>
-                        <p className="text-gray-900">{d.totalViews.toLocaleString('fr-FR')} vues</p>
-                        <p className="text-xs text-gray-500">{d.status}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-gray-900">{d.clicks} clic(s)</p>
-                        <p className="text-xs text-gray-500">{(d.clickThroughRate * 100).toFixed(2)}%</p>
-                      </div>
+              <div className="p-5">
+                <div className="grid grid-cols-2 gap-3 mb-5">
+                  <motion.div {...adsItemMotion(0, 0.05)} className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-full bg-[#115CF6] text-white flex items-center justify-center mb-2">
+                      <FaEye size={13} />
                     </div>
-                  ))}
+                    <p className="text-2xl font-bold text-gray-900 leading-none">
+                      {detail.progress.totalViewsDelivered.toLocaleString('fr-FR')}
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">Vues livrées</p>
+                  </motion.div>
+                  <motion.div {...adsItemMotion(1, 0.05)} className="bg-green-50 border border-green-100 rounded-2xl p-4">
+                    <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center mb-2">
+                      <FaMousePointer size={13} />
+                    </div>
+                    <p className="text-2xl font-bold text-gray-900 leading-none">{detail.clicksTotal}</p>
+                    <p className="text-xs text-gray-500 mt-1">Clics reçus</p>
+                  </motion.div>
                 </div>
-              )}
+
+                <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
+                  <FaUsers size={13} className="text-[#115CF6]" /> Par diffuseur
+                </h3>
+                <p className="text-xs text-gray-500 mb-3">
+                  Le taux de clic distingue ceux qui apportent des contacts de ceux qui
+                  apportent seulement de la portée.
+                </p>
+
+                {perfLoading ? (
+                  <div className="flex justify-center py-8"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
+                ) : !performance?.diffuseurs?.length ? (
+                  <div className="text-center py-6">
+                    <div className="w-14 h-14 rounded-full bg-blue-50 text-[#115CF6] flex items-center justify-center mx-auto mb-3">
+                      <FaBullhorn size={20} />
+                    </div>
+                    <p className="text-sm font-medium text-gray-700">Diffusion en préparation</p>
+                    <p className="text-xs text-gray-500 mt-1 max-w-[240px] mx-auto">
+                      Vos diffuseurs préparent leur publication. Les premières vues
+                      apparaissent en général sous 24 h.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    {performance.diffuseurs.map((d, i) => (
+                      <motion.div
+                        key={d.diffuseurUserId}
+                        {...adsItemMotion(i, 0.1)}
+                        className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
+                          {i + 1}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900">
+                            {d.totalViews.toLocaleString('fr-FR')} vues
+                          </p>
+                          <p className="text-xs text-gray-500">{d.clicks} clic{d.clicks > 1 ? 's' : ''}</p>
+                        </div>
+                        <span className={`shrink-0 text-xs font-semibold rounded-full px-2.5 py-1 ${d.clickThroughRate >= 0.02 ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+                          {(d.clickThroughRate * 100).toFixed(1)}% CTR
+                        </span>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </motion.div>
           </motion.div>
         )}
