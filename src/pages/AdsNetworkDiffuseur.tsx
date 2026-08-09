@@ -79,6 +79,8 @@ function AdsNetworkDiffuseur() {
   const [sharing, setSharing] = useState<Participation | null>(null);
   const [verifying, setVerifying] = useState<Participation | null>(null);
   const [offerDetail, setOfferDetail] = useState<Participation | null>(null);
+  const [transferOpen, setTransferOpen] = useState(false);
+  const [transferring, setTransferring] = useState(false);
 
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['ads-diffuseur-profile'],
@@ -107,17 +109,54 @@ function AdsNetworkDiffuseur() {
     },
   });
 
+  // Money in (campaign credits) and out (transfers to the main balance).
+  const { data: walletHistory, refetch: refetchHistory } = useQuery({
+    queryKey: ['ads-wallet-history'],
+    queryFn: async () => {
+      const [ins, outs] = await Promise.all([
+        sbcApiService.getTransactionHistory({ type: 'advertising_earnings', limit: 10 }),
+        sbcApiService.getTransactionHistory({ type: 'advertising_transfer_out', limit: 10 }),
+      ]);
+      const parse = (r: any) => {
+        const d = r.body?.data;
+        return (Array.isArray(d) ? d : d?.transactions ?? []) as any[];
+      };
+      return [...parse(ins), ...parse(outs)]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+        .slice(0, 10);
+    },
+  });
+
   const refreshAll = useCallback(() => {
     refetchParts();
     refetchProfile();
     refetchBalance();
-  }, [refetchParts, refetchProfile, refetchBalance]);
+    refetchHistory();
+  }, [refetchParts, refetchProfile, refetchBalance, refetchHistory]);
 
   // Redirect during render rather than from an effect, so the dashboard is never
   // painted for someone who is not a diffuseur.
   if (isResolved && !roles.isDiffuseur && !profileLoading && !profile) {
     return <Navigate to="/ads-network/diffuseur/onboarding" replace />;
   }
+
+  const handleTransfer = async () => {
+    const amount = balance?.advertisingBalance ?? 0;
+    setTransferring(true);
+    setMessage(null);
+    try {
+      const res = await sbcApiService.transferAdvertisingBalance(amount);
+      if (!res.isSuccessByStatusCode) {
+        setMessage({ type: 'err', text: res.body?.message || 'Le transfert a échoué.' });
+        return;
+      }
+      setMessage({ type: 'ok', text: `${formatFCFA(amount)} transférés vers votre solde principal.` });
+      setTransferOpen(false);
+      refreshAll();
+    } finally {
+      setTransferring(false);
+    }
+  };
 
   const handleAccept = async (p: Participation) => {
     setActing(p._id);
@@ -173,6 +212,13 @@ function AdsNetworkDiffuseur() {
           <p className="text-xs text-blue-100 mt-1">
             Transfert possible dès {formatFCFA(balance?.minTransferAmount ?? 0)}.
           </p>
+          <motion.button
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setTransferOpen(true)}
+            className="w-full bg-white text-[#115CF6] rounded-xl py-2.5 text-sm font-semibold mt-3"
+          >
+            Transférer vers mon solde principal
+          </motion.button>
           {profile && (
             <div className="mt-3 pt-3 border-t border-white/20">
               {/* Whether they are measured or still on their own estimate. A
@@ -391,6 +437,38 @@ function AdsNetworkDiffuseur() {
             )}
 
             {/* History */}
+            {(walletHistory?.length ?? 0) > 0 && (
+              <section className="mt-6">
+                <h2 className="font-semibold text-gray-900 mb-1">Mouvements du portefeuille</h2>
+                <p className="text-xs text-gray-500 mb-3">
+                  Entrées (gains de campagnes) et sorties (transferts vers le solde principal).
+                </p>
+                <div className="space-y-2">
+                  {walletHistory!.map((t: any, i: number) => {
+                    const isIn = t.type === 'advertising_earnings';
+                    return (
+                      <motion.div
+                        key={t.transactionId ?? t._id ?? i}
+                        {...adsItemMotion(i, 0.05)}
+                        className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
+                      >
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#115CF6]'}`}>
+                          {isIn ? '↓' : '↑'}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-gray-900 truncate">{isIn ? 'Gains de campagne' : 'Transfert vers solde principal'}</p>
+                          <p className="text-xs text-gray-500">{relativeDate(t.createdAt)}</p>
+                        </div>
+                        <p className={`font-semibold shrink-0 ${isIn ? 'text-green-700' : 'text-gray-900'}`}>
+                          {isIn ? '+' : '−'}{formatFCFA(Math.abs(t.amount))}
+                        </p>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              </section>
+            )}
+
             {past.length > 0 && (
               <section className="mt-8">
                 <h2 className="font-semibold text-gray-900 mb-3">Historique</h2>
@@ -416,6 +494,65 @@ function AdsNetworkDiffuseur() {
       </div>
 
       <AnimatePresence>
+        {transferOpen && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => !transferring && setTransferOpen(false)}
+          >
+            <motion.div
+              className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5"
+              initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4 sm:hidden" />
+              {(balance?.advertisingBalance ?? 0) >= (balance?.minTransferAmount ?? 0) ? (
+                <>
+                  <h2 className="font-bold text-lg text-gray-900">Transférer vos gains ?</h2>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {formatFCFA(balance?.advertisingBalance ?? 0)} seront transférés de votre solde
+                    publicitaire vers votre solde principal, d'où vous pourrez les retirer.
+                  </p>
+                  <div className="flex gap-2 mt-5">
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={() => setTransferOpen(false)}
+                      disabled={transferring}
+                      className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                    >
+                      Annuler
+                    </motion.button>
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={handleTransfer}
+                      disabled={transferring}
+                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-400"
+                    >
+                      {transferring ? 'Transfert…' : 'Confirmer le transfert'}
+                    </motion.button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <h2 className="font-bold text-lg text-gray-900">Montant insuffisant</h2>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Le transfert est possible à partir de {formatFCFA(balance?.minTransferAmount ?? 0)}.
+                    Il vous manque {formatFCFA(Math.max(0, (balance?.minTransferAmount ?? 0) - (balance?.advertisingBalance ?? 0)))} —
+                    terminez d'autres campagnes pour compléter vos gains.
+                  </p>
+                  <motion.button
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setTransferOpen(false)}
+                    className="w-full bg-[#115CF6] text-white rounded-xl py-3 text-sm font-medium mt-5"
+                  >
+                    Compris
+                  </motion.button>
+                </>
+              )}
+            </motion.div>
+          </motion.div>
+        )}
         {offerDetail && (
           <motion.div
             className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
