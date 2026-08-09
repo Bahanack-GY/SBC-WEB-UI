@@ -104,39 +104,28 @@ export const AdsStatCard: React.FC<{
 /**
  * The three campaign days as pips.
  *
- * This replaced "Jour 2 sur 3 · 0 journée(s) validée(s) · en attente de
- * vérification" plus two timestamped lines. Where someone is in a three-step
- * run is a shape, not a sentence.
+ * Three states only — grey (to come), amber (posted, needs verifying), green
+ * (validated). A fourth "in progress" colour was tried and dropped: it competed
+ * with amber for the same meaning and left people guessing which one wanted
+ * something from them.
  */
 export const AdsDayPips: React.FC<{
     total: number;
-    currentDay?: number;
     completed: number;
     awaitingDay?: number;
-}> = ({ total, currentDay, completed, awaitingDay }) => (
+}> = ({ total, completed, awaitingDay }) => (
     <div className="flex items-center gap-1.5" role="list" aria-label="Progression des journées">
-        {/*
-            The day being worked on is the one awaiting verification, if there is
-            one. `currentDay` from the service is the next *unposted* day — which
-            becomes day 2 the moment day 1 is posted — so using it directly lit
-            day 2 blue while day 1 was still open and unverified.
-        */}
         {Array.from({ length: total }, (_, i) => {
             const day = i + 1;
-            const inProgress = awaitingDay ?? currentDay;
             const done = day <= completed;
             const awaiting = day === awaitingDay;
-            const active = day === inProgress && !done && !awaiting;
 
             return (
                 <span
                     key={day}
                     role="listitem"
                     aria-label={`Jour ${day} ${done ? 'validé' : awaiting ? 'à vérifier' : 'à venir'}`}
-                    className={`h-1.5 flex-1 rounded-full ${done ? 'bg-green-500'
-                        : awaiting ? 'bg-amber-400'
-                            : active ? 'bg-[#115CF6]'
-                                : 'bg-gray-200'
+                    className={`h-1.5 flex-1 rounded-full ${done ? 'bg-green-500' : awaiting ? 'bg-amber-400' : 'bg-gray-200'
                         }`}
                 />
             );

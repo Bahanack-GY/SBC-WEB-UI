@@ -285,7 +285,6 @@ function AdsNetworkDiffuseur() {
                         <div className="mt-2">
                           <AdsDayPips
                             total={3}
-                            currentDay={day?.day}
                             completed={p.schedule?.daysCompleted ?? 0}
                             awaitingDay={awaiting?.day}
                           />
