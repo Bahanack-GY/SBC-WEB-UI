@@ -42,8 +42,10 @@ interface Participation {
   } | null;
   schedule?: {
     currentDay?: DaySchedule;
+    /** Present when a day is posted and waiting for the diffuseur to verify it. */
+    awaitingVerification?: { day: number; postedAt?: string };
     daysCompleted?: number;
-    graceDaysRemaining?: number;
+    canPostNow?: boolean;
     completionDeadline?: string;
     day1Deadline?: string;
   };
@@ -258,13 +260,18 @@ function AdsNetworkDiffuseur() {
                 <div className="space-y-3">
                   {active.map((p) => {
                     const day = p.schedule?.currentDay;
-                    const windowOpen = !day?.windowOpensAt || new Date(day.windowOpensAt) <= new Date();
-                    const awaitingVerification = day?.status === 'posted';
+                    // canPostNow is decided by the service: it knows a day with no
+                    // window is closed, not unrestricted. Recomputing it here is
+                    // how the screen ended up offering "Publier" for a day that
+                    // had never opened.
+                    const windowOpen = p.schedule?.canPostNow === true;
+                    const awaiting = p.schedule?.awaitingVerification;
                     return (
                       <div key={p._id} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
                         <p className="font-medium text-gray-900">{p.campaign?.title ?? 'Campagne'}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           Jour {day?.day ?? '—'} sur 3 · {p.schedule?.daysCompleted ?? 0} journée(s) validée(s)
+                          {awaiting ? ' · en attente de vérification' : ''}
                         </p>
                         <p className="text-xs text-gray-500">
                           À terminer avant le {formatDate(p.schedule?.completionDeadline)}
@@ -278,7 +285,7 @@ function AdsNetworkDiffuseur() {
                         )}
 
                         <div className="flex flex-col gap-2 mt-3">
-                          {windowOpen && !awaitingVerification && (
+                          {windowOpen && !awaiting && (
                             <button
                               onClick={() => setSharing(p)}
                               className="w-full bg-green-600 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
@@ -286,13 +293,18 @@ function AdsNetworkDiffuseur() {
                               <FaShareAlt /> Publier le jour {day?.day}
                             </button>
                           )}
-                          {awaitingVerification && (
+                          {awaiting && (
                             <button
                               onClick={() => setVerifying(p)}
                               className="w-full bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
                             >
-                              <FaQrcode /> Vérifier ma publication
+                              <FaQrcode /> Vérifier le jour {awaiting.day}
                             </button>
+                          )}
+                          {!windowOpen && !awaiting && day?.windowOpensAt && (
+                            <p className="text-xs text-gray-500">
+                              Prochaine publication possible le {formatDate(day.windowOpensAt)}.
+                            </p>
                           )}
                           <p className="text-xs text-gray-500">
                             Vues comptées jusqu'ici : {p.totalViews} · {formatFCFA(p.totalEarned)}
