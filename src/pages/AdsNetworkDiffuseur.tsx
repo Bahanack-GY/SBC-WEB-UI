@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaExclamationTriangle, FaSpinner, FaShareAlt, FaQrcode, FaCheckCircle,
-  FaTimes, FaWallet, FaDownload,
+  FaTimes, FaWallet, FaDownload, FaHourglassHalf,
 } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton } from '../components/ads/AdsScreen';
@@ -169,13 +169,30 @@ function AdsNetworkDiffuseur() {
             Ce solde ne peut pas être envoyé à un autre membre.
           </p>
           {profile && (
-            <div className="flex gap-4 text-xs text-blue-100 mt-3 pt-3 border-t border-white/20">
+            <div className="mt-3 pt-3 border-t border-white/20">
+              {/* Whether they are measured or still on their own estimate. A
+                  diffuseur who receives nothing needs to know it is because the
+                  test campaign is still outstanding, not because SBC forgot them. */}
+              <div className="flex items-center gap-2 mb-2">
+                <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${profile.verification?.verified ? 'bg-white text-green-700' : 'bg-white/20 text-white'}`}>
+                  {profile.verification?.verified ? <FaCheckCircle size={11} /> : <FaHourglassHalf size={11} />}
+                  {profile.verification?.label ?? 'Statut inconnu'}
+                </span>
+              </div>
+              {!profile.verification?.verified && (
+                <p className="text-xs text-blue-100 mb-2">
+                  Terminez la campagne test pour que nous mesurions votre audience réelle.
+                  Les campagnes rémunérées vous seront proposées ensuite.
+                </p>
+              )}
+              <div className="flex gap-4 text-xs text-blue-100">
               <span>{profile.campaignsCompleted ?? 0} campagne(s) terminée(s)</span>
               <span>
                 Moyenne {profile.effectiveAverageViews ?? 0} vues
                 {profile.hasCompletedTestCampaign ? ' (mesurée)' : ' (déclarée)'}
               </span>
-              <span>Confiance {profile.trustScore ?? 0}</span>
+                <span>Confiance {profile.trustScore ?? 0}</span>
+              </div>
             </div>
           )}
         </div>
