@@ -77,6 +77,7 @@ function AdsNetworkAnnonceur() {
   const [acting, setActing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<Campaign | null>(null);
+  const [closing, setClosing] = useState<Campaign | null>(null);
 
   const { data: campaigns, isLoading, refetch } = useQuery({
     queryKey: ['ads-my-campaigns'],
@@ -142,6 +143,7 @@ function AdsNetworkAnnonceur() {
         setError(res.body?.message || "L'opération a échoué.");
         return;
       }
+      setClosing(null);
       refetch();
     } finally {
       setActing(null);
@@ -274,7 +276,7 @@ function AdsNetworkAnnonceur() {
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
                             <FaEye size={10} className="text-[#115CF6]" />
-                            {c.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}/{c.progress.targetUniqueViews.toLocaleString('fr-FR')} vues
+                            {c.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}/{c.progress.targetUniqueViews.toLocaleString('fr-FR')} uniques
                           </span>
                           <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
                             <FaGift size={10} className="text-purple-500" />
@@ -339,7 +341,7 @@ function AdsNetworkAnnonceur() {
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.97 }}
-                        onClick={() => handleBank(c)}
+                        onClick={() => setClosing(c)}
                         disabled={acting === c._id}
                         className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
                       >
@@ -377,6 +379,68 @@ function AdsNetworkAnnonceur() {
         </p>
       </div>
 
+      {/* Closing is one tap but not reversible — the campaign leaves diffusion
+          for good. Spell out what is kept and what stops before acting. */}
+      <AnimatePresence>
+        {closing && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => acting !== closing._id && setClosing(null)}
+          >
+            <motion.div
+              className="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5"
+              initial={{ y: 60 }} animate={{ y: 0 }} exit={{ y: 60 }}
+              transition={{ type: 'spring', damping: 26, stiffness: 300 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4 sm:hidden" />
+              <h2 className="font-bold text-lg text-gray-900">Clôturer « {closing.title} » ?</h2>
+              <p className="text-sm text-gray-600 mt-2">
+                La diffusion s'arrête immédiatement et la campagne ne pourra pas être relancée.
+              </p>
+              <ul className="text-sm text-gray-600 mt-3 space-y-2">
+                <li className="flex gap-2">
+                  <span className="text-green-600 shrink-0">✓</span>
+                  Les {closing.progress.totalViewsDelivered.toLocaleString('fr-FR')} vues déjà livrées restent acquises.
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-green-600 shrink-0">✓</span>
+                  <span>
+                    Le budget non consommé (~
+                    {formatFCFA(Math.max(0, closing.amountPaid * (1 - (closing.progress.targetUniqueViews
+                      ? closing.progress.uniqueViewsDelivered / closing.progress.targetUniqueViews : 0))))}
+                    ) est conservé en <strong>crédit</strong> pour votre prochaine campagne.
+                  </span>
+                </li>
+                <li className="flex gap-2">
+                  <span className="text-amber-600 shrink-0">!</span>
+                  Ce crédit n'est pas remboursable en espèces.
+                </li>
+              </ul>
+              <div className="flex gap-2 mt-5">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setClosing(null)}
+                  disabled={acting === closing._id}
+                  className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                >
+                  Annuler
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleBank(closing)}
+                  disabled={acting === closing._id}
+                  className="flex-1 bg-red-600 text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-400"
+                >
+                  {acting === closing._id ? 'Clôture…' : 'Clôturer définitivement'}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <AnimatePresence>
         {detail && (
           <motion.div
@@ -408,22 +472,35 @@ function AdsNetworkAnnonceur() {
               </div>
 
               <div className="p-5">
-                <div className="grid grid-cols-2 gap-3 mb-5">
-                  <motion.div {...adsItemMotion(0, 0.05)} className="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-full bg-[#115CF6] text-white flex items-center justify-center mb-2">
-                      <FaEye size={13} />
+                <div className="grid grid-cols-3 gap-2 mb-5">
+                  <motion.div {...adsItemMotion(0, 0.05)} className="bg-blue-50 border border-blue-100 rounded-2xl p-3">
+                    <div className="w-7 h-7 rounded-full bg-[#115CF6] text-white flex items-center justify-center mb-2">
+                      <FaEye size={11} />
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 leading-none">
+                    <p className="text-xl font-bold text-gray-900 leading-none">
+                      {detail.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}
+                    </p>
+                    <p className="text-[11px] text-gray-500 mt-1 leading-tight">
+                      Vues uniques<br />sur {detail.progress.targetUniqueViews.toLocaleString('fr-FR')} visées
+                    </p>
+                  </motion.div>
+                  <motion.div {...adsItemMotion(1, 0.05)} className="bg-purple-50 border border-purple-100 rounded-2xl p-3">
+                    <div className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center mb-2">
+                      <FaGift size={11} />
+                    </div>
+                    <p className="text-xl font-bold text-gray-900 leading-none">
                       {detail.progress.totalViewsDelivered.toLocaleString('fr-FR')}
                     </p>
-                    <p className="text-xs text-gray-500 mt-1">Vues livrées</p>
+                    <p className="text-[11px] text-gray-500 mt-1 leading-tight">
+                      Vues totales<br />dont {detail.progress.repeatViewsDelivered.toLocaleString('fr-FR')} offertes
+                    </p>
                   </motion.div>
-                  <motion.div {...adsItemMotion(1, 0.05)} className="bg-green-50 border border-green-100 rounded-2xl p-4">
-                    <div className="w-8 h-8 rounded-full bg-green-600 text-white flex items-center justify-center mb-2">
-                      <FaMousePointer size={13} />
+                  <motion.div {...adsItemMotion(2, 0.05)} className="bg-green-50 border border-green-100 rounded-2xl p-3">
+                    <div className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center mb-2">
+                      <FaMousePointer size={11} />
                     </div>
-                    <p className="text-2xl font-bold text-gray-900 leading-none">{detail.clicksTotal}</p>
-                    <p className="text-xs text-gray-500 mt-1">Clics reçus</p>
+                    <p className="text-xl font-bold text-gray-900 leading-none">{detail.clicksTotal}</p>
+                    <p className="text-[11px] text-gray-500 mt-1 leading-tight">Clics<br />reçus</p>
                   </motion.div>
                 </div>
 
