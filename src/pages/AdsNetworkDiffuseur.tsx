@@ -380,8 +380,17 @@ function ShareSheet({
   const [error, setError] = useState<string | null>(null);
 
   const caption = participation.shareCaption ?? participation.trackingUrl ?? '';
+  // Displayed from the CDN (free bandwidth), but fetched through our own origin:
+  // the bucket sends no CORS headers, so reading the bytes for the share sheet
+  // fails against the CDN URL however it is requested.
   const mediaUrl = participation.campaign
     ? sbcApiService.generateSettingsFileUrl(participation.campaign.mediaFileId)
+    : '';
+  const mediaBytesUrl = participation.campaign
+    ? sbcApiService.generateStreamedFileUrl(participation.campaign.mediaFileId)
+    : '';
+  const mediaDownloadUrl = participation.campaign
+    ? sbcApiService.generateStreamedFileUrl(participation.campaign.mediaFileId, { download: true })
     : '';
 
   const copyCaption = async () => {
@@ -394,7 +403,7 @@ function ShareSheet({
     setError(null);
     setBusy(true);
     try {
-      const blob = await fetch(mediaUrl).then((r) => r.blob());
+      const blob = await fetch(mediaBytesUrl).then((r) => r.blob());
       const file = new File([blob], `campagne.${blob.type.split('/')[1] || 'jpg'}`, { type: blob.type });
 
       // Level 2 Web Share carries files; older browsers only take text, and some
@@ -489,7 +498,7 @@ function ShareSheet({
         </button>
 
         <a
-          href={mediaUrl}
+          href={mediaDownloadUrl}
           download
           className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-2 flex items-center justify-center gap-2"
         >

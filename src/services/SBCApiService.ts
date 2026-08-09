@@ -986,6 +986,23 @@ export class SBCApiService extends ApiService {
     return `https://storage.googleapis.com/sbc-file-storage/${fileId}`;
   }
 
+  /**
+   * Same-origin URL for a stored file, for when the bytes are needed rather than
+   * just displayed.
+   *
+   * The CDN sends no Access-Control-Allow-Origin, so fetch(), canvas and the Web
+   * Share API are all blocked against generateSettingsFileUrl — the share sheet
+   * could never attach the creative. This routes through settings-service, which
+   * pipes the file back from our own origin.
+   *
+   * Use generateSettingsFileUrl for <img src>: it hits the CDN directly and costs
+   * us no bandwidth.
+   */
+  generateStreamedFileUrl(fileId: string, opts: { download?: boolean } = {}): string {
+    const param = opts.download ? 'download=1' : 'stream=1';
+    return `${this.baseUrl}/settings/files/${encodeURIComponent(fileId)}?${param}`;
+  }
+
   // ==================== CURRENCY CONVERSION & USD BALANCE MANAGEMENT ====================
 
   /**
