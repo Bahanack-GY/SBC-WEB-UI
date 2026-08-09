@@ -180,14 +180,24 @@ function AdsNetworkAnnonceur() {
             >
               <FaBullhorn className="absolute -right-4 -bottom-4 text-white/10" size={110} />
               <div className="flex items-center gap-2 text-blue-100 text-sm">
-                <FaBullhorn /> Investissement publicitaire
+                <FaBullhorn /> Budget restant
               </div>
+              {/* What is still working for them: unconsumed budget of live
+                  campaigns plus banked credit. Total spend is the subtitle —
+                  the big number should answer "what do I still have". */}
               <p className="text-3xl font-bold mt-1">
-                {formatFCFA(campaigns.reduce((n, c) => n + c.amountPaid, 0))}
+                {formatFCFA(campaigns.reduce((n, c) => {
+                  if (c.status === 'active') {
+                    const ratio = c.progress.targetUniqueViews
+                      ? c.progress.uniqueViewsDelivered / c.progress.targetUniqueViews : 0;
+                    return n + Math.max(0, c.amountPaid * (1 - ratio));
+                  }
+                  return n + (c.bankedAmount ?? 0);
+                }, 0))}
               </p>
               <p className="text-xs text-blue-100 mt-1">
-                {campaigns.filter(c => c.status === 'active').length} campagne(s) en diffusion ·{' '}
-                {campaigns.length} au total
+                sur {formatFCFA(campaigns.reduce((n, c) => n + c.amountPaid, 0))} investis ·{' '}
+                {campaigns.filter(c => c.status === 'active').length} campagne(s) en diffusion
               </p>
             </motion.div>
 
