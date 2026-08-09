@@ -82,7 +82,7 @@ function AdsNetworkDiffuseur() {
   const [transferOpen, setTransferOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
   const [transferAmount, setTransferAmount] = useState('');
-  const [walletTab, setWalletTab] = useState<'in' | 'out'>('in');
+  const [historyTab, setHistoryTab] = useState<'wallet' | 'campaigns'>('wallet');
 
   const { data: profile, isLoading: profileLoading, refetch: refetchProfile } = useQuery({
     queryKey: ['ads-diffuseur-profile'],
@@ -120,24 +120,26 @@ function AdsNetworkDiffuseur() {
     isFetchingNextPage,
     refetch: refetchHistory,
   } = useInfiniteQuery({
-    queryKey: ['ads-wallet-history', walletTab],
+    queryKey: ['ads-wallet-history'],
     initialPageParam: 1,
     queryFn: async ({ pageParam }) => {
       // includeActivation: the endpoint excludes advertising_earnings from the
       // default (main-wallet) view; without it the credits never show.
-      const res = await sbcApiService.getTransactionHistory({
-        type: walletTab === 'in' ? 'advertising_earnings' : 'advertising_transfer_out',
-        limit: 10,
-        page: pageParam,
-        includeActivation: 'true',
-      });
-      const b = res.body;
+      // Both directions fetched page-by-page and merged: the movements list is
+      // one chronological story, in and out together.
+      const [ins, outs] = await Promise.all([
+        sbcApiService.getTransactionHistory({ type: 'advertising_earnings', limit: 10, page: pageParam, includeActivation: 'true' }),
+        sbcApiService.getTransactionHistory({ type: 'advertising_transfer_out', limit: 10, page: pageParam, includeActivation: 'true' }),
+      ]);
       // The endpoint answers { transactions }, not { data }.
-      return (Array.isArray(b?.transactions) ? b.transactions : []) as any[];
+      const parse = (r: any) => (Array.isArray(r.body?.transactions) ? r.body.transactions : []) as any[];
+      const rows = [...parse(ins), ...parse(outs)]
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      return { rows, exhausted: parse(ins).length < 10 && parse(outs).length < 10 };
     },
-    getNextPageParam: (last, all) => (last.length === 10 ? all.length + 1 : undefined),
+    getNextPageParam: (last, all) => (last.exhausted ? undefined : all.length + 1),
   });
-  const walletHistory = walletPages?.pages.flat() ?? [];
+  const walletHistory = walletPages?.pages.flatMap(p => p.rows) ?? [];
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -148,7 +150,7 @@ function AdsNetworkDiffuseur() {
     });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [hasNextPage, isFetchingNextPage, fetchNextPage, walletTab]);
+  }, [hasNextPage, isFetchingNextPage, fetchNextPage, historyTab]);
 
   const refreshAll = useCallback(() => {
     refetchParts();
@@ -512,66 +514,62 @@ function AdsNetworkDiffuseur() {
 
             {/* History */}
             <section className="mt-6">
-              <h2 className="font-semibold text-gray-900 mb-2">Mouvements du portefeuille</h2>
               <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
                 <button
-                  onClick={() => setWalletTab('in')}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${walletTab === 'in' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => setHistoryTab('wallet')}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'wallet' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
                 >
-                  ↓ Entrées
+                  Mouvements du portefeuille
                 </button>
                 <button
-                  onClick={() => setWalletTab('out')}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${walletTab === 'out' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                  onClick={() => setHistoryTab('campaigns')}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'campaigns' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
                 >
-                  ↑ Sorties
+                  Historique
                 </button>
               </div>
 
-              {walletHistory.length === 0 ? (
-                <p className="text-sm text-gray-500 py-4 text-center">
-                  {walletTab === 'in'
-                    ? 'Aucun gain pour le moment — vos campagnes créditées apparaîtront ici.'
-                    : 'Aucun transfert pour le moment.'}
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {walletHistory.map((t: any, i: number) => {
-                    const isIn = walletTab === 'in';
-                    const isCommission = isIn && /commission parrainage/i.test(t.description ?? '');
-                    return (
-                      <motion.div
-                        key={t.transactionId ?? t._id ?? i}
-                        {...adsItemMotion(Math.min(i, 6), 0.02)}
-                        className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
-                      >
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#115CF6]'}`}>
-                          {isIn ? '↓' : '↑'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-gray-900 truncate">
-                            {isCommission ? '💎 Commission parrainage' : isIn ? 'Gains de campagne' : 'Transfert vers solde principal'}
+              {historyTab === 'wallet' ? (
+                walletHistory.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-4 text-center">
+                    Aucun mouvement pour le moment — vos gains crédités et transferts apparaîtront ici.
+                  </p>
+                ) : (
+                  <div className="space-y-2">
+                    {walletHistory.map((t: any, i: number) => {
+                      const isIn = t.type === 'advertising_earnings';
+                      const isCommission = isIn && /commission parrainage/i.test(t.description ?? '');
+                      return (
+                        <motion.div
+                          key={t.transactionId ?? t._id ?? i}
+                          {...adsItemMotion(Math.min(i, 6), 0.02)}
+                          className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
+                        >
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#115CF6]'}`}>
+                            {isIn ? '↓' : '↑'}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-gray-900 truncate">
+                              {isCommission ? '💎 Commission parrainage' : isIn ? 'Gains de campagne' : 'Transfert vers solde principal'}
+                            </p>
+                            <p className="text-xs text-gray-500">{relativeDate(t.createdAt)}</p>
+                          </div>
+                          <p className={`font-semibold shrink-0 ${isIn ? 'text-green-700' : 'text-gray-900'}`}>
+                            {isIn ? '+' : '−'}{formatFCFA(Math.abs(t.amount))}
                           </p>
-                          <p className="text-xs text-gray-500">{relativeDate(t.createdAt)}</p>
-                        </div>
-                        <p className={`font-semibold shrink-0 ${isIn ? 'text-green-700' : 'text-gray-900'}`}>
-                          {isIn ? '+' : '−'}{formatFCFA(Math.abs(t.amount))}
-                        </p>
-                      </motion.div>
-                    );
-                  })}
-                  {/* Scroll sentinel: crossing it loads the next page. */}
-                  <div ref={loadMoreRef} className="h-1" />
-                  {isFetchingNextPage && (
-                    <div className="flex justify-center py-3"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
-                  )}
-                </div>
-              )}
-            </section>
-
-            {past.length > 0 && (
-              <section className="mt-8">
-                <h2 className="font-semibold text-gray-900 mb-3">Historique</h2>
+                        </motion.div>
+                      );
+                    })}
+                    {/* Scroll sentinel: crossing it loads the next page. */}
+                    <div ref={loadMoreRef} className="h-1" />
+                    {isFetchingNextPage && (
+                      <div className="flex justify-center py-3"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
+                    )}
+                  </div>
+                )
+              ) : past.length === 0 ? (
+                <p className="text-sm text-gray-500 py-4 text-center">Aucune campagne terminée pour le moment.</p>
+              ) : (
                 <div className="space-y-2">
                   {past.map((p) => (
                     <div key={p._id} className="flex items-center justify-between border border-gray-100 rounded-xl p-3 text-sm">
@@ -587,8 +585,8 @@ function AdsNetworkDiffuseur() {
                     </div>
                   ))}
                 </div>
-              </section>
-            )}
+              )}
+            </section>
           </>
         )}
       </div>
