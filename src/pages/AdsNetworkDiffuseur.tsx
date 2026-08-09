@@ -333,12 +333,37 @@ function AdsNetworkDiffuseur() {
                             </button>
                           )}
                           {awaiting && (
-                            <button
-                              onClick={() => setVerifying(p)}
-                              className="w-full bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
-                            >
-                              <FaQrcode /> Vérifier le jour {awaiting.day}
-                            </button>
+                            <>
+                              <button
+                                onClick={() => setVerifying(p)}
+                                className="w-full bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
+                              >
+                                <FaQrcode /> Vérifier le jour {awaiting.day}
+                              </button>
+                              {/* Escape hatch for a premature « J'ai publié » —
+                                  without it the day is stuck in verification
+                                  mode with nothing to verify. */}
+                              <button
+                                onClick={async () => {
+                                  setActing(p._id);
+                                  try {
+                                    const res = await sbcApiService.unmarkParticipationPosted(p._id);
+                                    if (!res.isSuccessByStatusCode) {
+                                      setMessage({ type: 'err', text: res.body?.message || "L'annulation a échoué." });
+                                      return;
+                                    }
+                                    setMessage({ type: 'ok', text: `Jour ${awaiting.day} annulé — publiez-le quand vous êtes prêt.` });
+                                    refreshAll();
+                                  } finally {
+                                    setActing(null);
+                                  }
+                                }}
+                                disabled={acting === p._id}
+                                className="w-full text-xs text-gray-500 underline underline-offset-2 py-1"
+                              >
+                                Je n'ai pas encore publié — annuler le jour {awaiting.day}
+                              </button>
+                            </>
                           )}
 
                           <p className="text-xs text-gray-500">

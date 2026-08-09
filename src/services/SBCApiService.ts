@@ -2236,6 +2236,11 @@ export class SBCApiService extends ApiService {
     return await this.post(`/advertising/diffuseurs/participations/${participationId}/mark-posted`);
   }
 
+  /** Undo for a premature « J'ai publié » — only while the day is unverified. */
+  async unmarkParticipationPosted(participationId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/diffuseurs/participations/${participationId}/unmark-posted`);
+  }
+
   // --- WhatsApp verification ---
 
   /** Free verification slots. 0 means every session is busy; try later. */
