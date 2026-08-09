@@ -166,9 +166,8 @@ function AdsNetworkDiffuseur() {
             <FaWallet /> Solde publicitaire
           </div>
           <p className="text-3xl font-bold mt-1">{formatFCFA(balance?.balance ?? 0)}</p>
-          <p className="text-xs text-blue-100 mt-2">
-            Transférable vers votre solde principal à partir de {formatFCFA(balance?.minimumTransfer ?? 0)}.
-            Ce solde ne peut pas être envoyé à un autre membre.
+          <p className="text-xs text-blue-100 mt-1">
+            Transfert possible dès {formatFCFA(balance?.minimumTransfer ?? 0)}.
           </p>
           {profile && (
             <div className="mt-3 pt-3 border-t border-white/20">
@@ -183,8 +182,7 @@ function AdsNetworkDiffuseur() {
               </div>
               {!profile.verification?.verified && (
                 <p className="text-xs text-blue-100 mb-2">
-                  Terminez la campagne test pour que nous mesurions votre audience réelle.
-                  Les campagnes rémunérées vous seront proposées ensuite.
+                  Terminez la campagne test pour débloquer les campagnes rémunérées.
                 </p>
               )}
               <div className="flex gap-4 text-xs text-blue-100">
@@ -279,8 +277,7 @@ function AdsNetworkDiffuseur() {
 
                         {!windowOpen && (
                           <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
-                            Le jour {day?.day} s'ouvre le {formatDate(day?.windowOpensAt)}. Les journées
-                            sont espacées de 24 h pour que la campagne dure réellement 3 jours.
+                            Jour {day?.day} disponible le {formatDate(day?.windowOpensAt)}.
                           </p>
                         )}
 
@@ -293,6 +290,14 @@ function AdsNetworkDiffuseur() {
                               <FaShareAlt /> Publier le jour {day?.day}
                             </button>
                           )}
+                          {!windowOpen && !awaiting && (
+                            <button
+                              onClick={() => setVerifying(p)}
+                              className="w-full border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium"
+                            >
+                              Revérifier mes publications
+                            </button>
+                          )}
                           {awaiting && (
                             <button
                               onClick={() => setVerifying(p)}
@@ -301,13 +306,9 @@ function AdsNetworkDiffuseur() {
                               <FaQrcode /> Vérifier le jour {awaiting.day}
                             </button>
                           )}
-                          {!windowOpen && !awaiting && day?.windowOpensAt && (
-                            <p className="text-xs text-gray-500">
-                              Prochaine publication possible le {formatDate(day.windowOpensAt)}.
-                            </p>
-                          )}
+
                           <p className="text-xs text-gray-500">
-                            Vues comptées jusqu'ici : {p.totalViews} · {formatFCFA(p.totalEarned)}
+                            {p.totalViews} vues · {formatFCFA(p.totalEarned)}
                           </p>
                         </div>
                       </div>
@@ -730,6 +731,19 @@ function VerifySheet({
           >
             Continuer
           </button>
+        </div>
+      );
+    }
+
+    // Connected: WhatsApp accepted the code, we are reading the account. Leaving
+    // the code on screen here made it look like nothing had happened.
+    if (state === 'reading') {
+      return (
+        <div className="py-8 text-center">
+          <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <p className="font-medium text-gray-900 mt-4">Appareil connecté</p>
+          <p className="text-sm text-gray-600 mt-1">Lecture de vos statuts et de leurs vues…</p>
+          <p className="text-xs text-gray-400 mt-3">Cela prend généralement moins d'une minute.</p>
         </div>
       );
     }

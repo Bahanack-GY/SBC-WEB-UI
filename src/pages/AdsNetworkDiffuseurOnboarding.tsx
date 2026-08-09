@@ -87,8 +87,7 @@ function AdsNetworkDiffuseurOnboarding() {
 
         <h1 className="text-2xl font-bold text-gray-900 text-center">Devenir diffuseur</h1>
         <p className="text-gray-600 mt-2 text-center">
-          Publiez l'annonce d'un annonceur sur votre statut WhatsApp. Vous êtes payé
-          selon le nombre de personnes qui l'ont vraiment vue.
+          Publiez sur votre statut WhatsApp. Soyez payé selon les vues réelles.
         </p>
 
         <div className="grid grid-cols-3 gap-2 mt-5 text-center">
@@ -107,43 +106,31 @@ function AdsNetworkDiffuseurOnboarding() {
         <h2 className="font-semibold text-gray-900 mt-6 mb-3">Comment ça marche</h2>
         <div className="space-y-3">
           <AdsStep index={1} title="Une campagne vous est proposée" accent="green">
-            Elle part à plusieurs diffuseurs en même temps : les premiers à accepter
-            l'obtiennent.
+Premier arrivé, premier servi.
           </AdsStep>
           <AdsStep index={2} title="Vous publiez le jour 1 sous 24 h" accent="green">
-            Passé ce délai, la place est rendue à un autre diffuseur.
+Sinon la place repart à quelqu'un d'autre.
           </AdsStep>
           <AdsStep index={3} title="Puis les jours 2 et 3" accent="green">
-            Une journée toutes les 24 h. Vous disposez de 3 jours de report au total
-            pour terminer la campagne.
+Une par jour, avec 3 jours de report si besoin.
           </AdsStep>
           <AdsStep index={4} title="Vous vérifiez chaque publication" accent="green">
-            Connectez votre WhatsApp sur SBC après chaque publication pour que vos
-            vues soient comptées.
+Connectez WhatsApp pour que vos vues comptent.
           </AdsStep>
           <AdsStep index={5} title="Vous êtes payé" accent="green">
-            Vos gains arrivent sur votre solde publicitaire, transférable vers votre
-            solde principal.
+Sur votre solde publicitaire, transférable ensuite.
           </AdsStep>
         </div>
 
-        <div className="mt-4 space-y-3">
+        <div className="mt-4">
           <AdsWarning>
             <p className="font-medium flex items-start gap-2">
               <FaExclamationTriangle className="mt-0.5 shrink-0" />
-              Vérifiez avant l'expiration de votre statut.
+              Ne modifiez jamais le lien du texte.
             </p>
             <p className="mt-1">
-              Un statut WhatsApp dure 24 h. Une fois expiré, les vues de cette journée
-              sont perdues et ne peuvent pas être récupérées.
-            </p>
-          </AdsWarning>
-
-          <AdsWarning>
-            <p className="font-medium">Ne modifiez jamais le texte proposé.</p>
-            <p className="mt-1">
-              Surtout pas le lien qu'il contient : sans lui, votre publication ne peut
-              pas être vérifiée et la journée ne sera pas payée.
+              Sans lui, la journée ne peut pas être vérifiée ni payée. Vérifiez aussi
+              votre publication dans les 24 h : un statut expiré est perdu.
             </p>
           </AdsWarning>
         </div>
