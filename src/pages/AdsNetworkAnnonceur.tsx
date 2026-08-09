@@ -78,6 +78,7 @@ function AdsNetworkAnnonceur() {
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<Campaign | null>(null);
   const [closing, setClosing] = useState<Campaign | null>(null);
+  const [cancelling, setCancelling] = useState<Campaign | null>(null);
 
   const { data: campaigns, isLoading, refetch } = useQuery({
     queryKey: ['ads-my-campaigns'],
@@ -144,6 +145,22 @@ function AdsNetworkAnnonceur() {
         return;
       }
       setClosing(null);
+      refetch();
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const handleCancel = async (c: Campaign) => {
+    setActing(c._id);
+    setError(null);
+    try {
+      const res = await sbcApiService.cancelAdsCampaign(c._id);
+      if (!res.isSuccessByStatusCode) {
+        setError(res.body?.message || "L'annulation a échoué.");
+        return;
+      }
+      setCancelling(null);
       refetch();
     } finally {
       setActing(null);
@@ -323,12 +340,30 @@ function AdsNetworkAnnonceur() {
 
                 <div className="flex flex-wrap gap-2 mt-3">
                   {c.status === 'approved' && (
+                    <>
+                      <button
+                        onClick={() => handlePay(c)}
+                        disabled={acting === c._id}
+                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
+                      >
+                        {acting === c._id ? 'Ouverture…' : 'Payer et lancer'}
+                      </button>
+                      <button
+                        onClick={() => setCancelling(c)}
+                        disabled={acting === c._id}
+                        className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
+                      >
+                        Annuler
+                      </button>
+                    </>
+                  )}
+                  {(c.status === 'pending_review' || c.status === 'draft' || c.status === 'rejected') && (
                     <button
-                      onClick={() => handlePay(c)}
+                      onClick={() => setCancelling(c)}
                       disabled={acting === c._id}
-                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
+                      className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
                     >
-                      {acting === c._id ? 'Ouverture…' : 'Payer et lancer'}
+                      Annuler la campagne
                     </button>
                   )}
                   {(c.status === 'draft' || c.status === 'rejected') && (
@@ -388,6 +423,48 @@ function AdsNetworkAnnonceur() {
           Budget non consommé : conservé en crédit, non remboursable en espèces.
         </p>
       </div>
+
+      <AnimatePresence>
+        {cancelling && (
+          <motion.div
+            className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => acting !== cancelling._id && setCancelling(null)}
+          >
+            <motion.div
+              className="bg-white w-full max-w-md rounded-3xl p-5"
+              initial={{ scale: 0.92, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: 'spring', damping: 24, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className="font-bold text-lg text-gray-900">Annuler « {cancelling.title} » ?</h2>
+              <p className="text-sm text-gray-600 mt-2">
+                {cancelling.status === 'approved'
+                  ? "Cette campagne est déjà validée : en l'annulant, l'approbation est perdue. Pour la relancer plus tard, elle devra repasser par la validation de notre équipe."
+                  : 'La campagne sera annulée. Vous pourrez en créer une nouvelle à tout moment.'}
+              </p>
+              <div className="flex gap-2 mt-5">
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setCancelling(null)}
+                  disabled={acting === cancelling._id}
+                  className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                >
+                  Garder la campagne
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleCancel(cancelling)}
+                  disabled={acting === cancelling._id}
+                  className="flex-1 bg-red-600 text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-400"
+                >
+                  {acting === cancelling._id ? 'Annulation…' : "Annuler définitivement"}
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Closing is one tap but not reversible — the campaign leaves diffusion
           for good. Spell out what is kept and what stops before acting. */}

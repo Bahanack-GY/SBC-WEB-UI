@@ -2180,6 +2180,11 @@ export class SBCApiService extends ApiService {
    * Opens the payment session. Returns a sessionId; build the payment page URL
    * with generatePaymentUrl(), same as subscriptions.
    */
+  /** Cancels an unpaid campaign — the approval is forfeited with it. */
+  async cancelAdsCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/cancel`);
+  }
+
   async payAdsCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.post(`/advertising/campaigns/${campaignId}/pay`);
   }
