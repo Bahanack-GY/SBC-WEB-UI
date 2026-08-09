@@ -32,8 +32,10 @@ export const AdsScreen: React.FC<{
     title: string;
     subtitle?: string;
     accent?: 'blue' | 'green';
+    /** Rounded image on the header's right — a title alone reads bare. */
+    illustration?: string;
     children: React.ReactNode;
-}> = ({ title, subtitle, accent = 'blue', children }) => (
+}> = ({ title, subtitle, accent = 'blue', illustration, children }) => (
     <div className="min-h-screen bg-gray-50">
         <motion.div
             {...adsHeaderMotion}
@@ -46,8 +48,22 @@ export const AdsScreen: React.FC<{
                 <div className="[&_button]:text-white [&_svg]:text-white">
                     <BackButton />
                 </div>
-                <h1 className="text-2xl font-bold mt-2">{title}</h1>
-                {subtitle && <p className="text-white/80 text-sm mt-1">{subtitle}</p>}
+                <div className="flex items-center gap-4">
+                    <div className="flex-1 min-w-0">
+                        <h1 className="text-2xl font-bold mt-2">{title}</h1>
+                        {subtitle && <p className="text-white/80 text-sm mt-1">{subtitle}</p>}
+                    </div>
+                    {illustration && (
+                        <motion.img
+                            src={illustration}
+                            alt=""
+                            initial={{ opacity: 0, scale: 0.8, rotate: -4 }}
+                            animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                            transition={{ delay: 0.2, type: 'spring' }}
+                            className="w-24 h-24 object-cover rounded-2xl shadow-lg ring-2 ring-white/30 shrink-0"
+                        />
+                    )}
+                </div>
             </div>
         </motion.div>
 
