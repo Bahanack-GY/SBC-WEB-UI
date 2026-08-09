@@ -24,7 +24,12 @@ export function useOtpInput(length = 6) {
         inputs.current[Math.min(Math.max(index, 0), length - 1)]?.focus();
     };
 
-    /** Writes `text` across the boxes starting at `start`, ignoring separators. */
+    /**
+     * Writes `text` across the boxes starting at `start`, ignoring separators.
+     *
+     * Separators matter: "123 456" is a normal thing to copy out of an SMS, and
+     * any length cap applied before this point would eat a character.
+     */
     const fillFrom = (start: number, text: string) => {
         const characters = text.replace(/[^a-zA-Z0-9]/g, '').slice(0, length - start).split('');
         if (!characters.length) return;
@@ -40,9 +45,13 @@ export function useOtpInput(length = 6) {
     };
 
     const handleChange = (index: number, value: string) => {
-        // Android keyboards and password managers can deliver the whole code to a
-        // single box, bypassing the paste event entirely. Spread it rather than
-        // dropping everything after the first character.
+        // The main paste path on mobile.
+        //
+        // Long-press → Paste usually arrives as an input event rather than a paste
+        // event, so onPaste never fires. The boxes therefore carry no maxLength:
+        // with maxLength={1} the DOM truncated the pasted string to one character
+        // before this handler ever saw it, which is why "paste only fills the
+        // first box" survived a fix that only addressed the paste event.
         if (value.length > 1) {
             fillFrom(index, value);
             return;
