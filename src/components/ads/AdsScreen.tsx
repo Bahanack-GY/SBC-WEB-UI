@@ -75,3 +75,28 @@ export const AdsStatSkeleton: React.FC = () => (
 );
 
 export default AdsScreen;
+
+/**
+ * One number, one label. Three of these read at a glance; the same three values
+ * as a sentence do not get read at all.
+ */
+export const AdsStatCard: React.FC<{
+    label: string;
+    value: React.ReactNode;
+    hint?: string;
+    tone?: 'default' | 'green' | 'amber';
+}> = ({ label, value, hint, tone = 'default' }) => {
+    const tones = {
+        default: 'bg-white border-gray-200 text-gray-900',
+        green: 'bg-green-50 border-green-200 text-green-900',
+        amber: 'bg-amber-50 border-amber-200 text-amber-900',
+    } as const;
+
+    return (
+        <div className={`border rounded-2xl p-3 text-center shadow-sm ${tones[tone]}`}>
+            <p className="text-xl font-bold leading-tight">{value}</p>
+            <p className="text-[11px] opacity-70 leading-tight mt-0.5">{label}</p>
+            {hint && <p className="text-[10px] opacity-60 mt-0.5">{hint}</p>}
+        </div>
+    );
+};

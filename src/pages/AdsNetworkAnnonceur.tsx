@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
-import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { AdsCardSkeleton, AdsStatCard } from '../components/ads/AdsScreen';
 import { sbcApiService } from '../services/SBCApiService';
 
 type CampaignStatus =
@@ -163,6 +163,26 @@ function AdsNetworkAnnonceur() {
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mt-3">{error}</div>
         )}
 
+        {/* Totals across every campaign. An annonceur's first question is what
+            their money bought, and it used to require adding up the cards. */}
+        {!!campaigns?.length && (
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <AdsStatCard
+              label="Vues livrées"
+              value={campaigns.reduce((n, c) => n + c.progress.totalViewsDelivered, 0).toLocaleString('fr-FR')}
+            />
+            <AdsStatCard
+              label="Clics reçus"
+              value={campaigns.reduce((n, c) => n + c.clicksTotal, 0).toLocaleString('fr-FR')}
+              tone="green"
+            />
+            <AdsStatCard
+              label="Campagnes actives"
+              value={campaigns.filter(c => c.status === 'active').length}
+            />
+          </div>
+        )}
+
         {isLoading ? (
           <div className="mt-5"><AdsCardSkeleton rows={2} /></div>
         ) : !campaigns?.length ? (
@@ -295,8 +315,7 @@ function AdsNetworkAnnonceur() {
         )}
 
         <p className="text-xs text-gray-500 mt-6">
-          Un budget non consommé peut être conservé en crédit pour une prochaine
-          campagne. Il n'est pas remboursable en espèces.
+          Budget non consommé : conservé en crédit, non remboursable en espèces.
         </p>
       </div>
 

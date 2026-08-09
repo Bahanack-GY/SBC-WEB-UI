@@ -7,7 +7,7 @@ import {
   FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard,
 } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
-import { AdsCardSkeleton } from '../components/ads/AdsScreen';
+import { AdsCardSkeleton, AdsStatCard } from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import illustrationShare from '../assets/icon/ads-share.jpg';
 import illustrationVerify from '../assets/icon/ads-verify.jpg';
@@ -185,17 +185,22 @@ function AdsNetworkDiffuseur() {
                   Terminez la campagne test pour débloquer les campagnes rémunérées.
                 </p>
               )}
-              <div className="flex gap-4 text-xs text-blue-100">
-              <span>{profile.campaignsCompleted ?? 0} campagne(s) terminée(s)</span>
-              <span>
-                Moyenne {profile.effectiveAverageViews ?? 0} vues
-                {profile.hasCompletedTestCampaign ? ' (mesurée)' : ' (déclarée)'}
-              </span>
-                <span>Confiance {profile.trustScore ?? 0}</span>
-              </div>
             </div>
           )}
         </div>
+
+        {profile && (
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            <AdsStatCard label="Campagnes terminées" value={profile.campaignsCompleted ?? 0} />
+            <AdsStatCard
+              label="Vues par publication"
+              value={profile.effectiveAverageViews ?? 0}
+              hint={profile.hasCompletedTestCampaign ? 'mesurée' : 'déclarée'}
+              tone={profile.hasCompletedTestCampaign ? 'green' : 'amber'}
+            />
+            <AdsStatCard label="Score de confiance" value={profile.trustScore ?? 0} />
+          </div>
+        )}
 
         {partsLoading ? (
           <div className="mt-6"><AdsCardSkeleton rows={2} /></div>
@@ -266,6 +271,15 @@ function AdsNetworkDiffuseur() {
                     const awaiting = p.schedule?.awaitingVerification;
                     return (
                       <div key={p._id} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+                        {/* The creative being published — the diffuseur should see
+                            what is on their status without opening anything. */}
+                        {p.campaign && (
+                          <img
+                            src={sbcApiService.generateSettingsFileUrl(p.campaign.mediaFileId)}
+                            alt=""
+                            className="w-full h-32 rounded-xl object-cover bg-gray-100 mb-3"
+                          />
+                        )}
                         <p className="font-medium text-gray-900">{p.campaign?.title ?? 'Campagne'}</p>
                         <p className="text-xs text-gray-500 mt-1">
                           Jour {day?.day ?? '—'} sur 3 · {p.schedule?.daysCompleted ?? 0} journée(s) validée(s)
