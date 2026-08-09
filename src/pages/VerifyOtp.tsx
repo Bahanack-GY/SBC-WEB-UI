@@ -80,9 +80,9 @@ function VerifyOtp() {
                                 ref={el => { inputs.current[i] = el; }}
                                 type="text"
                                 inputMode="text"
-                                maxLength={1}
                                 autoComplete="one-time-code"
                                 value={val}
+                                onFocus={e => e.target.select()}
                                 onChange={e => handleChange(i, e.target.value)}
                                 onKeyDown={e => handleKeyDown(i, e)}
                                 onPaste={e => handlePaste(i, e)}

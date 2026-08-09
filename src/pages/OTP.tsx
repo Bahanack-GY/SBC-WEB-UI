@@ -174,10 +174,10 @@ function OTP() {
                 ref={el => { inputs.current[i] = el; }}
                 type="text"
                 inputMode="text"
-                maxLength={1}
                 autoComplete="one-time-code"
                 value={val}
-                onChange={e => handleChange(i, e.target.value)}
+                onFocus={e => e.target.select()}
+                                onChange={e => handleChange(i, e.target.value)}
                 onKeyDown={e => handleKeyDown(i, e)}
                 onPaste={e => handlePaste(i, e)}
                 className="w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#115CF6] bg-white font-mono"
