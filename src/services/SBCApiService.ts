@@ -2247,8 +2247,13 @@ export class SBCApiService extends ApiService {
    * Opens a WhatsApp link session. Answers 503 with Retry-After when all slots
    * are taken — that is a queue signal, not a failure.
    */
-  async startVerification(participationId: string): Promise<ApiResponse> {
-    return await this.post(`/advertising/verification/participations/${participationId}/start`);
+  async startVerification(
+    participationId: string,
+    options: { method?: 'qr' | 'code'; phoneNumber?: string } = {},
+  ): Promise<ApiResponse> {
+    return await this.post(`/advertising/verification/participations/${participationId}/start`, {
+      body: { method: options.method ?? 'qr', phoneNumber: options.phoneNumber },
+    });
   }
 
   /** Poll for the QR code, then for the verdict. */

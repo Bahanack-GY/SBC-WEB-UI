@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaExclamationTriangle, FaSpinner, FaShareAlt, FaQrcode, FaCheckCircle,
-  FaTimes, FaWallet, FaDownload, FaHourglassHalf,
+  FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard,
 } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton } from '../components/ads/AdsScreen';
@@ -364,6 +364,7 @@ function AdsNetworkDiffuseur() {
         {verifying && (
           <VerifySheet
             participation={verifying}
+            defaultPhone={profile?.whatsappPhone}
             onClose={() => { setVerifying(null); refreshAll(); }}
           />
         )}
@@ -541,18 +542,31 @@ function ShareSheet({
  */
 function VerifySheet({
   participation,
+  defaultPhone,
   onClose,
 }: {
   participation: Participation;
+  defaultPhone?: string;
   onClose: () => void;
 }) {
+  // Nothing is started until a method is picked. Diffuseurs are on the same phone
+  // that would display the QR, so pointing a camera at their own screen is not an
+  // option for most of them — the pairing code is what makes this work on one
+  // device, and it is offered first for that reason.
+  const [method, setMethod] = useState<'qr' | 'code' | null>(null);
+  const [phone, setPhone] = useState(defaultPhone ?? '');
   const [state, setState] = useState<string>('starting');
   const [qr, setQr] = useState<string | null>(null);
+  const [pairingCode, setPairingCode] = useState<string | null>(null);
   const [result, setResult] = useState<{ verdicts: Verdict[]; totalViews: number; totalEarned: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
+  const [started, setStarted] = useState(false);
 
   useEffect(() => {
+    if (!started || !method) return;
+
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
 
@@ -567,6 +581,7 @@ function VerifySheet({
       }
       setState(data?.state ?? 'reading');
       if (data?.qr) setQr(data.qr);
+      if (data?.pairingCode) setPairingCode(data.pairingCode);
 
       if (data?.state === 'done') {
         setResult({
@@ -580,7 +595,10 @@ function VerifySheet({
     };
 
     (async () => {
-      const res = await sbcApiService.startVerification(participation._id);
+      const res = await sbcApiService.startVerification(participation._id, {
+        method,
+        phoneNumber: method === 'code' ? phone : undefined,
+      });
       if (stopped) return;
       if (res.statusCode === 503) {
         setError('Toutes les vérifications sont occupées pour le moment. Réessayez dans une minute.');
@@ -601,7 +619,171 @@ function VerifySheet({
       // else until it times out.
       if (sessionIdRef.current) sbcApiService.cancelVerification(sessionIdRef.current);
     };
-  }, [participation._id]);
+  }, [started, method, phone, participation._id]);
+
+  const copyCode = async () => {
+    if (!pairingCode) return;
+    await navigator.clipboard.writeText(pairingCode);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  };
+
+  const body = () => {
+    if (error) {
+      return (
+        <div>
+          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">{error}</div>
+          <button
+            onClick={() => { setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); }}
+            className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-3"
+          >
+            Choisir une autre méthode
+          </button>
+        </div>
+      );
+    }
+
+    if (result) {
+      return (
+        <div>
+          <div className="flex items-center gap-2 text-green-700 font-medium">
+            <FaCheckCircle /> Vérification terminée
+          </div>
+          <p className="text-3xl font-bold text-gray-900 mt-3">{result.totalViews} vues</p>
+          <p className="text-sm text-gray-600">{formatFCFA(result.totalEarned)} pour cette vérification</p>
+          <div className="mt-4 space-y-2">
+            {result.verdicts.map((v) => (
+              <div key={v.day} className={`text-sm rounded-xl p-3 border ${v.accepted ? 'border-green-200 bg-green-50 text-green-900' : 'border-red-200 bg-red-50 text-red-900'}`}>
+                <p className="font-medium">Jour {v.day} — {v.accepted ? 'validé' : 'refusé'}</p>
+                {!v.accepted && v.reason && <p className="text-xs mt-1">{v.reason}</p>}
+                {v.accepted && <p className="text-xs mt-1">{v.viewCount} vues · {formatFCFA(v.earnedAmount)}</p>}
+              </div>
+            ))}
+          </div>
+          <button onClick={onClose} className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4">
+            Fermer
+          </button>
+        </div>
+      );
+    }
+
+    // Method picker, before anything is started.
+    if (!started) {
+      return (
+        <div>
+          <img src={illustrationVerify} alt="" aria-hidden="true" className="w-36 mx-auto -mt-2" />
+          <p className="text-sm text-gray-600 mb-4">
+            Connectez votre WhatsApp le temps de lire les vues de votre statut.
+            Choisissez la méthode qui vous arrange.
+          </p>
+
+          <button
+            onClick={() => setMethod('code')}
+            className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
+          >
+            <div className="flex items-center gap-2 font-medium text-gray-900">
+              <FaKeyboard className="text-[#115CF6]" /> Code à 8 caractères
+              <span className="ml-auto text-[10px] uppercase tracking-wide bg-[#115CF6] text-white rounded-full px-2 py-0.5">
+                Conseillé
+              </span>
+            </div>
+            <p className="text-xs text-gray-600 mt-1">
+              Sur le même téléphone. Vous entrez un code dans WhatsApp, sans photo à scanner.
+            </p>
+          </button>
+
+          {method === 'code' && (
+            <div className="mt-3">
+              <label className="block text-sm text-gray-700 mb-1">
+                Numéro WhatsApp à connecter
+              </label>
+              <input
+                type="tel"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="ex. 237675080477"
+                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Avec l'indicatif du pays, sans le « + ».
+              </p>
+            </div>
+          )}
+
+          <button
+            onClick={() => setMethod('qr')}
+            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
+          >
+            <div className="flex items-center gap-2 font-medium text-gray-900">
+              <FaQrcode className="text-[#115CF6]" /> Code QR
+            </div>
+            <p className="text-xs text-gray-600 mt-1">
+              Pratique depuis un ordinateur ou un second téléphone.
+            </p>
+          </button>
+
+          <button
+            onClick={() => setStarted(true)}
+            disabled={!method || (method === 'code' && phone.replace(/\D/g, '').length < 8)}
+            className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-300"
+          >
+            Continuer
+          </button>
+        </div>
+      );
+    }
+
+    if (method === 'code' && pairingCode) {
+      return (
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-3">
+            Dans WhatsApp : <strong>Appareils connectés</strong> → <strong>Connecter un appareil</strong> →
+            <strong> Connecter avec le numéro de téléphone</strong>, puis entrez ce code.
+          </p>
+          <div className="font-mono text-3xl tracking-[0.3em] font-bold text-gray-900 bg-gray-100 rounded-xl py-4">
+            {pairingCode}
+          </div>
+          <button onClick={copyCode} className="text-sm text-[#115CF6] mt-2">
+            {copied ? 'Code copié' : 'Copier le code'}
+          </button>
+          <p className="text-xs text-gray-500 mt-3">
+            La connexion est temporaire. Elle sert uniquement à lire les vues de votre
+            statut, puis elle est supprimée.
+          </p>
+        </div>
+      );
+    }
+
+    if (method === 'qr' && qr) {
+      return (
+        <div className="text-center">
+          <p className="text-sm text-gray-600 mb-3">
+            Dans WhatsApp : <strong>Appareils connectés</strong> → <strong>Connecter un appareil</strong>,
+            puis scannez ce code.
+          </p>
+          <img src={qr} alt="QR code WhatsApp" className="w-56 h-56 mx-auto" />
+          <p className="text-xs text-gray-500 mt-3">
+            La connexion est temporaire. Elle sert uniquement à lire les vues de votre
+            statut, puis elle est supprimée.
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="py-8 text-center text-gray-500">
+        <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={24} />
+        <p className="text-sm mt-3">
+          {state === 'reading'
+            ? 'Lecture de vos statuts…'
+            : method === 'code'
+              ? 'Génération de votre code…'
+              : 'Préparation du QR code…'}
+        </p>
+      </div>
+    );
+  };
 
   return (
     <motion.div
@@ -616,53 +798,7 @@ function VerifySheet({
           <h2 className="font-bold text-lg text-gray-900">Vérifier ma publication</h2>
           <button onClick={onClose} className="text-gray-400"><FaTimes /></button>
         </div>
-
-        {error ? (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">{error}</div>
-        ) : result ? (
-          <div>
-            <div className="flex items-center gap-2 text-green-700 font-medium">
-              <FaCheckCircle /> Vérification terminée
-            </div>
-            <p className="text-3xl font-bold text-gray-900 mt-3">{result.totalViews} vues</p>
-            <p className="text-sm text-gray-600">{formatFCFA(result.totalEarned)} pour cette vérification</p>
-            <div className="mt-4 space-y-2">
-              {result.verdicts.map((v) => (
-                <div key={v.day} className={`text-sm rounded-xl p-3 border ${v.accepted ? 'border-green-200 bg-green-50 text-green-900' : 'border-red-200 bg-red-50 text-red-900'}`}>
-                  <p className="font-medium">Jour {v.day} — {v.accepted ? 'validé' : 'refusé'}</p>
-                  {!v.accepted && v.reason && <p className="text-xs mt-1">{v.reason}</p>}
-                  {v.accepted && <p className="text-xs mt-1">{v.viewCount} vues · {formatFCFA(v.earnedAmount)}</p>}
-                </div>
-              ))}
-            </div>
-            <p className="text-xs text-gray-500 mt-4">
-              Vos gains seront crédités une fois les 3 journées terminées.
-            </p>
-            <button onClick={onClose} className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4">
-              Fermer
-            </button>
-          </div>
-        ) : qr ? (
-          <div className="text-center">
-            <p className="text-sm text-gray-600 mb-3">
-              Sur votre téléphone : WhatsApp → Appareils connectés → Connecter un appareil,
-              puis scannez ce code.
-            </p>
-            <img src={qr} alt="QR code WhatsApp" className="w-56 h-56 mx-auto" />
-            <p className="text-xs text-gray-500 mt-3">
-              La connexion est temporaire. Elle sert uniquement à lire les vues de votre
-              statut, puis elle est supprimée.
-            </p>
-          </div>
-        ) : (
-          <div className="py-6 text-center text-gray-500">
-            <img src={illustrationVerify} alt="" aria-hidden="true" className="w-40 mx-auto mb-2" />
-            <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={24} />
-            <p className="text-sm mt-3">
-              {state === 'reading' ? 'Lecture de vos statuts…' : 'Préparation de la connexion…'}
-            </p>
-          </div>
-        )}
+        {body()}
       </motion.div>
     </motion.div>
   );
