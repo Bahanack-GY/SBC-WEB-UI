@@ -100,3 +100,55 @@ export const AdsStatCard: React.FC<{
         </div>
     );
 };
+
+/**
+ * The three campaign days as pips.
+ *
+ * This replaced "Jour 2 sur 3 · 0 journée(s) validée(s) · en attente de
+ * vérification" plus two timestamped lines. Where someone is in a three-step
+ * run is a shape, not a sentence.
+ */
+export const AdsDayPips: React.FC<{
+    total: number;
+    currentDay?: number;
+    completed: number;
+    awaitingDay?: number;
+}> = ({ total, currentDay, completed, awaitingDay }) => (
+    <div className="flex items-center gap-1.5" role="list" aria-label="Progression des journées">
+        {Array.from({ length: total }, (_, i) => {
+            const day = i + 1;
+            const done = day <= completed;
+            const awaiting = day === awaitingDay;
+            const active = day === currentDay && !done;
+
+            return (
+                <span
+                    key={day}
+                    role="listitem"
+                    aria-label={`Jour ${day} ${done ? 'validé' : awaiting ? 'à vérifier' : 'à venir'}`}
+                    className={`h-1.5 flex-1 rounded-full ${done ? 'bg-green-500'
+                        : awaiting ? 'bg-amber-400'
+                            : active ? 'bg-[#115CF6]'
+                                : 'bg-gray-200'
+                        }`}
+                />
+            );
+        })}
+    </div>
+);
+
+/** "demain 10:08", "dans 3 jours" — a full timestamp is noise on a phone. */
+export const relativeDate = (iso?: string): string => {
+    if (!iso) return '';
+    const date = new Date(iso);
+    const now = new Date();
+    const midnight = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+    const days = Math.round((midnight(date) - midnight(now)) / 86_400_000);
+    const time = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+    if (days === 0) return `aujourd'hui ${time}`;
+    if (days === 1) return `demain ${time}`;
+    if (days < 0) return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+    if (days <= 6) return `dans ${days} jours`;
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
+};

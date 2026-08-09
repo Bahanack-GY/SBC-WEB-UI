@@ -7,7 +7,7 @@ import {
   FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard,
 } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
-import { AdsCardSkeleton, AdsStatCard } from '../components/ads/AdsScreen';
+import { AdsCardSkeleton, AdsStatCard, AdsDayPips, relativeDate } from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import illustrationShare from '../assets/icon/ads-share.jpg';
 import illustrationVerify from '../assets/icon/ads-verify.jpg';
@@ -60,7 +60,6 @@ interface Verdict {
 }
 
 const formatFCFA = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} F`;
-const formatDate = (iso?: string) => (iso ? new Date(iso).toLocaleString('fr-FR') : '—');
 
 /**
  * Diffuseur dashboard: offers, the campaign in progress, and earnings.
@@ -281,19 +280,28 @@ function AdsNetworkDiffuseur() {
                           />
                         )}
                         <p className="font-medium text-gray-900">{p.campaign?.title ?? 'Campagne'}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          Jour {day?.day ?? '—'} sur 3 · {p.schedule?.daysCompleted ?? 0} journée(s) validée(s)
-                          {awaiting ? ' · en attente de vérification' : ''}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          À terminer avant le {formatDate(p.schedule?.completionDeadline)}
-                        </p>
-
-                        {!windowOpen && (
-                          <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
-                            Jour {day?.day} disponible le {formatDate(day?.windowOpensAt)}.
-                          </p>
-                        )}
+                        {/* Three lines of prose about where they stand became a
+                            progress bar and two short labels. */}
+                        <div className="mt-2">
+                          <AdsDayPips
+                            total={3}
+                            currentDay={day?.day}
+                            completed={p.schedule?.daysCompleted ?? 0}
+                            awaitingDay={awaiting?.day}
+                          />
+                          <div className="flex items-center justify-between text-xs mt-1.5">
+                            <span className={awaiting ? 'text-amber-700 font-medium' : 'text-gray-500'}>
+                              {awaiting
+                                ? `Jour ${awaiting.day} à vérifier`
+                                : !windowOpen && day?.windowOpensAt
+                                  ? `Jour ${day.day} · ${relativeDate(day.windowOpensAt)}`
+                                  : `Jour ${day?.day ?? '—'} sur 3`}
+                            </span>
+                            <span className="text-gray-400">
+                              Fin {relativeDate(p.schedule?.completionDeadline)}
+                            </span>
+                          </div>
+                        </div>
 
                         <div className="flex flex-col gap-2 mt-3">
                           {windowOpen && !awaiting && (
