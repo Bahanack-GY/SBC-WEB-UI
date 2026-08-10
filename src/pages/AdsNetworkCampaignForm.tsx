@@ -8,6 +8,9 @@ import { sbcApiService } from '../services/SBCApiService';
 const MIN_AMOUNT = 6000;
 
 /** Countries SBC operates in. Targeting is optional; empty means every country. */
+import { baseInterestOptions, getInterestDisplayValue } from './ModifierLeProfil';
+import { removeAccents } from '../utils/apiHelpers';
+
 const COUNTRIES = [
   { code: 'CM', label: 'Cameroun' },
   { code: 'CI', label: "Côte d'Ivoire" },
@@ -44,6 +47,9 @@ function AdsNetworkCampaignForm() {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [countries, setCountries] = useState<string[]>([]);
   const [sex, setSex] = useState<string[]>([]);
+  const [cities, setCities] = useState<string[]>([]);
+  const [cityInput, setCityInput] = useState('');
+  const [interests, setInterests] = useState<string[]>([]);
   const [minAge, setMinAge] = useState('');
   const [maxAge, setMaxAge] = useState('');
 
@@ -105,6 +111,10 @@ function AdsNetworkCampaignForm() {
         websiteUrl: websiteUrl.trim() || undefined,
         targeting: {
           countries: countries.length ? countries : undefined,
+          // Accent-stripped, same normalization as user profiles, so matching
+          // doesn't quietly lose half the audience.
+          cities: cities.length ? cities.map(c => removeAccents(c)) : undefined,
+          interests: interests.length ? interests : undefined,
           sex: sex.length ? sex : undefined,
           minAge: minAge ? Number(minAge) : undefined,
           maxAge: maxAge ? Number(maxAge) : undefined,
@@ -263,6 +273,62 @@ function AdsNetworkCampaignForm() {
                 </button>
               ))}
             </div>
+            {/* Cities: free text, chip on Entrée/virgule — profiles hold free-text
+                cities, so a fixed list would never match reality. */}
+            <div className="mb-2">
+              <div className="flex gap-2">
+                <input
+                  value={cityInput}
+                  onChange={(e) => setCityInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ',') {
+                      e.preventDefault();
+                      const v = cityInput.trim().replace(/,$/, '');
+                      if (v && !cities.some(c => c.toLowerCase() === v.toLowerCase())) setCities([...cities, v]);
+                      setCityInput('');
+                    }
+                  }}
+                  placeholder="Villes (Entrée pour ajouter)"
+                  className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                />
+              </div>
+              {cities.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {cities.map((c) => (
+                    <button
+                      key={c}
+                      type="button"
+                      onClick={() => setCities(cities.filter(x => x !== c))}
+                      className="px-3 py-1.5 rounded-full text-sm border bg-[#115CF6] text-white border-[#115CF6]"
+                    >
+                      {c} ×
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Interests: the same list users pick from at signup, so targeting
+                and profiles speak the same vocabulary. */}
+            <div className="mb-2">
+              <p className="text-xs text-gray-500 mb-1">Centres d'intérêt</p>
+              <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
+                {baseInterestOptions.map((base: string) => {
+                  const selected = interests.includes(base);
+                  return (
+                    <button
+                      key={base}
+                      type="button"
+                      onClick={() => setInterests(selected ? interests.filter(i => i !== base) : [...interests, base])}
+                      className={`px-3 py-1.5 rounded-full text-sm border ${selected ? 'bg-[#115CF6] text-white border-[#115CF6]' : 'bg-white text-gray-700 border-gray-300'}`}
+                    >
+                      {getInterestDisplayValue(base)}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <div className="flex gap-2">
               <input
                 type="number" inputMode="numeric" value={minAge}
