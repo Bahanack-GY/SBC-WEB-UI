@@ -21,7 +21,7 @@ export function useSubscriptionStatus() {
     (user as { id?: string; _id?: string })?._id ||
     (typeof window !== 'undefined' ? localStorage.getItem('userId') || undefined : undefined);
 
-  const { data, isLoading, isFetching } = useQuery<unknown>({
+  const { data, isLoading } = useQuery<unknown>({
     queryKey: ['current-subscription', scopedUserId ?? 'anonymous'],
     queryFn: async () => {
       try {
@@ -37,7 +37,11 @@ export function useSubscriptionStatus() {
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: true,
+    // Explicit true here overrode the app-wide false and was the real source
+    // of « la page se rafraîchit seule » : every refocus refetched this query,
+    // and the guard below swapped the whole route tree for a spinner while it
+    // ran — wiping any form mid-entry (campaign creation, Rufus's team).
+    refetchOnWindowFocus: false,
     refetchOnMount: true,
     retry: 1,
   });
@@ -61,7 +65,11 @@ export function useSubscriptionStatus() {
 
   // Loading is only meaningful when authenticated — for unauthenticated callers
   // the query is disabled and we shouldn't block the guard chain on it.
-  const loading = isAuthenticated && (isLoading || isFetching);
+  // Only the INITIAL load blocks (isLoading = no data yet). Background
+  // refetches keep the current page mounted: blocking on isFetching unmounted
+  // every guarded page mid-refetch and destroyed in-progress form state.
+  // Fail-closed is preserved — with no data yet, isLoading is true.
+  const loading = isAuthenticated && isLoading;
 
   return { isSubscribed, isLoading: loading };
 }
