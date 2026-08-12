@@ -11,7 +11,12 @@ import { purgeStaleCaches } from './utils/cacheBuster'
 // from past deploys, so users always run the freshly-shipped bundles.
 purgeStaleCaches();
 
-const queryClient = new QueryClient()
+// No refetch on window focus: every return to the tab refetched every query,
+// and the resulting spinner flashes read as "the page refreshes by itself"
+// (Rufus, twice). Data still refreshes on mount and on explicit invalidation.
+const queryClient = new QueryClient({
+    defaultOptions: { queries: { refetchOnWindowFocus: false } },
+})
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
