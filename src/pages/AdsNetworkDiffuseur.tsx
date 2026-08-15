@@ -41,6 +41,7 @@ interface Participation {
     mediaFileId: string;
     mediaType: 'image' | 'video';
     suggestedCaption?: string;
+    isTestCampaign?: boolean;
   } | null;
   schedule?: {
     currentDay?: DaySchedule;
@@ -338,7 +339,9 @@ function AdsNetworkDiffuseur() {
               <section className="mt-6">
                 <h2 className="font-semibold text-gray-900 mb-1">Campagnes proposées</h2>
                 <p className="text-xs text-gray-500 mb-3">
-                  Proposées à plusieurs diffuseurs. Les premiers à accepter les obtiennent.
+                  {offers.some(o => o.campaign?.isTestCampaign)
+                    ? 'La campagne test mesure votre audience : elle est obligatoire et reste proposée tant qu\'elle n\'est pas terminée.'
+                    : 'Proposées à plusieurs diffuseurs. Les premiers à accepter les obtiennent.'}
                 </p>
                 <div className="space-y-3">
                   {offers.map((p, i) => (
@@ -378,13 +381,19 @@ function AdsNetworkDiffuseur() {
                         >
                           {acting === p._id ? 'Traitement…' : 'Accepter'}
                         </button>
-                        <button
-                          onClick={() => handleDecline(p)}
-                          disabled={acting === p._id}
-                          className="px-4 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm"
-                        >
-                          Refuser
-                        </button>
+                        {/* The test campaign is not optional: it is the only
+                            way to be measured, and measurement is what unlocks
+                            paid work. Offering Refuser on it promised a choice
+                            that does not exist. */}
+                        {!p.campaign?.isTestCampaign && (
+                          <button
+                            onClick={() => handleDecline(p)}
+                            disabled={acting === p._id}
+                            className="px-4 bg-gray-100 text-gray-700 rounded-xl py-2.5 text-sm"
+                          >
+                            Refuser
+                          </button>
+                        )}
                       </div>
                     </motion.div>
                   ))}
@@ -730,8 +739,9 @@ function AdsNetworkDiffuseur() {
                 )}
 
                 <p className="text-xs text-gray-500 mt-3">
-                  En acceptant, vous vous engagez à publier le statut 3 jours de suite,
-                  à raison d'une publication par jour, et à vérifier chaque publication.
+                  {offerDetail.campaign?.isTestCampaign
+                    ? "Campagne test obligatoire : elle ne rapporte rien, mais elle mesure votre audience réelle et débloque les campagnes rémunérées. Publiez le statut 3 jours de suite et vérifiez chaque publication."
+                    : "En acceptant, vous vous engagez à publier le statut 3 jours de suite, à raison d'une publication par jour, et à vérifier chaque publication."}
                 </p>
 
                 <div className="flex gap-2 mt-4">
@@ -743,14 +753,16 @@ function AdsNetworkDiffuseur() {
                   >
                     {acting === offerDetail._id ? 'Traitement…' : 'Accepter la campagne'}
                   </motion.button>
-                  <motion.button
-                    whileTap={{ scale: 0.97 }}
-                    onClick={async () => { await handleDecline(offerDetail); setOfferDetail(null); }}
-                    disabled={acting === offerDetail._id}
-                    className="px-4 bg-gray-100 text-gray-700 rounded-xl py-3 text-sm"
-                  >
-                    Refuser
-                  </motion.button>
+                  {!offerDetail.campaign?.isTestCampaign && (
+                    <motion.button
+                      whileTap={{ scale: 0.97 }}
+                      onClick={async () => { await handleDecline(offerDetail); setOfferDetail(null); }}
+                      disabled={acting === offerDetail._id}
+                      className="px-4 bg-gray-100 text-gray-700 rounded-xl py-3 text-sm"
+                    >
+                      Refuser
+                    </motion.button>
+                  )}
                 </div>
               </div>
             </motion.div>
