@@ -14,6 +14,7 @@ import { useAdsRoles } from '../hooks/useAdsRoles';
 import illustrationShare from '../assets/icon/ads-share.jpg';
 import illustrationVerify from '../assets/icon/ads-verify.jpg';
 import illustrationEmpty from '../assets/icon/ads-empty.jpg';
+import { africanCountryCodes } from '../utils/countriesData';
 import { sbcApiService } from '../services/SBCApiService';
 
 interface DaySchedule {
@@ -968,18 +969,10 @@ function VerifySheet({
   // option for most of them — the pairing code is what makes this work on one
   // device, and it is offered first for that reason.
   const [method, setMethod] = useState<'qr' | 'code' | null>(null);
-  // Split so the country can never be forgotten; defaultPhone may already be
-  // international, so peel a known code off it when pre-filling.
-  const DIAL_CODES = [
-    { code: '237', flag: '🇨🇲' }, { code: '225', flag: '🇨🇮' }, { code: '221', flag: '🇸🇳' },
-    { code: '229', flag: '🇧🇯' }, { code: '228', flag: '🇹🇬' }, { code: '226', flag: '🇧🇫' },
-    { code: '223', flag: '🇲🇱' }, { code: '227', flag: '🇳🇪' }, { code: '241', flag: '🇬🇦' },
-    { code: '243', flag: '🇨🇩' }, { code: '242', flag: '🇨🇬' }, { code: '224', flag: '🇬🇳' },
-    { code: '235', flag: '🇹🇩' }, { code: '254', flag: '🇰🇪' }, { code: '233', flag: '🇬🇭' },
-    { code: '234', flag: '🇳🇬' },
-  ];
+  // Same country list and shape as the signup screen — one place to maintain,
+  // and a diffuseur meets the control they already used to register.
   const prefill = (defaultPhone ?? '').replace(/\D/g, '');
-  const matched = DIAL_CODES.find(c => prefill.startsWith(c.code));
+  const matched = africanCountryCodes.find(c => prefill.startsWith(c.code));
   const [dialCode, setDialCode] = useState(matched?.code ?? '237');
   const [phone, setPhone] = useState(matched ? prefill.slice(matched.code.length) : prefill);
   const [state, setState] = useState<string>('starting');
@@ -1024,7 +1017,7 @@ function VerifySheet({
     (async () => {
       const res = await sbcApiService.startVerification(participation._id, {
         method,
-        // Composed here so the country can never be left off (see DIAL_CODES).
+        // Composed here so the country can never be left off.
         phoneNumber: method === 'code'
           ? `${dialCode}${phone.replace(/\D/g, '').replace(/^0+/, '')}`
           : undefined,
@@ -1137,8 +1130,8 @@ function VerifySheet({
                   onChange={(e) => setDialCode(e.target.value)}
                   className="border border-gray-300 rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
                 >
-                  {DIAL_CODES.map((c) => (
-                    <option key={c.code} value={c.code}>{c.flag} +{c.code}</option>
+                  {africanCountryCodes.map((c) => (
+                    <option key={c.value} value={c.code}>{c.label}</option>
                   ))}
                 </select>
                 <input
