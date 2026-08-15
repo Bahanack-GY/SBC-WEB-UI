@@ -968,7 +968,20 @@ function VerifySheet({
   // option for most of them — the pairing code is what makes this work on one
   // device, and it is offered first for that reason.
   const [method, setMethod] = useState<'qr' | 'code' | null>(null);
-  const [phone, setPhone] = useState(defaultPhone ?? '');
+  // Split so the country can never be forgotten; defaultPhone may already be
+  // international, so peel a known code off it when pre-filling.
+  const DIAL_CODES = [
+    { code: '237', flag: '🇨🇲' }, { code: '225', flag: '🇨🇮' }, { code: '221', flag: '🇸🇳' },
+    { code: '229', flag: '🇧🇯' }, { code: '228', flag: '🇹🇬' }, { code: '226', flag: '🇧🇫' },
+    { code: '223', flag: '🇲🇱' }, { code: '227', flag: '🇳🇪' }, { code: '241', flag: '🇬🇦' },
+    { code: '243', flag: '🇨🇩' }, { code: '242', flag: '🇨🇬' }, { code: '224', flag: '🇬🇳' },
+    { code: '235', flag: '🇹🇩' }, { code: '254', flag: '🇰🇪' }, { code: '233', flag: '🇬🇭' },
+    { code: '234', flag: '🇳🇬' },
+  ];
+  const prefill = (defaultPhone ?? '').replace(/\D/g, '');
+  const matched = DIAL_CODES.find(c => prefill.startsWith(c.code));
+  const [dialCode, setDialCode] = useState(matched?.code ?? '237');
+  const [phone, setPhone] = useState(matched ? prefill.slice(matched.code.length) : prefill);
   const [state, setState] = useState<string>('starting');
   const [qr, setQr] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
@@ -1011,7 +1024,10 @@ function VerifySheet({
     (async () => {
       const res = await sbcApiService.startVerification(participation._id, {
         method,
-        phoneNumber: method === 'code' ? phone : undefined,
+        // Composed here so the country can never be left off (see DIAL_CODES).
+        phoneNumber: method === 'code'
+          ? `${dialCode}${phone.replace(/\D/g, '').replace(/^0+/, '')}`
+          : undefined,
       });
       if (stopped) return;
       if (res.statusCode === 503) {
@@ -1033,7 +1049,7 @@ function VerifySheet({
       // else until it times out.
       if (sessionIdRef.current) sbcApiService.cancelVerification(sessionIdRef.current);
     };
-  }, [started, method, phone, participation._id]);
+  }, [started, method, phone, dialCode, participation._id]);
 
   const copyCode = async () => {
     if (!pairingCode) return;
@@ -1111,41 +1127,44 @@ function VerifySheet({
               <label className="block text-sm text-gray-700 mb-1">
                 Numéro WhatsApp à connecter
               </label>
-              <input
-                type="tel"
-                inputMode="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="ex. 237675080477"
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
-              />
-              {/* WhatsApp binds the code to this exact number; entering it on any
-                  other account answers « Impossible de connecter l'appareil ».
-                  Showing what will actually be sent catches the typo before the
-                  code is burned. */}
+              {/* Country picked, national part typed. One field invited people to
+                  send their local number: WhatsApp then bound the code to that,
+                  and their app answered « Impossible de connecter l'appareil »
+                  with no way for us to see why (Christian, Rufus). */}
+              <div className="flex gap-2">
+                <select
+                  value={dialCode}
+                  onChange={(e) => setDialCode(e.target.value)}
+                  className="border border-gray-300 rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                >
+                  {DIAL_CODES.map((c) => (
+                    <option key={c.code} value={c.code}>{c.flag} +{c.code}</option>
+                  ))}
+                </select>
+                <input
+                  type="tel"
+                  inputMode="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="675080477"
+                  className="flex-1 min-w-0 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                />
+              </div>
+              {/* WhatsApp binds the code to this exact number; typed wrong, their
+                  app answers « Impossible de connecter l'appareil » and the code
+                  is burned. Echo what will actually be sent. */}
               {(() => {
-                const digits = phone.replace(/\D/g, '').replace(/^00/, '');
-                const bad = digits.startsWith('0');
-                const short = digits.length > 0 && digits.length < 8;
-                return (
-                  <>
-                    <p className="text-xs text-gray-500 mt-1">
-                      Avec l'indicatif du pays, sans le « + » — ex. 237675080477.
-                    </p>
-                    {digits.length >= 8 && !bad && (
-                      <p className="text-xs text-gray-700 mt-1">
-                        Le code sera généré pour le <strong>+{digits}</strong> — il ne
-                        fonctionnera que sur ce WhatsApp.
-                      </p>
-                    )}
-                    {(bad || short) && (
-                      <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2 mt-1">
-                        {bad
-                          ? 'Ne commencez pas par 0 : mettez l\'indicatif du pays (ex. 237 puis le numéro sans le 0).'
-                          : 'Numéro trop court — indicatif pays compris.'}
-                      </p>
-                    )}
-                  </>
+                const national = phone.replace(/\D/g, '').replace(/^0+/, '');
+                const full = `${dialCode}${national}`;
+                return national.length >= 6 ? (
+                  <p className="text-xs text-gray-700 mt-2">
+                    Le code sera généré pour le <strong>+{full}</strong> — il ne
+                    fonctionnera que sur ce WhatsApp.
+                  </p>
+                ) : (
+                  <p className="text-xs text-gray-500 mt-2">
+                    Votre numéro sans l'indicatif ni le 0 initial.
+                  </p>
                 );
               })()}
             </div>
