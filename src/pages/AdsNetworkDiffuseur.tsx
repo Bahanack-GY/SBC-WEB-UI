@@ -1119,9 +1119,35 @@ function VerifySheet({
                 placeholder="ex. 237675080477"
                 className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
               />
-              <p className="text-xs text-gray-500 mt-1">
-                Avec l'indicatif du pays, sans le « + ».
-              </p>
+              {/* WhatsApp binds the code to this exact number; entering it on any
+                  other account answers « Impossible de connecter l'appareil ».
+                  Showing what will actually be sent catches the typo before the
+                  code is burned. */}
+              {(() => {
+                const digits = phone.replace(/\D/g, '').replace(/^00/, '');
+                const bad = digits.startsWith('0');
+                const short = digits.length > 0 && digits.length < 8;
+                return (
+                  <>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Avec l'indicatif du pays, sans le « + » — ex. 237675080477.
+                    </p>
+                    {digits.length >= 8 && !bad && (
+                      <p className="text-xs text-gray-700 mt-1">
+                        Le code sera généré pour le <strong>+{digits}</strong> — il ne
+                        fonctionnera que sur ce WhatsApp.
+                      </p>
+                    )}
+                    {(bad || short) && (
+                      <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2 mt-1">
+                        {bad
+                          ? 'Ne commencez pas par 0 : mettez l\'indicatif du pays (ex. 237 puis le numéro sans le 0).'
+                          : 'Numéro trop court — indicatif pays compris.'}
+                      </p>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           )}
 
