@@ -1,9 +1,11 @@
 import { FiEdit2 } from 'react-icons/fi';
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import { motion } from 'framer-motion';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 
 function ChangeEmail() {
     const [newEmail, setNewEmail] = useState('');
@@ -44,14 +46,14 @@ function ChangeEmail() {
         }
     };
     return (
-        <div className="min-h-screen flex flex-col justify-center items-center bg-white px-4">
-            <div className="w-full max-w-sm mx-auto">
-                <div className="flex flex-col items-center mt-8 mb-6">
+        <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col justify-center items-center bg-white px-4">
+            <motion.div variants={sectionRise} className="w-full max-w-sm mx-auto">
+                <motion.div variants={headerDrop} className="flex flex-col items-center mt-8 mb-6">
                     <div className="bg-blue-100 rounded-full w-24 h-24 flex items-center justify-center mb-4">
                         <FiEdit2 className="text-blue-500" size={40} />
                     </div>
                     <p className="text-center text-gray-800 font-semibold mb-2">Modifier mon email</p>
-                </div>
+                </motion.div>
                 {mutation.isError && (
                     <div className="text-red-500 text-center mb-2">
                         {(mutation.error as Error)?.message || "Erreur lors de l'envoi du code."}
@@ -87,8 +89,8 @@ function ChangeEmail() {
                         {mutation.status === 'pending' ? 'Envoi en cours...' : 'Envoyer le code'}
                     </button>
                 </form>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     )
 }
 

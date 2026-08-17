@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   MagnifyingGlassIcon,
@@ -15,6 +16,7 @@ import { formatDistanceToNow, format, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Skeleton from '../common/Skeleton';
 import { needsAcceptance, getRemainingMessages, isInitiator, hasReachedMessageLimit } from '../../utils/conversationHelpers';
+import { pageFade, listContainer, listItem } from '../../utils/motion';
 
 interface ConversationListProps {
   onConversationClick?: (conversation: Conversation) => void;
@@ -529,7 +531,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
   // Loading skeleton
   if (loading && conversations.length === 0) {
     return (
-      <div className="flex flex-col h-full bg-white">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header skeleton */}
         <div className="p-4 border-b border-gray-200">
           <Skeleton height="h-10" rounded="rounded-lg" />
@@ -548,13 +550,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col h-full bg-white">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header */}
         <div className="p-4 border-b border-gray-200">
           {selectionMode ? (
@@ -634,8 +636,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
         </div>
 
         {/* Conversation list */}
-        <div
+        <motion.div
           ref={scrollContainerRef}
+          variants={listContainer}
+          initial="hidden"
+          animate="show"
           className="flex-1 overflow-y-auto"
         >
           {filteredConversations.length === 0 ? (
@@ -678,7 +683,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
             <>
               {/* Archived Chats Button */}
               {!searchQuery && (
-                <button
+                <motion.button
+                  variants={listItem}
                   onClick={openArchivedModal}
                   className="w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors text-left"
                 >
@@ -698,12 +704,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>
-                </button>
+                </motion.button>
               )}
 
               {filteredConversations.map((conv) => (
-                <div
+                <motion.div
                   key={conv._id}
+                  variants={listItem}
                   onClick={() => handleConversationClick(conv)}
                   onMouseDown={() => !selectionMode && handleLongPressStart(conv._id)}
                   onMouseUp={handleLongPressEnd}
@@ -808,7 +815,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                       </div>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
 
               {/* Loading more indicator */}
@@ -819,8 +826,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
               )}
             </>
           )}
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
 
       {/* User Search Modal */}
       {showUserSearchModal && (
