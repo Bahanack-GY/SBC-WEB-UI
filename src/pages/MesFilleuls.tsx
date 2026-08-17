@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useQuery, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
+import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 import { FaWhatsapp, FaFilter, FaSearch, FaTimes, FaChartLine, FaUsers, FaUserCheck, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import Skeleton from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
@@ -416,14 +418,14 @@ function MesFilleuls() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow-sm sticky top-0 z-10">
+      <motion.div variants={headerDrop} className="bg-white shadow-sm sticky top-0 z-10">
         <div className="flex items-center p-4">
           <BackButton />
           <h1 className="text-xl font-semibold text-gray-900 ml-3">Mes filleuls</h1>
         </div>
-      </div>
+      </motion.div>
 
       <div className="p-4 space-y-4">
         {/* Search Bar */}
@@ -693,14 +695,15 @@ function MesFilleuls() {
             ))}
           </div>
         ) : (
-          <div className="space-y-3">
+          <motion.div variants={listContainer} initial="hidden" animate="show" className="space-y-3">
             {allFilleuls.length > 0 ? (
               <>
                 <div className="text-sm text-gray-600 mb-3">
                   {filteredCount} {filteredCount === 1 ? 'filleul trouvé' : 'filleuls trouvés'}
                 </div>
                 {allFilleuls.map((filleul: User, index: number) => (
-                  <div
+                  <motion.div
+                    variants={listItem}
                     key={filleul._id}
                     ref={index === allFilleuls.length - 1 ? lastItemRef : null}
                     className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
@@ -753,7 +756,7 @@ function MesFilleuls() {
                         <FaWhatsapp size={20} />
                       </a>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
 
                 {isFetchingNextPage && (
@@ -777,10 +780,10 @@ function MesFilleuls() {
                 </div>
               </div>
             )}
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
 import { sbcApiService } from '../../services/SBCApiService';
 import type { Status, StatusCategory } from '../../types/chat';
 import { CATEGORY_CONFIG } from '../../types/chat';
+import { pageFade, listContainer, listItem } from '../../utils/motion';
 import { PlusCircleIcon } from '@heroicons/react/24/solid';
 
 interface StatusFeedProps {
@@ -49,7 +51,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
   ];
 
   return (
-    <div className="flex flex-col h-full bg-white">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
       {/* Category Filter */}
       <div className="flex items-center gap-2 p-4 overflow-x-auto scrollbar-hide border-b border-gray-200">
         {categories.map((cat) => (
@@ -108,10 +110,11 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4">
+          <motion.div variants={listContainer} initial="hidden" animate="show" className="grid grid-cols-2 gap-4">
             {statuses.map((status) => (
-              <button
+              <motion.button
                 key={status._id}
+                variants={listItem}
                 onClick={() => onStatusClick(status)}
                 className="relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
               >
@@ -173,11 +176,11 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
                   <span>❤️ {status.likesCount}</span>
                   <span>👁️ {status.viewsCount}</span>
                 </div>
-              </button>
+              </motion.button>
             ))}
-          </div>
+          </motion.div>
         )}
       </div>
-    </div>
+    </motion.div>
   );
 };

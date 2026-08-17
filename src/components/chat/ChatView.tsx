@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSocket } from '../../contexts/SocketContext';
 import { sbcApiService } from '../../services/SBCApiService';
@@ -34,6 +35,7 @@ import {
   isInitiator,
   hasReachedMessageLimit,
 } from '../../utils/conversationHelpers';
+import { pageFade, sectionRise } from '../../utils/motion';
 
 interface ChatViewProps {
   conversationId: string;
@@ -1353,7 +1355,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
   // Loading state
   if (loading && messages.length === 0) {
     return (
-      <div className="flex flex-col h-full bg-white">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header skeleton */}
         <div className="p-4 border-b border-gray-200">
           <div className="flex items-center gap-3">
@@ -1376,13 +1378,13 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   return (
     <>
-      <div className="flex flex-col h-full bg-white">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header */}
         <div className="p-4 border-b border-gray-200 bg-white shadow-sm">
           {selectionMode ? (
@@ -1583,8 +1585,11 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         )}
 
         {/* Messages */}
-        <div
+        <motion.div
           ref={messagesContainerRef}
+          variants={sectionRise}
+          initial="hidden"
+          animate="show"
           className="flex-1 overflow-y-auto p-4 bg-gray-50"
           style={{ scrollBehavior: 'smooth' }}
         >
@@ -1644,7 +1649,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
           )}
 
           <div ref={messagesEndRef} />
-        </div>
+        </motion.div>
 
         {/* Input area */}
         <div className="p-4 bg-white border-t border-gray-200">
@@ -1762,7 +1767,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
             </button>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Forward Modal */}
       {forwardModal.isOpen && (

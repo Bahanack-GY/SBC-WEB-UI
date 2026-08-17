@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import type { SmsLink, SmsLinkType, SmsTemplate } from '../types/relance';
@@ -86,7 +88,7 @@ export default function RelanceSmsLinks() {
     const key = `${tpl.type}:${tpl.dayNumber}`;
     const value = linkValues[key] || '';
     return (
-      <div key={key} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+      <motion.div variants={listItem} key={key} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
         <div className="font-bold text-sm text-gray-700 mb-1">
           {dayLabel(tpl.type, tpl.dayNumber)}
         </div>
@@ -102,17 +104,17 @@ export default function RelanceSmsLinks() {
           placeholder="https://..."
           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
         />
-      </div>
+      </motion.div>
     );
   };
 
   return (
     <ProtectedRoute>
-      <div className="p-3 bg-white relative pb-24 min-h-screen">
-        <div className="flex items-center mb-4">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="p-3 bg-white relative pb-24 min-h-screen">
+        <motion.div variants={headerDrop} className="flex items-center mb-4">
           <BackButton />
           <h3 className="text-xl font-medium text-center flex-1">Mes liens SMS</h3>
-        </div>
+        </motion.div>
 
         <p className="text-sm text-gray-600 mb-4">
           Définissez le lien à inclure dans chaque SMS. Numéros Cameroun (+237) uniquement.
@@ -137,18 +139,18 @@ export default function RelanceSmsLinks() {
             {sortedTemplates.auto.length > 0 && (
               <section className="mb-6">
                 <h4 className="font-bold text-gray-800 mb-3">SMS automatiques</h4>
-                <div className="space-y-2">
+                <motion.div variants={listContainer} initial="hidden" animate="show" className="space-y-2">
                   {sortedTemplates.auto.map(renderRow)}
-                </div>
+                </motion.div>
               </section>
             )}
 
             {sortedTemplates.manual.length > 0 && (
               <section className="mb-6">
                 <h4 className="font-bold text-gray-800 mb-3">SMS manuels</h4>
-                <div className="space-y-2">
+                <motion.div variants={listContainer} initial="hidden" animate="show" className="space-y-2">
                   {sortedTemplates.manual.map(renderRow)}
-                </div>
+                </motion.div>
               </section>
             )}
 
@@ -167,7 +169,7 @@ export default function RelanceSmsLinks() {
             )}
           </>
         )}
-      </div>
+      </motion.div>
     </ProtectedRoute>
   );
 }

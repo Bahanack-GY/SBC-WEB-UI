@@ -9,6 +9,8 @@ import heroAnnonceur from '../assets/icon/ads-annonceur.jpg';
 import illustrationReview from '../assets/icon/ads-review.jpg';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
+import { motion } from 'framer-motion';
+import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
 const MIN_AMOUNT = 6000;
 
@@ -60,11 +62,13 @@ function AdsNetworkAnnonceurOnboarding() {
   }
 
   return (
-    <div className="min-h-screen bg-white p-4 pb-24">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-white p-4 pb-24">
       <BackButton />
 
       <div className="max-w-2xl mx-auto">
-        <AdsHero src={heroAnnonceur} alt="" />
+        <motion.div variants={headerDrop}>
+          <AdsHero src={heroAnnonceur} alt="" />
+        </motion.div>
 
         <h1 className="text-2xl font-bold text-gray-900 text-center">Devenir annonceur</h1>
         <p className="text-gray-600 mt-2 text-center">
@@ -72,23 +76,33 @@ function AdsNetworkAnnonceurOnboarding() {
         </p>
 
         <h2 className="font-semibold text-gray-900 mt-6 mb-3">Comment ça marche</h2>
-        <div className="space-y-3">
-          <AdsStep index={1} title="Vous créez votre annonce">
+        <motion.div variants={listContainer} initial="hidden" animate="show" className="space-y-3">
+          <motion.div variants={listItem}>
+            <AdsStep index={1} title="Vous créez votre annonce">
 Visuel, texte et moyen de contact.
-          </AdsStep>
-          <AdsStep index={2} title="Notre équipe la vérifie">
+            </AdsStep>
+          </motion.div>
+          <motion.div variants={listItem}>
+            <AdsStep index={2} title="Notre équipe la vérifie">
 Rien n'est diffusé sans validation.
-          </AdsStep>
-          <AdsStep index={3} title="Vous payez, la campagne part">
+            </AdsStep>
+          </motion.div>
+          <motion.div variants={listItem}>
+            <AdsStep index={3} title="Vous payez, la campagne part">
 Elle part aux diffuseurs correspondant à votre ciblage.
-          </AdsStep>
-          <AdsStep index={4} title="Chaque diffuseur publie 3 jours">
+            </AdsStep>
+          </motion.div>
+          <motion.div variants={listItem}>
+            <AdsStep index={4} title="Chaque diffuseur publie 3 jours">
 Seul le jour 1 est facturé. Les jours 2 et 3 sont offerts.
-          </AdsStep>
-          <AdsStep index={5} title="Vous suivez les résultats en direct">
+            </AdsStep>
+          </motion.div>
+          <motion.div variants={listItem}>
+            <AdsStep index={5} title="Vous suivez les résultats en direct">
 Vues et clics, diffuseur par diffuseur.
-          </AdsStep>
-        </div>
+            </AdsStep>
+          </motion.div>
+        </motion.div>
 
         <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-3 mt-4">
           <img src={illustrationReview} alt="" aria-hidden="true" className="w-20 shrink-0" />
@@ -147,7 +161,7 @@ Vues et clics, diffuseur par diffuseur.
           </button>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 

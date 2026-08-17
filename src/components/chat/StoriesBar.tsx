@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
+import { motion } from 'framer-motion';
 import { PlusIcon } from '@heroicons/react/24/solid';
 import type { StoryGroup } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';
 import { useAuth } from '../../contexts/AuthContext';
+import { pageFade, listContainer, rowItem } from '../../utils/motion';
 
 interface StoriesBarProps {
   onStoryClick: (group: StoryGroup, startIndex: number) => void;
@@ -80,7 +82,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
 
   if (loading && storyGroups.length === 0) {
     return (
-      <div className="bg-white border-b border-gray-200 p-4">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-gray-200 p-4">
         <div className="flex gap-3 overflow-x-auto">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex flex-col items-center gap-2">
@@ -89,18 +91,19 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
             </div>
           ))}
         </div>
-      </div>
+      </motion.div>
     );
   }
 
   console.log('StoriesBar - Rendering with storyGroups:', storyGroups.length, 'groups');
 
   return (
-    <div className="bg-white border-b border-gray-200 p-4">
-      <div className="flex gap-3 overflow-x-auto scrollbar-hide">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-gray-200 p-4">
+      <motion.div variants={listContainer} initial="hidden" animate="show" className="flex gap-3 overflow-x-auto scrollbar-hide">
         {/* Add Your Story Button */}
-        <button
+        <motion.button
           key="add-story"
+          variants={rowItem}
           onClick={onCreateClick}
           className="flex flex-col items-center gap-2 flex-shrink-0"
         >
@@ -117,13 +120,14 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
             </div>
           </div>
           <span className="text-xs font-medium text-gray-900 max-w-[64px] truncate">Votre statut</span>
-        </button>
+        </motion.button>
 
         {/* User Stories */}
         {storyGroups.map((group) => {
           return (
-            <button
+            <motion.button
               key={group.userId}
+              variants={rowItem}
               onClick={() => onStoryClick(group, 0)}
               className="flex flex-col items-center gap-2 flex-shrink-0"
             >
@@ -143,10 +147,10 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
               <span className="text-xs font-medium text-gray-900 max-w-[64px] truncate">
                 {group.authorName}
               </span>
-            </button>
+            </motion.button>
           );
         })}
-      </div>
-    </div>
+      </motion.div>
+    </motion.div>
   );
 };

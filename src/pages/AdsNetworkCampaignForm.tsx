@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { FaSpinner, FaImage, FaShieldAlt } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
+import { motion } from 'framer-motion';
+import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
 const MIN_AMOUNT = 6000;
 
@@ -145,11 +147,13 @@ function AdsNetworkCampaignForm() {
   };
 
   return (
-    <div className="min-h-screen bg-white p-4 pb-24">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-white p-4 pb-24">
       <BackButton />
 
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mt-2">Nouvelle annonce</h1>
+        <motion.div variants={headerDrop}>
+          <h1 className="text-2xl font-bold text-gray-900 mt-2">Nouvelle annonce</h1>
+        </motion.div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-3 text-sm text-blue-900 flex items-start gap-2">
           <FaShieldAlt className="mt-0.5 shrink-0" />
@@ -159,8 +163,8 @@ function AdsNetworkCampaignForm() {
           </span>
         </div>
 
-        <div className="space-y-4 mt-5">
-          <div>
+        <motion.div variants={listContainer} initial="hidden" animate="show" className="space-y-4 mt-5">
+          <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">Visuel à publier</label>
             <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-6 cursor-pointer">
               {preview ? (
@@ -178,9 +182,9 @@ function AdsNetworkCampaignForm() {
                 onChange={(e) => pickFile(e.target.files?.[0] ?? null)}
               />
             </label>
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">Titre</label>
             <input
               value={title}
@@ -189,9 +193,9 @@ function AdsNetworkCampaignForm() {
               placeholder="ex. Promo rentrée — sacs à dos"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
             />
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">Description</label>
             <textarea
               value={description}
@@ -201,9 +205,9 @@ function AdsNetworkCampaignForm() {
               placeholder="Ce que voit un prospect sur votre page."
               className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
             />
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">
               Texte proposé aux diffuseurs
             </label>
@@ -218,9 +222,9 @@ function AdsNetworkCampaignForm() {
             <p className="text-xs text-gray-500 mt-1">
               Le lien de suivi de chaque diffuseur y sera ajouté automatiquement.
             </p>
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">Moyens de contact</label>
             <p className="text-xs text-gray-500 mb-2">Au moins un. C'est ainsi que les prospects vous joignent.</p>
             <input
@@ -241,9 +245,9 @@ function AdsNetworkCampaignForm() {
               placeholder="Site web (https://…)"
               className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
             />
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">Ciblage</label>
             <p className="text-xs text-gray-500 mb-2">
               Facultatif. Sans ciblage, votre annonce est proposée à tous les diffuseurs —
@@ -341,9 +345,9 @@ function AdsNetworkCampaignForm() {
                 className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
               />
             </div>
-          </div>
+          </motion.div>
 
-          <div>
+          <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">Budget</label>
             <input
               type="number" inputMode="numeric" min={MIN_AMOUNT} step={1000}
@@ -351,8 +355,8 @@ function AdsNetworkCampaignForm() {
               className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
             />
             {quote && <p className="text-sm text-gray-700 mt-2">{quote.message}</p>}
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mt-4">{error}</div>
@@ -367,7 +371,7 @@ function AdsNetworkCampaignForm() {
           Envoyer à la validation
         </button>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
