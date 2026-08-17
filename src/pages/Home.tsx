@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube, FaLock } from "react-icons/fa";
+import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube, FaLock, FaBullhorn } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
 import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
@@ -268,9 +268,10 @@ function Home() {
             </div>
             <div className="quick-actions flex flex-col gap-4">
               <h2 className="text-2xl font-bold">Nos services</h2>
-              <div className="flex justify-between overflow-x-auto gap-4">
+              <div className="flex flex-wrap justify-center gap-x-2 gap-y-2 sm:gap-x-4">
                 <HomeButtons icon={<FaBook size={30} />} title="Formations" onClick={() => setIsFormationsModalOpen(true)} />
                 <HomeButtons icon={<FaCartShopping size={30} />} title="Marketplace" onClick={() => navigate("/marketplace")} />
+                <HomeButtons icon={<FaBullhorn size={30} />} title="Ads Network" onClick={() => navigate("/ads-network")} />
                 <HomeButtons icon={<FaPhone size={30} />} title="Contacts" onClick={() => navigate("/contacts")} />
                 <HomeButtons
                   icon={<FaEnvelope size={30} />}

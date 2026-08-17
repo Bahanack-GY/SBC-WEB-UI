@@ -11,7 +11,7 @@ interface HomeButtonsProps {
 function HomeButtons({ icon, title, onClick, badge }: HomeButtonsProps) {
 
     return (
-        <div className=" py-3 flex flex-col items-center gap-0">
+        <div className="w-[30%] sm:w-[18%] py-3 flex flex-col items-center gap-0">
             <div className="relative">
                 <button onClick={onClick} className="bg-[#F68F0F] rounded-lg p-4 text-white">
                     {icon}
@@ -22,7 +22,7 @@ function HomeButtons({ icon, title, onClick, badge }: HomeButtonsProps) {
                     </span>
                 )}
             </div>
-            <p className="text-lg font-medium text-gray-800 mt-2">{title}</p>
+            <p className="text-sm sm:text-lg font-medium text-gray-800 mt-2 text-center leading-tight min-h-[2.5rem] sm:min-h-0">{title}</p>
         </div>
     )
 }
