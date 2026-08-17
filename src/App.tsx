@@ -45,6 +45,7 @@ import { RelanceProvider } from './contexts/RelanceContext'
 import { SocketProvider } from './contexts/SocketContext'
 import Chat from './pages/Chat'
 import CompleteProfile from './pages/CompleteProfile'
+import AdsLaunchGate from './components/ads/AdsLaunchGate'
 import AdsNetwork from './pages/AdsNetwork'
 import AdsNetworkDiffuseurOnboarding from './pages/AdsNetworkDiffuseurOnboarding'
 import AdsNetworkDiffuseur from './pages/AdsNetworkDiffuseur'
@@ -219,12 +220,16 @@ function AppContent() {
           <Route path="/chat" element={<Chat />} />
           {/* SBC Ads Network. Paywalled like the rest of the member area: both
               roles pay out or spend money against an SBC account. */}
+          {/* Every Ads Network screen sits behind the launch gate — a
+              bookmarked sub-page must not slip past it. */}
+          <Route element={<AdsLaunchGate />}>
           <Route path="/ads-network" element={<AdsNetwork />} />
           <Route path="/ads-network/diffuseur/onboarding" element={<AdsNetworkDiffuseurOnboarding />} />
           <Route path="/ads-network/diffuseur" element={<AdsNetworkDiffuseur />} />
           <Route path="/ads-network/annonceur/onboarding" element={<AdsNetworkAnnonceurOnboarding />} />
           <Route path="/ads-network/annonceur/nouvelle-campagne" element={<AdsNetworkCampaignForm />} />
           <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
+          </Route>
         </Route>
       </Routes>
       {!hideNav && <NavigationBar />}
