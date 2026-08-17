@@ -983,6 +983,7 @@ function VerifySheet({
   const [copied, setCopied] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
   const [started, setStarted] = useState(false);
+  const [queuePosition, setQueuePosition] = useState<number | null>(null);
 
   useEffect(() => {
     if (!started || !method) return;
@@ -1000,6 +1001,7 @@ function VerifySheet({
         return;
       }
       setState(data?.state ?? 'reading');
+      setQueuePosition(typeof data?.queuePosition === 'number' ? data.queuePosition : null);
       if (data?.qr) setQr(data.qr);
       if (data?.pairingCode) setPairingCode(data.pairingCode);
 
@@ -1182,6 +1184,26 @@ function VerifySheet({
           >
             Continuer
           </button>
+        </div>
+      );
+    }
+
+    // Everyone verifying at once on launch night: waiting in line beats being
+    // told to come back later, as long as the line is visible.
+    if (state === 'queued') {
+      return (
+        <div className="py-8 text-center">
+          <FaHourglassHalf className="mx-auto text-[#115CF6]" size={28} />
+          <p className="font-medium text-gray-900 mt-4">
+            {queuePosition && queuePosition > 1
+              ? `Vous êtes ${queuePosition}ᵉ dans la file`
+              : 'Vous êtes le prochain'}
+          </p>
+          <p className="text-sm text-gray-600 mt-1">
+            Beaucoup de diffuseurs vérifient en ce moment. Votre tour arrive —
+            gardez cette page ouverte.
+          </p>
+          <p className="text-xs text-gray-400 mt-3">Cela prend généralement moins d'une minute.</p>
         </div>
       );
     }
