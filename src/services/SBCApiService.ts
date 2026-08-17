@@ -2154,6 +2154,12 @@ export class SBCApiService extends ApiService {
     return await this.post('/advertising/campaigns', { body });
   }
 
+  /** Whether the network is open yet, and when it opens. No auth: the splash
+   *  has to render before anyone signs in. */
+  async getAdsLaunchState(): Promise<ApiResponse> {
+    return await this.get('/advertising/launch', { requiresAuth: false });
+  }
+
   async getMyAdsCampaigns(filters?: Record<string, unknown>): Promise<ApiResponse> {
     return await this.get('/advertising/campaigns', { queryParameters: filters });
   }
