@@ -7,6 +7,10 @@ import illustration from '../../assets/icon/ads-share.jpg';
 /**
  * Shown in place of the network until it opens.
  *
+ * Deliberately says nothing about what the network does: Rufus reveals it
+ * himself during the launch presentation, and a page that explains it first
+ * spends the surprise.
+ *
  * The feature ships days before the launch so it can be rehearsed on the real
  * thing; this is what everyone else sees in the meantime. The backend refuses
  * the same requests, so this is the polite face of a real gate, not the gate.
@@ -49,10 +53,6 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                     <div className="flex items-center gap-4 mt-2">
                         <div className="flex-1 min-w-0">
                             <h1 className="text-2xl font-bold">SBC Ads Network</h1>
-                            <p className="text-white/85 text-sm mt-1">
-                                Bientôt disponible — gagnez de l'argent en publiant des annonces
-                                sur votre statut WhatsApp.
-                            </p>
                         </div>
                         <img
                             src={illustration}
@@ -101,11 +101,6 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                             L'ouverture est imminente. Rechargez la page dans un instant.
                         </p>
                     )}
-
-                    <div className="text-left text-sm text-gray-600 mt-6 space-y-2 border-t border-gray-100 pt-5">
-                        <p>📢 <strong>Annonceurs</strong> — faites voir votre produit par des milliers de personnes, et ne payez que les vues uniques.</p>
-                        <p>📱 <strong>Diffuseurs</strong> — publiez les campagnes sur votre statut pendant 3 jours et gagnez selon les vues vérifiées.</p>
-                    </div>
                 </motion.div>
             </div>
         </div>
