@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FiUser, FiPhone, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
@@ -12,6 +13,7 @@ import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
 import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
 import { countryOptions, africanCountryCodes } from '../utils/countriesData';
 import PublicFooter from '../components/common/PublicFooter';
+import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 
 interface SignupData {
   nom: string;
@@ -681,8 +683,8 @@ function Signup() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] py-8 px-4">
-      <div className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] py-8 px-4">
+      <motion.div variants={sectionRise} className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-6">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -695,11 +697,13 @@ function Signup() {
           ))}
         </div>
 
-        <div className="mb-4">{stepIcons[step]}</div>
-        <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Créer un compte</h2>
-        <p className="text-center text-gray-500 mb-6">
-          {step === 0 ? 'Vos informations personnelles' : 'Contact et parrainage'}
-        </p>
+        <motion.div variants={headerDrop}>
+          <div className="mb-4">{stepIcons[step]}</div>
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Créer un compte</h2>
+          <p className="text-center text-gray-500 mb-6">
+            {step === 0 ? 'Vos informations personnelles' : 'Contact et parrainage'}
+          </p>
+        </motion.div>
 
         <form className="flex flex-col gap-4">
           {step === 0 && (
@@ -846,7 +850,7 @@ function Signup() {
         <div className="text-center text-sm text-gray-500 mt-6">
           Déjà un compte ? <a href="/connexion" className="text-[#115CF6] font-semibold hover:underline">Connexion</a>
         </div>
-      </div>
+      </motion.div>
 
       <div className="w-full max-w-md px-4">
         <PublicFooter />
@@ -885,7 +889,7 @@ function Signup() {
           recoveryData={recoveryCompletedData}
         />
       )}
-    </div>
+    </motion.div>
   );
 }
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -11,6 +12,7 @@ import logo from '../assets/img/logo-sbc.png';
 import { clearSignupCacheWithFeedback } from '../utils/signupHelpers';
 import { useTranslation } from 'react-i18next';
 import PublicFooter from '../components/common/PublicFooter';
+import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 
 function Connexion() {
   const { t } = useTranslation();
@@ -145,11 +147,13 @@ function Connexion() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-white py-8 px-4">
-      <div className="w-full max-w-md p-8">
-        <img src={logo} alt="logo" className=" mb-4 object-contain" />
-        <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('pages.connexion.title')}</h1>
-        <p className="text-gray-500 mb-8">{t('pages.connexion.loginHere')}</p>
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-center bg-white py-8 px-4">
+      <motion.div variants={sectionRise} className="w-full max-w-md p-8">
+        <motion.div variants={headerDrop}>
+          <img src={logo} alt="logo" className=" mb-4 object-contain" />
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">{t('pages.connexion.title')}</h1>
+          <p className="text-gray-500 mb-8">{t('pages.connexion.loginHere')}</p>
+        </motion.div>
         <form className="flex flex-col gap-6" onSubmit={handleSubmit} noValidate>
           <div>
             <label className="block text-gray-700 font-medium mb-2">{t('pages.connexion.emailOrPhone')}</label>
@@ -207,7 +211,7 @@ function Connexion() {
             {t('common.signup')}
           </button>
         </div>
-      </div>
+      </motion.div>
 
       <div className="w-full max-w-md px-4">
         <PublicFooter />
@@ -233,7 +237,7 @@ function Connexion() {
         userReferralCode={''} // Will be handled by the component
         negativeBalance={0} // Will be handled by the component
       />
-    </div>
+    </motion.div>
   );
 }
 

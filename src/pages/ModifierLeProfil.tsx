@@ -321,9 +321,8 @@ function ModifierLeProfil() {
         ? normalizePhoneNumber(formData.momoNumber, countryPhoneCode)
         : '';
 
-      const updates = {
+      const updates: Record<string, unknown> = {
         name: formData.name,
-        phoneNumber: fullPhoneNumber, // Use the normalized phone number
         city: formData.city,
         country: countryCode,
         profession: formData.profession ? removeAccents(formData.profession) : '',
@@ -333,10 +332,20 @@ function ModifierLeProfil() {
         momoNumber: fullMomoNumber, // Use the normalized MoMo number
         momoOperator: formData.momoOperator,
         whatsappGroupLink: formData.whatsappGroupLink.trim(),
-        referralCode: formData.referralCode,
         notificationPreference: formData.notificationPreference,
       };
-      
+
+      // Only resend phone and referral code when they actually changed. The
+      // backend rejects the WHOLE update on an unchanged phone (unique-index
+      // E11000) or an empty/short referral code — which silently blocked saving
+      // unrelated fields like city / sex / birthDate.
+      if (fullPhoneNumber && fullPhoneNumber !== user?.phoneNumber) {
+        updates.phoneNumber = fullPhoneNumber;
+      }
+      if (formData.referralCode && formData.referralCode !== user?.referralCode) {
+        updates.referralCode = formData.referralCode;
+      }
+
       // Update regular profile
       await sbcApiService.updateUserProfile(updates);
       

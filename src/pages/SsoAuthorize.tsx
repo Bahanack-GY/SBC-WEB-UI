@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import logo from '../assets/img/logo-sbc.png';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
+import { pageFade, sectionRise } from '../utils/motion';
 
 // Where we stash the full /sso/authorize URL while the user goes through
 // /connexion or /signup. Connexion + OTP read this back after login.
@@ -216,13 +218,13 @@ export default function SsoAuthorize() {
   const submitting = status === 'submitting';
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-start sm:justify-center bg-white p-4">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-start sm:justify-center bg-white p-4">
       <div className="w-full max-w-md">
         <div className="flex justify-center mb-4 mt-4 sm:mt-0">
           <img src={logo} alt="SBC" className="w-20 sm:w-24 object-contain" />
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 sm:p-6">
+        <motion.div variants={sectionRise} className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-2">
             {clientName}
           </h1>
@@ -328,8 +330,8 @@ export default function SsoAuthorize() {
             reçoive ces informations. Vous pouvez révoquer l'accès à tout moment
             depuis votre profil SBC (à venir).
           </p>
-        </div>
+        </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 }

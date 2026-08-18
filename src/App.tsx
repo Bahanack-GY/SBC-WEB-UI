@@ -1,4 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
+import { MotionConfig } from 'framer-motion'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -239,17 +240,19 @@ function AppContent() {
 
 function App() {
   return (
-    <AuthProvider>
-      <SocketProvider>
-        <AffiliationProvider>
-          <RelanceProvider>
-            <TourProvider>
-              <AppContent />
-            </TourProvider>
-          </RelanceProvider>
-        </AffiliationProvider>
-      </SocketProvider>
-    </AuthProvider>
+    <MotionConfig reducedMotion="user">
+      <AuthProvider>
+        <SocketProvider>
+          <AffiliationProvider>
+            <RelanceProvider>
+              <TourProvider>
+                <AppContent />
+              </TourProvider>
+            </RelanceProvider>
+          </AffiliationProvider>
+        </SocketProvider>
+      </AuthProvider>
+    </MotionConfig>
   )
 }
 
