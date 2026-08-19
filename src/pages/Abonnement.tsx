@@ -271,6 +271,10 @@ function Abonnement() {
                                                         <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Contacts WhatsApp</span>
                                                     </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
+                                                    </li>
                                                 </>
                                             ) : (
                                                 <>
@@ -305,6 +309,10 @@ function Abonnement() {
                                                     <li className="flex items-center text-white text-xs gap-2">
                                                         <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Contacts WhatsApp</span>
+                                                    </li>
+                                                    <li className="flex items-center text-white text-xs gap-2">
+                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
                                                         <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
