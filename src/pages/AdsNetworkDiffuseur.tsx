@@ -992,6 +992,15 @@ function VerifySheet({
   const [attempt, setAttempt] = useState(0);
   const [retrying, setRetrying] = useState(false);
 
+  // Congo-Brazzaville (+242) numbers keep their leading 0 — the 05/06 is part of
+  // the subscriber number, not a trunk prefix, so WhatsApp only matches them WITH
+  // it. Everywhere else the leading 0 is a national trunk prefix and is dropped.
+  const keepsLeadingZero = dialCode === '242';
+  const nationalDigits = (raw: string) => {
+    const d = raw.replace(/\D/g, '');
+    return keepsLeadingZero ? d : d.replace(/^0+/, '');
+  };
+
   useEffect(() => {
     if (!started || !method) return;
 
@@ -1052,7 +1061,7 @@ function VerifySheet({
         method,
         // Composed here so the country can never be left off.
         phoneNumber: method === 'code'
-          ? `${dialCode}${phone.replace(/\D/g, '').replace(/^0+/, '')}`
+          ? `${dialCode}${nationalDigits(phone)}`
           : undefined,
       });
       if (stopped) return;
@@ -1188,7 +1197,7 @@ function VerifySheet({
                   app answers « Impossible de connecter l'appareil » and the code
                   is burned. Echo what will actually be sent. */}
               {(() => {
-                const national = phone.replace(/\D/g, '').replace(/^0+/, '');
+                const national = nationalDigits(phone);
                 const full = `${dialCode}${national}`;
                 return national.length >= 6 ? (
                   <p className="text-xs text-gray-700 mt-2">
@@ -1197,7 +1206,9 @@ function VerifySheet({
                   </p>
                 ) : (
                   <p className="text-xs text-gray-500 mt-2">
-                    Votre numéro sans l'indicatif ni le 0 initial.
+                    {keepsLeadingZero
+                      ? "Votre numéro avec le 0 (ex : 06… ou 05…), sans l'indicatif."
+                      : "Votre numéro sans l'indicatif ni le 0 initial."}
                   </p>
                 );
               })()}
