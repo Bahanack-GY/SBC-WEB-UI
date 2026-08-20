@@ -984,12 +984,40 @@ function VerifySheet({
   const sessionIdRef = useRef<string | null>(null);
   const [started, setStarted] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
+  // WhatsApp drops the pairing socket often (reason=408 and friends). Rather than
+  // show the raw error and make the diffuseur retry by hand, retry silently a few
+  // times behind a "Reconnexion…" state; only surface a friendly error once we
+  // have really given up.
+  const MAX_ATTEMPTS = 3;
+  const [attempt, setAttempt] = useState(0);
+  const [retrying, setRetrying] = useState(false);
 
   useEffect(() => {
     if (!started || !method) return;
 
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
+    let retryTimer: ReturnType<typeof setTimeout>;
+
+    const giveUpMessage = (kind: 'capacity' | 'link') =>
+      kind === 'capacity'
+        ? 'Trop de vérifications en cours en ce moment. Réessayez dans une minute.'
+        : "La connexion à WhatsApp n'a pas abouti après plusieurs tentatives. Réessayez, ou choisissez une autre méthode.";
+
+    // Retry by bumping `attempt` (an effect dependency): the cleanup below cancels
+    // the current session, then the effect re-runs and opens a fresh one.
+    const retryOrFail = (kind: 'capacity' | 'link') => {
+      if (attempt < MAX_ATTEMPTS - 1) {
+        setRetrying(true);
+        setState('starting');
+        setQr(null);
+        setPairingCode(null);
+        retryTimer = setTimeout(() => setAttempt(a => a + 1), kind === 'capacity' ? 4000 : 1500);
+      } else {
+        setRetrying(false);
+        setError(giveUpMessage(kind));
+      }
+    };
 
     const poll = async () => {
       if (stopped || !sessionIdRef.current) return;
@@ -997,9 +1025,12 @@ function VerifySheet({
       const data = res.body?.data;
 
       if (!res.isSuccessByStatusCode || data?.state === 'failed') {
-        setError(data?.error || res.body?.message || 'La vérification a échoué.');
+        // A failed session is a technical/link failure (a verdict rejection comes
+        // back as state 'done'). Retry it rather than dumping "reason=408".
+        retryOrFail('link');
         return;
       }
+      setRetrying(false);
       setState(data?.state ?? 'reading');
       setQueuePosition(typeof data?.queuePosition === 'number' ? data.queuePosition : null);
       if (data?.qr) setQr(data.qr);
@@ -1025,14 +1056,8 @@ function VerifySheet({
           : undefined,
       });
       if (stopped) return;
-      if (res.statusCode === 503) {
-        setError('Toutes les vérifications sont occupées pour le moment. Réessayez dans une minute.');
-        return;
-      }
-      if (!res.isSuccessByStatusCode) {
-        setError(res.body?.message || "Impossible d'ouvrir la vérification.");
-        return;
-      }
+      if (res.statusCode === 503) { retryOrFail('capacity'); return; }
+      if (!res.isSuccessByStatusCode) { retryOrFail('link'); return; }
       sessionIdRef.current = res.body?.data?.sessionId ?? null;
       poll();
     })();
@@ -1040,11 +1065,13 @@ function VerifySheet({
     return () => {
       stopped = true;
       clearTimeout(timer);
+      clearTimeout(retryTimer);
       // Release the slot: sessions are capped and an abandoned one blocks someone
       // else until it times out.
       if (sessionIdRef.current) sbcApiService.cancelVerification(sessionIdRef.current);
+      sessionIdRef.current = null;
     };
-  }, [started, method, phone, dialCode, participation._id]);
+  }, [started, method, phone, dialCode, participation._id, attempt]);
 
   const copyCode = async () => {
     if (!pairingCode) return;
@@ -1054,12 +1081,24 @@ function VerifySheet({
   };
 
   const body = () => {
+    if (retrying && !error && !result) {
+      return (
+        <div className="py-8 text-center">
+          <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <p className="font-medium text-gray-900 mt-4">Reconnexion à WhatsApp…</p>
+          <p className="text-sm text-gray-600 mt-1">
+            La connexion a été interrompue. Nouvelle tentative en cours ({attempt + 1}/{MAX_ATTEMPTS}).
+          </p>
+          <p className="text-xs text-gray-400 mt-3">Gardez cette page ouverte.</p>
+        </div>
+      );
+    }
     if (error) {
       return (
         <div>
           <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">{error}</div>
           <button
-            onClick={() => { setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); }}
+            onClick={() => { setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); setAttempt(0); setRetrying(false); }}
             className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-3"
           >
             Choisir une autre méthode
@@ -1178,7 +1217,7 @@ function VerifySheet({
           </button>
 
           <button
-            onClick={() => setStarted(true)}
+            onClick={() => { setAttempt(0); setRetrying(false); setError(null); setStarted(true); }}
             disabled={!method || (method === 'code' && phone.replace(/\D/g, '').length < 8)}
             className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-300"
           >
