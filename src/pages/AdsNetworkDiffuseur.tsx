@@ -1007,21 +1007,29 @@ function VerifySheet({
     let stopped = false;
     let timer: ReturnType<typeof setTimeout>;
     let retryTimer: ReturnType<typeof setTimeout>;
+    const attemptStartedAt = Date.now();
 
     const giveUpMessage = (kind: 'capacity' | 'link') =>
       kind === 'capacity'
         ? 'Trop de vérifications en cours en ce moment. Réessayez dans une minute.'
-        : "La connexion à WhatsApp n'a pas abouti après plusieurs tentatives. Réessayez, ou choisissez une autre méthode.";
+        : "La connexion à WhatsApp n'a pas abouti. Réessayez, ou choisissez une autre méthode.";
 
     // Retry by bumping `attempt` (an effect dependency): the cleanup below cancels
-    // the current session, then the effect re-runs and opens a fresh one.
+    // the current session, then the effect re-runs and opens a fresh one. Only a
+    // GENUINELY transient drop is worth retrying — one where the socket died fast.
+    // When the pairing window was largely spent (WhatsApp holds the socket ~160s
+    // then closes it), the diffuseur already had their chance; retrying would just
+    // make them wait another two minutes. Fail fast in that case, and never
+    // auto-retry a capacity/queue rejection (that only adds load).
     const retryOrFail = (kind: 'capacity' | 'link') => {
-      if (attempt < MAX_ATTEMPTS - 1) {
+      const elapsedMs = Date.now() - attemptStartedAt;
+      const worthRetrying = kind === 'link' && elapsedMs < 45_000 && attempt < MAX_ATTEMPTS - 1;
+      if (worthRetrying) {
         setRetrying(true);
         setState('starting');
         setQr(null);
         setPairingCode(null);
-        retryTimer = setTimeout(() => setAttempt(a => a + 1), kind === 'capacity' ? 4000 : 1500);
+        retryTimer = setTimeout(() => setAttempt(a => a + 1), 1500);
       } else {
         setRetrying(false);
         setError(giveUpMessage(kind));
