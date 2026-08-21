@@ -14,7 +14,8 @@ import { useAdsRoles } from '../hooks/useAdsRoles';
 import illustrationShare from '../assets/icon/ads-share.jpg';
 import illustrationVerify from '../assets/icon/ads-verify.jpg';
 import illustrationEmpty from '../assets/icon/ads-empty.jpg';
-import { africanCountryCodes } from '../utils/countriesData';
+import { allAfricanCountries } from '../utils/countriesData';
+import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 
 interface DaySchedule {
@@ -76,6 +77,7 @@ const formatFCFA = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} F`;
  */
 function AdsNetworkDiffuseur() {
   const { roles, isResolved } = useAdsRoles();
+  const { user } = useAuth();
   const [acting, setActing] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'ok' | 'err'; text: string } | null>(null);
   const [sharing, setSharing] = useState<Participation | null>(null);
@@ -779,7 +781,7 @@ function AdsNetworkDiffuseur() {
         {verifying && (
           <VerifySheet
             participation={verifying}
-            defaultPhone={profile?.whatsappPhone}
+            defaultPhone={profile?.whatsappPhone || user?.phoneNumber}
             onClose={() => { setVerifying(null); refreshAll(); }}
           />
         )}
@@ -969,12 +971,19 @@ function VerifySheet({
   // option for most of them — the pairing code is what makes this work on one
   // device, and it is offered first for that reason.
   const [method, setMethod] = useState<'qr' | 'code' | null>(null);
-  // Same country list and shape as the signup screen — one place to maintain,
-  // and a diffuseur meets the control they already used to register.
+  // Dial codes are BARE digits here ("237", not "+237") so they compose cleanly
+  // and compare correctly. `defaultPhone` (the user's own number, country code and
+  // all) seeds both the country picker and the national part, so the field opens on
+  // the diffuseur's country with just their local number — not the raw code.
+  const dialOf = (c: { phoneCode: string }) => c.phoneCode.replace(/\D/g, '');
   const prefill = (defaultPhone ?? '').replace(/\D/g, '');
-  const matched = africanCountryCodes.find(c => prefill.startsWith(c.code));
-  const [dialCode, setDialCode] = useState(matched?.code ?? '237');
-  const [phone, setPhone] = useState(matched ? prefill.slice(matched.code.length) : prefill);
+  // Longest dial code first, so a number isn't captured by a shorter code that
+  // happens to be a prefix of the right one.
+  const matched = [...allAfricanCountries]
+    .sort((a, b) => dialOf(b).length - dialOf(a).length)
+    .find(c => prefill.startsWith(dialOf(c)));
+  const [dialCode, setDialCode] = useState(matched ? dialOf(matched) : '237');
+  const [phone, setPhone] = useState(matched ? prefill.slice(dialOf(matched).length) : prefill);
   const [state, setState] = useState<string>('starting');
   const [qr, setQr] = useState<string | null>(null);
   const [pairingCode, setPairingCode] = useState<string | null>(null);
@@ -1188,8 +1197,8 @@ function VerifySheet({
                   onChange={(e) => setDialCode(e.target.value)}
                   className="border border-gray-300 rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
                 >
-                  {africanCountryCodes.map((c) => (
-                    <option key={c.value} value={c.code}>{c.label}</option>
+                  {allAfricanCountries.map((c) => (
+                    <option key={c.value} value={dialOf(c)}>{c.flag} {c.value} ({c.phoneCode})</option>
                   ))}
                 </select>
                 <input
