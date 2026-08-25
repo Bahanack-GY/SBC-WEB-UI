@@ -1001,14 +1001,12 @@ function VerifySheet({
   const [attempt, setAttempt] = useState(0);
   const [retrying, setRetrying] = useState(false);
 
-  // Congo-Brazzaville (+242) numbers keep their leading 0 — the 05/06 is part of
-  // the subscriber number, not a trunk prefix, so WhatsApp only matches them WITH
-  // it. Everywhere else the leading 0 is a national trunk prefix and is dropped.
-  const keepsLeadingZero = dialCode === '242';
-  const nationalDigits = (raw: string) => {
-    const d = raw.replace(/\D/g, '');
-    return keepsLeadingZero ? d : d.replace(/^0+/, '');
-  };
+  // Send the number exactly as the diffuseur types it (digits only), country code
+  // prepended — no stripping. The trunk-0 rule differs per country (Cameroun drops
+  // it; Congo-Brazza and Côte d'Ivoire keep the 0 as part of the subscriber number)
+  // and guessing wrong silently burned pairing codes. The echo line below shows
+  // precisely what will be sent, so what they type is what they get.
+  const nationalDigits = (raw: string) => raw.replace(/\D/g, '');
 
   useEffect(() => {
     if (!started || !method) return;
@@ -1198,7 +1196,7 @@ function VerifySheet({
                   className="border border-gray-300 rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
                 >
                   {allAfricanCountries.map((c) => (
-                    <option key={c.value} value={dialOf(c)}>{c.flag} {c.value} ({c.phoneCode})</option>
+                    <option key={c.value} value={dialOf(c)}>{c.flag} {c.phoneCode}</option>
                   ))}
                 </select>
                 <input
@@ -1223,9 +1221,8 @@ function VerifySheet({
                   </p>
                 ) : (
                   <p className="text-xs text-gray-500 mt-2">
-                    {keepsLeadingZero
-                      ? "Votre numéro avec le 0 (ex : 06… ou 05…), sans l'indicatif."
-                      : "Votre numéro sans l'indicatif ni le 0 initial."}
+                    Votre numéro sans l'indicatif du pays. Gardez le 0 s'il fait
+                    partie de votre numéro (ex. Côte d'Ivoire, Congo).
                   </p>
                 );
               })()}
