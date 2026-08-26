@@ -59,6 +59,16 @@ body {
   color: var(--color-ink);
 }
 
+/* Horizontal chip/carousel strips scroll but must not show a bar. */
+.no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
 /* Custom scrollbar styles for modal scrolling */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;

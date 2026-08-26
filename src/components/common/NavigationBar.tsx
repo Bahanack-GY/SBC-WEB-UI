@@ -28,11 +28,11 @@ function NavigationBar() {
   const navItems = useMemo(() => {
     // Always include chat buttons for all users
     let items: NavItem[] = [
+      { label: 'Accueil', icon: Home01Icon, path: '/' },
+      { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
       { label: 'Publicité', icon: ConnectIcon, path: '/ads-pack' },
       { label: 'Messages', icon: Message01Icon, path: '/chat' },
       { label: 'Statuts', icon: Target02Icon, path: '/chat?view=status' },
-      { label: 'Accueil', icon: Home01Icon, path: '/' },
-      { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
     ];
 
     // Show Relance entry to users who have credits (or admin/tester via context)

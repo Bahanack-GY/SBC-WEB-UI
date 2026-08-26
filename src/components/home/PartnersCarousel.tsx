@@ -67,7 +67,7 @@ function PartnersCarousel() {
       <div
         ref={scroller}
         onScroll={onScroll}
-        className="flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-4 px-4 [scrollbar-width:none] [&::-webkit-scrollbar]{display:none}"
+        className="flex overflow-x-auto snap-x snap-mandatory gap-3 -mx-4 px-4 no-scrollbar"
       >
         {PARTNERS.map((p) => (
           <article
