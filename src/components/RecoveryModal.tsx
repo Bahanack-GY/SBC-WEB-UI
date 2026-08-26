@@ -49,7 +49,7 @@ const RecoveryModal: React.FC<RecoveryModalProps> = ({
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
           <motion.div
-            className="bg-white rounded-2xl shadow-lg max-w-md w-full relative animate-fadeIn max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl max-w-md w-full relative animate-fadeIn max-h-[90vh] overflow-y-auto border border-border"
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
@@ -57,7 +57,7 @@ const RecoveryModal: React.FC<RecoveryModalProps> = ({
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="relative p-4 border-b border-gray-200">
+            <div className="relative p-4 border-b border-border">
               <button 
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"
                 onClick={onClose}
@@ -109,7 +109,7 @@ const RecoveryModal: React.FC<RecoveryModalProps> = ({
               
               {/* Show a different message when we don't have specific transaction data */}
               {recoveryInfo.totalTransactions === 0 && (
-                <div className="p-3 bg-orange-50 rounded-lg mb-4 border border-orange-200">
+                <div className="p-3 bg-orange-50 rounded-lg mb-4 border border-border">
                   <p className="text-orange-700 text-sm text-center">
                     Vos informations de connexion ont été perdues, mais nous avons détecté des transactions 
                     associées à ce numéro. Inscrivez-vous avec les mêmes identifiants pour tout récupérer automatiquement.
@@ -150,7 +150,7 @@ const RecoveryModal: React.FC<RecoveryModalProps> = ({
             </div>
             
             {/* Footer */}
-            <div className="flex flex-col gap-2 p-4 bg-gray-50 border-t border-gray-200">
+            <div className="flex flex-col gap-2 p-4 bg-gray-50 border-t border-border">
               <button 
                 className="w-full py-3 px-4 bg-[#115CF6] hover:bg-blue-700 text-white font-medium rounded-xl transition-colors text-sm"
                 onClick={handleRegisterRedirect}

@@ -50,7 +50,7 @@ function NavigationBar() {
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-[#d7f699] rounded-full flex px-3 py-3 shadow-lg gap-2 mt-3"
+      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-[#d7f699] rounded-full flex px-3 py-3 gap-2 mt-3"
     >
       {navItems.map((item) => {
         // Handle chat page with query params
@@ -65,7 +65,7 @@ function NavigationBar() {
             key={item.label}
             onClick={() => navigate(item.path)}
             whileTap={{ scale: 0.92 }}
-            className={`flex items-center px-3 py-2 rounded-full transition-colors duration-200 focus:outline-none ${isActive ? 'bg-lime-400 text-green-900 font-bold shadow' : 'bg-green-700 text-white hover:bg-green-600'}`}
+            className={`flex items-center px-3 py-2 rounded-full transition-colors duration-200 focus:outline-none ${isActive ? 'bg-lime-400 text-green-900 font-bold ' : 'bg-green-700 text-white hover:bg-green-600'}`}
             aria-label={item.label}
             initial={false}
             animate={isActive ? { scale: 1.08 } : { scale: 1 }}

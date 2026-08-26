@@ -393,11 +393,11 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     value={criteria.search}
                     onChange={e => handleCriteriaChange('search', e.target.value)}
                     placeholder="Rechercher par nom, téléphone..."
-                    className="w-full mb-3 rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
+                    className="w-full mb-3 rounded-xl border border-border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
                 />
                 <div className="flex items-center gap-2 mb-4">
                     <button
-                        className="bg-gray-100 px-4 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200"
+                        className="bg-gray-100 px-4 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-border"
                         onClick={() => setModalOpen(true)}
                     >
                         <HugeiconsIcon icon={FilterIcon} className="text-green-700" />
@@ -405,7 +405,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     </button>
                     <span className="text-gray-500">A-Z</span>
                     <button
-                        className="ml-auto bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200 hover:bg-gray-200"
+                        className="ml-auto bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-border hover:bg-gray-200"
                         onClick={() => setDownloadModalOpen(true)}
                         title="Télécharger les contacts"
                         disabled={downloading}
@@ -413,7 +413,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         <HugeiconsIcon icon={Download01Icon} size={18} />
                     </button>
                     <button
-                        className="bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200 hover:bg-gray-200"
+                        className="bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-border hover:bg-gray-200"
                         onClick={() => setFilterDownloadModalOpen(true)}
                         title="Télécharger les contacts filtrés"
                         disabled={downloading}
@@ -430,7 +430,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                             exit={{ opacity: 0 }}
                         >
                             <motion.div
-                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative border border-border"
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}
@@ -439,7 +439,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 <h4 className="text-lg font-bold mb-4">Télécharger les contacts</h4>
                                 <div className="flex flex-col gap-4">
                                     <button
-                                        className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
+                                        className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
                                         onClick={handleDownloadAll}
                                         disabled={downloading}
                                     >
@@ -452,17 +452,17 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                                 type="date"
                                                 value={dateRange.from}
                                                 onChange={e => setDateRange(r => ({ ...r, from: e.target.value }))}
-                                                className="rounded-lg border border-gray-200 px-3 py-2"
+                                                className="rounded-lg border border-border px-3 py-2"
                                             />
                                             <input
                                                 type="date"
                                                 value={dateRange.to}
                                                 onChange={e => setDateRange(r => ({ ...r, to: e.target.value }))}
-                                                className="rounded-lg border border-gray-200 px-3 py-2"
+                                                className="rounded-lg border border-border px-3 py-2"
                                             />
                                         </div>
                                         <button
-                                            className="w-full bg-green-700 text-white rounded-xl py-2 font-bold shadow hover:bg-green-800 transition-colors"
+                                            className="w-full bg-green-700 text-white rounded-xl py-2 font-bold hover:bg-green-800 transition-colors"
                                             onClick={handleDownloadRange}
                                             disabled={!dateRange.from || !dateRange.to || downloading}
                                         >
@@ -471,7 +471,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                     </div>
                                 </div>
                                 <button
-                                    className="w-full mt-4 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                    className="w-full mt-4 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                                     onClick={() => setDownloadModalOpen(false)}
                                 >
                                     Annuler
@@ -489,7 +489,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                             exit={{ opacity: 0 }}
                         >
                             <motion.div
-                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative border border-border"
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}
@@ -516,7 +516,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                             navigate('/abonnement');
                                             setFilterDownloadModalOpen(false);
                                         }}
-                                        className="w-full bg-gradient-to-r from-[#F68F0F] to-orange-400 text-white rounded-xl py-2 font-bold shadow hover:bg-green-800 transition-colors mb-4"
+                                        className="bg-accent w-full text-white rounded-xl py-2 font-bold hover:bg-green-800 transition-colors mb-4"
                                     >
                                         Mettre à niveau vers l'abonnement CIBLÉ
                                     </button>
@@ -528,25 +528,25 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                             type="date"
                                             value={filterModalDateRange.from}
                                             onChange={e => setFilterModalDateRange(r => ({ ...r, from: e.target.value }))}
-                                            className="rounded-lg border border-gray-200 px-3 py-2"
+                                            className="rounded-lg border border-border px-3 py-2"
                                         />
                                         <input
                                             type="date"
                                             value={filterModalDateRange.to}
                                             onChange={e => setFilterModalDateRange(r => ({ ...r, to: e.target.value }))}
-                                            className="rounded-lg border border-gray-200 px-3 py-2"
+                                            className="rounded-lg border border-border px-3 py-2"
                                         />
                                     </div>
                                 </div>
                                 <button
-                                    className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors mb-2"
+                                    className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors mb-2"
                                     onClick={handleDownloadFiltered}
                                     disabled={downloading}
                                 >
                                     {downloading ? 'Téléchargement...' : 'Télécharger les contacts filtrés'}
                                 </button>
                                 <button
-                                    className="w-full bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                    className="w-full bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                                     onClick={() => setFilterDownloadModalOpen(false)}
                                 >
                                     Annuler
@@ -564,7 +564,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                             exit={{ opacity: 0 }}
                         >
                             <motion.div
-                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg overflow-y-auto max-h-[80vh]"
+                                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative overflow-y-auto max-h-[80vh] border border-border"
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}
@@ -576,7 +576,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                     <select
                                         value={criteria.country}
                                         onChange={e => handleCriteriaChange('country', e.target.value)}
-                                        className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2 bg-white"
+                                        className="w-full rounded-lg border border-border px-3 py-2 mb-2 bg-white"
                                     >
                                         <option value="">Sélectionner</option>
                                         {africanCountries.map(c => (
@@ -588,7 +588,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 </div>
                                 {isRestrictedToBasicFilters ? (
                                     <>
-                                        <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-sm text-center mb-4">
+                                        <div className="p-3 bg-blue-50 border border-border text-blue-800 rounded-lg text-sm text-center mb-4">
                                             Les filtres par âge, sexe, profession et centres d'intérêt sont une fonctionnalité exclusive pour les abonnés **CIBLÉ**.
                                         </div>
                                         <button
@@ -596,7 +596,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                                 navigate('/changer-abonnement');
                                                 setModalOpen(false); // Close the modal
                                             }}
-                                            className="w-full bg-gradient-to-r from-[#F68F0F] to-orange-400 text-white rounded-xl py-2 font-bold shadow hover:bg-green-800 transition-colors mb-2"
+                                            className="bg-accent w-full text-white rounded-xl py-2 font-bold hover:bg-green-800 transition-colors mb-2"
                                         >
                                             Mettre à niveau vers l'abonnement CIBLÉ
                                         </button>
@@ -610,7 +610,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                                 value={criteria.minAge}
                                                 onChange={e => handleCriteriaChange('minAge', e.target.value)}
                                                 placeholder="Min. âge"
-                                                className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
+                                                className="w-full rounded-lg border border-border px-3 py-2 mb-2"
                                             />
                                         </div>
                                         <div className="mb-3">
@@ -620,7 +620,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                                 value={criteria.maxAge}
                                                 onChange={e => handleCriteriaChange('maxAge', e.target.value)}
                                                 placeholder="Max. âge"
-                                                className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2"
+                                                className="w-full rounded-lg border border-border px-3 py-2 mb-2"
                                             />
                                         </div>
                                         <div className="mb-3">
@@ -629,7 +629,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                                 name="sex"
                                                 value={criteria.sex}
                                                 onChange={e => handleCriteriaChange('sex', e.target.value)}
-                                                className="w-full rounded-lg border border-gray-200 px-3 py-2 mb-2 bg-white"
+                                                className="w-full rounded-lg border border-border px-3 py-2 mb-2 bg-white"
                                             >
                                                 <option value="">Sélectionner</option>
                                                 {sexes.map(sex => <option key={sex} value={sex}>{sex}</option>)}
@@ -642,7 +642,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                                     <button
                                                         key={prof}
                                                         type="button"
-                                                        className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.professions.includes(prof) ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                                                        className={`px-3 py-1 rounded-full border text-xs font-medium ${criteria.professions.includes(prof) ? 'bg-green-700 text-white border-success' : 'bg-white text-gray-700 border-border'}`}
                                                         onClick={() => handleMultiSelect('professions', prof)}
                                                     >
                                                         {prof}
@@ -660,7 +660,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                                         <button
                                                             key={displayInterest}
                                                             type="button"
-                                                            className={`px-3 py-1 rounded-full border text-xs font-medium ${isSelected ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                                                            className={`px-3 py-1 rounded-full border text-xs font-medium ${isSelected ? 'bg-green-700 text-white border-success' : 'bg-white text-gray-700 border-border'}`}
                                                             onClick={() => handleMultiSelect('interests', baseInterest)}
                                                         >
                                                             {displayInterest}
@@ -673,13 +673,13 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 )}
                                 <div className="flex gap-3 mt-4">
                                     <button
-                                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
+                                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
                                         onClick={() => setModalOpen(false)}
                                     >
                                         Appliquer
                                     </button>
                                     <button
-                                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                                         onClick={() => setModalOpen(false)}
                                     >
                                         Annuler
@@ -698,7 +698,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         {error instanceof Error ? error.message : error}
                     </div>
                 ) : (
-                    <div className="flex flex-col divide-y divide-gray-100 bg-white rounded-xl shadow">
+                    <div className="flex flex-col divide-y divide-gray-100 bg-white rounded-xl border border-border">
                         {contacts.map((c: User) => (
                             <div key={c._id} className="flex items-center px-3 py-3 gap-3">
                                 <img
@@ -707,7 +707,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                             ? sbcApiService.generateSettingsFileUrl(c.avatarId)
                                             : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
                                     alt={c.name}
-                                    className="w-10 h-10 rounded-full object-cover border border-gray-200"
+                                    className="w-10 h-10 rounded-full object-cover border border-border"
                                 />
                                 <div className="flex-1 min-w-0">
                                     <div className={`font-semibold text-sm truncate text-gray-900`}>{c.name}</div>
@@ -741,7 +741,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                             onClick={() => setFeedbackModal({ ...feedbackModal, show: false })}
                         >
                             <motion.div
-                                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+                                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}

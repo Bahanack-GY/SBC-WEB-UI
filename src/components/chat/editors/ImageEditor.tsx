@@ -279,7 +279,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }: ImageEditorProps) =>
         {/* Crop overlay */}
         {isCropping && cropArea && cropArea.width > 0 && cropArea.height > 0 && (
           <div
-            className="absolute border-2 border-blue-500 bg-blue-500/10"
+            className="absolute border-2 border-primary bg-blue-500/10"
             style={{
               left: cropArea.x,
               top: cropArea.y,

@@ -74,8 +74,8 @@ export default function RelanceLowBalanceBanner({
         const isEmpty = spec.severity === 'empty';
         const isEmail = spec.channel === 'email';
         const tone = isEmpty
-          ? 'bg-red-50 border-red-300 text-red-800'
-          : 'bg-amber-50 border-amber-300 text-amber-900';
+          ? 'bg-red-50 border-danger text-red-800'
+          : 'bg-amber-50 border-accent text-amber-900';
         const accentBtn = isEmpty
           ? 'bg-red-600 hover:bg-red-700 text-white'
           : 'bg-amber-500 hover:bg-amber-600 text-white';

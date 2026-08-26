@@ -380,7 +380,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <h3 className="text-xl font-bold text-gray-900">
             {step === 'select' && 'Select Withdrawal Type'}
             {step === 'configure' && `Configure ${selectedTypeInfo?.name}`}
@@ -409,7 +409,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 <button
                   key={type.id}
                   onClick={() => handleTypeSelect(type.id)}
-                  className="w-full p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all text-left"
+                  className="w-full p-4 border border-border rounded-xl hover:border-primary hover:bg-blue-50 transition-all text-left"
                 >
                   <div className="flex items-start space-x-4">
                     <div className="text-blue-600 mt-1">{type.icon}</div>
@@ -428,7 +428,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
               
               {/* Show message if mobile money is not available */}
               {!userCountrySupportsMomo && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <div className="bg-yellow-50 border border-border rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="text-yellow-600 text-xl">📱</div>
                     <div>
@@ -481,7 +481,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                       value={momoNumber}
                       onChange={(e) => setMomoNumber(e.target.value)}
                       placeholder="e.g., 237675080477"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Include country code (e.g., 237 for Cameroon)
@@ -495,7 +495,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                     <select
                       value={momoOperator}
                       onChange={(e) => setMomoOperator(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Operator</option>
                       <option value="MTN">MTN</option>
@@ -523,7 +523,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                       value={cryptoAddress}
                       onChange={(e) => setCryptoAddress(e.target.value)}
                       placeholder="Enter your wallet address"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -534,7 +534,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                     <select
                       value={cryptoCurrency}
                       onChange={(e) => setCryptoCurrency(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="BTC">Bitcoin</option>
                       <option value="LTC">Litecoin</option>
@@ -578,7 +578,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                   placeholder={`Minimum: ${selectedTypeInfo.minAmount} ${selectedTypeInfo.currency}`}
                   min={selectedTypeInfo.minAmount}
                   step={selectedType === 'mobile_money' ? '5' : '0.01'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <div className="text-xs text-gray-500 mt-1">
                   <div>Available: {selectedType === 'crypto' 
@@ -686,7 +686,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                     Annuler le retrait
                   </button>
                 ) : (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="bg-blue-50 border border-border rounded-lg p-3">
                     <p className="text-blue-700 text-sm text-center">
                       <strong>Information:</strong> Cette transaction est en cours de traitement par l'administrateur et ne peut plus être annulée.
                     </p>
@@ -731,21 +731,21 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mt-4 p-3 bg-red-50 border border-border rounded-lg">
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
           {/* Success Message */}
           {success && !error && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="mt-4 p-3 bg-green-50 border border-border rounded-lg">
               <p className="text-green-600 text-sm">{success}</p>
             </div>
           )}
 
           {/* Important Notes */}
           {step === 'select' && (
-            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="mt-6 p-4 bg-yellow-50 border border-border rounded-lg">
               <h5 className="font-semibold text-yellow-800 mb-2">Important Notes:</h5>
               <ul className="text-xs text-yellow-700 space-y-1">
                 <li>• Maximum 3 successful withdrawals per 24 hours (all types combined)</li>

@@ -127,7 +127,7 @@ function MesProduits() {
                                 <div className="absolute top-2 right-2 flex gap-1">
                                     <button
                                         onClick={() => handleEdit(product._id)}
-                                        className="bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
+                                        className="bg-white p-2 rounded-full hover:bg-gray-50 transition-colors border border-border"
                                         title="Modifier"
                                     >
                                         <HugeiconsIcon icon={PencilEdit01Icon} className="w-4 h-4 text-green-600" />
@@ -135,7 +135,7 @@ function MesProduits() {
                                     <button
                                         onClick={() => handleDelete(product._id)}
                                         disabled={deleting === product._id}
-                                        className="bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors disabled:opacity-50"
+                                        className="bg-white p-2 rounded-full hover:bg-gray-50 transition-colors disabled:opacity-50 border border-border"
                                         title="Supprimer"
                                     >
                                         <HugeiconsIcon icon={Delete02Icon} className="w-4 h-4 text-red-600" />
@@ -160,7 +160,7 @@ function MesProduits() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -179,7 +179,7 @@ function MesProduits() {
                             <div className="flex gap-3 mt-2">
                                 <button
                                     type="button"
-                                    className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                                    className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold hover:bg-red-600 transition-colors"
                                     onClick={() => {
                                         modalContent.onConfirm?.();
                                         setShowModal(false);
@@ -189,7 +189,7 @@ function MesProduits() {
                                 </button>
                                 <button
                                     type="button"
-                                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                                     onClick={() => setShowModal(false)}
                                 >
                                     Annuler
@@ -198,7 +198,7 @@ function MesProduits() {
                         ) : (
                             <button
                                 type="button"
-                                className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                                className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                                 onClick={() => setShowModal(false)}
                             >
                                 Fermer

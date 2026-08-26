@@ -51,7 +51,7 @@ function AdsPack() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-gradient-to-r from-[#25D366] to-green-500 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden"
+                            className="bg-success rounded-2xl p-5 flex items-center justify-between relative overflow-hidden"
                         >
                             <div className="w-full">
                                 <div className="uppercase text-white text-xs">Relance email & SMS</div>
@@ -96,21 +96,21 @@ function AdsPack() {
 
                                 <div className="mt-3 flex gap-2 flex-wrap">
                                     {checkingSubscription ? (
-                                        <button className="bg-white/30 text-white rounded-xl px-4 py-2 font-bold shadow cursor-wait" disabled>
+                                        <button className="bg-white/30 text-white rounded-xl px-4 py-2 font-bold cursor-wait border border-border" disabled>
                                             Vérification...
                                         </button>
                                     ) : hasCredits ? (
                                         <>
                                             <button
                                                 onClick={handleAccessRelance}
-                                                className="bg-green-600 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-green-700 transition-colors flex items-center gap-2"
+                                                className="bg-green-600 text-white rounded-xl px-4 py-2 font-bold hover:bg-green-700 transition-colors flex items-center gap-2"
                                             >
                                                 <span>✓</span>
                                                 Accéder à Relance
                                             </button>
                                             <button
                                                 onClick={handlePurchaseClick}
-                                                className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold shadow hover:bg-green-50 transition-colors"
+                                                className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
                                             >
                                                 Acheter des crédits
                                             </button>
@@ -118,7 +118,7 @@ function AdsPack() {
                                     ) : (
                                         <button
                                             onClick={handlePurchaseClick}
-                                            className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold shadow hover:bg-green-50 transition-colors"
+                                            className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
                                         >
                                             Acheter des crédits
                                         </button>

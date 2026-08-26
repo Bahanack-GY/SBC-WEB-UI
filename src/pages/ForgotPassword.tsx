@@ -95,7 +95,7 @@ function ForgotPassword() {
                                 setError(''); // Clear error when user types
                             }}
                             placeholder="Ex : jeanpierre@gmail.com ou +237675090755"
-                            className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 placeholder-gray-400`}
                             required
                         />
                         {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
@@ -119,7 +119,7 @@ function ForgotPassword() {
                                 <select 
                                     value={channel} 
                                     onChange={(e) => setChannel(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white text-sm"
+                                    className="w-full border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white text-sm"
                                 >
                                     <option value="">Utiliser ma préférence</option>
                                     <option value="email">📧 Email</option>
@@ -131,7 +131,7 @@ function ForgotPassword() {
 
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="bg-accent w-full text-white font-bold py-3 rounded-xl text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         disabled={loading}
                     >
                         {loading ? 'Envoi en cours...' : 'Envoyer le code'}
@@ -158,7 +158,7 @@ function ForgotPassword() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -172,7 +172,7 @@ function ForgotPassword() {
                             {modalContent.message}
                         </p>
                         {modalContent.type === 'success' && (
-                            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center mb-4">
+                            <p className="text-xs text-amber-600 bg-amber-50 border border-border rounded-lg px-3 py-2 text-center mb-4">
                                 Si vous ne trouvez pas l'email, vérifiez votre dossier spam ou courrier indésirable.
                             </p>
                         )}
@@ -181,7 +181,7 @@ function ForgotPassword() {
                             className={`w-full ${modalContent.type === 'success'
                                 ? 'bg-green-500 hover:bg-green-600'
                                 : 'bg-red-500 hover:bg-red-600'
-                                } text-white rounded-xl py-2 font-bold shadow transition-colors`}
+                                } text-white rounded-xl py-2 font-bold  transition-colors`}
                             onClick={() => setShowModal(false)}
                         >
                             {modalContent.type === 'success' ? 'Continuer' : 'Réessayer'}

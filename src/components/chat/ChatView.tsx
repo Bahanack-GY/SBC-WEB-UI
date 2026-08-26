@@ -1205,7 +1205,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         {selectionMode && (
           <div
             className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-colors ${
-              isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'
+              isSelected ? 'bg-blue-600 border-primary' : 'border-border'
             }`}
           >
             {isSelected && <HugeiconsIcon icon={Tick02Icon} className="w-3.5 h-3.5 text-white" />}
@@ -1344,7 +1344,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
     return (
       <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header skeleton */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
             <Skeleton width="w-10" height="h-10" rounded="rounded-full" />
             <div className="flex-1">
@@ -1373,7 +1373,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
     <>
       <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200 bg-white shadow-sm">
+        <div className="p-4 border-b border-border bg-white">
           {selectionMode ? (
             // Selection mode header
             <div className="flex items-center justify-between">
@@ -1476,7 +1476,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                       <HugeiconsIcon icon={MoreVerticalIcon} className="w-5 h-5 text-gray-600" />
                     </button>
                     {showHeaderMenu && (
-                      <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 w-48">
+                      <div className="absolute right-0 top-full mt-1 bg-white rounded-xl border border-border py-1 z-50 w-48">
                         <button
                           onClick={handleReportConversation}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
@@ -1502,7 +1502,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
         {/* Acceptance Bar (for recipients) */}
         {conversation && user && !isAdmin && needsAcceptance(conversation, user._id) && (
-          <div className="bg-yellow-50 border-b border-yellow-200 p-3">
+          <div className="bg-yellow-50 border-b border-border p-3">
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 flex-1">
                 <svg className="w-5 h-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
@@ -1532,7 +1532,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
         {/* Initiator Waiting Bar - shown when initiator is waiting for recipient to accept */}
         {conversation && user && !isAdmin && isInitiator(conversation, user._id) && conversation.acceptanceStatus === 'pending' && (
-          <div className={`border-b p-3 ${hasReachedMessageLimit(conversation, user._id) ? 'bg-orange-50 border-orange-200' : 'bg-blue-50 border-blue-200'}`}>
+          <div className={`border-b p-3 ${hasReachedMessageLimit(conversation, user._id) ? 'bg-orange-50 border-border' : 'bg-blue-50 border-border'}`}>
             <div className="flex items-center gap-2">
               {hasReachedMessageLimit(conversation, user._id) ? (
                 <>
@@ -1559,7 +1559,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
         {/* Reported/Blocked Status */}
         {conversation && (conversation.acceptanceStatus === 'reported' || conversation.acceptanceStatus === 'blocked') && (
-          <div className="bg-red-50 border-b border-red-200 p-3">
+          <div className="bg-red-50 border-b border-border p-3">
             <div className="flex items-center gap-2">
               <svg className="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M13.477 14.89A6 6 0 015.11 6.524l8.367 8.368zm1.414-1.414L6.524 5.11a6 6 0 018.367 8.367zM18 10a8 8 0 11-16 0 8 8 0 0116 0z" clipRule="evenodd" />
@@ -1583,7 +1583,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
           {/* Loading more indicator */}
           {loadingMore && (
             <div className="flex justify-center mb-4">
-              <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+              <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
             </div>
           )}
 
@@ -1639,10 +1639,10 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         </motion.div>
 
         {/* Input area */}
-        <div className="p-4 bg-white border-t border-gray-200">
+        <div className="p-4 bg-white border-t border-border">
           {/* Selected file preview */}
           {selectedFile && !uploadingDocument && (
-            <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+            <div className="mb-3 p-3 bg-blue-50 border border-border rounded-lg flex items-center justify-between">
               <div className="flex items-center gap-3 flex-1 min-w-0">
                 <span className="text-2xl">{getFileIcon(selectedFile.type)}</span>
                 <div className="flex-1 min-w-0">
@@ -1759,9 +1759,9 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
       {/* Forward Modal */}
       {forwardModal.isOpen && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col border border-border">
             {/* Modal header */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Transférer à
@@ -1799,8 +1799,8 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   <div
                     className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                       selectedConversations.has(conv._id)
-                        ? 'bg-blue-600 border-blue-600'
-                        : 'border-gray-300'
+                        ? 'bg-blue-600 border-primary'
+                        : 'border-border'
                     }`}
                   >
                     {selectedConversations.has(conv._id) && (
@@ -1838,7 +1838,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
             </div>
 
             {/* Footer */}
-            <div className="p-4 border-t border-gray-200">
+            <div className="p-4 border-t border-border">
               <button
                 onClick={confirmForward}
                 disabled={selectedConversations.size === 0}
@@ -1854,7 +1854,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+          <div className="bg-white rounded-lg w-full max-w-sm p-6 border border-border">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Supprimer {selectedMessages.size > 1 ? 'les messages' : 'le message'} ?
             </h3>
@@ -1886,7 +1886,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-border p-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Informations du profil</h3>
               <button
                 onClick={() => setShowProfileModal(false)}
@@ -1982,7 +1982,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
                     {/* Subscription Type */}
                     {otherUserProfile.subscriptionType && (
-                      <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-blue-200">
+                      <div className="bg-primary-soft rounded-lg p-4 border border-border">
                         <div className="flex items-center gap-3">
                           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />

@@ -82,7 +82,7 @@ function ChangePassword() {
 
                 <button
                     onClick={handleSendOtp}
-                    className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="bg-primary w-full text-white font-bold py-3 rounded-xl text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                     disabled={loading}
                 >
                     {loading ? 'Envoi en cours...' : 'Recevoir le code OTP'}
@@ -98,7 +98,7 @@ function ChangePassword() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -116,7 +116,7 @@ function ChangePassword() {
                             className={`w-full ${modalContent.type === 'success'
                                 ? 'bg-green-500 hover:bg-green-600'
                                 : 'bg-red-500 hover:bg-red-600'
-                                } text-white rounded-xl py-2 font-bold shadow transition-colors`}
+                                } text-white rounded-xl py-2 font-bold  transition-colors`}
                             onClick={() => setShowModal(false)}
                         >
                             {modalContent.type === 'success' ? 'Continuer' : 'Réessayer'}

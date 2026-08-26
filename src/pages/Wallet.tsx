@@ -861,7 +861,7 @@ function Wallet() {
         ) : (
           <>
             {/* Balance Card */}
-            <div className="wallet-balance rounded-2xl bg-gradient-to-r from-blue-500 to-green-600 p-5 mb-6 shadow-lg">
+            <div className="bg-primary wallet-balance rounded-2xl p-5 mb-6">
               <div className="text-sm opacity-80">Vos soldes</div>
               <div className="flex flex-col gap-2 mb-3">
                 <div className="flex justify-between items-center">
@@ -914,7 +914,7 @@ function Wallet() {
             <div className="flex gap-2 mb-6">
               <button
                 onClick={() => setShowFundActivationModal(true)}
-                className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 shadow hover:bg-blue-800 transition-colors"
+                className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 hover:bg-blue-800 transition-colors"
               >
                 <HugeiconsIcon icon={ArrowUp01Icon} size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Activation</span>
@@ -932,7 +932,7 @@ function Wallet() {
                   }
                 }}
                 disabled={balance < 0 && usdBalance < 0}
-                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4 shadow transition-colors ${
+                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4  transition-colors ${
                   balance < 0 && usdBalance < 0
                     ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                     : 'bg-[#94B027] hover:bg-green-700'
@@ -954,7 +954,7 @@ function Wallet() {
                   }
                 }}
                 disabled={balance < 0 && usdBalance < 0}
-                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4 shadow transition-colors text-white ${
+                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4  transition-colors text-white ${
                   balance < 0 && usdBalance < 0
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-orange-500 hover:bg-orange-600'
@@ -967,7 +967,7 @@ function Wallet() {
               </button>
             </div>
             {showWithdrawForm && (
-              <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col gap-3 bg-gray-50 rounded-2xl p-4 shadow">
+              <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col gap-3 bg-gray-50 rounded-2xl p-4">
                 {/* Balance Selection */}
                 <div className="mb-4">
                   <label className="text-gray-800 font-semibold mb-2 block">Solde à utiliser:</label>
@@ -980,8 +980,8 @@ function Wallet() {
                       }}
                       className={`p-3 rounded-lg border transition-all text-left ${
                         selectedBalanceType === 'FCFA'
-                          ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-500'
-                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                          ? 'bg-blue-50 border-border ring-2 ring-blue-500'
+                          : 'bg-white border-border hover:bg-gray-50'
                       }`}
                     >
                       <div className="text-xs font-medium text-blue-600">Solde Principal</div>
@@ -1001,8 +1001,8 @@ function Wallet() {
                       }}
                       className={`p-3 rounded-lg border transition-all text-left ${
                         selectedBalanceType === 'USD'
-                          ? 'bg-green-50 border-green-200 ring-2 ring-green-500'
-                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                          ? 'bg-green-50 border-border ring-2 ring-green-500'
+                          : 'bg-white border-border hover:bg-gray-50'
                       }`}
                     >
                       <div className="text-xs font-medium text-green-600">Solde USD</div>
@@ -1020,7 +1020,7 @@ function Wallet() {
                 
                 {/* Show warning if balance is negative */}
                 {((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0)) && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 mb-3">
+                  <div className="bg-red-50 border border-border rounded-lg p-3 text-sm text-red-700 mb-3">
                     ⚠️ Impossible d'effectuer un retrait avec un solde négatif. 
                     Solde actuel: {selectedBalanceType === 'FCFA' 
                       ? `${balance.toLocaleString('fr-FR')} F` 
@@ -1038,8 +1038,8 @@ function Wallet() {
                     }}
                     className={`w-full rounded-lg border px-3 py-2 text-gray-900 text-center font-bold ${
                       ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
-                        ? 'border-red-300 bg-red-50 cursor-not-allowed' 
-                        : 'border-gray-300'
+                        ? 'border-danger bg-red-50 cursor-not-allowed' 
+                        : 'border-border'
                     }`}
                     placeholder={`Montant en ${selectedBalanceType}`}
                     step={selectedBalanceType === 'USD' ? '0.01' : '1'}
@@ -1050,7 +1050,7 @@ function Wallet() {
                   <button
                     type="submit"
                     disabled={isSubmittingWithdrawal || ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))}
-                    className={`rounded-full p-3 font-bold shadow transition-colors ${
+                    className={`rounded-full p-3 font-bold  transition-colors ${
                       isSubmittingWithdrawal || ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
                         ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                         : 'bg-[#115CF6] text-white hover:bg-blue-800'
@@ -1062,7 +1062,7 @@ function Wallet() {
 
                 {/* Fee calculation display */}
                 {withdrawAmount && Number(withdrawAmount) > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                  <div className="bg-blue-50 border border-border rounded-lg p-3 text-sm">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-gray-700">Montant à retirer:</span>
                       <span className="font-semibold text-gray-900">
@@ -1092,7 +1092,7 @@ function Wallet() {
                         </div>
                       </>
                     )}
-                    <div className="border-t border-blue-200 pt-2 mt-2">
+                    <div className="border-t border-border pt-2 mt-2">
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-gray-800">Total déduit du solde {selectedBalanceType}:</span>
                         <span className="font-bold text-red-600">
@@ -1120,7 +1120,7 @@ function Wallet() {
             {/* Navigation to Activation Balance */}
             <button
               onClick={handleActivationBalanceClick}
-              className="w-full mb-6 bg-gradient-to-r from-[#115CF6] to-blue-600 text-white p-4 rounded-2xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-between"
+              className="bg-primary w-full mb-6 text-white p-4 rounded-2xl transition-all flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-3 rounded-full">
@@ -1137,7 +1137,7 @@ function Wallet() {
             </button>
 
             {/* Bar Chart */}
-            <div className="transaction-chart bg-white rounded-2xl p-4 mb-6 shadow text-gray-800 relative">
+            <div className="transaction-chart bg-white rounded-2xl p-4 mb-6 text-gray-800 relative border border-border">
               <div className="filter-options flex items-center justify-between mb-2">
                 <div className="font-semibold text-[#115CF6]">Résumé des transactions</div>
                 <div className="flex bg-gray-100 rounded-full p-1 gap-1">
@@ -1202,7 +1202,7 @@ function Wallet() {
                         if (active && payload && payload.length) {
                           const dataPoint = chartData.find(d => d.name === label); // Find the full data point
                           return (
-                            <div className="rounded-lg bg-gray-800 p-3 text-white shadow-lg text-sm">
+                            <div className="rounded-lg bg-gray-800 p-3 text-white text-sm">
                               <p className="font-bold mb-1">{label}</p>
                               <div className="space-y-2">
                                 <div>
@@ -1239,7 +1239,7 @@ function Wallet() {
                                   </p>
                                 </div>
                               </div>
-                              <p className="text-xs text-gray-400 mt-2 border-t border-gray-600 pt-2">
+                              <p className="text-xs text-gray-400 mt-2 border-t border-border pt-2">
                                 💡 USD converti à 1:500 FCFA pour le graphique
                               </p>
                             </div>
@@ -1256,7 +1256,7 @@ function Wallet() {
               </div>
             </div>
             {/* Recent Transactions */}
-            <div className="transaction-list bg-[#192040] rounded-2xl p-4 shadow">
+            <div className="transaction-list bg-[#192040] rounded-2xl p-4">
               <div className="font-semibold mb-2 text-white">Transactions récentes</div>
               {!transactions || transactions.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
@@ -1321,7 +1321,7 @@ function Wallet() {
             <div className="flex justify-center mt-6">
               <button
                 onClick={openAllTransactionsModal}
-                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition-colors"
               >
                 Voir toutes les transactions
               </button>
@@ -1337,7 +1337,7 @@ function Wallet() {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+                    className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative border border-border"
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
@@ -1392,7 +1392,7 @@ function Wallet() {
                       {/* Continue OTP verification button - only for pending_otp_verification withdrawals */}
                       {selectedTx.status === 'pending_otp_verification' && selectedTx.type === 'withdrawal' && (
                         <button
-                          className="w-full bg-green-500 text-white rounded-xl py-3 font-bold shadow hover:bg-green-600 transition-colors"
+                          className="w-full bg-green-500 text-white rounded-xl py-3 font-bold hover:bg-green-600 transition-colors"
                           onClick={() => {
                             navigate('/otp', {
                               state: {
@@ -1411,7 +1411,7 @@ function Wallet() {
 
                       <div className="flex gap-3">
                         <button
-                          className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
+                          className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
                           onClick={handleShare}
                         >
                           <HugeiconsIcon icon={Share08Icon} className="inline mr-2" />Partager
@@ -1419,7 +1419,7 @@ function Wallet() {
                         {/* Cancel button - only if cancellation is allowed (pending or pending_otp_verification) */}
                         {selectedTx.type === 'withdrawal' && canCancelWithdrawal(selectedTx.status) && (
                           <button
-                            className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                            className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold hover:bg-red-600 transition-colors"
                             onClick={() => {
                               setModalContent({
                                 type: 'confirm',
@@ -1436,7 +1436,7 @@ function Wallet() {
                           </button>
                         )}
                         <button
-                          className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                          className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                           onClick={closeModal}
                         >
                           Fermer
@@ -1445,7 +1445,7 @@ function Wallet() {
 
                       {/* Info message for non-cancellable transactions */}
                       {selectedTx.type === 'withdrawal' && (selectedTx.status === 'pending_admin_approval' || selectedTx.status === 'processing') && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="bg-blue-50 border border-border rounded-lg p-3">
                           <p className="text-blue-700 text-sm text-center">
                             Cette transaction est en cours de traitement et ne peut plus être annulée.
                           </p>
@@ -1467,7 +1467,7 @@ function Wallet() {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative shadow-lg flex flex-col"
+                    className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
                     initial={{ y: '100%' }}
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
@@ -1571,7 +1571,7 @@ function Wallet() {
                 exit={{ opacity: 0 }}
               >
                 <motion.div
-                  className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                  className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
@@ -1590,7 +1590,7 @@ function Wallet() {
                     <div className="flex gap-3 mt-2">
                       <button
                         type="button"
-                        className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                        className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold hover:bg-red-600 transition-colors"
                         onClick={() => {
                           modalContent.onConfirm?.();
                           setShowModal(false);
@@ -1600,7 +1600,7 @@ function Wallet() {
                       </button>
                       <button
                         type="button"
-                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                         onClick={() => setShowModal(false)}
                       >
                         Annuler
@@ -1609,7 +1609,7 @@ function Wallet() {
                   ) : (
                     <button
                       type="button"
-                      className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                      className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                       onClick={() => {
                         modalContent.onConfirm?.();
                         setShowModal(false);
@@ -1715,7 +1715,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
       onClick={handleClose}
     >
       <motion.div
-        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl"
+        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md border border-border"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -1750,17 +1750,17 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
                   setError('');
                 }}
                 placeholder="Ex: 5000"
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                className="w-full border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               />
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="mb-4 p-3 bg-red-50 border border-border rounded-xl">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+            <div className="bg-yellow-50 border border-border rounded-xl p-3 mb-4">
               <p className="text-xs text-yellow-700">
                 ⚠️ Ce transfert est irréversible. Le solde d'activation ne peut être utilisé que pour sponsoriser vos filleuls.
               </p>

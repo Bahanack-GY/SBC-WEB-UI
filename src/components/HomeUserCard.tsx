@@ -33,7 +33,7 @@ function HomeUserCard({name, image, affiliates, status, promoCode}: HomeUserCard
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
             whileHover={{ scale: 1.02 }}
-            className="p-4 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex flex-col"
+            className="bg-primary p-4 rounded-2xl flex flex-col"
         >
             <div className="flex justify-between items-center">
             <motion.p 

@@ -179,7 +179,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl p-4 w-full max-w-sm text-gray-900 relative shadow-lg max-h-[85vh] overflow-y-auto"
+              className="bg-white rounded-2xl p-4 w-full max-w-sm text-gray-900 relative max-h-[85vh] overflow-y-auto border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -221,7 +221,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
 
               {/* Negative Balance Warning */}
               {maxAmount < 0 && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="mb-4 p-3 bg-red-50 border border-border rounded-lg">
                   <div className="text-xs text-red-700 text-center">
                     ⚠️ Impossible de convertir avec un solde {fromCurrency} négatif
                   </div>
@@ -253,8 +253,8 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                     placeholder={`Montant en ${fromCurrency}`}
                     className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 ${
                       maxAmount < 0 
-                        ? 'border-red-300 bg-red-50 cursor-not-allowed focus:ring-red-500' 
-                        : 'border-gray-300 focus:ring-blue-500'
+                        ? 'border-danger bg-red-50 cursor-not-allowed focus:ring-red-500' 
+                        : 'border-border focus:ring-blue-500'
                     }`}
                     max={Math.max(0, maxAmount)}
                     disabled={maxAmount < 0}
@@ -267,7 +267,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                 {/* To Currency Display */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Vers: {toCurrency}</label>
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg min-h-[2.5rem] flex items-center">
+                  <div className="px-3 py-2 bg-gray-50 border border-border rounded-lg min-h-[2.5rem] flex items-center">
                     {convertedAmount !== null ? (
                       <div className="w-full">
                         <div className="font-bold">
@@ -285,7 +285,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
 
                 {/* Error Message */}
                 {error && (
-                  <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="p-2 bg-red-50 border border-border rounded-lg">
                     <p className="text-red-600 text-xs">{error}</p>
                   </div>
                 )}

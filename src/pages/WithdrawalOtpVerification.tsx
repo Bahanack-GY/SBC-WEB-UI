@@ -195,7 +195,7 @@ const WithdrawalOtpVerification: React.FC = () => {
           </div>
 
           {/* OTP Verification Section */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+          <div className="bg-white rounded-2xl border border-border p-6 mb-6">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <HugeiconsIcon icon={Wallet01Icon} className="text-blue-600" size={24} />
@@ -204,7 +204,7 @@ const WithdrawalOtpVerification: React.FC = () => {
               <p className="text-sm text-gray-600">
                 We've sent a verification code to your registered email and phone number.
               </p>
-              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+              <p className="text-xs text-amber-600 bg-amber-50 border border-border rounded-lg px-3 py-2 mt-2">
                 If you can't find the email, please check your spam or junk folder.
               </p>
             </div>
@@ -226,7 +226,7 @@ const WithdrawalOtpVerification: React.FC = () => {
                   }}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest font-mono"
+                  className="w-full px-4 py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest font-mono"
                   autoFocus
                 />
               </div>
@@ -267,13 +267,13 @@ const WithdrawalOtpVerification: React.FC = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="mb-4 p-4 bg-red-50 border border-border rounded-xl">
               <p className="text-red-600 text-sm text-center">{error}</p>
             </div>
           )}
 
           {/* Important Notes */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+          <div className="bg-yellow-50 border border-border rounded-xl p-4">
             <h5 className="font-semibold text-yellow-800 mb-2">Important Notes:</h5>
             <ul className="text-xs text-yellow-700 space-y-1">
               <li>• The verification code expires in 10 minutes</li>
@@ -295,7 +295,7 @@ const WithdrawalOtpVerification: React.FC = () => {
               onClick={() => setResendModal({ show: false, message: '' })}
             >
               <motion.div
-                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}

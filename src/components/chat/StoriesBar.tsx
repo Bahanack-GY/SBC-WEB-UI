@@ -83,7 +83,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
 
   if (loading && storyGroups.length === 0) {
     return (
-      <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-gray-200 p-4">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-border p-4">
         <div className="flex gap-3 overflow-x-auto">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex flex-col items-center gap-2">
@@ -99,7 +99,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
   console.log('StoriesBar - Rendering with storyGroups:', storyGroups.length, 'groups');
 
   return (
-    <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-gray-200 p-4">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-border p-4">
       <motion.div variants={listContainer} initial="hidden" animate="show" className="flex gap-3 overflow-x-auto scrollbar-hide">
         {/* Add Your Story Button */}
         <motion.button
@@ -109,7 +109,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
           className="flex flex-col items-center gap-2 flex-shrink-0"
         >
           <div className="relative">
-            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300">
+            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border">
               <img
                 src={user?.avatar || '/default-avatar.png'}
                 alt="Your story"
@@ -132,11 +132,11 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
               onClick={() => onStoryClick(group, 0)}
               className="flex flex-col items-center gap-2 flex-shrink-0"
             >
-              <div className={`rounded-full p-0.5 ${
-                group.hasUnviewed
-                  ? 'bg-gradient-to-tr from-blue-500 via-green-500 to-orange-500'
-                  : 'bg-gray-300'
-              }`}>
+              <div className={`bg-primary rounded-full p-0.5 ${
+ group.hasUnviewed
+ ? ' '
+ : 'bg-gray-300'
+ }`}>
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white bg-white">
                   <img
                     src={group.authorAvatar || '/default-avatar.png'}

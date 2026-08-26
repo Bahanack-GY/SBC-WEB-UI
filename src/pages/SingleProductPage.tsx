@@ -103,7 +103,7 @@ function SingleProductPage() {
                   key={i}
                   src={img}
                   alt="Miniature"
-                  className={`w-16 h-16 object-contain rounded-xl border ${i === selectedImg ? 'border-[#115CF6] border-2' : 'border-gray-200'}`}
+                  className={`w-16 h-16 object-contain rounded-xl border ${i === selectedImg ? 'border-[#115CF6] border-2' : 'border-border'}`}
                   onClick={() => setSelectedImg(i)}
                   style={{ cursor: 'pointer' }}
                   whileHover={{ scale: 1.08 }}
@@ -123,7 +123,7 @@ function SingleProductPage() {
                   href={product.whatsappLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 px-2 rounded-xl text-lg shadow transition-colors"
+                  className="bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 px-2 rounded-xl text-lg transition-colors"
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.5, type: 'spring' }}

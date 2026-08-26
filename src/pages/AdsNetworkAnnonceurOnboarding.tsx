@@ -105,7 +105,7 @@ Vues et clics, diffuseur par diffuseur.
           </motion.div>
         </motion.div>
 
-        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-3 mt-4">
+        <div className="flex items-center gap-3 bg-blue-50 border border-border rounded-2xl p-3 mt-4">
           <img src={illustrationReview} alt="" aria-hidden="true" className="w-20 shrink-0" />
           <p className="text-sm text-blue-900">
 <span className="font-medium">Chaque annonce est relue avant diffusion.</span>{' '}
@@ -113,7 +113,7 @@ Vues et clics, diffuseur par diffuseur.
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 mt-5 shadow-sm">
+        <div className="bg-white border border-border rounded-2xl p-4 mt-5">
           <label className="block text-sm font-medium text-gray-800 mb-1">
             Quel budget souhaitez-vous investir ?
           </label>
@@ -124,7 +124,7 @@ Vues et clics, diffuseur par diffuseur.
             step={1000}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+            className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
           />
           <p className="text-xs text-gray-500 mt-1">
             Minimum {MIN_AMOUNT.toLocaleString('fr-FR')} F.

@@ -31,7 +31,7 @@ const WithdrawalSuccessModal: React.FC<WithdrawalSuccessModalProps> = ({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
+      <div className="bg-white rounded-lg max-w-md w-full p-6 border border-border">
         {/* Success Icon */}
         <div className="flex justify-center mb-4">
           <div className="flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
@@ -62,7 +62,7 @@ const WithdrawalSuccessModal: React.FC<WithdrawalSuccessModalProps> = ({
         )}
 
         {/* Info Box - Pending Approval */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <div className="bg-blue-50 border border-border rounded-lg p-4 mb-4">
           <div className="flex items-start">
             <svg className="h-5 w-5 text-blue-500 mt-0.5 mr-3 flex-shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
               <path fillRule="evenodd" d="M18 5v8a2 2 0 01-2 2h-5l-5 4v-4H4a2 2 0 01-2-2V5a2 2 0 012-2h12a2 2 0 012 2zm-11-1a1 1 0 11-2 0 1 1 0 012 0zm5 0a1 1 0 11-2 0 1 1 0 012 0zm4 0a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" />

@@ -9,7 +9,7 @@ const TourButton: React.FC = () => {
   return (
     <button
       onClick={startTour}
-      className="fixed bottom-20 right-4 bg-[#115CF6] text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50"
+      className="fixed bottom-20 right-4 bg-[#115CF6] text-white p-3 rounded-full hover:bg-blue-700 transition-colors z-50"
       title="Démarrer le guide"
     >
       <HugeiconsIcon icon={HelpCircleIcon} size={24} />

@@ -26,7 +26,7 @@ const RecoveryPreviewBanner: React.FC<RecoveryPreviewBannerProps> = ({
       exit={{ opacity: 0, y: -20 }}
       transition={{ type: 'spring', bounce: 0.2 }}
     >
-      <div className="flex items-start bg-gradient-to-r from-green-500 to-green-600 text-white p-5 rounded-xl shadow-lg">
+      <div className="bg-success flex items-start text-white p-5 rounded-xl">
         <div className="banner-icon text-3xl mr-4 flex-shrink-0">
           🎉
         </div>

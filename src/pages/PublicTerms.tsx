@@ -8,10 +8,10 @@ import { pageFade, headerDrop, sectionRise } from '../utils/motion';
 
 export default function PublicTerms() {
   return (
-    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen w-full bg-gradient-to-br from-[#eaf2ff] via-white to-[#eaffea]">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-bg min-h-screen w-full">
       <div className="max-w-3xl mx-auto px-5 py-6">
         <motion.header variants={headerDrop} className="flex items-center justify-between mb-6">
-          <Link to="/a-propos" aria-label="Retour" className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm hover:bg-white">
+          <Link to="/a-propos" aria-label="Retour" className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 hover:bg-white border border-border">
             <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <img src={logo} alt="SBC" className="h-9 w-9 object-contain" />
@@ -20,7 +20,7 @@ export default function PublicTerms() {
           </Link>
         </motion.header>
 
-        <motion.article variants={sectionRise} className="bg-white/80 backdrop-blur rounded-2xl p-6 md:p-8 shadow-sm prose prose-sm md:prose-base max-w-none">
+        <motion.article variants={sectionRise} className="bg-white/80 backdrop-blur rounded-2xl p-6 md:p-8 prose prose-sm md:prose-base max-w-none border border-border">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Conditions Générales d'Utilisation</h1>
           <p className="text-sm text-gray-500 mb-6">Sniper Business Center — En vigueur</p>
 

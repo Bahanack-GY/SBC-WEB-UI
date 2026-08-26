@@ -70,7 +70,7 @@ function CompleteProfile() {
     <ProtectedRoute>
       <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-4">
         <motion.div
-          className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8 max-h-[90vh] overflow-y-auto"
+          className="w-full max-w-md bg-white rounded-3xl p-8 max-h-[90vh] overflow-y-auto border border-border"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
@@ -90,7 +90,7 @@ function CompleteProfile() {
                 <select
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                  className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
                 >
                   <option value="">Sélectionner la région</option>
                   {availableRegions.map((r) => (
@@ -107,7 +107,7 @@ function CompleteProfile() {
                 type="date"
                 value={naissance}
                 onChange={(e) => setNaissance(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
               />
             </div>
 
@@ -117,7 +117,7 @@ function CompleteProfile() {
               <select
                 value={sexe}
                 onChange={(e) => setSexe(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
               >
                 <option value="">Sélectionner</option>
                 <option value="male">👨 Homme</option>
@@ -131,7 +131,7 @@ function CompleteProfile() {
               <select
                 value={profession}
                 onChange={(e) => setProfession(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
               >
                 <option value="">Sélectionner la profession</option>
                 {professionOptions.map((p) => (
@@ -146,7 +146,7 @@ function CompleteProfile() {
               <select
                 value={langue}
                 onChange={(e) => setLangue(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
               >
                 <option value="">Sélectionner la langue</option>
                 <option value="fr">Français</option>
@@ -167,8 +167,8 @@ function CompleteProfile() {
                       type="button"
                       className={`px-3 py-1 rounded-full border text-xs font-medium transition-colors ${
                         isSelected
-                          ? 'bg-green-700 text-white border-green-700'
-                          : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                          ? 'bg-green-700 text-white border-success'
+                          : 'bg-white text-gray-700 border-border hover:bg-gray-50'
                       }`}
                       onClick={() => handleInterestClick(displayInterest)}
                     >

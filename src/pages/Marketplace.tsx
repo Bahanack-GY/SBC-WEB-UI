@@ -149,7 +149,7 @@ function Marketplace() {
                     placeholder="Rechercher un produit ou un service"
                     value={searchQuery}
                     onChange={handleSearch}
-                    className="w-full rounded-xl border border-gray-200 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
+                    className="w-full rounded-xl border border-border px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-300 bg-gray-50 text-gray-700"
                 />
             </div>
 
@@ -175,8 +175,8 @@ function Marketplace() {
                             key={cat}
                             onClick={() => setSelectedCategory(cat)}
                             className={`px-4 py-1 rounded-full border text-sm font-medium whitespace-nowrap transition-colors duration-150 ${selectedCategory === cat
-                                ? 'bg-green-700 text-white border-green-700'
-                                : 'bg-white text-gray-700 border-gray-300'
+                                ? 'bg-green-700 text-white border-success'
+                                : 'bg-white text-gray-700 border-border'
                                 }`}
                         >
                             {cat}
@@ -261,7 +261,7 @@ function Marketplace() {
                 >
                     <motion.button
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
-                        className="bg-green-600 text-white rounded-full p-4 shadow-lg hover:bg-green-700 transition-colors"
+                        className="bg-green-600 text-white rounded-full p-4 hover:bg-green-700 transition-colors"
                         whileTap={{ scale: 0.95 }}
                     >
                         <HugeiconsIcon icon={PlusSignIcon} className="w-6 h-6" />
@@ -274,7 +274,7 @@ function Marketplace() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: 20 }}
                                 transition={{ duration: 0.2 }}
-                                className="absolute bottom-16 right-0 bg-white rounded-lg shadow-xl p-2 w-48"
+                                className="absolute bottom-16 right-0 bg-white rounded-lg p-2 w-48 border border-border"
                             >
                                 {menuItems.map((item, index) => (
                                     <motion.button

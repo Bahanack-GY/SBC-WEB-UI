@@ -67,7 +67,7 @@ function VerifyOtp() {
                     <div className="text-center text-sm text-gray-500 mb-2">
                         Un code de vérification a été envoyé à votre email pour finaliser la connexion.
                     </div>
-                    <div className="text-center text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+                    <div className="text-center text-xs text-amber-600 bg-amber-50 border border-border rounded-lg px-3 py-2 mb-2">
                         Si vous ne trouvez pas l'email, vérifiez votre dossier spam ou courrier indésirable.
                     </div>
                     {error && (
@@ -86,7 +86,7 @@ function VerifyOtp() {
                                 onChange={e => handleChange(i, e.target.value)}
                                 onKeyDown={e => handleKeyDown(i, e)}
                                 onPaste={e => handlePaste(i, e)}
-                                className="w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#115CF6] bg-white font-mono"
+                                className="w-12 h-12 text-center text-2xl border-2 border-border rounded-lg focus:outline-none focus:border-[#115CF6] bg-white font-mono"
                                 autoFocus={i === 0}
                             />
                         ))}
@@ -105,7 +105,7 @@ function VerifyOtp() {
                     <button
                         type="submit"
                         disabled={loading || otpCode.length !== 6}
-                        className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-bold shadow hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors text-lg"
+                        className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-bold hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors text-lg"
                     >
                         {loading ? 'Vérification...' : 'Vérifier'}
                     </button>
@@ -123,7 +123,7 @@ function VerifyOtp() {
                         onClick={() => setSuccessModal({ show: false, message: '' })}
                     >
                         <motion.div
-                            className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+                            className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}

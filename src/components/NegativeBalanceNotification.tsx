@@ -40,7 +40,7 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
           transition={{ duration: 0.3 }}
         >
           <motion.div
-            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-w-[95vw] sm:max-w-lg mx-auto my-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl max-w-lg w-full max-w-[95vw] sm:max-w-lg mx-auto my-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto border border-border"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -67,7 +67,7 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
               </button>
             </div>
 
-            <div className="bg-red-50 border-l-4 border-red-400 p-3 sm:p-4 rounded-r-lg mb-3 sm:mb-4">
+            <div className="bg-red-50 border-l-4 border-danger p-3 sm:p-4 rounded-r-lg mb-3 sm:mb-4">
               <div className="flex items-start">
                 <HugeiconsIcon icon={UserGroupIcon} className="text-red-600 mr-2 sm:mr-3 mt-1 flex-shrink-0" size={18} />
                 <div className="text-gray-700 text-sm leading-relaxed">
@@ -76,7 +76,7 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+            <div className="bg-blue-50 border border-border rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
               <h4 className="font-semibold text-blue-800 mb-2 sm:mb-3 text-sm">
                 🔧 Comment résoudre ce problème :
               </h4>
@@ -90,7 +90,7 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+            <div className="bg-green-50 border border-border rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
               <h4 className="font-semibold text-green-800 mb-2 text-sm">
                 💡 Avantages pour vos filleuls :
               </h4>

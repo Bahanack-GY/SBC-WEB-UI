@@ -289,7 +289,7 @@ const StoryViewer = ({
                     className="w-full h-full object-cover"
                   />
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 to-green-500 flex items-center justify-center text-white font-bold">
+                  <div className="bg-primary w-full h-full flex items-center justify-center text-white font-bold">
                     {currentGroup.authorName.charAt(0).toUpperCase()}
                   </div>
                 )}
@@ -333,7 +333,7 @@ const StoryViewer = ({
               />
             )
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-600 via-green-600 to-orange-500 p-8">
+            <div className="bg-primary w-full h-full flex items-center justify-center p-8">
               <p className="text-white text-2xl md:text-4xl font-bold text-center max-w-2xl">
                 {currentStory.content || currentStory.textContent}
               </p>

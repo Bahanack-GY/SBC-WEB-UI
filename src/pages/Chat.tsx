@@ -129,7 +129,7 @@ export default function Chat() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl p-8 max-w-md text-center shadow-xl border border-white/50"
+            className="bg-primary-soft rounded-2xl p-8 max-w-md text-center border border-white/50"
           >
             <div className="text-6xl mb-4">
               {viewMode === 'status' ? '📸' : '💬'}

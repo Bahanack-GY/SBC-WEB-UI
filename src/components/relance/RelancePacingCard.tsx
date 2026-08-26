@@ -60,7 +60,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
   };
 
   return (
-    <div className="relance-pacing-card bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+    <div className="relance-pacing-card bg-white rounded-2xl border border-border mb-4 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
@@ -74,7 +74,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
       </button>
 
       {open && (
-        <div className="p-4 pt-0 border-t border-gray-100">
+        <div className="p-4 pt-0 border-t border-border">
           <label className="block text-sm font-medium text-gray-800 mb-1 mt-3" htmlFor="relance-pacing-input">
             Vitesse d'envoi par jour
           </label>
@@ -107,7 +107,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
                 if (Number.isNaN(n)) return;
                 setAndPersist(n);
               }}
-              className="flex-1 h-12 text-center text-lg font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+              className="flex-1 h-12 text-center text-lg font-bold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
             />
             <button
               type="button"

@@ -298,7 +298,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
             />
           ) : (
             // Gradient background for text-only stories
-            <div className="w-full h-full bg-gradient-to-br from-blue-600 via-green-600 to-orange-500" />
+            <div className="bg-primary w-full h-full" />
           )}
         </div>
 
@@ -439,7 +439,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
               <button
                 onClick={handleShareStory}
                 disabled={!canShare}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-primary flex-1 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? (
                   <>

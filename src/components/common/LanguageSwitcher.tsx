@@ -18,9 +18,9 @@ function LanguageSwitcher() {
         onClick={() => changeLanguage('fr')}
         className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
           currentLanguage === 'fr'
-            ? 'bg-white text-blue-600 shadow-sm'
+            ? 'bg-white text-blue-600'
             : 'text-gray-600 hover:text-gray-800'
-        }`}
+        } border border-border`}
       >
         🇫🇷 FR
       </motion.button>
@@ -29,9 +29,9 @@ function LanguageSwitcher() {
         onClick={() => changeLanguage('en')}
         className={`px-3 py-1 rounded-full text-sm font-medium transition-all ${
           currentLanguage === 'en'
-            ? 'bg-white text-blue-600 shadow-sm'
+            ? 'bg-white text-blue-600'
             : 'text-gray-600 hover:text-gray-800'
-        }`}
+        } border border-border`}
       >
         🇬🇧 EN
       </motion.button>

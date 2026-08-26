@@ -55,7 +55,7 @@ function TransactionConfirmation() {
       </div>
 
       {/* Transaction summary card */}
-      <div className="w-full max-w-md bg-[#f8fafc] border border-dashed border-gray-200 rounded-xl p-4 flex items-center gap-4 mb-6">
+      <div className="w-full max-w-md bg-[#f8fafc] border border-dashed border-border rounded-xl p-4 flex items-center gap-4 mb-6">
 
         <div className="bg-[#115CF6]/10 rounded-full p-3 flex items-center justify-center">
           <svg width="32" height="32" fill="none" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#115CF6" opacity="0.1" /><path d="M8 12h8M8 16h5" stroke="#115CF6" strokeWidth="2" strokeLinecap="round" /></svg>
@@ -80,10 +80,10 @@ function TransactionConfirmation() {
         Votre demande de retrait a été enregistrée et est en cours de traitement. Vous recevrez une notification lorsque le processus sera terminé.
       </div>
       <div className="flex gap-3 mb-6">
-        <button onClick={handleDownload} className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-5 py-2 font-bold shadow hover:bg-blue-800 transition-colors">
+        <button onClick={handleDownload} className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-5 py-2 font-bold hover:bg-blue-800 transition-colors">
           <HugeiconsIcon icon={Download01Icon} /> Télécharger PDF
         </button>
-        <button onClick={handleShare} className="flex items-center gap-2 bg-green-600 text-white rounded-xl px-5 py-2 font-bold shadow hover:bg-green-700 transition-colors">
+        <button onClick={handleShare} className="flex items-center gap-2 bg-green-600 text-white rounded-xl px-5 py-2 font-bold hover:bg-green-700 transition-colors">
           <HugeiconsIcon icon={Share08Icon} /> Partager
         </button>
       </div>
@@ -99,7 +99,7 @@ function TransactionConfirmation() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 10 }}
-            className="w-full max-w-md bg-white border border-gray-100 rounded-xl p-4 shadow mb-4"
+            className="w-full max-w-md bg-white border border-border rounded-xl p-4 mb-4"
           >
             <div className="mb-2 text-sm text-gray-500">ID de la transaction</div>
             <div className="font-mono text-sm mb-2">{transactionId}</div>
@@ -135,7 +135,7 @@ function TransactionConfirmation() {
             onClick={() => setInfoModal({ show: false, message: '' })}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+              className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

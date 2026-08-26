@@ -17,7 +17,7 @@ function HomeButtons({ icon, title, onClick, badge }: HomeButtonsProps) {
                     {icon}
                 </button>
                 {badge && (
-                    <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap shadow-lg">
+                    <span className="absolute -top-2 -right-2 bg-green-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full whitespace-nowrap">
                         {badge}
                     </span>
                 )}

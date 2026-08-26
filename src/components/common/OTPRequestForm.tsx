@@ -70,7 +70,7 @@ function OTPRequestForm({
           value={identifier}
           onChange={(e) => setIdentifier(e.target.value)}
           placeholder="Ex: jeanpierre@gmail.com ou +237675090755"
-          className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400"
+          className="w-full border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400"
           required
         />
       </div>
@@ -94,7 +94,7 @@ function OTPRequestForm({
               <select 
                 value={channelOverride} 
                 onChange={(e) => setChannelOverride(e.target.value)}
-                className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-sm"
+                className="w-full border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white text-sm"
               >
                 <option value="">Utiliser ma préférence</option>
                 <option value="email">📧 Email</option>
@@ -107,7 +107,7 @@ function OTPRequestForm({
 
       <button
         type="submit"
-        className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl text-lg shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+        className="bg-primary w-full text-white font-bold py-3 rounded-xl text-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         disabled={loading}
       >
         {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : null}

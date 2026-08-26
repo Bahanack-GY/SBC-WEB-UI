@@ -24,16 +24,16 @@ function MarketplaceProductCard({ image, brand, name, price, whatsappLink, produ
 
     return (
         <div>
-            <div className="bg-white rounded-xl border border-gray-200 p-3 shadow flex flex-col relative min-h-[240px]">
+            <div className="bg-white rounded-xl border border-border p-3 flex flex-col relative min-h-[240px]">
                 {/* Share button */}
                 <button
-                    className="absolute top-3 right-3 bg-white rounded-full p-1 shadow text-green-600 hover:bg-green-50 transition-colors"
+                    className="absolute top-3 right-3 bg-white rounded-full p-1 text-green-600 hover:bg-green-50 transition-colors border border-border"
                     onClick={handleShare}
                 >
                     <HugeiconsIcon icon={Share08Icon} size={18} />
                 </button>
                 {copied && (
-                    <span className="absolute top-10 right-3 bg-green-600 text-white text-xs rounded px-2 py-1 shadow">Lien copié !</span>
+                    <span className="absolute top-10 right-3 bg-green-600 text-white text-xs rounded px-2 py-1">Lien copié !</span>
                 )}
                 {/* Product image */}
                 <div className="flex justify-center items-center h-24 mb-2">

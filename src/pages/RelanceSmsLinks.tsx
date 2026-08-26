@@ -88,7 +88,7 @@ export default function RelanceSmsLinks() {
     const key = `${tpl.type}:${tpl.dayNumber}`;
     const value = linkValues[key] || '';
     return (
-      <motion.div variants={listItem} key={key} className="border border-gray-200 rounded-lg p-3 bg-gray-50">
+      <motion.div variants={listItem} key={key} className="border border-border rounded-lg p-3 bg-gray-50">
         <div className="font-bold text-sm text-gray-700 mb-1">
           {dayLabel(tpl.type, tpl.dayNumber)}
         </div>
@@ -102,7 +102,7 @@ export default function RelanceSmsLinks() {
           value={value}
           onChange={(e) => setValue(tpl.type, tpl.dayNumber, e.target.value)}
           placeholder="https://..."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
+          className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
         />
       </motion.div>
     );
@@ -123,7 +123,7 @@ export default function RelanceSmsLinks() {
         {loading && <div className="text-center text-gray-500 py-8">Chargement…</div>}
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
+          <div className="bg-red-50 border border-border text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
             {error}
           </div>
         )}

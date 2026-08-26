@@ -68,7 +68,7 @@ function ChangeEmail() {
                             value={newEmail}
                             onChange={e => setNewEmail(e.target.value)}
                             placeholder="Ex : nouvel@email.com"
-                            className={`w-full border ${error && error.toLowerCase().includes('email') ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error && error.toLowerCase().includes('email') ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
                         />
                     </div>
                     <div>
@@ -78,13 +78,13 @@ function ChangeEmail() {
                             value={password}
                             onChange={e => setPassword(e.target.value)}
                             placeholder="Votre mot de passe"
-                            className={`w-full border ${error && error.toLowerCase().includes('passe') ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error && error.toLowerCase().includes('passe') ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
                         />
                     </div>
                     {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow"
+                        className="bg-primary w-full text-white font-bold py-3 rounded-xl text-lg mt-2"
                         disabled={mutation.status === 'pending'}
                     >
                         {mutation.status === 'pending' ? 'Envoi en cours...' : 'Envoyer le code'}

@@ -110,7 +110,7 @@ function ResetPassword() {
                                 setError('');
                             }}
                             placeholder="Au moins 8 caractères"
-                            className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
                             required
                         />
                     </div>
@@ -125,7 +125,7 @@ function ResetPassword() {
                                 setError('');
                             }}
                             placeholder="Répétez le mot de passe"
-                            className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
                             required
                         />
                     </div>
@@ -143,7 +143,7 @@ function ResetPassword() {
                     
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="bg-success w-full text-white font-bold py-3 rounded-xl text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         disabled={loading}
                     >
                         {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
@@ -159,7 +159,7 @@ function ResetPassword() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -192,7 +192,7 @@ function ResetPassword() {
                         {modalContent.type === 'error' && (
                             <button
                                 type="button"
-                                className="w-full bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold shadow transition-colors"
+                                className="w-full bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold transition-colors"
                                 onClick={() => setShowModal(false)}
                             >
                                 Réessayer

@@ -161,7 +161,7 @@ function Connexion() {
             <input
               type="text"
               placeholder={t('pages.connexion.emailOrPhonePlaceholder')}
-              className={`w-full border ${errors.identifier ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400`}
+              className={`w-full border ${errors.identifier ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400`}
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
             />
@@ -176,7 +176,7 @@ function Connexion() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder={t('common.password')}
-                className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400 pr-12`}
+                className={`w-full border ${errors.password ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400 pr-12`}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
@@ -197,7 +197,7 @@ function Connexion() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-lg mt-2 shadow"
+            className="w-full bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-lg mt-2"
           >
             {loading ? t('common.pleaseWait') : t('pages.connexion.connectButton')}
           </button>

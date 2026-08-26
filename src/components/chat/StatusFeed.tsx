@@ -54,7 +54,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
       {/* Category Filter */}
-      <div className="flex items-center gap-2 p-4 overflow-x-auto scrollbar-hide border-b border-gray-200">
+      <div className="flex items-center gap-2 p-4 overflow-x-auto scrollbar-hide border-b border-border">
         {categories.map((cat) => (
           <button
             key={cat.key}
@@ -76,10 +76,10 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
       </div>
 
       {/* Create Status Button */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-border">
         <button
           onClick={onCreateClick}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-green-600 transition-all"
+          className="bg-primary w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl font-semibold transition-all"
         >
           <HugeiconsIcon icon={PlusSignCircleIcon} className="w-6 h-6" />
           Créer un statut
@@ -117,7 +117,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
                 key={status._id}
                 variants={listItem}
                 onClick={() => onStatusClick(status)}
-                className="relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                className="relative aspect-square rounded-xl overflow-hidden transition-shadow"
               >
                 {/* Background */}
                 {status.mediaUrl ? (
@@ -135,7 +135,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
                     />
                   )
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 via-green-500 to-orange-500" />
+                  <div className="bg-primary w-full h-full" />
                 )}
 
                 {/* Overlay Gradient */}

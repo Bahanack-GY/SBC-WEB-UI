@@ -264,7 +264,7 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
 
             {/* Active area */}
             <div
-              className="absolute top-0 bottom-0 bg-blue-500/20 border-y-2 border-blue-500"
+              className="absolute top-0 bottom-0 bg-blue-500/20 border-y-2 border-primary"
               style={{
                 left: `${(startTime / duration) * 100}%`,
                 right: `${(1 - endTime / duration) * 100}%`,
@@ -284,7 +284,7 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
                 left: `${(startTime / duration) * 100}%`,
               }}
             >
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg" />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white" />
             </div>
 
             {/* End trim handle */}
@@ -300,12 +300,12 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
                 left: `${(endTime / duration) * 100}%`,
               }}
             >
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg" />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white" />
             </div>
 
             {/* Current time indicator */}
             <div
-              className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg"
+              className="absolute top-0 bottom-0 w-0.5 bg-white border border-border"
               style={{
                 left: `${(currentTime / duration) * 100}%`,
               }}

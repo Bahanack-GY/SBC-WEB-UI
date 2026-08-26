@@ -33,7 +33,7 @@ function Header() {
             onClick={() => setShowAppModal(false)}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+              className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

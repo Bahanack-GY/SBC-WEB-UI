@@ -7,14 +7,14 @@ import PublicFooter from '../components/common/PublicFooter';
 
 export default function PublicLanding() {
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#eaf2ff] via-white to-[#eaffea]">
+    <div className="bg-bg relative min-h-screen w-full overflow-hidden">
       <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[#115CF6]/10 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-[#25D366]/10 blur-3xl" />
 
       <div className="relative z-10 max-w-3xl mx-auto px-5 py-6">
         {/* Header */}
         <header className="flex items-center justify-between mb-8">
-          <Link to="/splash-screen" aria-label="Retour" className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm hover:bg-white">
+          <Link to="/splash-screen" aria-label="Retour" className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 hover:bg-white border border-border">
             <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <img src={logo} alt="SBC" className="h-9 w-9 object-contain" />
@@ -41,7 +41,7 @@ export default function PublicLanding() {
         </motion.section>
 
         {/* What we do */}
-        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-sm mb-6">
+        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 mb-6 border border-border">
           <h2 className="text-xl font-bold text-gray-900 mb-3">Ce que nous proposons</h2>
           <ul className="space-y-2 text-gray-700">
             <li>📣 <strong>Publicité ciblée</strong> — diffusez vos produits et services à une communauté d'affiliés actifs.</li>
@@ -53,7 +53,7 @@ export default function PublicLanding() {
         </section>
 
         {/* Email use case — important for SES reviewers */}
-        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-sm mb-6">
+        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 mb-6 border border-border">
           <h2 className="text-xl font-bold text-gray-900 mb-3">Communications par email</h2>
           <p className="text-gray-700 mb-3">
             En vous inscrivant sur SBC, vous recevrez les types d'emails suivants :
@@ -70,7 +70,7 @@ export default function PublicLanding() {
         </section>
 
         {/* Quick contact */}
-        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-sm mb-6">
+        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 mb-6 border border-border">
           <h2 className="text-xl font-bold text-gray-900 mb-3">Nous contacter</h2>
           <div className="space-y-2 text-gray-700">
             <div className="flex items-center gap-3">
@@ -104,7 +104,7 @@ export default function PublicLanding() {
             <a href="https://www.facebook.com/sniperbusinesscenter/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#1877F2] text-white hover:opacity-90">
               <HugeiconsIcon icon={Facebook01Icon} />
             </a>
-            <a href="https://www.instagram.com/sniperbusinesscenter/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="h-10 w-10 flex items-center justify-center rounded-full bg-gradient-to-br from-purple-600 to-pink-500 text-white hover:opacity-90">
+            <a href="https://www.instagram.com/sniperbusinesscenter/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="bg-primary h-10 w-10 flex items-center justify-center rounded-full text-white hover:opacity-90">
               <HugeiconsIcon icon={InstagramIcon} />
             </a>
             <a href="https://www.tiktok.com/@sniper.business.center" target="_blank" rel="noopener noreferrer" aria-label="TikTok" className="h-10 w-10 flex items-center justify-center rounded-full bg-black text-white hover:opacity-90">
@@ -114,7 +114,7 @@ export default function PublicLanding() {
         </section>
 
         {/* Resources */}
-        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 shadow-sm mb-10">
+        <section className="bg-white/80 backdrop-blur rounded-2xl p-6 mb-10 border border-border">
           <h2 className="text-xl font-bold text-gray-900 mb-3">Documents</h2>
           <div className="flex flex-col gap-2">
             <a
@@ -134,7 +134,7 @@ export default function PublicLanding() {
         <div className="flex flex-col sm:flex-row gap-3 mb-10">
           <Link
             to="/connexion"
-            className="flex-1 text-center bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl py-3 shadow-md transition-colors"
+            className="flex-1 text-center bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl py-3 transition-colors"
           >
             Se connecter
           </Link>

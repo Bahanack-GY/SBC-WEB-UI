@@ -121,7 +121,7 @@ const PartnerSpace = () => {
   };
 
   const getPackColor = (pack: string) => {
-    return pack === 'gold' ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' : 'bg-gradient-to-r from-gray-400 to-gray-600';
+    return pack === 'gold' ? 'bg-accent' : 'bg-ink';
   };
 
   const formatDate = (dateString: string) => {
@@ -266,7 +266,7 @@ const PartnerSpace = () => {
 
   // Non-partner view
   const BecomePartnerView = () => (
-    <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+    <div className="bg-white rounded-2xl p-8 text-center border border-border">
       <div className="mb-6">
         <HugeiconsIcon icon={UserGroupIcon} size={60} className="text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Devenez Partenaire SBC</h2>
@@ -287,7 +287,7 @@ const PartnerSpace = () => {
           </ul>
         </div>
 
-        <div className="bg-yellow-50 rounded-xl p-6 border-2 border-yellow-200">
+        <div className="bg-yellow-50 rounded-xl p-6 border-2 border-border">
           <HugeiconsIcon icon={CrownIcon} size={30} className="text-yellow-500 mx-auto mb-3" />
           <h3 className="font-bold text-lg mb-2">Pack Gold</h3>
           <p className="text-gray-600 text-sm mb-4">Commissions maximales sur 3 niveaux</p>
@@ -300,10 +300,10 @@ const PartnerSpace = () => {
       </div>
 
       <div className="space-y-3">
-        <button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white font-bold py-3 px-6 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all">
+        <button className="bg-accent w-full text-white font-bold py-3 px-6 rounded-xl transition-all">
           Upgrade vers Gold
         </button>
-        <button className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white font-bold py-3 px-6 rounded-xl hover:from-gray-500 hover:to-gray-700 transition-all">
+        <button className="bg-ink w-full text-white font-bold py-3 px-6 rounded-xl transition-all">
           Upgrade vers Silver
         </button>
       </div>
@@ -328,7 +328,7 @@ const PartnerSpace = () => {
 
         {/* Error State */}
         {errorDetails && !loadingDetails && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+          <div className="bg-red-50 border border-border rounded-2xl p-6 text-center">
             <p className="text-red-600 font-medium">Erreur lors du chargement des données partenaire</p>
             <p className="text-red-500 text-sm mt-2">{String(errorDetails)}</p>
             <button
@@ -349,7 +349,7 @@ const PartnerSpace = () => {
             {/* Partner Stats Overview */}
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               {/* Current Balance */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl p-6 border border-border">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-700">Solde Actuel</h3>
                   <HugeiconsIcon icon={GiftIcon} size={24} className="text-green-500" />
@@ -359,7 +359,7 @@ const PartnerSpace = () => {
               </div>
 
               {/* Partner Level */}
-              <div className={`rounded-2xl shadow-lg p-6 text-white ${getPackColor(partnerData.pack)}`}>
+              <div className={`rounded-2xl p-6 text-white ${getPackColor(partnerData.pack)}`}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Niveau Partenaire</h3>
                   {getPackIcon(partnerData.pack)}
@@ -371,7 +371,7 @@ const PartnerSpace = () => {
               </div>
 
               {/* Total Withdrawn */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl p-6 border border-border">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-700">Total Retiré</h3>
                   <HugeiconsIcon icon={ArrowDown01Icon} size={24} className="text-blue-500" />
@@ -384,7 +384,7 @@ const PartnerSpace = () => {
             </div>
 
             {/* Partner Info Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-2xl p-6 mb-6 border border-border">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Informations Partenaire</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
@@ -410,7 +410,7 @@ const PartnerSpace = () => {
             </div>
 
             {/* Recent Transactions - Compact View like Wallet.tsx */}
-            <div className="bg-[#192040] rounded-2xl p-4 shadow mb-6">
+            <div className="bg-[#192040] rounded-2xl p-4 mb-6">
               <div className="font-semibold mb-2 text-white">Commissions récentes</div>
               {loadingTx || isFetchingTx ? (
                 <div className="space-y-3">
@@ -464,7 +464,7 @@ const PartnerSpace = () => {
             <div className="flex justify-center mb-20">
               <button
                 onClick={openAllTransactionsModal}
-                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition-colors"
               >
                 Voir toutes les commissions
               </button>
@@ -484,7 +484,7 @@ const PartnerSpace = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative shadow-lg flex flex-col"
+              className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}

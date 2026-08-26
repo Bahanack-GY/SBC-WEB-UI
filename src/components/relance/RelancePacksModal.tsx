@@ -77,8 +77,8 @@ export default function RelancePacksModal({
         disabled={purchasingId !== null}
         className={`w-full text-left rounded-xl border-2 p-4 transition-colors ${
           isEmail
-            ? 'border-blue-200 hover:border-blue-400 hover:bg-blue-50'
-            : 'border-green-200 hover:border-green-400 hover:bg-green-50'
+            ? 'border-border hover:border-primary hover:bg-blue-50'
+            : 'border-border hover:border-success hover:bg-green-50'
         } ${isPurchasing ? 'opacity-60 cursor-wait' : ''} disabled:opacity-50`}
       >
         <div className="flex items-center justify-between gap-3">
@@ -110,7 +110,7 @@ export default function RelancePacksModal({
           onClick={onClose}
         >
           <motion.div
-            className="bg-white rounded-2xl p-6 w-full max-w-lg text-gray-900 relative shadow-lg max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl p-6 w-full max-w-lg text-gray-900 relative max-h-[90vh] overflow-y-auto border border-border"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -135,7 +135,7 @@ export default function RelancePacksModal({
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
+              <div className="bg-red-50 border border-border text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
                 {error}
               </div>
             )}

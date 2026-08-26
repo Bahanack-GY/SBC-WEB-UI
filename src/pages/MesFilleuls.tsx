@@ -242,7 +242,7 @@ function MesFilleuls() {
     const chartHeight = 120;
 
     return (
-      <div className="bg-white rounded-xl p-4 shadow-sm">
+      <div className="bg-white rounded-xl p-4 border border-border">
         <button
           onClick={() => setShowChart(!showChart)}
           className="flex items-center justify-between w-full mb-4 text-left"
@@ -277,14 +277,14 @@ function MesFilleuls() {
                       <div className="flex flex-col items-center mb-2 relative">
                         {/* Total bar */}
                         <div
-                          className={`bg-gradient-to-t from-gray-400 to-gray-300 rounded-t-md transition-all duration-300 shadow-sm ${relevantMonths.length <= 6 ? 'w-10' : relevantMonths.length <= 9 ? 'w-8' : 'w-6'
-                            } ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
+                          className={`bg-ink rounded-t-md transition-all duration-300 ${relevantMonths.length <= 6 ? 'w-10' : relevantMonths.length <= 9 ? 'w-8' : 'w-6'
+ } ${isSelected ? 'ring-2 ring-blue-400 ring-offset-1' : ''}`}
                           style={{ height: `${Math.max(totalHeight, 8)}px` }}
                         />
                         {/* Active subscribers bar overlay */}
                         <div
-                          className={`bg-gradient-to-t from-green-600 to-green-400 rounded-t-md absolute bottom-0 transition-all duration-300 shadow-sm ${relevantMonths.length <= 6 ? 'w-10' : relevantMonths.length <= 9 ? 'w-8' : 'w-6'
-                            }`}
+                          className={`bg-success rounded-t-md absolute bottom-0 transition-all duration-300 ${relevantMonths.length <= 6 ? 'w-10' : relevantMonths.length <= 9 ? 'w-8' : 'w-6'
+ }`}
                           style={{ height: `${Math.max(activeHeight, 4)}px` }}
                         />
 
@@ -309,7 +309,7 @@ function MesFilleuls() {
 
               {/* Selected Month Details */}
               {selectedMonth && (
-                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                <div className="mt-4 p-3 bg-blue-50 rounded-lg border border-border">
                   <h4 className="font-medium text-blue-900 mb-2">{selectedMonth.monthName} 2025</h4>
                   <div className="grid grid-cols-2 gap-3 text-sm">
                     <div>
@@ -350,7 +350,7 @@ function MesFilleuls() {
             </div>
 
             {/* Summary Stats */}
-            <div className="grid grid-cols-4 gap-3 pt-4 border-t border-gray-100">
+            <div className="grid grid-cols-4 gap-3 pt-4 border-t border-border">
               <div className="text-center">
                 <div className="text-sm font-medium text-green-600">
                   {relevantMonths.reduce((sum, m) => sum + m.level1, 0)}
@@ -421,7 +421,7 @@ function MesFilleuls() {
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-gray-50">
       {/* Header */}
-      <motion.div variants={headerDrop} className="bg-white shadow-sm sticky top-0 z-10">
+      <motion.div variants={headerDrop} className="bg-white sticky top-0 z-10 border border-border">
         <div className="flex items-center p-4">
           <BackButton />
           <h1 className="text-xl font-semibold text-gray-900 ml-3">Mes filleuls</h1>
@@ -446,7 +446,7 @@ function MesFilleuls() {
             placeholder="Rechercher un filleul..."
             value={searchInput}
             onChange={e => setSearchInput(e.target.value)}
-            className="w-full pl-10 pr-10 py-3 border border-gray-200 rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            className="w-full pl-10 pr-10 py-3 border border-border rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
           />
           {searchInput && (
             <button
@@ -458,7 +458,7 @@ function MesFilleuls() {
           )}
         </div>
         {/* Enhanced Stats Overview */}
-        <div className="bg-white rounded-xl p-4 shadow-sm">
+        <div className="bg-white rounded-xl p-4 border border-border">
           {statsError ? (
             <div className="text-center text-red-600 text-sm">
               Erreur de chargement des statistiques
@@ -480,7 +480,7 @@ function MesFilleuls() {
               </div>
 
               {/* Additional Stats Row Skeleton */}
-              <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+              <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
                     <HugeiconsIcon icon={UserGroupIcon} className="text-gray-300 mr-1" size={12} />
@@ -529,7 +529,7 @@ function MesFilleuls() {
               </div>
 
               {/* Additional Stats Row */}
-              <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
+              <div className="grid grid-cols-3 gap-3 pt-3 border-t border-border">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
                     <HugeiconsIcon icon={UserGroupIcon} className="text-gray-500 mr-1" size={12} />
@@ -564,7 +564,7 @@ function MesFilleuls() {
 
         {/* Monthly Chart */}
         {statsLoading ? (
-          <div className="bg-white rounded-xl p-4 shadow-sm">
+          <div className="bg-white rounded-xl p-4 border border-border">
             <div className="flex items-center justify-between mb-4">
               <Skeleton width="w-32" height="h-6" rounded="rounded" />
               <Skeleton width="w-20" height="h-4" rounded="rounded" />
@@ -582,9 +582,9 @@ function MesFilleuls() {
           <div className="flex bg-gray-100 rounded-lg p-1">
             <button
               className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'direct'
-                ? 'bg-white text-green-600 shadow-sm'
+                ? 'bg-white text-green-600'
                 : 'text-gray-600 hover:text-gray-900'
-                }`}
+                } border border-border`}
               onClick={() => setSelectedTab('direct')}
             >
               <div className="flex flex-col items-center">
@@ -596,9 +596,9 @@ function MesFilleuls() {
             </button>
             <button
               className={`px-3 py-2 rounded-md text-sm font-medium transition-all ${selectedTab === 'indirect'
-                ? 'bg-white text-blue-600 shadow-sm'
+                ? 'bg-white text-blue-600'
                 : 'text-gray-600 hover:text-gray-900'
-                }`}
+                } border border-border`}
               onClick={() => setSelectedTab('indirect')}
             >
               <div className="flex flex-col items-center">
@@ -611,7 +611,7 @@ function MesFilleuls() {
           </div>
 
           <button
-            className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-2 bg-white border border-border rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
             onClick={() => setModalOpen(true)}
           >
             <HugeiconsIcon icon={FilterIcon} className="text-gray-500" size={14} />
@@ -621,7 +621,7 @@ function MesFilleuls() {
 
         {/* Current Filter Display */}
         {subTypeFilterInput !== 'undefined' && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <div className="bg-blue-50 border border-border rounded-lg p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm text-blue-800">
                 Filtre actif: {getFilterDisplayName(subTypeFilterInput)}
@@ -638,7 +638,7 @@ function MesFilleuls() {
         {/* Filter Modal */}
         {modalOpen && (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black bg-opacity-50">
-            <div className="bg-white rounded-t-2xl sm:rounded-2xl shadow-xl w-full sm:w-96 max-w-md">
+            <div className="bg-white rounded-t-2xl sm:rounded-2xl w-full sm:w-96 max-w-md border border-border">
               <div className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-900">Filtrer par abonnement</h3>
@@ -661,8 +661,8 @@ function MesFilleuls() {
                     <button
                       key={filter.value}
                       className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-colors ${subTypeFilterInput === filter.value
-                        ? 'bg-green-50 border-green-200 text-green-800'
-                        : 'bg-white border-gray-200 text-gray-700 hover:bg-gray-50'
+                        ? 'bg-green-50 border-border text-green-800'
+                        : 'bg-white border-border text-gray-700 hover:bg-gray-50'
                         }`}
                       onClick={() => {
                         setSubTypeFilterInput(filter.value as any);
@@ -707,7 +707,7 @@ function MesFilleuls() {
                     variants={listItem}
                     key={filleul._id}
                     ref={index === allFilleuls.length - 1 ? lastItemRef : null}
-                    className="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow"
+                    className="bg-white rounded-xl p-4 transition-shadow border border-border"
                   >
                     <div className="flex items-center gap-4">
                       <div className="relative">

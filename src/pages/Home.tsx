@@ -42,24 +42,24 @@ function getFormationCardVariant(decoration?: string): {
     case 'orange':
       return {
         container:
-          'border-2 border-orange-500 bg-gradient-to-br from-orange-50 to-white shadow-[0_0_0_4px_rgba(249,115,22,0.12)]',
+          'bg-accent-soft border-2 border-accent',
         title: 'text-orange-600',
       };
     case 'gold':
       return {
         container:
-          'border-2 border-amber-400 bg-gradient-to-br from-amber-50 to-white shadow-[0_0_0_4px_rgba(251,191,36,0.15)]',
+          'bg-accent-soft border-2 border-accent',
         title: 'text-amber-700',
       };
     case 'new':
       return {
-        container: 'border border-gray-200 hover:bg-gray-50',
+        container: 'border border-border hover:bg-gray-50',
         title: 'text-blue-700',
         badge: 'NEW',
       };
     default:
       return {
-        container: 'border border-gray-200 hover:bg-gray-50',
+        container: 'border border-border hover:bg-gray-50',
         title: 'text-blue-700',
       };
   }
@@ -297,7 +297,7 @@ function Home() {
               <a
                 href={presentationPdfUrl}
                 download="document_de_presentation_sbc.pdf"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
               >
                 Téléchargez le document de présentation de la SBC
               </a>
@@ -312,7 +312,7 @@ function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
+                  className="flex items-center gap-4 p-4 rounded-2xl text-white"
                   style={{ backgroundColor: '#25D366' }}
                 >
                   <HugeiconsIcon icon={WhatsappIcon} size={32} />
@@ -326,7 +326,7 @@ function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
+                  className="flex items-center gap-4 p-4 rounded-2xl text-white"
                   style={{ backgroundColor: '#0088cc' }}
                 >
                   <HugeiconsIcon icon={TelegramIcon} size={32} />
@@ -340,7 +340,7 @@ function Home() {
                   target="_blank"
                   rel="noopener noreferrer"
                   whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
+                  className="flex items-center gap-4 p-4 rounded-2xl text-white"
                   style={{ backgroundColor: '#FF0000' }}
                 >
                   <HugeiconsIcon icon={YoutubeIcon} size={32} />
@@ -371,7 +371,7 @@ function Home() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg max-h-[80vh] overflow-y-auto"
+              className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative max-h-[80vh] overflow-y-auto border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -407,7 +407,7 @@ function Home() {
                             <p className={`font-semibold ${variant.title} pr-2`}>{formation.title}</p>
                             <div className="flex items-center gap-2 shrink-0">
                               {tier && (
-                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-purple-200">
+                                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 border border-border">
                                   🔒 {tier}
                                 </span>
                               )}
@@ -415,7 +415,7 @@ function Home() {
                             </div>
                           </div>
                           {variant.badge && (
-                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                            <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                               {variant.badge}
                             </span>
                           )}
@@ -432,7 +432,7 @@ function Home() {
                         className={`relative block p-3 rounded-xl transition-colors ${variant.container}`}
                       >
                         {variant.badge && (
-                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow">
+                          <span className="absolute -top-2 -right-2 bg-red-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
                             {variant.badge}
                           </span>
                         )}
@@ -447,7 +447,7 @@ function Home() {
                 </div>
               )}
               <button
-                className="w-full mt-6 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                className="w-full mt-6 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                 onClick={() => setIsFormationsModalOpen(false)}
               >
                 Fermer
@@ -468,7 +468,7 @@ function Home() {
             onClick={() => setLockedFormation(null)}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 w-full max-w-sm text-gray-900 shadow-lg"
+              className="bg-white rounded-2xl p-6 w-full max-w-sm text-gray-900 border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}

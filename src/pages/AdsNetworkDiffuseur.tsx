@@ -225,13 +225,13 @@ function AdsNetworkDiffuseur() {
         <h1 className="text-2xl font-bold text-gray-900 mt-2">Espace diffuseur</h1>
 
         {message && (
-          <div className={`rounded-xl p-3 mt-3 text-sm ${message.type === 'ok' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+          <div className={`rounded-xl p-3 mt-3 text-sm ${message.type === 'ok' ? 'bg-green-50 text-green-800 border border-border' : 'bg-red-50 text-red-800 border border-border'}`}>
             {message.text}
           </div>
         )}
 
         {/* Earnings */}
-        <motion.div {...adsHeaderMotion} className="bg-[#115CF6] text-white rounded-2xl p-5 mt-4 shadow-lg">
+        <motion.div {...adsHeaderMotion} className="bg-[#115CF6] text-white rounded-2xl p-5 mt-4">
           <div className="flex items-center gap-2 text-blue-100 text-sm">
             <HugeiconsIcon icon={Wallet01Icon} /> Solde publicitaire
           </div>
@@ -288,7 +288,7 @@ function AdsNetworkDiffuseur() {
             campaign launched by a direct filleul; the money lands in this same
             solde publicitaire and shows as 💎 in the movements below. */}
         {profile?.referral && (
-          <motion.div {...adsItemMotion(3)} className={`rounded-2xl p-4 mt-3 border ${profile.referral.tier === 'unlocked' ? 'bg-green-50 border-green-200' : profile.referral.suspended ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 shadow-sm'}`}>
+          <motion.div {...adsItemMotion(3)} className={`rounded-2xl p-4 mt-3 border ${profile.referral.tier === 'unlocked' ? 'bg-green-50 border-border' : profile.referral.suspended ? 'bg-amber-50 border-border' : 'bg-white border-border '}`}>
             {profile.referral.tier === 'unlocked' ? (
               <>
                 <p className="font-semibold text-green-900">💎 Commission parrainage active</p>
@@ -316,7 +316,7 @@ function AdsNetworkDiffuseur() {
                 <div className="flex items-center gap-2 mt-3">
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex-1">
                     <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-[#115CF6] to-blue-400"
+                      className="bg-primary h-full rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(100, (profile.referral.campaignsCompleted / Math.max(1, profile.referral.campaignsToUnlock)) * 100)}%` }}
                       transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
@@ -346,7 +346,7 @@ function AdsNetworkDiffuseur() {
                 </p>
                 <div className="space-y-3">
                   {offers.map((p, i) => (
-                    <motion.div key={p._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+                    <motion.div key={p._id} {...adsItemMotion(i)} className="border border-border rounded-2xl p-4">
                       {/* The card is the summary; the sheet is where the decision
                           is made — accepting commits 3 days of posting, nobody
                           should do that off a two-line blurb. */}
@@ -416,7 +416,7 @@ function AdsNetworkDiffuseur() {
                     const windowOpen = p.schedule?.canPostNow === true;
                     const awaiting = p.schedule?.awaitingVerification;
                     return (
-                      <motion.div key={p._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <motion.div key={p._id} {...adsItemMotion(i)} className="border border-border rounded-2xl p-4">
                         {/* The creative being published — the diffuseur should see
                             what is on their status without opening anything. */}
                         {p.campaign && (
@@ -461,7 +461,7 @@ function AdsNetworkDiffuseur() {
                           {!windowOpen && !awaiting && (
                             <button
                               onClick={() => setVerifying(p)}
-                              className="w-full border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium"
+                              className="w-full border border-border text-gray-700 rounded-xl py-2.5 text-sm font-medium"
                             >
                               Revérifier mes publications
                             </button>
@@ -527,13 +527,13 @@ function AdsNetworkDiffuseur() {
               <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
                 <button
                   onClick={() => setHistoryTab('wallet')}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'wallet' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'wallet' ? 'bg-white text-gray-900 ' : 'text-gray-500'} border border-border`}
                 >
                   Mouvements du portefeuille
                 </button>
                 <button
                   onClick={() => setHistoryTab('campaigns')}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'campaigns' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'campaigns' ? 'bg-white text-gray-900 ' : 'text-gray-500'} border border-border`}
                 >
                   Historique
                 </button>
@@ -553,7 +553,7 @@ function AdsNetworkDiffuseur() {
                         <motion.div
                           key={t.transactionId ?? t._id ?? i}
                           {...adsItemMotion(Math.min(i, 6), 0.02)}
-                          className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
+                          className="flex items-center gap-3 border border-border rounded-xl p-3 text-sm"
                         >
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#115CF6]'}`}>
                             {isIn ? '↓' : '↑'}
@@ -582,7 +582,7 @@ function AdsNetworkDiffuseur() {
               ) : (
                 <div className="space-y-2">
                   {past.map((p) => (
-                    <div key={p._id} className="flex items-center justify-between border border-gray-100 rounded-xl p-3 text-sm">
+                    <div key={p._id} className="flex items-center justify-between border border-border rounded-xl p-3 text-sm">
                       <div>
                         <p className="text-gray-900">{p.campaign?.title ?? 'Campagne'}</p>
                         <p className="text-xs text-gray-500">
@@ -637,17 +637,17 @@ function AdsNetworkDiffuseur() {
                       min="1"
                       value={transferAmount}
                       onChange={(e) => setTransferAmount(e.target.value)}
-                      className={`w-full rounded-xl border px-3 py-3 text-gray-900 text-center font-bold mt-2 ${aboveBalance ? 'border-red-300 bg-red-50' : belowMinimum ? 'border-amber-300 bg-amber-50' : 'border-gray-300'}`}
+                      className={`w-full rounded-xl border px-3 py-3 text-gray-900 text-center font-bold mt-2 ${aboveBalance ? 'border-danger bg-red-50' : belowMinimum ? 'border-accent bg-amber-50' : 'border-border'}`}
                       placeholder="Montant en F"
                     />
 
                     {aboveBalance && (
-                      <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2 mt-2">
+                      <p className="text-xs text-red-700 bg-red-50 border border-border rounded-lg p-2 mt-2">
                         ⚠️ Montant supérieur à votre solde publicitaire ({formatFCFA(available)} disponibles).
                       </p>
                     )}
                     {!aboveBalance && belowMinimum && (
-                      <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+                      <p className="text-xs text-amber-800 bg-amber-50 border border-border rounded-lg p-2 mt-2">
                         Le minimum est de {formatFCFA(minimum)} — il manque {formatFCFA(Math.max(0, minimum - amount))}.
                         {available < minimum && ' Terminez d\'autres campagnes pour compléter vos gains.'}
                       </p>
@@ -658,7 +658,7 @@ function AdsNetworkDiffuseur() {
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setTransferOpen(false)}
                         disabled={transferring}
-                        className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                        className="flex-1 border border-border text-gray-700 rounded-xl py-3 text-sm font-medium"
                       >
                         Annuler
                       </motion.button>
@@ -712,17 +712,17 @@ function AdsNetworkDiffuseur() {
                 )}
 
                 <div className="grid grid-cols-3 gap-2 mt-4">
-                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-center">
+                  <div className="bg-gray-50 border border-border rounded-xl p-3 text-center">
                     <p className="text-lg font-bold text-gray-900">3</p>
                     <p className="text-[11px] text-gray-500">jours de publication</p>
                   </div>
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-center">
+                  <div className="bg-blue-50 border border-border rounded-xl p-3 text-center">
                     <p className="text-lg font-bold text-gray-900">
                       ~{offerDetail.expectedViews ?? profile?.effectiveAverageViews ?? 0}
                     </p>
                     <p className="text-[11px] text-gray-500">vues estimées</p>
                   </div>
-                  <div className="bg-green-50 border border-green-100 rounded-xl p-3 text-center">
+                  <div className="bg-green-50 border border-border rounded-xl p-3 text-center">
                     <p className="text-lg font-bold text-green-700">
                       {offerDetail.ratePerView
                         ? `~${formatFCFA((offerDetail.expectedViews ?? profile?.effectiveAverageViews ?? 0) * offerDetail.ratePerView)}`
@@ -733,7 +733,7 @@ function AdsNetworkDiffuseur() {
                 </div>
 
                 {offerDetail.campaign?.suggestedCaption && (
-                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 mt-3">
+                  <div className="bg-gray-50 border border-border rounded-xl p-3 mt-3">
                     <p className="text-[11px] text-gray-500 mb-1">Légende suggérée</p>
                     <p className="text-sm text-gray-700 whitespace-pre-line">{offerDetail.campaign.suggestedCaption}</p>
                   </div>
@@ -891,7 +891,7 @@ function ShareSheet({
 
         <img src={illustrationShare} alt="" aria-hidden="true" className="w-40 mx-auto -mt-2 mb-1" />
 
-        <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 mb-4">
+        <div className="bg-amber-50 border border-accent rounded-xl p-3 text-sm text-amber-900 mb-4">
           <p className="flex items-start gap-2 font-medium">
             <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 shrink-0" />
             Ne modifiez pas le texte, et surtout pas le lien.
@@ -907,7 +907,7 @@ function ShareSheet({
         )}
 
         <label className="text-xs text-gray-500">Texte à publier</label>
-        <div className="border border-gray-200 rounded-xl p-3 text-sm text-gray-800 whitespace-pre-wrap mt-1">
+        <div className="border border-border rounded-xl p-3 text-sm text-gray-800 whitespace-pre-wrap mt-1">
           {caption}
         </div>
         <button onClick={copyCaption} className="text-sm text-[#115CF6] mt-2">
@@ -928,7 +928,7 @@ function ShareSheet({
         <a
           href={mediaDownloadUrl}
           download
-          className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-2 flex items-center justify-center gap-2"
+          className="w-full border border-border text-gray-700 rounded-xl py-3 font-medium mt-2 flex items-center justify-center gap-2"
         >
           <HugeiconsIcon icon={Download01Icon} /> Télécharger l'image
         </a>
@@ -1118,10 +1118,10 @@ function VerifySheet({
     if (error) {
       return (
         <div>
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">{error}</div>
+          <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800">{error}</div>
           <button
             onClick={() => { setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); setAttempt(0); setRetrying(false); }}
-            className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-3"
+            className="w-full border border-border text-gray-700 rounded-xl py-3 font-medium mt-3"
           >
             Choisir une autre méthode
           </button>
@@ -1139,7 +1139,7 @@ function VerifySheet({
           <p className="text-sm text-gray-600">{formatFCFA(result.totalEarned)} pour cette vérification</p>
           <div className="mt-4 space-y-2">
             {result.verdicts.map((v) => (
-              <div key={v.day} className={`text-sm rounded-xl p-3 border ${v.accepted ? 'border-green-200 bg-green-50 text-green-900' : 'border-red-200 bg-red-50 text-red-900'}`}>
+              <div key={v.day} className={`text-sm rounded-xl p-3 border ${v.accepted ? 'border-border bg-green-50 text-green-900' : 'border-border bg-red-50 text-red-900'}`}>
                 <p className="font-medium">Jour {v.day} — {v.accepted ? 'validé' : 'refusé'}</p>
                 {!v.accepted && v.reason && <p className="text-xs mt-1">{v.reason}</p>}
                 {v.accepted && <p className="text-xs mt-1">{v.viewCount} vues · {formatFCFA(v.earnedAmount)}</p>}
@@ -1165,7 +1165,7 @@ function VerifySheet({
 
           <button
             onClick={() => setMethod('code')}
-            className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
+            className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-[#115CF6] bg-blue-50' : 'border-border'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
               <HugeiconsIcon icon={KeyboardIcon} className="text-[#115CF6]" /> Code à 8 caractères
@@ -1191,7 +1191,7 @@ function VerifySheet({
                 <select
                   value={dialCode}
                   onChange={(e) => setDialCode(e.target.value)}
-                  className="border border-gray-300 rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                  className="border border-border rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
                 >
                   {allAfricanCountries.map((c) => (
                     <option key={c.value} value={dialOf(c)}>{c.flag} {c.phoneCode}</option>
@@ -1203,7 +1203,7 @@ function VerifySheet({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="675080477"
-                  className="flex-1 min-w-0 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                  className="flex-1 min-w-0 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
                 />
               </div>
               {/* WhatsApp binds the code to this exact number; typed wrong, their
@@ -1229,7 +1229,7 @@ function VerifySheet({
 
           <button
             onClick={() => setMethod('qr')}
-            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
+            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-[#115CF6] bg-blue-50' : 'border-border'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
               <HugeiconsIcon icon={QrCodeIcon} className="text-[#115CF6]" /> Code QR

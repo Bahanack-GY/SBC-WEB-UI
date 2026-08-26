@@ -230,7 +230,7 @@ function ModifierProduit() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 placeholder="Ex: Smartphone Samsung Galaxy S23"
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none"
                                 required
                             />
                         </div>
@@ -241,7 +241,7 @@ function ModifierProduit() {
                                 name="category"
                                 value={formData.category}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white"
                                 required
                             >
                                 <option value="">Sélectionner une catégorie</option>
@@ -257,7 +257,7 @@ function ModifierProduit() {
                                     name="subcategory"
                                     value={formData.subcategory}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                                    className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white"
                                     required
                                 >
                                     <option value="">Sélectionner une sous-catégorie</option>
@@ -277,7 +277,7 @@ function ModifierProduit() {
                                 onChange={handleChange}
                                 placeholder="Décrivez votre produit ou service..."
                                 rows={4}
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none resize-none"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none resize-none"
                                 required
                             />
                         </div>
@@ -290,7 +290,7 @@ function ModifierProduit() {
                                 value={formData.price}
                                 onChange={handleChange}
                                 placeholder="Ex: 1200.50"
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none"
                                 step="0.01"
                                 min="0"
                                 required
@@ -301,7 +301,7 @@ function ModifierProduit() {
                             <label className="block text-gray-700 mb-1">Images existantes</label>
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {existingImageUrls.map((url, index) => (
-                                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border">
                                         <img src={url} alt={`existing-${index}`} className="w-full h-full object-cover" />
                                         {/* Removed explicit delete button for existing images as API handling is unclear */}
                                     </div>
@@ -326,7 +326,7 @@ function ModifierProduit() {
                             />
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {newImages.map((file, index) => (
-                                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border">
                                         <img
                                             src={URL.createObjectURL(file)}
                                             alt={`preview-${file.name}`}
@@ -345,7 +345,7 @@ function ModifierProduit() {
                                 ))}
                                 {/* If more new images can be added, show a placeholder */}
                                 {(existingImageUrls.length + newImages.length) < 10 && (
-                                    <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
+                                    <label className="w-20 h-20 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
                                         <HugeiconsIcon icon={CloudUploadIcon} size={24} />
                                         <input type="file" multiple accept="image/*" onChange={handleNewFileChange} className="hidden" />
                                     </label>
@@ -365,7 +365,7 @@ function ModifierProduit() {
 
                         <button
                             type="submit"
-                            className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
+                            className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 flex items-center justify-center gap-2 disabled:bg-blue-400"
                             disabled={saving}
                         >
                             {saving ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Mettre à jour le produit'}
@@ -381,7 +381,7 @@ function ModifierProduit() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -395,7 +395,7 @@ function ModifierProduit() {
                         </p>
                         <button
                             type="button"
-                            className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                            className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                             onClick={() => setShowModal(false)}
                         >
                             Fermer

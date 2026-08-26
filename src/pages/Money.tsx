@@ -40,7 +40,7 @@ function Money() {
                 </div>
 
                 {/* Exchange Rate Display */}
-                <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-2xl">
+                <div className="mb-6 p-4 bg-blue-50 border border-border rounded-2xl">
                     <h4 className="text-lg font-semibold text-blue-800 mb-2">Taux de change actuel</h4>
                     <div className="text-center">
                         <div className="text-xl font-bold text-blue-900 mb-1">
@@ -56,7 +56,7 @@ function Money() {
                 {/* Balance Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
                     {/* FCFA Balance */}
-                    <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 rounded-2xl text-white shadow-lg">
+                    <div className="bg-primary p-6 rounded-2xl text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <h3 className="text-sm opacity-80">Solde FCFA</h3>
@@ -68,7 +68,7 @@ function Money() {
                     </div>
 
                     {/* USD Balance */}
-                    <div className="bg-gradient-to-r from-green-500 to-green-600 p-6 rounded-2xl text-white shadow-lg">
+                    <div className="bg-success p-6 rounded-2xl text-white">
                         <div className="flex items-center justify-between mb-4">
                             <div>
                                 <h3 className="text-sm opacity-80">Solde USD</h3>
@@ -86,7 +86,7 @@ function Money() {
                     <div className="grid grid-cols-2 gap-4">
                         <button
                             onClick={() => setShowCurrencyConverter(true)}
-                            className="flex flex-col items-center justify-center bg-orange-500 hover:bg-orange-600 text-white p-6 rounded-2xl shadow-lg transition-colors"
+                            className="flex flex-col items-center justify-center bg-orange-500 hover:bg-orange-600 text-white p-6 rounded-2xl transition-colors"
                         >
                             <HugeiconsIcon icon={Exchange01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Convertir</span>
@@ -95,7 +95,7 @@ function Money() {
 
                         <button
                             onClick={() => setShowUnifiedWithdrawal(true)}
-                            className="flex flex-col items-center justify-center bg-green-500 hover:bg-green-600 text-white p-6 rounded-2xl shadow-lg transition-colors"
+                            className="flex flex-col items-center justify-center bg-green-500 hover:bg-green-600 text-white p-6 rounded-2xl transition-colors"
                         >
                             <HugeiconsIcon icon={ArrowDown01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Retirer</span>
@@ -104,7 +104,7 @@ function Money() {
 
                         <button
                             onClick={() => navigate('/wallet')}
-                            className="flex flex-col items-center justify-center bg-purple-500 hover:bg-purple-600 text-white p-6 rounded-2xl shadow-lg transition-colors"
+                            className="flex flex-col items-center justify-center bg-purple-500 hover:bg-purple-600 text-white p-6 rounded-2xl transition-colors"
                         >
                             <HugeiconsIcon icon={Wallet01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Portefeuille</span>
@@ -113,7 +113,7 @@ function Money() {
 
                         <button
                             onClick={handleFundActivationClick}
-                            className="flex flex-col items-center justify-center bg-[#115CF6] hover:bg-blue-700 text-white p-6 rounded-2xl shadow-lg transition-colors"
+                            className="flex flex-col items-center justify-center bg-[#115CF6] hover:bg-blue-700 text-white p-6 rounded-2xl transition-colors"
                         >
                             <HugeiconsIcon icon={ArrowUp01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Alimenter</span>
@@ -124,7 +124,7 @@ function Money() {
                     {/* Navigation to Activation Balance */}
                     <button
                         onClick={handleActivationBalanceClick}
-                        className="w-full mt-4 flex items-center justify-between bg-gradient-to-r from-blue-50 to-green-50 border border-blue-200 p-4 rounded-2xl shadow-sm hover:shadow-md transition-shadow"
+                        className="bg-primary-soft w-full mt-4 flex items-center justify-between border border-border p-4 rounded-2xl transition-shadow"
                     >
                         <div className="flex items-center gap-3">
                             <div className="bg-blue-100 p-3 rounded-full">
@@ -256,7 +256,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
             onClick={handleClose}
         >
             <motion.div
-                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl"
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-md border border-border"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -291,17 +291,17 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
                                     setError('');
                                 }}
                                 placeholder="Ex: 5000"
-                                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
                         </div>
 
                         {error && (
-                            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+                            <div className="mb-4 p-3 bg-red-50 border border-border rounded-xl">
                                 <p className="text-red-600 text-sm">{error}</p>
                             </div>
                         )}
 
-                        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+                        <div className="bg-yellow-50 border border-border rounded-xl p-3 mb-4">
                             <p className="text-xs text-yellow-700">
                                 ⚠️ Ce transfert est irréversible. Le solde d'activation ne peut être utilisé que pour sponsoriser vos filleuls.
                             </p>

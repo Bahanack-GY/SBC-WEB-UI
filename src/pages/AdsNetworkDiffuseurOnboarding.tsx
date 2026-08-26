@@ -98,7 +98,7 @@ function AdsNetworkDiffuseurOnboarding() {
             { value: '24 h', label: 'pour le jour 1' },
             { value: '3 jours', label: 'de report' },
           ].map((stat, i) => (
-            <motion.div key={stat.label} {...adsItemMotion(i)} className="bg-green-50 border border-green-200 rounded-xl py-3">
+            <motion.div key={stat.label} {...adsItemMotion(i)} className="bg-green-50 border border-border rounded-xl py-3">
               <p className="font-bold text-green-800">{stat.value}</p>
               <p className="text-[11px] text-green-700 leading-tight mt-0.5">{stat.label}</p>
             </motion.div>
@@ -140,7 +140,7 @@ Sur votre solde publicitaire, transférable ensuite.
         {isLoading ? (
           <div className="flex justify-center py-10"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-[#115CF6]" size={24} /></div>
         ) : eligibility && !eligibility.eligible ? (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mt-5">
+          <div className="bg-red-50 border border-border rounded-2xl p-4 mt-5">
             <h2 className="font-semibold text-red-900 mb-2">Profil incomplet</h2>
             <p className="text-sm text-red-800 mb-3">
               Les annonceurs ciblent leurs campagnes sur ces informations. Sans
@@ -159,7 +159,7 @@ Sur votre solde publicitaire, transférable ensuite.
             </button>
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-2xl p-4 mt-5 shadow-sm">
+          <div className="bg-white border border-border rounded-2xl p-4 mt-5">
             <div className="flex items-center gap-2 text-green-700 text-sm mb-4">
               <HugeiconsIcon icon={CheckmarkCircle02Icon} />
               <span>Votre profil est complet.</span>
@@ -181,7 +181,7 @@ Sur votre solde publicitaire, transférable ensuite.
               value={declaredViews}
               onChange={(e) => setDeclaredViews(e.target.value)}
               placeholder="ex. 150"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
             />
 
             {error && <p className="text-sm text-red-600 mt-2">{error}</p>}

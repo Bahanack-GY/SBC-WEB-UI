@@ -26,7 +26,7 @@ function AdsNetwork() {
             newLabel: 'Devenir annonceur',
             blurb: "Faites voir votre produit par des milliers de personnes. Vous ne payez que les vues uniques ; les rediffusions des jours 2 et 3 sont offertes.",
             icon: <HugeiconsIcon icon={Megaphone01Icon} size={22} />,
-            className: 'bg-gradient-to-br from-[#115CF6] to-blue-500',
+            className: 'bg-primary',
             to: roles.isAnnonceur ? '/ads-network/annonceur' : '/ads-network/annonceur/onboarding',
         },
         {
@@ -36,7 +36,7 @@ function AdsNetwork() {
             newLabel: 'Devenir diffuseur',
             blurb: "Publiez les campagnes sur votre statut WhatsApp pendant 3 jours et gagnez selon le nombre de personnes qui les ont vues.",
             icon: <HugeiconsIcon icon={Share08Icon} size={20} />,
-            className: 'bg-gradient-to-br from-green-600 to-emerald-500',
+            className: 'bg-success',
             to: roles.isDiffuseur ? '/ads-network/diffuseur' : '/ads-network/diffuseur/onboarding',
         },
     ];
@@ -59,7 +59,7 @@ function AdsNetwork() {
                             onClick={() => navigate(card.to)}
                             {...adsItemMotion(i)}
                             whileTap={{ scale: 0.98 }}
-                            className={`w-full text-left text-white rounded-2xl p-5 shadow-lg ${card.className}`}
+                            className={`w-full text-left text-white rounded-2xl p-5 ${card.className}`}
                         >
                             <div className="flex items-center gap-3">
                                 {card.icon}
@@ -81,7 +81,7 @@ function AdsNetwork() {
                 </div>
             )}
 
-            <div className="bg-white border border-gray-200 rounded-2xl p-4 mt-5 text-sm text-gray-600 shadow-sm">
+            <div className="bg-white border border-border rounded-2xl p-4 mt-5 text-sm text-gray-600">
                 <p className="font-medium text-gray-900 mb-1">Vous pouvez tenir les deux rôles.</p>
                 <p>
                     Rien n'empêche d'être annonceur et diffuseur avec le même compte. Chaque

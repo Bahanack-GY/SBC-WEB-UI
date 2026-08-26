@@ -685,7 +685,7 @@ function Signup() {
 
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] py-8 px-4">
-      <motion.div variants={sectionRise} className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
+      <motion.div variants={sectionRise} className="w-full max-w-md bg-white rounded-3xl p-8 border border-border">
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-6">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -711,12 +711,12 @@ function Signup() {
             <>
               <div>
                 <label className="block text-gray-700 mb-1">👤 Nom complet</label>
-                <input name="nom" value={data.nom} onChange={handleChange} placeholder="Ex: Jean Paul" className={`w-full border ${errors.nom ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
+                <input name="nom" value={data.nom} onChange={handleChange} placeholder="Ex: Jean Paul" className={`w-full border ${errors.nom ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.nom && <div className="text-red-500 text-xs">{errors.nom}</div>}
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">📧 Email</label>
-                <input name="email" value={data.email} onChange={handleChange} placeholder="Ex: Jeanpierre@gmail.com" className={`w-full border ${errors.email || errors.emailExists ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
+                <input name="email" value={data.email} onChange={handleChange} placeholder="Ex: Jeanpierre@gmail.com" className={`w-full border ${errors.email || errors.emailExists ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
                 {errors.emailExists && <div className="text-red-500 text-xs">{errors.emailExists}</div>}
                 {renderRecoveryStatusMessage('email')}
@@ -731,7 +731,7 @@ function Signup() {
                     value={data.password}
                     onChange={handleChange}
                     placeholder="Mot de passe"
-                    className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
+                    className={`w-full border ${errors.password ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
                   />
                   <button
                     type="button"
@@ -752,7 +752,7 @@ function Signup() {
                     value={data.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirmer mot de passe"
-                    className={`w-full border ${errors.confirmPassword ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
+                    className={`w-full border ${errors.confirmPassword ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
                   />
                   <button
                     type="button"
@@ -787,7 +787,7 @@ function Signup() {
                     value={data.whatsapp}
                     onChange={handleChange}
                     placeholder="Ex: 675090755"
-                    className={`flex-1 border ${errors.whatsapp || errors.whatsappExists ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}
+                    className={`flex-1 border ${errors.whatsapp || errors.whatsappExists ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`}
                     style={{ minWidth: 0 }}
                   />
                 </div>
@@ -798,7 +798,7 @@ function Signup() {
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">🌍 Pays</label>
-                <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
+                <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner le pays</option>
                   {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
@@ -811,7 +811,7 @@ function Signup() {
                   value={data.parrain}
                   onChange={handleChange}
                   placeholder="Code du parrain"
-                  className={`w-full border ${errors.parrain ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none ${isAffiliationCodeDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  className={`w-full border ${errors.parrain ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none ${isAffiliationCodeDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   disabled={isAffiliationCodeDisabled}
                 />
                 {affiliateLoading && <div className="text-gray-500 text-xs mt-1">Vérification du code parrain...</div>}
@@ -859,7 +859,7 @@ function Signup() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full p-6 relative animate-fadeIn">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 relative animate-fadeIn border border-border">
             <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"><HugeiconsIcon icon={Cancel01Icon} /></button>
             <h3 className="text-xl font-bold mb-4 text-center">Conditions d'utilisation</h3>
             <div className="text-gray-700 text-sm max-h-[60vh] overflow-y-auto px-1">
