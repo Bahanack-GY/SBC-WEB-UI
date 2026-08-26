@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Megaphone01Icon } from '@hugeicons/core-free-icons';
 import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { FaBullhorn } from 'react-icons/fa';
 import BackButton from '../common/BackButton';
 import illustration from '../../assets/icon/ads-share.jpg';
 
@@ -71,7 +72,7 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                     className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-center"
                 >
                     <div className="w-14 h-14 rounded-full bg-blue-50 text-[#115CF6] flex items-center justify-center mx-auto">
-                        <FaBullhorn size={22} />
+                        <HugeiconsIcon icon={Megaphone01Icon} size={22} />
                     </div>
 
                     {left !== null && left > 0 ? (

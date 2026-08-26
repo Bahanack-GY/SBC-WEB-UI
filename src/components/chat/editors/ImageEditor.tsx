@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, CropIcon, RefreshIcon, Tick02Icon, ZoomInAreaIcon, ZoomOutAreaIcon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
-import { RotateCw, ZoomIn, ZoomOut, Crop, Check, X } from 'lucide-react';
 
 interface ImageEditorProps {
   imageUrl: string;
@@ -192,7 +193,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }: ImageEditorProps) =>
           disabled={isProcessing}
           className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors disabled:opacity-50"
         >
-          <X className="w-6 h-6" />
+          <HugeiconsIcon icon={Cancel01Icon} className="w-6 h-6" />
         </button>
 
         <div className="flex items-center gap-2">
@@ -203,7 +204,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }: ImageEditorProps) =>
             className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors disabled:opacity-50"
             title="Rotation"
           >
-            <RotateCw className="w-5 h-5" />
+            <HugeiconsIcon icon={RefreshIcon} className="w-5 h-5" />
           </button>
 
           {/* Crop toggle */}
@@ -215,7 +216,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }: ImageEditorProps) =>
             }`}
             title="Recadrer"
           >
-            <Crop className="w-5 h-5" />
+            <HugeiconsIcon icon={CropIcon} className="w-5 h-5" />
           </button>
 
           {/* Zoom out */}
@@ -225,7 +226,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }: ImageEditorProps) =>
             className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors disabled:opacity-50"
             title="Zoom arrière"
           >
-            <ZoomOut className="w-5 h-5" />
+            <HugeiconsIcon icon={ZoomOutAreaIcon} className="w-5 h-5" />
           </button>
 
           {/* Zoom in */}
@@ -235,7 +236,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }: ImageEditorProps) =>
             className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors disabled:opacity-50"
             title="Zoom avant"
           >
-            <ZoomIn className="w-5 h-5" />
+            <HugeiconsIcon icon={ZoomInAreaIcon} className="w-5 h-5" />
           </button>
         </div>
 
@@ -247,7 +248,7 @@ export const ImageEditor = ({ imageUrl, onSave, onCancel }: ImageEditorProps) =>
           {isProcessing ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <Check className="w-6 h-6" />
+            <HugeiconsIcon icon={Tick02Icon} className="w-6 h-6" />
           )}
         </button>
       </div>

@@ -15,7 +15,6 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
-import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
 import { useRelance } from '../contexts/RelanceContext';
@@ -290,16 +289,6 @@ function Home() {
                 balance={balance}
                 usdBalance={usdBalance}
                 icon={<img src={BalanceIcon} alt="Balance" className="size-48" />}
-              />
-            </div>
-
-            {/* Video Presentation */}
-            <div className="video-presentation mt-6">
-              <h2 className="text-2xl font-bold mb-4">Présentation</h2>
-              <CustomVideoPlayer
-                src="/sbc presentation.mp4"
-                poster="/sbc_presentation_thumbnail.jpg"
-                title="SBC Presentation Video"
               />
             </div>
 

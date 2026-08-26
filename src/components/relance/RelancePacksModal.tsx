@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Mail01Icon, SmsCodeIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FaEnvelope, FaSms, FaTimes } from 'react-icons/fa';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
 import type { RelancePack, RelancePacksResponse, PurchasePackResponse } from '../../types/relance';
@@ -121,7 +122,7 @@ export default function RelancePacksModal({
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               aria-label="Fermer"
             >
-              <FaTimes size={20} />
+              <HugeiconsIcon icon={Cancel01Icon} size={20} />
             </button>
 
             <h3 className="text-xl font-bold mb-2">Acheter des crédits Relance</h3>
@@ -144,7 +145,7 @@ export default function RelancePacksModal({
                 {showEmail && packs.emailPacks?.length > 0 && (
                   <section>
                     <div className="flex items-center gap-2 mb-2 text-blue-700">
-                      <FaEnvelope />
+                      <HugeiconsIcon icon={Mail01Icon} />
                       <h4 className="font-bold">Packs Email</h4>
                     </div>
                     <div className="space-y-2">
@@ -156,7 +157,7 @@ export default function RelancePacksModal({
                 {showSms && packs.smsPacks?.length > 0 && (
                   <section>
                     <div className="flex items-center gap-2 mb-2 text-green-700">
-                      <FaSms />
+                      <HugeiconsIcon icon={SmsCodeIcon} />
                       <h4 className="font-bold">Packs SMS</h4>
                     </div>
                     <div className="space-y-2">

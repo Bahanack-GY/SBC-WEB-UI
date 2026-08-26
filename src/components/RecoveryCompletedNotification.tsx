@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FiX } from 'react-icons/fi';
 
 interface RecoveryCompletedNotificationProps {
   isOpen: boolean;
@@ -59,7 +60,7 @@ const RecoveryCompletedNotification: React.FC<RecoveryCompletedNotificationProps
                 className="absolute top-4 right-4 text-white hover:text-green-200 text-xl"
                 onClick={onClose}
               >
-                <FiX />
+                <HugeiconsIcon icon={Cancel01Icon} />
               </button>
               <div className="success-icon text-5xl mb-4">
                 ✅

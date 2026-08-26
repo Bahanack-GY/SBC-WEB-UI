@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Loading03Icon, RefreshIcon } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FiX, FiLoader, FiRefreshCw } from 'react-icons/fi';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
@@ -188,7 +189,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                 className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
                 onClick={onClose}
               >
-                <FiX size={20} />
+                <HugeiconsIcon icon={Cancel01Icon} size={20} />
               </button>
 
               <h2 className="text-lg font-bold mb-4 text-center pr-6">Convertir</h2>
@@ -238,7 +239,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                       className="p-1 text-gray-400 hover:text-gray-600"
                       title="Inverser"
                     >
-                      <FiRefreshCw size={16} />
+                      <HugeiconsIcon icon={RefreshIcon} size={16} />
                     </button>
                   </div>
                   <input
@@ -296,7 +297,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                     disabled={loading || !amount || maxAmount < 0}
                     className="flex-1 bg-blue-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    {loading ? <FiLoader className="animate-spin mr-1" size={14} /> : null}
+                    {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-1" size={14} /> : null}
                     Prévisualiser
                   </button>
                   <button
@@ -304,7 +305,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                     disabled={converting || !convertedAmount || maxAmount < 0}
                     className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    {converting ? <FiLoader className="animate-spin mr-1" size={14} /> : null}
+                    {converting ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-1" size={14} /> : null}
                     Convertir
                   </button>
                 </div>

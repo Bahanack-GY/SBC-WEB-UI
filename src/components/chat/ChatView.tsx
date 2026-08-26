@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowTurnBackwardIcon, ArrowTurnForwardIcon, AttachmentIcon, Cancel01Icon, CancelCircleIcon, Copy01Icon, Delete02Icon, Download01Icon, Flag02Icon, MoreVerticalIcon, SendIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -10,21 +12,6 @@ import type {
   MessageStatusEvent,
   MessageDeletedEvent,
 } from '../../types/chat';
-import {
-  PaperAirplaneIcon,
-  PaperClipIcon,
-  XMarkIcon,
-  CheckIcon,
-  ArrowUturnLeftIcon,
-  ArrowUturnRightIcon,
-  DocumentDuplicateIcon,
-  TrashIcon,
-  ArrowDownTrayIcon,
-  EllipsisVerticalIcon,
-  FlagIcon,
-  NoSymbolIcon,
-} from '@heroicons/react/24/outline';
-import { CheckIcon as CheckIconSolid } from '@heroicons/react/24/solid';
 import { format, isToday, isYesterday, parseISO } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import Skeleton from '../common/Skeleton';
@@ -993,16 +980,16 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
     }
 
     if (message.status === 'read' || message.readBy.length > 1) {
-      return <CheckIconSolid className="w-4 h-4 text-blue-500" />;
+      return <HugeiconsIcon icon={Tick02Icon} className="w-4 h-4 text-blue-500" />;
     } else if (message.status === 'delivered') {
       return (
         <div className="flex -space-x-1">
-          <CheckIcon className="w-4 h-4 text-gray-500" />
-          <CheckIcon className="w-4 h-4 text-gray-500" />
+          <HugeiconsIcon icon={Tick02Icon} className="w-4 h-4 text-gray-500" />
+          <HugeiconsIcon icon={Tick02Icon} className="w-4 h-4 text-gray-500" />
         </div>
       );
     } else {
-      return <CheckIcon className="w-4 h-4 text-gray-400" />;
+      return <HugeiconsIcon icon={Tick02Icon} className="w-4 h-4 text-gray-400" />;
     }
   };
 
@@ -1095,7 +1082,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   ? 'bg-blue-400 bg-opacity-50'
                   : 'bg-gray-400 bg-opacity-50'
               }`}>
-                <PaperClipIcon className="w-5 h-5" />
+                <HugeiconsIcon icon={AttachmentIcon} className="w-5 h-5" />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-medium truncate">{message.documentName || 'Document'}</p>
@@ -1114,7 +1101,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                       : 'hover:bg-gray-400 hover:bg-opacity-40'
                   }`}
                 >
-                  <ArrowDownTrayIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={Download01Icon} className="w-5 h-5" />
                 </button>
               )}
             </div>
@@ -1209,7 +1196,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
             <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
               swipeOffset >= swipeThreshold ? 'bg-blue-600' : 'bg-gray-400'
             }`}>
-              <ArrowUturnLeftIcon className="w-4 h-4 text-white" />
+              <HugeiconsIcon icon={ArrowTurnBackwardIcon} className="w-4 h-4 text-white" />
             </div>
           </div>
         )}
@@ -1221,7 +1208,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
               isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-300'
             }`}
           >
-            {isSelected && <CheckIcon className="w-3.5 h-3.5 text-white" />}
+            {isSelected && <HugeiconsIcon icon={Tick02Icon} className="w-3.5 h-3.5 text-white" />}
           </div>
         )}
 
@@ -1395,7 +1382,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   onClick={exitSelectionMode}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-700" />
+                  <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-700" />
                 </button>
                 <span className="font-medium text-gray-900">
                   {selectedMessages.size} sélectionné{selectedMessages.size > 1 ? 's' : ''}
@@ -1410,7 +1397,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                     className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                     title="Répondre"
                   >
-                    <ArrowUturnLeftIcon className="w-5 h-5" />
+                    <HugeiconsIcon icon={ArrowTurnBackwardIcon} className="w-5 h-5" />
                   </button>
                 )}
                 <button
@@ -1418,14 +1405,14 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                   title="Transférer"
                 >
-                  <ArrowUturnRightIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={ArrowTurnForwardIcon} className="w-5 h-5" />
                 </button>
                 <button
                   onClick={handleCopy}
                   className="p-2 text-blue-600 hover:bg-blue-50 rounded-full transition-colors"
                   title="Copier"
                 >
-                  <DocumentDuplicateIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={Copy01Icon} className="w-5 h-5" />
                 </button>
                 <button
                   onClick={handleDeleteClick}
@@ -1433,7 +1420,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   className="p-2 text-red-600 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
                   title="Supprimer"
                 >
-                  <TrashIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={Delete02Icon} className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -1445,7 +1432,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   onClick={onBack}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors lg:hidden"
                 >
-                  <ArrowUturnLeftIcon className="w-5 h-5 text-gray-700" />
+                  <HugeiconsIcon icon={ArrowTurnBackwardIcon} className="w-5 h-5 text-gray-700" />
                 </button>
               )}
 
@@ -1486,7 +1473,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                       onClick={() => setShowHeaderMenu(!showHeaderMenu)}
                       className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                     >
-                      <EllipsisVerticalIcon className="w-5 h-5 text-gray-600" />
+                      <HugeiconsIcon icon={MoreVerticalIcon} className="w-5 h-5 text-gray-600" />
                     </button>
                     {showHeaderMenu && (
                       <div className="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-200 py-1 z-50 w-48">
@@ -1494,14 +1481,14 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                           onClick={handleReportConversation}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                         >
-                          <FlagIcon className="w-4 h-4 text-orange-500" />
+                          <HugeiconsIcon icon={Flag02Icon} className="w-4 h-4 text-orange-500" />
                           Signaler
                         </button>
                         <button
                           onClick={handleBlockConversation}
                           className="w-full flex items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                         >
-                          <NoSymbolIcon className="w-4 h-4" />
+                          <HugeiconsIcon icon={CancelCircleIcon} className="w-4 h-4" />
                           Bloquer
                         </button>
                       </div>
@@ -1671,7 +1658,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                 onClick={handleRemoveSelectedFile}
                 className="p-1.5 hover:bg-blue-100 rounded-full transition-colors flex-shrink-0"
               >
-                <XMarkIcon className="w-5 h-5 text-gray-500" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-500" />
               </button>
             </div>
           )}
@@ -1689,7 +1676,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                 onClick={() => setReplyToMessage(null)}
                 className="p-1 hover:bg-gray-200 rounded-full transition-colors"
               >
-                <XMarkIcon className="w-4 h-4 text-gray-500" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-4 h-4 text-gray-500" />
               </button>
             </div>
           )}
@@ -1727,7 +1714,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
               disabled={uploadingDocument}
               className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-colors disabled:opacity-50"
             >
-              <PaperClipIcon className="w-6 h-6" />
+              <HugeiconsIcon icon={AttachmentIcon} className="w-6 h-6" />
             </button>
 
             {/* Text input */}
@@ -1763,7 +1750,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
               disabled={(!inputValue.trim() && !selectedFile) || uploadingDocument || (conversation && user && !isAdmin ? !canSendMessage(conversation, user._id) : false)}
               className="p-2 bg-blue-600 text-white rounded-full hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <PaperAirplaneIcon className="w-6 h-6" />
+              <HugeiconsIcon icon={SendIcon} className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -1786,7 +1773,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   }}
                   className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-500" />
+                  <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
             </div>
@@ -1817,7 +1804,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                     }`}
                   >
                     {selectedConversations.has(conv._id) && (
-                      <CheckIcon className="w-3.5 h-3.5 text-white" />
+                      <HugeiconsIcon icon={Tick02Icon} className="w-3.5 h-3.5 text-white" />
                     )}
                   </div>
 
@@ -1905,7 +1892,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                 onClick={() => setShowProfileModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <XMarkIcon className="w-5 h-5 text-gray-700" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-700" />
               </button>
             </div>
 

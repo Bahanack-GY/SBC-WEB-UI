@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
-import { PlusIcon } from '@heroicons/react/24/solid';
 import type { StoryGroup } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';
 import { useAuth } from '../../contexts/AuthContext';
@@ -116,7 +117,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
               />
             </div>
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
-              <PlusIcon className="w-3 h-3 text-white" />
+              <HugeiconsIcon icon={PlusSignIcon} className="w-3 h-3 text-white" />
             </div>
           </div>
           <span className="text-xs font-medium text-gray-900 max-w-[64px] truncate">Votre statut</span>

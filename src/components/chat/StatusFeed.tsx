@@ -1,10 +1,11 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignCircleIcon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { sbcApiService } from '../../services/SBCApiService';
 import type { Status, StatusCategory } from '../../types/chat';
 import { CATEGORY_CONFIG } from '../../types/chat';
 import { pageFade, listContainer, listItem } from '../../utils/motion';
-import { PlusCircleIcon } from '@heroicons/react/24/solid';
 
 interface StatusFeedProps {
   onStatusClick: (status: Status) => void;
@@ -80,7 +81,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
           onClick={onCreateClick}
           className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-green-600 transition-all"
         >
-          <PlusCircleIcon className="w-6 h-6" />
+          <HugeiconsIcon icon={PlusSignCircleIcon} className="w-6 h-6" />
           Créer un statut
         </button>
       </div>

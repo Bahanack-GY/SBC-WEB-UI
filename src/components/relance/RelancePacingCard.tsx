@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, MinusSignIcon, PlusSignIcon, Settings02Icon } from '@hugeicons/core-free-icons';
 import { useEffect, useRef, useState } from 'react';
-import { FaCog, FaChevronRight, FaMinus, FaPlus } from 'react-icons/fa';
 import { sbcApiService } from '../../services/SBCApiService';
 
 interface RelancePacingCardProps {
@@ -66,10 +67,10 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
         className="w-full flex items-center justify-between p-4 min-h-[56px] hover:bg-gray-50 active:bg-gray-100 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <FaCog className="text-gray-600" />
+          <HugeiconsIcon icon={Settings02Icon} className="text-gray-600" />
           <span className="font-bold text-sm text-gray-800">Paramètres d'envoi</span>
         </div>
-        <FaChevronRight className={`text-gray-500 transition-transform ${open ? 'rotate-90' : ''}`} />
+        <HugeiconsIcon icon={ArrowRight01Icon} className={`text-gray-500 transition-transform ${open ? 'rotate-90' : ''}`} />
       </button>
 
       {open && (
@@ -87,7 +88,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
               aria-label="Diminuer"
               className="w-11 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg"
             >
-              <FaMinus />
+              <HugeiconsIcon icon={MinusSignIcon} />
             </button>
             <input
               id="relance-pacing-input"
@@ -114,7 +115,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
               aria-label="Augmenter"
               className="w-11 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg"
             >
-              <FaPlus />
+              <HugeiconsIcon icon={PlusSignIcon} />
             </button>
           </div>
 

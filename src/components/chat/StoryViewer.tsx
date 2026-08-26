@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon, ArrowRight01Icon, Cancel01Icon, FavouriteIcon, Message01Icon } from '@hugeicons/core-free-icons';
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { X, Heart, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Status, StoryGroup } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';
 
@@ -306,7 +307,7 @@ const StoryViewer = ({
               onClick={onClose}
               className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/50 transition-colors"
             >
-              <X className="w-6 h-6" />
+              <HugeiconsIcon icon={Cancel01Icon} className="w-6 h-6" />
             </button>
           </div>
         </div>
@@ -356,7 +357,7 @@ const StoryViewer = ({
           aria-label="Previous story"
         >
           <div className="absolute left-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <ChevronLeft className="w-12 h-12 text-white drop-shadow-lg" />
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="w-12 h-12 text-white drop-shadow-lg" />
           </div>
         </button>
 
@@ -366,7 +367,7 @@ const StoryViewer = ({
           aria-label="Next story"
         >
           <div className="absolute right-4 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <ChevronRight className="w-12 h-12 text-white drop-shadow-lg" />
+            <HugeiconsIcon icon={ArrowRight01Icon} className="w-12 h-12 text-white drop-shadow-lg" />
           </div>
         </button>
 
@@ -392,7 +393,7 @@ const StoryViewer = ({
                   onClick={handleReply}
                   className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-colors"
                 >
-                  <MessageCircle className="w-5 h-5" />
+                  <HugeiconsIcon icon={Message01Icon} className="w-5 h-5" />
                   <span>Répondre</span>
                 </button>
               )}
@@ -402,11 +403,9 @@ const StoryViewer = ({
                 onClick={handleLikeToggle}
                 className="bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-6 rounded-full flex items-center gap-2 transition-all hover:scale-105"
               >
-                <Heart
-                  className={`w-5 h-5 transition-all ${
+                <HugeiconsIcon icon={FavouriteIcon} className={`w-5 h-5 transition-all ${
                     isLiked ? 'fill-red-500 text-red-500' : ''
-                  }`}
-                />
+                  }`} />
                 <span>{likesCount}</span>
               </button>
             </div>

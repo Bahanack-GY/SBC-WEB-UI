@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import React from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FiX } from 'react-icons/fi';
 
 interface RecoveryModalProps {
   isOpen: boolean;
@@ -61,7 +62,7 @@ const RecoveryModal: React.FC<RecoveryModalProps> = ({
                 className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-xl"
                 onClick={onClose}
               >
-                <FiX />
+                <HugeiconsIcon icon={Cancel01Icon} />
               </button>
               <div className="text-center pr-8">
                 <div className="text-3xl mb-2">

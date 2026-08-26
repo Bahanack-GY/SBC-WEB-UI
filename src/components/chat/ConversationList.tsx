@@ -1,13 +1,8 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Archive02Icon, Cancel01Icon, PlusSignIcon, Search01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import {
-  MagnifyingGlassIcon,
-  PlusIcon,
-  XMarkIcon,
-  CheckIcon,
-  ArchiveBoxIcon,
-} from '@heroicons/react/24/outline';
 import type { Conversation } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';
 import { useSocket } from '../../contexts/SocketContext';
@@ -567,7 +562,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   onClick={exitSelectionMode}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-700" />
+                  <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-700" />
                 </button>
                 <span className="font-medium text-gray-900">
                   {selectedConversations.size} sélectionné{selectedConversations.size > 1 ? 's' : ''}
@@ -595,7 +590,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   className="p-2 text-orange-600 hover:bg-orange-50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Archiver"
                 >
-                  <ArchiveBoxIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={Archive02Icon} className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -608,13 +603,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   onClick={() => setShowUserSearchModal(true)}
                   className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={PlusSignIcon} className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Search bar */}
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Rechercher des conversations..."
@@ -627,7 +622,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                     onClick={() => setSearchQuery('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
                   >
-                    <XMarkIcon className="w-4 h-4 text-gray-500" />
+                    <HugeiconsIcon icon={Cancel01Icon} className="w-4 h-4 text-gray-500" />
                   </button>
                 )}
               </div>
@@ -691,7 +686,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
-                        <ArchiveBoxIcon className="w-6 h-6 text-orange-600" />
+                        <HugeiconsIcon icon={Archive02Icon} className="w-6 h-6 text-orange-600" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">Conversations archivées</p>
@@ -731,7 +726,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                       }`}
                     >
                       {selectedConversations.has(conv._id) && (
-                        <CheckIcon className="w-3.5 h-3.5 text-white" />
+                        <HugeiconsIcon icon={Tick02Icon} className="w-3.5 h-3.5 text-white" />
                       )}
                     </div>
                   )}
@@ -846,13 +841,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   }}
                   className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-500" />
+                  <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
 
               {/* Search input */}
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Rechercher un utilisateur..."
@@ -974,7 +969,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                 onClick={() => setShowProfileModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <XMarkIcon className="w-5 h-5 text-gray-700" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-700" />
               </button>
             </div>
 
@@ -1116,7 +1111,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                 onClick={() => setShowArchivedModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <XMarkIcon className="w-5 h-5 text-gray-500" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
@@ -1129,7 +1124,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
               ) : archivedConversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <ArchiveBoxIcon className="w-8 h-8 text-gray-400" />
+                    <HugeiconsIcon icon={Archive02Icon} className="w-8 h-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune conversation archivée</h3>
                   <p className="text-gray-500 text-center">
