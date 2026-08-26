@@ -3,7 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { LinkSquare01Icon } from '@hugeicons/core-free-icons';
 import { BUSINESS_TYPES } from './businessTypes';
 import { cn } from '../../lib/utils';
-import type { Shop } from '../../services/shopDirectory';
+import { isNewShop, type Shop } from '../../services/shopDirectory';
 
 /** Deterministic tint per shop, so a card looks the same across reloads. */
 const AVATAR_TINTS = [
@@ -36,7 +36,14 @@ function ShopCard({ shop, index }: { shop: Shop; index: number }) {
       </span>
 
       <span className="min-w-0 flex-1">
-        <span className="block font-semibold text-ink text-sm truncate">{shop.name}</span>
+        <span className="flex items-center gap-1.5 min-w-0">
+          <span className="font-semibold text-ink text-sm truncate">{shop.name}</span>
+          {isNewShop(shop) && (
+            <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-pill bg-success text-white">
+              Nouveau
+            </span>
+          )}
+        </span>
         {/* The slug IS the shop's address — it is what members share, so show it. */}
         <span className="block text-xs text-ink-3 truncate">{shop.slug}</span>
         <span className={cn('mt-1 inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-pill', meta.tint)}>
