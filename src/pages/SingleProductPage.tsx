@@ -46,7 +46,7 @@ function SingleProductPage() {
   }
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-[#f8fafc] px-2 py-4">
+      <div className="flex flex-col items-center justify-center min-h-screen bg-bg px-2 py-4">
         <Skeleton height="h-10" rounded="rounded-xl" className="mb-4 w-full max-w-md" />
         <Skeleton height="h-60" rounded="rounded-2xl" className="mb-4 w-full max-w-md" />
         <Skeleton height="h-8" rounded="rounded-xl" className="mb-2 w-full max-w-md" />
@@ -64,7 +64,7 @@ function SingleProductPage() {
         <BackButton />
         <h3 className="text-xl font-medium text-center w-full text-gray-900">Information du produit</h3>
       </div>
-      <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] px-2 py-4">
+      <div className="min-h-screen flex flex-col items-center bg-bg px-2 py-4">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -92,7 +92,7 @@ function SingleProductPage() {
                 <button
                   key={i}
                   onClick={() => setSelectedImg(i)}
-                  className={`w-3 h-3 rounded-full ${i === selectedImg ? 'bg-[#115CF6]' : 'bg-gray-300'}`}
+                  className={`w-3 h-3 rounded-full ${i === selectedImg ? 'bg-primary' : 'bg-gray-300'}`}
                   aria-label={`Voir l'image ${i + 1}`}
                 />
               ))}
@@ -103,7 +103,7 @@ function SingleProductPage() {
                   key={i}
                   src={img}
                   alt="Miniature"
-                  className={`w-16 h-16 object-contain rounded-xl border ${i === selectedImg ? 'border-[#115CF6] border-2' : 'border-border'}`}
+                  className={`w-16 h-16 object-contain rounded-xl border ${i === selectedImg ? 'border-primary border-2' : 'border-border'}`}
                   onClick={() => setSelectedImg(i)}
                   style={{ cursor: 'pointer' }}
                   whileHover={{ scale: 1.08 }}
@@ -123,7 +123,7 @@ function SingleProductPage() {
                   href={product.whatsappLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 px-2 rounded-xl text-lg transition-colors"
+                  className="bg-primary hover:bg-blue-800 text-white font-bold py-3 px-2 rounded-xl text-lg transition-colors"
                   initial={{ scale: 0.95, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   transition={{ delay: 0.5, type: 'spring' }}

@@ -439,7 +439,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 <h4 className="text-lg font-bold mb-4">Télécharger les contacts</h4>
                                 <div className="flex flex-col gap-4">
                                     <button
-                                        className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
+                                        className="w-full bg-primary text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
                                         onClick={handleDownloadAll}
                                         disabled={downloading}
                                     >
@@ -539,7 +539,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                     </div>
                                 </div>
                                 <button
-                                    className="w-full bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors mb-2"
+                                    className="w-full bg-primary text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors mb-2"
                                     onClick={handleDownloadFiltered}
                                     disabled={downloading}
                                 >
@@ -673,7 +673,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 )}
                                 <div className="flex gap-3 mt-4">
                                     <button
-                                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
+                                        className="flex-1 bg-primary text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
                                         onClick={() => setModalOpen(false)}
                                     >
                                         Appliquer

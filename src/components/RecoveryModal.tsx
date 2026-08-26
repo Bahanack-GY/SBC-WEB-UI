@@ -152,7 +152,7 @@ const RecoveryModal: React.FC<RecoveryModalProps> = ({
             {/* Footer */}
             <div className="flex flex-col gap-2 p-4 bg-gray-50 border-t border-border">
               <button 
-                className="w-full py-3 px-4 bg-[#115CF6] hover:bg-blue-700 text-white font-medium rounded-xl transition-colors text-sm"
+                className="w-full py-3 px-4 bg-primary hover:bg-blue-700 text-white font-medium rounded-xl transition-colors text-sm"
                 onClick={handleRegisterRedirect}
               >
                 {recoveryInfo.totalTransactions > 0 ? 'S\'inscrire & Récupérer' : 'S\'inscrire pour récupérer'}

@@ -107,7 +107,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
                 if (Number.isNaN(n)) return;
                 setAndPersist(n);
               }}
-              className="flex-1 h-12 text-center text-lg font-bold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+              className="flex-1 h-12 text-center text-lg font-bold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
               type="button"

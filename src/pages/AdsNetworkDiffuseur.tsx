@@ -231,7 +231,7 @@ function AdsNetworkDiffuseur() {
         )}
 
         {/* Earnings */}
-        <motion.div {...adsHeaderMotion} className="bg-[#115CF6] text-white rounded-2xl p-5 mt-4">
+        <motion.div {...adsHeaderMotion} className="bg-primary text-white rounded-2xl p-5 mt-4">
           <div className="flex items-center gap-2 text-blue-100 text-sm">
             <HugeiconsIcon icon={Wallet01Icon} /> Solde publicitaire
           </div>
@@ -245,7 +245,7 @@ function AdsNetworkDiffuseur() {
               setTransferAmount(String(Math.floor(balance?.advertisingBalance ?? 0)));
               setTransferOpen(true);
             }}
-            className="w-full bg-white text-[#115CF6] rounded-xl py-2.5 text-sm font-semibold mt-3"
+            className="w-full bg-white text-primary rounded-xl py-2.5 text-sm font-semibold mt-3"
           >
             Transférer vers mon solde principal
           </motion.button>
@@ -371,7 +371,7 @@ function AdsNetworkDiffuseur() {
                           <p className="text-xs text-gray-500 mt-1">
                             3 jours de publication · environ {p.expectedViews ?? profile?.effectiveAverageViews ?? 0} vues
                           </p>
-                          <p className="text-xs text-[#115CF6] font-medium mt-1">Voir les détails →</p>
+                          <p className="text-xs text-primary font-medium mt-1">Voir les détails →</p>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-3">
@@ -470,7 +470,7 @@ function AdsNetworkDiffuseur() {
                             <>
                               <button
                                 onClick={() => setVerifying(p)}
-                                className="w-full bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
+                                className="w-full bg-primary text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
                               >
                                 <HugeiconsIcon icon={QrCodeIcon} /> Vérifier le jour {awaiting.day}
                               </button>
@@ -555,7 +555,7 @@ function AdsNetworkDiffuseur() {
                           {...adsItemMotion(Math.min(i, 6), 0.02)}
                           className="flex items-center gap-3 border border-border rounded-xl p-3 text-sm"
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#115CF6]'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-primary'}`}>
                             {isIn ? '↓' : '↑'}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -573,7 +573,7 @@ function AdsNetworkDiffuseur() {
                     {/* Scroll sentinel: crossing it loads the next page. */}
                     <div ref={loadMoreRef} className="h-1" />
                     {isFetchingNextPage && (
-                      <div className="flex justify-center py-3"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-[#115CF6]" /></div>
+                      <div className="flex justify-center py-3"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-primary" /></div>
                     )}
                   </div>
                 )
@@ -666,7 +666,7 @@ function AdsNetworkDiffuseur() {
                         whileTap={{ scale: 0.97 }}
                         onClick={handleTransfer}
                         disabled={transferring || !valid}
-                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-300"
+                        className="flex-1 bg-primary text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-300"
                       >
                         {transferring ? 'Transfert…' : 'Confirmer le transfert'}
                       </motion.button>
@@ -910,7 +910,7 @@ function ShareSheet({
         <div className="border border-border rounded-xl p-3 text-sm text-gray-800 whitespace-pre-wrap mt-1">
           {caption}
         </div>
-        <button onClick={copyCaption} className="text-sm text-[#115CF6] mt-2">
+        <button onClick={copyCaption} className="text-sm text-primary mt-2">
           {copied ? 'Texte copié' : 'Copier le texte'}
         </button>
 
@@ -936,7 +936,7 @@ function ShareSheet({
         <button
           onClick={confirmPosted}
           disabled={busy}
-          className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400"
+          className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400"
         >
           J'ai publié
         </button>
@@ -1106,7 +1106,7 @@ function VerifySheet({
     if (retrying && !error && !result) {
       return (
         <div className="py-8 text-center">
-          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-primary" size={28} />
           <p className="font-medium text-gray-900 mt-4">Reconnexion à WhatsApp…</p>
           <p className="text-sm text-gray-600 mt-1">
             La connexion a été interrompue. Nouvelle tentative en cours ({attempt + 1}/{MAX_ATTEMPTS}).
@@ -1146,7 +1146,7 @@ function VerifySheet({
               </div>
             ))}
           </div>
-          <button onClick={onClose} className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4">
+          <button onClick={onClose} className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-4">
             Fermer
           </button>
         </div>
@@ -1165,11 +1165,11 @@ function VerifySheet({
 
           <button
             onClick={() => setMethod('code')}
-            className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-[#115CF6] bg-blue-50' : 'border-border'}`}
+            className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-primary bg-blue-50' : 'border-border'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
-              <HugeiconsIcon icon={KeyboardIcon} className="text-[#115CF6]" /> Code à 8 caractères
-              <span className="ml-auto text-[10px] uppercase tracking-wide bg-[#115CF6] text-white rounded-full px-2 py-0.5">
+              <HugeiconsIcon icon={KeyboardIcon} className="text-primary" /> Code à 8 caractères
+              <span className="ml-auto text-[10px] uppercase tracking-wide bg-primary text-white rounded-full px-2 py-0.5">
                 Conseillé
               </span>
             </div>
@@ -1191,7 +1191,7 @@ function VerifySheet({
                 <select
                   value={dialCode}
                   onChange={(e) => setDialCode(e.target.value)}
-                  className="border border-border rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                  className="border border-border rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
                 >
                   {allAfricanCountries.map((c) => (
                     <option key={c.value} value={dialOf(c)}>{c.flag} {c.phoneCode}</option>
@@ -1203,7 +1203,7 @@ function VerifySheet({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="675080477"
-                  className="flex-1 min-w-0 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                  className="flex-1 min-w-0 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </div>
               {/* WhatsApp binds the code to this exact number; typed wrong, their
@@ -1229,10 +1229,10 @@ function VerifySheet({
 
           <button
             onClick={() => setMethod('qr')}
-            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-[#115CF6] bg-blue-50' : 'border-border'}`}
+            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-primary bg-blue-50' : 'border-border'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
-              <HugeiconsIcon icon={QrCodeIcon} className="text-[#115CF6]" /> Code QR
+              <HugeiconsIcon icon={QrCodeIcon} className="text-primary" /> Code QR
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Pratique depuis un ordinateur ou un second téléphone.
@@ -1242,7 +1242,7 @@ function VerifySheet({
           <button
             onClick={() => { setAttempt(0); setRetrying(false); setError(null); setStarted(true); }}
             disabled={!method || (method === 'code' && phone.replace(/\D/g, '').length < 8)}
-            className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-300"
+            className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-300"
           >
             Continuer
           </button>
@@ -1255,7 +1255,7 @@ function VerifySheet({
     if (state === 'queued') {
       return (
         <div className="py-8 text-center">
-          <HugeiconsIcon icon={HourglassIcon} className="mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={HourglassIcon} className="mx-auto text-primary" size={28} />
           <p className="font-medium text-gray-900 mt-4">
             {queuePosition && queuePosition > 1
               ? `Vous êtes ${queuePosition}ᵉ dans la file`
@@ -1275,7 +1275,7 @@ function VerifySheet({
     if (state === 'reading') {
       return (
         <div className="py-8 text-center">
-          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-primary" size={28} />
           <p className="font-medium text-gray-900 mt-4">Appareil connecté</p>
           <p className="text-sm text-gray-600 mt-1">Lecture de vos statuts et de leurs vues…</p>
           <p className="text-xs text-gray-400 mt-3">Cela prend généralement moins d'une minute.</p>
@@ -1293,7 +1293,7 @@ function VerifySheet({
           <div className="font-mono text-3xl tracking-[0.3em] font-bold text-gray-900 bg-gray-100 rounded-xl py-4">
             {pairingCode}
           </div>
-          <button onClick={copyCode} className="text-sm text-[#115CF6] mt-2">
+          <button onClick={copyCode} className="text-sm text-primary mt-2">
             {copied ? 'Code copié' : 'Copier le code'}
           </button>
           <p className="text-xs text-gray-500 mt-3">
@@ -1322,7 +1322,7 @@ function VerifySheet({
 
     return (
       <div className="py-8 text-center text-gray-500">
-        <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-[#115CF6]" size={24} />
+        <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-primary" size={24} />
         <p className="text-sm mt-3">
           {state === 'reading'
             ? 'Lecture de vos statuts…'

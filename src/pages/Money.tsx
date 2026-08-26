@@ -113,7 +113,7 @@ function Money() {
 
                         <button
                             onClick={handleFundActivationClick}
-                            className="flex flex-col items-center justify-center bg-[#115CF6] hover:bg-blue-700 text-white p-6 rounded-2xl transition-colors"
+                            className="flex flex-col items-center justify-center bg-primary hover:bg-blue-700 text-white p-6 rounded-2xl transition-colors"
                         >
                             <HugeiconsIcon icon={ArrowUp01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Alimenter</span>
@@ -128,7 +128,7 @@ function Money() {
                     >
                         <div className="flex items-center gap-3">
                             <div className="bg-blue-100 p-3 rounded-full">
-                                <HugeiconsIcon icon={GiftIcon} size={24} className="text-[#115CF6]" />
+                                <HugeiconsIcon icon={GiftIcon} size={24} className="text-primary" />
                             </div>
                             <div className="text-left">
                                 <span className="font-semibold text-gray-900 block">Solde d'Activation</span>
@@ -317,7 +317,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
                             <button
                                 onClick={handleSubmit}
                                 disabled={loading || !amount}
-                                className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="flex-1 bg-primary text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
                                 {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
                             </button>

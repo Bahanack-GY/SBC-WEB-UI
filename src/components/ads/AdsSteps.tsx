@@ -38,7 +38,7 @@ export const AdsStep: React.FC<{
         className="flex gap-3 bg-white border border-border rounded-2xl p-4"
     >
         <span
-            className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-sm font-bold text-white ${accent === 'green' ? 'bg-green-600' : 'bg-[#115CF6]'
+            className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-sm font-bold text-white ${accent === 'green' ? 'bg-green-600' : 'bg-primary'
                 }`}
         >
             {index}

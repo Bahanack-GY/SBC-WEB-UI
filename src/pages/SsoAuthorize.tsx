@@ -115,7 +115,7 @@ export default function SsoAuthorize() {
   if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#115CF6]" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     );
   }
@@ -244,7 +244,7 @@ export default function SsoAuthorize() {
                     key={scope}
                     className="flex items-start gap-2 text-sm text-gray-700"
                   >
-                    <span className="text-[#115CF6] mt-1">•</span>
+                    <span className="text-primary mt-1">•</span>
                     <span>
                       {known ?? (
                         <>
@@ -268,7 +268,7 @@ export default function SsoAuthorize() {
               type="button"
               onClick={handleSwitchAccount}
               disabled={submitting}
-              className="mt-2 min-h-[44px] w-full sm:w-auto text-sm font-medium text-[#115CF6] hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left"
+              className="mt-2 min-h-[44px] w-full sm:w-auto text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left"
             >
               Pas vous&nbsp;? Déconnexion
             </button>

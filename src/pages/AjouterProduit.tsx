@@ -140,7 +140,7 @@ function AjouterProduit() {
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] p-4">
+            <div className="min-h-screen flex flex-col items-center bg-bg p-4">
                 <div className="w-full max-w-md">
                     <div className="flex items-center mb-4">
                         <BackButton />
@@ -283,7 +283,7 @@ function AjouterProduit() {
 
                         <button
                             type="submit"
-                            className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 flex items-center justify-center gap-2 disabled:bg-blue-400"
+                            className="w-full bg-primary hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 flex items-center justify-center gap-2 disabled:bg-blue-400"
                             disabled={loading} // Disable button during submission
                         >
                             {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Ajouter le produit'}

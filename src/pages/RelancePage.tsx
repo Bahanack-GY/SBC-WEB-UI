@@ -653,7 +653,7 @@ function RelancePage() {
               </div>
               <button
                 onClick={() => setShowPacksModal('all')}
-                className="w-full bg-[#115CF6] text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors"
+                className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-700 transition-colors"
               >
                 Acheter des crédits
               </button>

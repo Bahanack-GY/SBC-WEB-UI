@@ -124,7 +124,7 @@ Vues et clics, diffuseur par diffuseur.
             step={1000}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+            className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
           />
           <p className="text-xs text-gray-500 mt-1">
             Minimum {MIN_AMOUNT.toLocaleString('fr-FR')} F.
@@ -156,7 +156,7 @@ Vues et clics, diffuseur par diffuseur.
           <button
             onClick={() => navigate(`/ads-network/annonceur/nouvelle-campagne?amount=${parsed}`)}
             disabled={!validAmount}
-            className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400 flex items-center justify-center gap-2"
+            className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400 flex items-center justify-center gap-2"
           >
             Créer mon annonce <HugeiconsIcon icon={ArrowRight01Icon} size={12} />
           </button>

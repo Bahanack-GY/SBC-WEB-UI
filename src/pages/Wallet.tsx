@@ -914,7 +914,7 @@ function Wallet() {
             <div className="flex gap-2 mb-6">
               <button
                 onClick={() => setShowFundActivationModal(true)}
-                className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 hover:bg-blue-800 transition-colors"
+                className="flex-1 flex flex-col items-center justify-center bg-primary rounded-2xl py-4 hover:bg-blue-800 transition-colors"
               >
                 <HugeiconsIcon icon={ArrowUp01Icon} size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Activation</span>
@@ -1053,7 +1053,7 @@ function Wallet() {
                     className={`rounded-full p-3 font-bold  transition-colors ${
                       isSubmittingWithdrawal || ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
                         ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                        : 'bg-[#115CF6] text-white hover:bg-blue-800'
+                        : 'bg-primary text-white hover:bg-blue-800'
                     }`}
                   >
                     {isSubmittingWithdrawal ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" size={24} /> : <HugeiconsIcon icon={Money01Icon} size={24} />}
@@ -1139,16 +1139,16 @@ function Wallet() {
             {/* Bar Chart */}
             <div className="transaction-chart bg-white rounded-2xl p-4 mb-6 text-gray-800 relative border border-border">
               <div className="filter-options flex items-center justify-between mb-2">
-                <div className="font-semibold text-[#115CF6]">Résumé des transactions</div>
+                <div className="font-semibold text-primary">Résumé des transactions</div>
                 <div className="flex bg-gray-100 rounded-full p-1 gap-1">
                   <button
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Reçu' ? 'bg-[#115CF6] text-white' : 'text-[#115CF6]'}`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Reçu' ? 'bg-primary text-white' : 'text-primary'}`}
                     onClick={() => setChartType('Reçu')}
                   >
                     Reçu
                   </button>
                   <button
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Retrait' ? 'bg-[#115CF6] text-white' : 'text-[#115CF6]'}`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Retrait' ? 'bg-primary text-white' : 'text-primary'}`}
                     onClick={() => setChartType('Retrait')}
                   >
                     Retrait
@@ -1256,7 +1256,7 @@ function Wallet() {
               </div>
             </div>
             {/* Recent Transactions */}
-            <div className="transaction-list bg-[#192040] rounded-2xl p-4">
+            <div className="transaction-list bg-ink rounded-2xl p-4">
               <div className="font-semibold mb-2 text-white">Transactions récentes</div>
               {!transactions || transactions.length === 0 ? (
                 <div className="text-center py-8 text-gray-400">
@@ -1411,7 +1411,7 @@ function Wallet() {
 
                       <div className="flex gap-3">
                         <button
-                          className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
+                          className="flex-1 bg-primary text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
                           onClick={handleShare}
                         >
                           <HugeiconsIcon icon={Share08Icon} className="inline mr-2" />Partager
@@ -1467,7 +1467,7 @@ function Wallet() {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
+                    className="bg-ink rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
                     initial={{ y: '100%' }}
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
@@ -1776,7 +1776,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
               <button
                 onClick={handleSubmit}
                 disabled={loading || !amount}
-                className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 bg-primary text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>

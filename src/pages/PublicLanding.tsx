@@ -8,8 +8,8 @@ import PublicFooter from '../components/common/PublicFooter';
 export default function PublicLanding() {
   return (
     <div className="bg-bg relative min-h-screen w-full overflow-hidden">
-      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[#115CF6]/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-[#25D366]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-whatsapp/10 blur-3xl" />
 
       <div className="relative z-10 max-w-3xl mx-auto px-5 py-6">
         {/* Header */}
@@ -18,7 +18,7 @@ export default function PublicLanding() {
             <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <img src={logo} alt="SBC" className="h-9 w-9 object-contain" />
-          <Link to="/connexion" className="text-sm font-semibold text-[#115CF6] hover:underline">
+          <Link to="/connexion" className="text-sm font-semibold text-primary hover:underline">
             Se connecter
           </Link>
         </header>
@@ -74,31 +74,31 @@ export default function PublicLanding() {
           <h2 className="text-xl font-bold text-gray-900 mb-3">Nous contacter</h2>
           <div className="space-y-2 text-gray-700">
             <div className="flex items-center gap-3">
-              <HugeiconsIcon icon={Mail01Icon} className="text-[#115CF6]" />
+              <HugeiconsIcon icon={Mail01Icon} className="text-primary" />
               <a href="mailto:reseautage.sbc@gmail.com" className="hover:underline">reseautage.sbc@gmail.com</a>
             </div>
             <div className="flex items-center gap-3">
-              <HugeiconsIcon icon={Call02Icon} className="text-[#115CF6]" />
+              <HugeiconsIcon icon={Call02Icon} className="text-primary" />
               <a href="tel:+237682903535" className="hover:underline">+237 6 82 90 35 35</a> (Yaoundé)
             </div>
             <div className="flex items-center gap-3">
-              <HugeiconsIcon icon={Call02Icon} className="text-[#115CF6]" />
+              <HugeiconsIcon icon={Call02Icon} className="text-primary" />
               <a href="tel:+237697470426" className="hover:underline">+237 6 97 47 04 26</a> (Douala)
             </div>
             <div className="flex items-center gap-3">
-              <HugeiconsIcon icon={Location01Icon} className="text-[#115CF6]" />
+              <HugeiconsIcon icon={Location01Icon} className="text-primary" />
               <span>BP 6877, rue Sylvanie, Douala, Cameroun</span>
             </div>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 mt-4">
-            <a href="https://whatsapp.com/channel/0029Vav3mvCElah05C8QuT03" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#25D366] text-white hover:opacity-90">
+            <a href="https://whatsapp.com/channel/0029Vav3mvCElah05C8QuT03" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp" className="h-10 w-10 flex items-center justify-center rounded-full bg-whatsapp text-white hover:opacity-90">
               <HugeiconsIcon icon={WhatsappIcon} />
             </a>
-            <a href="https://t.me/sniperbusinesscenterafrica" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#0088cc] text-white hover:opacity-90">
+            <a href="https://t.me/sniperbusinesscenterafrica" target="_blank" rel="noopener noreferrer" aria-label="Telegram" className="h-10 w-10 flex items-center justify-center rounded-full bg-telegram text-white hover:opacity-90">
               <HugeiconsIcon icon={TelegramIcon} />
             </a>
-            <a href="https://m.youtube.com/@SniperBusinessCenterSBC" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#FF0000] text-white hover:opacity-90">
+            <a href="https://m.youtube.com/@SniperBusinessCenterSBC" target="_blank" rel="noopener noreferrer" aria-label="YouTube" className="h-10 w-10 flex items-center justify-center rounded-full bg-youtube text-white hover:opacity-90">
               <HugeiconsIcon icon={YoutubeIcon} />
             </a>
             <a href="https://www.facebook.com/sniperbusinesscenter/" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="h-10 w-10 flex items-center justify-center rounded-full bg-[#1877F2] text-white hover:opacity-90">
@@ -121,12 +121,12 @@ export default function PublicLanding() {
               href="https://storage.googleapis.com/sbc-file-storage/documents/pres_pdf_1753011729757_SBC%20Pr%C3%83%C2%A9sentation.pdf"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#115CF6] hover:underline"
+              className="text-primary hover:underline"
             >
               📄 Présentation officielle (PDF)
             </a>
-            <Link to="/conditions" className="text-[#115CF6] hover:underline">📄 Conditions générales d'utilisation</Link>
-            <Link to="/confidentialite" className="text-[#115CF6] hover:underline">📄 Politique de confidentialité</Link>
+            <Link to="/conditions" className="text-primary hover:underline">📄 Conditions générales d'utilisation</Link>
+            <Link to="/confidentialite" className="text-primary hover:underline">📄 Politique de confidentialité</Link>
           </div>
         </section>
 
@@ -134,13 +134,13 @@ export default function PublicLanding() {
         <div className="flex flex-col sm:flex-row gap-3 mb-10">
           <Link
             to="/connexion"
-            className="flex-1 text-center bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl py-3 transition-colors"
+            className="flex-1 text-center bg-primary hover:bg-blue-700 text-white font-bold rounded-xl py-3 transition-colors"
           >
             Se connecter
           </Link>
           <Link
             to="/signup"
-            className="flex-1 text-center bg-white border-2 border-[#115CF6] text-[#115CF6] font-bold rounded-xl py-3 hover:bg-blue-50 transition-colors"
+            className="flex-1 text-center bg-white border-2 border-primary text-primary font-bold rounded-xl py-3 hover:bg-blue-50 transition-colors"
           >
             Créer un compte
           </Link>

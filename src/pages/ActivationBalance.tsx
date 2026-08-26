@@ -291,7 +291,7 @@ function ActivationBalance() {
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.key
-                  ? 'bg-white text-[#115CF6]'
+                  ? 'bg-white text-primary'
                   : 'text-gray-600 hover:text-gray-800'
                   } border border-border`}
               >
@@ -353,7 +353,7 @@ function ActivationBalance() {
                     onClick={() => setReferralTab('direct')}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                       referralTab === 'direct'
-                        ? 'bg-white text-[#115CF6]'
+                        ? 'bg-white text-primary'
                         : 'text-gray-600 hover:text-gray-800'
                     } border border-border`}
                   >
@@ -363,7 +363,7 @@ function ActivationBalance() {
                     onClick={() => setReferralTab('indirect')}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                       referralTab === 'indirect'
-                        ? 'bg-white text-[#115CF6]'
+                        ? 'bg-white text-primary'
                         : 'text-gray-600 hover:text-gray-800'
                     } border border-border`}
                   >
@@ -402,7 +402,7 @@ function ActivationBalance() {
                         key={f.key}
                         onClick={() => setFilter(f.key as FilterType)}
                         className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === f.key
-                          ? 'bg-[#115CF6] text-white'
+                          ? 'bg-primary text-white'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                       >
@@ -482,7 +482,7 @@ function ActivationBalance() {
                               Upgrade
                             </button>
                           ) : (
-                            <span className="text-[#115CF6] text-sm font-medium flex items-center gap-1">
+                            <span className="text-primary text-sm font-medium flex items-center gap-1">
                               <HugeiconsIcon icon={Tick02Icon} size={14} />
                               Actif
                             </span>
@@ -508,7 +508,7 @@ function ActivationBalance() {
                 exit={{ opacity: 0, y: -10 }}
               >
                 {historyLoading ? (
-                  <div className="bg-[#192040] rounded-2xl p-4">
+                  <div className="bg-ink rounded-2xl p-4">
                     <div className="space-y-3">
                       {[1, 2, 3].map(i => (
                         <Skeleton key={i} height="h-[60px]" className="rounded-lg bg-white/10" />
@@ -516,12 +516,12 @@ function ActivationBalance() {
                     </div>
                   </div>
                 ) : allHistory.length === 0 ? (
-                  <div className="bg-[#192040] rounded-2xl p-8 text-center">
+                  <div className="bg-ink rounded-2xl p-8 text-center">
                     <HugeiconsIcon icon={HistoryIcon} className="mx-auto text-gray-500 mb-4" size={48} />
                     <p className="text-gray-400">Aucun historique d'activation</p>
                   </div>
                 ) : (
-                  <div className="bg-[#192040] rounded-2xl p-4">
+                  <div className="bg-ink rounded-2xl p-4">
                     <div className="font-semibold mb-3 text-white">Historique des transactions</div>
                     {allHistory.map((item, index) => {
                       // Determine display based on transaction type
@@ -788,7 +788,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, minimumAmount, onSu
               <button
                 onClick={handleSubmit}
                 disabled={loading || !amount}
-                className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 bg-primary text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>
@@ -956,7 +956,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
 
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <p className="text-sm text-gray-600">Solde d'activation disponible</p>
-              <p className="text-2xl font-bold text-[#115CF6]">{activationBalance.toLocaleString('fr-FR')} F</p>
+              <p className="text-2xl font-bold text-primary">{activationBalance.toLocaleString('fr-FR')} F</p>
             </div>
 
             {/* Selected User Display */}
@@ -1230,13 +1230,13 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
                     key={type}
                     onClick={() => setSelectedType(type)}
                     className={`w-full p-4 rounded-xl border-2 text-left transition-colors ${selectedType === type
-                      ? 'border-[#115CF6] bg-blue-50'
+                      ? 'border-primary bg-blue-50'
                       : 'border-border hover:border-border'
                       }`}
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-900">{label}</span>
-                      <span className="font-bold text-[#115CF6]">{price.toLocaleString('fr-FR')} F</span>
+                      <span className="font-bold text-primary">{price.toLocaleString('fr-FR')} F</span>
                     </div>
                   </button>
                 ))}
@@ -1247,7 +1247,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Solde d'activation</span>
-                <span className={`font-bold ${canAfford || !selectedType ? 'text-[#115CF6]' : 'text-red-600'}`}>
+                <span className={`font-bold ${canAfford || !selectedType ? 'text-primary' : 'text-red-600'}`}>
                   {activationBalance.toLocaleString('fr-FR')} F
                 </span>
               </div>

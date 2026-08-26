@@ -102,7 +102,7 @@ export default function RelanceSmsLinks() {
           value={value}
           onChange={(e) => setValue(tpl.type, tpl.dayNumber, e.target.value)}
           placeholder="https://..."
-          className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
+          className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
         />
       </motion.div>
     );
@@ -157,7 +157,7 @@ export default function RelanceSmsLinks() {
             <button
               onClick={handleSave}
               disabled={saving}
-              className="w-full bg-[#115CF6] text-white font-bold py-3 rounded-xl hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
+              className="w-full bg-primary text-white font-bold py-3 rounded-xl hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors"
             >
               {saving ? 'Sauvegarde…' : 'Enregistrer les liens'}
             </button>

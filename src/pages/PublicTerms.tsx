@@ -15,7 +15,7 @@ export default function PublicTerms() {
             <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <img src={logo} alt="SBC" className="h-9 w-9 object-contain" />
-          <Link to="/connexion" className="text-sm font-semibold text-[#115CF6] hover:underline">
+          <Link to="/connexion" className="text-sm font-semibold text-primary hover:underline">
             Se connecter
           </Link>
         </motion.header>
@@ -61,7 +61,7 @@ export default function PublicTerms() {
           <h2 className="text-xl font-bold text-gray-900 mt-6 mb-2">6. Contact</h2>
           <p>
             Pour toute question relative aux présentes CGU, vous pouvez nous écrire à&nbsp;
-            <a href="mailto:reseautage.sbc@gmail.com" className="text-[#115CF6] hover:underline">reseautage.sbc@gmail.com</a>.
+            <a href="mailto:reseautage.sbc@gmail.com" className="text-primary hover:underline">reseautage.sbc@gmail.com</a>.
           </p>
         </motion.article>
 

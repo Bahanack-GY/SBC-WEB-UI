@@ -311,7 +311,7 @@ const PartnerSpace = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-0">
+    <div className="min-h-screen bg-bg flex flex-col items-center py-0">
       <div className="w-full max-w-4xl mx-auto p-4">
         <div className="flex items-center mb-6">
           <BackButton />
@@ -410,7 +410,7 @@ const PartnerSpace = () => {
             </div>
 
             {/* Recent Transactions - Compact View like Wallet.tsx */}
-            <div className="bg-[#192040] rounded-2xl p-4 mb-6">
+            <div className="bg-ink rounded-2xl p-4 mb-6">
               <div className="font-semibold mb-2 text-white">Commissions récentes</div>
               {loadingTx || isFetchingTx ? (
                 <div className="space-y-3">
@@ -484,7 +484,7 @@ const PartnerSpace = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
+              className="bg-ink rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}

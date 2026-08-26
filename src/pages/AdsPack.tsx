@@ -110,7 +110,7 @@ function AdsPack() {
                                             </button>
                                             <button
                                                 onClick={handlePurchaseClick}
-                                                className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
+                                                className="bg-white text-whatsapp rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
                                             >
                                                 Acheter des crédits
                                             </button>
@@ -118,7 +118,7 @@ function AdsPack() {
                                     ) : (
                                         <button
                                             onClick={handlePurchaseClick}
-                                            className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
+                                            className="bg-white text-whatsapp rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
                                         >
                                             Acheter des crédits
                                         </button>

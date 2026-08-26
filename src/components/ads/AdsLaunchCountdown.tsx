@@ -71,7 +71,7 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                     transition={{ delay: 0.15 }}
                     className="bg-white border border-border rounded-2xl p-6 text-center"
                 >
-                    <div className="w-14 h-14 rounded-full bg-blue-50 text-[#115CF6] flex items-center justify-center mx-auto">
+                    <div className="w-14 h-14 rounded-full bg-blue-50 text-primary flex items-center justify-center mx-auto">
                         <HugeiconsIcon icon={Megaphone01Icon} size={22} />
                     </div>
 

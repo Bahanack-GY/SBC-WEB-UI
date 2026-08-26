@@ -142,7 +142,7 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
             padding: '15px',
           },
           buttonNext: {
-            backgroundColor: '#115CF6',
+            backgroundColor: 'var(--color-primary)',
             padding: '8px 16px',
             borderRadius: '8px',
           },

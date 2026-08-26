@@ -23,16 +23,16 @@ type ActionItem = {
 };
 
 const baseActions: ActionItem[] = [
-  { label: 'Modifier le profil', icon: <HugeiconsIcon icon={PencilEdit01Icon} className="text-[#115CF6]" />, to: '/modifier-le-profil' },
-  { label: 'Modifier mon email', icon: <HugeiconsIcon icon={Mail01Icon} className="text-[#115CF6]" />, to: '/modifier-email' },
-  { label: 'Changer le numéro de téléphone', icon: <HugeiconsIcon icon={Call02Icon} className="text-[#115CF6]" />, to: '/change-phone' },
-  { label: 'Modifier mon mot de passe', icon: <HugeiconsIcon icon={LockIcon} className="text-[#115CF6]" />, to: '/change-password' },
-  { label: 'Mon Abonnement', icon: <HugeiconsIcon icon={CreditCardIcon} className="text-[#115CF6]" />, to: '/changer-abonnement' },
+  { label: 'Modifier le profil', icon: <HugeiconsIcon icon={PencilEdit01Icon} className="text-primary" />, to: '/modifier-le-profil' },
+  { label: 'Modifier mon email', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/modifier-email' },
+  { label: 'Changer le numéro de téléphone', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/change-phone' },
+  { label: 'Modifier mon mot de passe', icon: <HugeiconsIcon icon={LockIcon} className="text-primary" />, to: '/change-password' },
+  { label: 'Mon Abonnement', icon: <HugeiconsIcon icon={CreditCardIcon} className="text-primary" />, to: '/changer-abonnement' },
   { label: 'Solde d\'Activation', icon: <HugeiconsIcon icon={GiftIcon} className="text-amber-500" />, to: '/activation-balance' },
-  { label: 'Mes Contacts', icon: <HugeiconsIcon icon={Call02Icon} className="text-[#115CF6]" />, to: '/contacts' },
-  { label: 'Mes filleuls', icon: <HugeiconsIcon icon={UserGroupIcon} className="text-[#115CF6]" />, to: '/filleuls' },
-  { label: 'Mon Parrain', icon: <HugeiconsIcon icon={UserCheck01Icon} className="text-[#115CF6]" />, to: '/parrain' },
-  { label: 'Espace partenaire', icon: <HugeiconsIcon icon={Briefcase01Icon} className="text-[#115CF6]" />, to: '/partenaire' },
+  { label: 'Mes Contacts', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/contacts' },
+  { label: 'Mes filleuls', icon: <HugeiconsIcon icon={UserGroupIcon} className="text-primary" />, to: '/filleuls' },
+  { label: 'Mon Parrain', icon: <HugeiconsIcon icon={UserCheck01Icon} className="text-primary" />, to: '/parrain' },
+  { label: 'Espace partenaire', icon: <HugeiconsIcon icon={Briefcase01Icon} className="text-primary" />, to: '/partenaire' },
   { label: 'Rejoindre la communauté', icon: <HugeiconsIcon icon={WhatsappIcon} className="text-green-500" />, to: 'https://www.whatsapp.com/channel/0029Vav3mvCElah05C8QuT03', external: true },
 ];
 
@@ -70,7 +70,7 @@ function Profile() {
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
     ...baseActions.slice(0, 7), // Up to "Mes Contacts"
-    { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} className="text-[#115CF6]" />, to: '/relance' },
+    { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/relance' },
     ...baseActions.slice(7), // Rest of the actions
   ];
 
@@ -169,7 +169,7 @@ function Profile() {
             href="${escape(groupLink)}"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center justify-center gap-2 w-full min-h-[48px] mt-2 px-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-sm"
+            class="inline-flex items-center justify-center gap-2 w-full min-h-[48px] mt-2 px-4 rounded-xl bg-whatsapp hover:bg-[#128C7E] text-white font-bold text-sm"
           >
             📱 Rejoindre le groupe WhatsApp
           </a>
@@ -246,7 +246,7 @@ function Profile() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-0">
+      <div className="min-h-screen bg-bg flex flex-col items-center py-0">
         <div className="w-full max-w-md mx-auto rounded-b-3xl overflow-hidden pb-6">
           <div className="bg-primary relative h-32 rounded-b-3xl flex flex-col items-center justify-end">
             <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2">
@@ -269,7 +269,7 @@ function Profile() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-0">
+      <div className="min-h-screen bg-bg flex flex-col items-center py-0">
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -288,7 +288,7 @@ function Profile() {
                   alt="avatar"
                   className="w-24 h-24 rounded-full border-4 border-white object-cover"
                 />
-                <button className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white text-white hover:bg-blue-800 transition-colors">
+                <button className="absolute bottom-2 right-2 bg-primary p-2 rounded-full border-2 border-white text-white hover:bg-blue-800 transition-colors">
                   <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
                 </button>
               </div>
@@ -367,7 +367,7 @@ function Profile() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + i * 0.07, duration: 0.4, type: 'spring' }}
-                className="w-full flex items-center gap-3 px-6 py-4 hover:bg-[#f1f5fd] transition cursor-pointer text-left relative"
+                className="w-full flex items-center gap-3 px-6 py-4 hover:bg-surface-2 transition cursor-pointer text-left relative"
               >
                 {action.icon}
                 <span className="flex-1 text-gray-700 font-medium">{action.label}</span>
@@ -443,7 +443,7 @@ function Profile() {
                   <div className="flex gap-3 mt-2">
                     <button
                       type="submit"
-                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
+                      className="flex-1 bg-primary text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
                       disabled={changeCodeLoading}
                     >
                       {changeCodeLoading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Sauvegarder'}

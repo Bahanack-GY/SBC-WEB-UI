@@ -68,7 +68,7 @@ function CompleteProfile() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen flex items-center justify-center bg-[#f8fafc] p-4">
+      <div className="min-h-screen flex items-center justify-center bg-bg p-4">
         <motion.div
           className="w-full max-w-md bg-white rounded-3xl p-8 max-h-[90vh] overflow-y-auto border border-border"
           initial={{ opacity: 0, y: 20 }}
@@ -90,7 +90,7 @@ function CompleteProfile() {
                 <select
                   value={region}
                   onChange={(e) => setRegion(e.target.value)}
-                  className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                  className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">Sélectionner la région</option>
                   {availableRegions.map((r) => (
@@ -107,7 +107,7 @@ function CompleteProfile() {
                 type="date"
                 value={naissance}
                 onChange={(e) => setNaissance(e.target.value)}
-                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -117,7 +117,7 @@ function CompleteProfile() {
               <select
                 value={sexe}
                 onChange={(e) => setSexe(e.target.value)}
-                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Sélectionner</option>
                 <option value="male">👨 Homme</option>
@@ -131,7 +131,7 @@ function CompleteProfile() {
               <select
                 value={profession}
                 onChange={(e) => setProfession(e.target.value)}
-                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Sélectionner la profession</option>
                 {professionOptions.map((p) => (
@@ -146,7 +146,7 @@ function CompleteProfile() {
               <select
                 value={langue}
                 onChange={(e) => setLangue(e.target.value)}
-                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">Sélectionner la langue</option>
                 <option value="fr">Français</option>
@@ -199,7 +199,7 @@ function CompleteProfile() {
               <button
                 onClick={handleSave}
                 disabled={saving}
-                className="flex-1 bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl py-3 transition-colors flex items-center justify-center gap-2"
+                className="flex-1 bg-primary hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl py-3 transition-colors flex items-center justify-center gap-2"
               >
                 {saving ? (
                   <>

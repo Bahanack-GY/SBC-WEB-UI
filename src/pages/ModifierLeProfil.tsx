@@ -394,7 +394,7 @@ function ModifierLeProfil() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] p-4">
+      <div className="min-h-screen flex flex-col items-center bg-bg p-4">
         <div className="w-full max-w-md">
           <div className="flex items-center mb-4">
             <BackButton />
@@ -413,7 +413,7 @@ function ModifierLeProfil() {
               <button
                 type="button"
                 onClick={handleAvatarButtonClick}
-                className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white text-white hover:bg-blue-800 transition-colors disabled:bg-gray-400"
+                className="absolute bottom-2 right-2 bg-primary p-2 rounded-full border-2 border-white text-white hover:bg-blue-800 transition-colors disabled:bg-gray-400"
                 disabled={avatarUploading}
               >
                 {avatarUploading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={PencilEdit01Icon} size={16} />}
@@ -436,7 +436,7 @@ function ModifierLeProfil() {
               <label className="block text-gray-700 mb-1">📞 Téléphone</label>
               <div className="relative flex gap-2"> {/* Added flex and gap */}
                 <select
-                  className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
+                  className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white"
                   name="countryCodeSelect" // Unique name for this select
                   value={selectedPhoneCountryCode.value}
                   onChange={handleChange}
@@ -712,7 +712,7 @@ function ModifierLeProfil() {
               <button
                 onClick={handleSave}
                 disabled={loading || avatarUploading}
-                className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg flex items-center justify-center gap-2 disabled:bg-blue-400"
+                className="w-full bg-primary hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg flex items-center justify-center gap-2 disabled:bg-blue-400"
               >
                 {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={FloppyDiskIcon} />}
                 {loading ? 'Sauvegarde...' : 'Sauvegarder'}

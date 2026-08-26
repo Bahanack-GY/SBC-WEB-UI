@@ -679,12 +679,12 @@ function Signup() {
   };
 
   const stepIcons = [
-    <HugeiconsIcon icon={User02Icon} size={40} className="text-[#115CF6] mx-auto" />,
-    <HugeiconsIcon icon={Call02Icon} size={40} className="text-[#115CF6] mx-auto" />,
+    <HugeiconsIcon icon={User02Icon} size={40} className="text-primary mx-auto" />,
+    <HugeiconsIcon icon={Call02Icon} size={40} className="text-primary mx-auto" />,
   ];
 
   return (
-    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] py-8 px-4">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-center bg-bg py-8 px-4">
       <motion.div variants={sectionRise} className="w-full max-w-md bg-white rounded-3xl p-8 border border-border">
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-6">
@@ -692,7 +692,7 @@ function Signup() {
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i <= step ? 'bg-[#115CF6] w-10' : 'bg-gray-200 w-6'
+                i <= step ? 'bg-primary w-10' : 'bg-gray-200 w-6'
               }`}
             />
           ))}
@@ -773,7 +773,7 @@ function Signup() {
                 <label className="block text-gray-700 mb-1">📱 Numéro WhatsApp</label>
                 <div className="flex gap-2">
                   <select
-                    className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
+                    className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white"
                     name="countryCodeSelect"
                     value={selectedCode.value}
                     onChange={handleChange}
@@ -820,7 +820,7 @@ function Signup() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input type="checkbox" name="cgu" checked={data.cgu} onChange={handleChange} className="accent-[#115CF6]" />
-                <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-[#115CF6] underline bg-transparent">conditions d'utilisation</button></span>
+                <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-primary underline bg-transparent">conditions d'utilisation</button></span>
               </div>
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
             </>
@@ -832,7 +832,7 @@ function Signup() {
             {step < TOTAL_STEPS - 1 && (
               <button
                 onClick={handleNext}
-                className="bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-2 ml-auto"
+                className="bg-primary hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
                 Suivant
               </button>
@@ -841,7 +841,7 @@ function Signup() {
               <button
                 onClick={handleRegister}
                 disabled={loading || checkingExistence || !data.cgu || affiliateLoading}
-                className="bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
+                className="bg-primary hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
                 {loading ? 'Inscription...' : checkingExistence ? 'Vérification...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
               </button>
@@ -849,7 +849,7 @@ function Signup() {
           </div>
         </form>
         <div className="text-center text-sm text-gray-500 mt-6">
-          Déjà un compte ? <a href="/connexion" className="text-[#115CF6] font-semibold hover:underline">Connexion</a>
+          Déjà un compte ? <a href="/connexion" className="text-primary font-semibold hover:underline">Connexion</a>
         </div>
       </motion.div>
 

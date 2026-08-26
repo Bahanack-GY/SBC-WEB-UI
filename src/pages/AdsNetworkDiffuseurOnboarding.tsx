@@ -138,7 +138,7 @@ Sur votre solde publicitaire, transférable ensuite.
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-10"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-[#115CF6]" size={24} /></div>
+          <div className="flex justify-center py-10"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-primary" size={24} /></div>
         ) : eligibility && !eligibility.eligible ? (
           <div className="bg-red-50 border border-border rounded-2xl p-4 mt-5">
             <h2 className="font-semibold text-red-900 mb-2">Profil incomplet</h2>
@@ -181,7 +181,7 @@ Sur votre solde publicitaire, transférable ensuite.
               value={declaredViews}
               onChange={(e) => setDeclaredViews(e.target.value)}
               placeholder="ex. 150"
-              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
             />
 
             {error && <p className="text-sm text-red-600 mt-2">{error}</p>}

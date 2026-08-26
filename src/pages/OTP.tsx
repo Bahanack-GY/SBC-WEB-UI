@@ -180,7 +180,7 @@ function OTP() {
                                 onChange={e => handleChange(i, e.target.value)}
                 onKeyDown={e => handleKeyDown(i, e)}
                 onPaste={e => handlePaste(i, e)}
-                className="w-12 h-12 text-center text-2xl border-2 border-border rounded-lg focus:outline-none focus:border-[#115CF6] bg-white font-mono"
+                className="w-12 h-12 text-center text-2xl border-2 border-border rounded-lg focus:outline-none focus:border-primary bg-white font-mono"
                 autoFocus={i === 0}
               />
             ))}
@@ -191,7 +191,7 @@ function OTP() {
               type="button"
               onClick={handleResendOtp}
               disabled={loading}
-              className="text-[#115CF6] font-semibold cursor-pointer hover:underline disabled:opacity-50 bg-transparent"
+              className="text-primary font-semibold cursor-pointer hover:underline disabled:opacity-50 bg-transparent"
             >
               Renvoyer
             </button>
@@ -199,7 +199,7 @@ function OTP() {
           <button
             type="submit"
             disabled={loading || otpCode.length !== 6}
-            className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-bold hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors text-lg"
+            className="w-full bg-primary text-white rounded-xl py-3 font-bold hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors text-lg"
           >
             {loading ? 'Vérification...' : 'Vérifier'}
           </button>

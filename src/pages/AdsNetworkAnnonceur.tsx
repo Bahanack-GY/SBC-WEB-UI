@@ -175,7 +175,7 @@ function AdsNetworkAnnonceur() {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/ads-network/annonceur/nouvelle-campagne')}
-            className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-4 py-2 text-sm font-medium"
+            className="flex items-center gap-2 bg-primary text-white rounded-xl px-4 py-2 text-sm font-medium"
           >
             <HugeiconsIcon icon={PlusSignIcon} size={12} /> Nouvelle
           </motion.button>
@@ -253,7 +253,7 @@ function AdsNetworkAnnonceur() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/ads-network/annonceur/onboarding')}
-              className="bg-[#115CF6] text-white rounded-xl px-6 py-3 text-sm font-medium mt-4"
+              className="bg-primary text-white rounded-xl px-6 py-3 text-sm font-medium mt-4"
             >
               Créer ma première annonce
             </motion.button>
@@ -281,7 +281,7 @@ function AdsNetworkAnnonceur() {
                         {STATUS_LABELS[c.status]}
                       </span>
                     </div>
-                    <p className="text-sm font-bold text-[#115CF6] mt-0.5">{formatFCFA(c.amountPaid)}</p>
+                    <p className="text-sm font-bold text-primary mt-0.5">{formatFCFA(c.amountPaid)}</p>
 
                     {(c.status === 'active' || c.status === 'completed' || c.status === 'banked') && (
                       <>
@@ -300,7 +300,7 @@ function AdsNetworkAnnonceur() {
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           <span className="inline-flex items-center gap-1 bg-gray-50 border border-border text-gray-700 rounded-lg px-2 py-1 text-[11px]">
-                            <HugeiconsIcon icon={EyeIcon} size={10} className="text-[#115CF6]" />
+                            <HugeiconsIcon icon={EyeIcon} size={10} className="text-primary" />
                             {c.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}/{c.progress.targetUniqueViews.toLocaleString('fr-FR')} uniques
                           </span>
                           <span className="inline-flex items-center gap-1 bg-gray-50 border border-border text-gray-700 rounded-lg px-2 py-1 text-[11px]">
@@ -342,7 +342,7 @@ function AdsNetworkAnnonceur() {
                       <button
                         onClick={() => handlePay(c)}
                         disabled={acting === c._id}
-                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
+                        className="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
                       >
                         {acting === c._id ? 'Ouverture…' : 'Payer et lancer'}
                       </button>
@@ -368,7 +368,7 @@ function AdsNetworkAnnonceur() {
                     <button
                       onClick={() => handleSubmit(c)}
                       disabled={acting === c._id}
-                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
+                      className="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
                     >
                       {acting === c._id ? 'Envoi…' : 'Envoyer à la validation'}
                     </button>
@@ -378,7 +378,7 @@ function AdsNetworkAnnonceur() {
                       <motion.button
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setDetail(c)}
-                        className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
+                        className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-primary rounded-xl py-2.5 text-sm font-medium"
                       >
                         <HugeiconsIcon icon={UserGroupIcon} size={13} /> Voir les diffuseurs
                       </motion.button>
@@ -396,7 +396,7 @@ function AdsNetworkAnnonceur() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => setDetail(c)}
-                      className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
+                      className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-primary rounded-xl py-2.5 text-sm font-medium"
                     >
                       <HugeiconsIcon icon={ChampionIcon} size={13} /> Voir les résultats
                     </motion.button>
@@ -559,7 +559,7 @@ function AdsNetworkAnnonceur() {
               <div className="p-5">
                 <div className="grid grid-cols-3 gap-2 mb-5">
                   <motion.div {...adsItemMotion(0, 0.05)} className="bg-blue-50 border border-border rounded-2xl p-3">
-                    <div className="w-7 h-7 rounded-full bg-[#115CF6] text-white flex items-center justify-center mb-2">
+                    <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center mb-2">
                       <HugeiconsIcon icon={EyeIcon} size={11} />
                     </div>
                     <p className="text-xl font-bold text-gray-900 leading-none">
@@ -590,7 +590,7 @@ function AdsNetworkAnnonceur() {
                 </div>
 
                 <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
-                  <HugeiconsIcon icon={UserGroupIcon} size={13} className="text-[#115CF6]" /> Par diffuseur
+                  <HugeiconsIcon icon={UserGroupIcon} size={13} className="text-primary" /> Par diffuseur
                 </h3>
                 <p className="text-xs text-gray-500 mb-3">
                   Le taux de clic distingue ceux qui apportent des contacts de ceux qui
@@ -598,10 +598,10 @@ function AdsNetworkAnnonceur() {
                 </p>
 
                 {perfLoading ? (
-                  <div className="flex justify-center py-8"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-[#115CF6]" /></div>
+                  <div className="flex justify-center py-8"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-primary" /></div>
                 ) : !performance?.diffuseurs?.length ? (
                   <div className="text-center py-6">
-                    <div className="w-14 h-14 rounded-full bg-blue-50 text-[#115CF6] flex items-center justify-center mx-auto mb-3">
+                    <div className="w-14 h-14 rounded-full bg-blue-50 text-primary flex items-center justify-center mx-auto mb-3">
                       <HugeiconsIcon icon={Megaphone01Icon} size={20} />
                     </div>
                     <p className="text-sm font-medium text-gray-700">Diffusion en préparation</p>
