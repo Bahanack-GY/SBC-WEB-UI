@@ -1,19 +1,20 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Book02Icon, Call02Icon, Loading03Icon, LockIcon, Mail01Icon, Megaphone01Icon, ShoppingCart01Icon, TelegramIcon, WhatsappIcon, YoutubeIcon } from '@hugeicons/core-free-icons';
+import { Download01Icon, Loading03Icon, LockIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
-import HomeUserCard from "../components/HomeUserCard"
-import HomeButtons from "../components/HomeButtons"
-import BalanceIcon from "../assets/icon/balance.png"
-import HomeBalanceCard from "../components/HomeBalanceCard";
 import Header from '../components/common/Header'
-import Skeleton from '../components/common/Skeleton';
+import ProfileHeaderCard from '../components/home/ProfileHeaderCard';
+import BalanceCard from '../components/home/BalanceCard';
+import PartnersCarousel from '../components/home/PartnersCarousel';
+import ServicesGrid from '../components/home/ServicesGrid';
+import LeaderboardPreview from '../components/home/LeaderboardPreview';
+import CommunityLinks from '../components/home/CommunityLinks';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { motion, AnimatePresence } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
@@ -99,7 +100,6 @@ export const queryKeys = {
 function Home() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Non abonné');
   const [isFormationsModalOpen, setIsFormationsModalOpen] = useState(false);
   const [lockedFormation, setLockedFormation] = useState<Formation | null>(null);
@@ -121,7 +121,7 @@ function Home() {
     retry: 2,
   });
 
-  const { data: referralStats, isLoading: referralLoading, error: referralError } = useQuery<ReferralStats>({
+  const { data: referralStats, isLoading: referralLoading } = useQuery<ReferralStats>({
     queryKey: queryKeys.referralStats,
     queryFn: async () => {
       const response = await sbcApiService.getReferralStats();
@@ -154,7 +154,7 @@ function Home() {
     retry: 2,
   });
 
-  const { data: settingsData, isLoading: settingsLoading, error: settingsError } = useQuery<SettingsData>({
+  const { data: settingsData } = useQuery<SettingsData>({
     queryKey: queryKeys.settings,
     queryFn: async () => {
       const response = await sbcApiService.getAppSettings();
@@ -177,15 +177,17 @@ function Home() {
     }
   }, [user]);
 
-  const loading = statsLoading || referralLoading || formationsLoading || settingsLoading;
-  const error = statsError || referralError || formationsError || settingsError;
+  // Per-section loading. This used to be the OR of all four queries, so the
+  // whole page rendered a skeleton until the slowest settled, and a single
+  // failing query blanked three healthy sections. Each section now owns its
+  // own state and nothing on Home blocks on a network round-trip.
 
   const balance = statsData?.balance || user?.balance || 0;
   const usdBalance = user?.usdBalance || 0;
 
   // Check for negative balance and show notification
   useEffect(() => {
-    if (!loading && !error && balance < 0) {
+    if (!statsLoading && !statsError && balance < 0) {
       // Check if this is the first page load for this user session (login)
       const sessionKey = `first-home-visit-${user?.id || 'anonymous'}`;
       const isFirstVisit = !sessionStorage.getItem(sessionKey);
@@ -213,16 +215,7 @@ function Home() {
       }
       */
     }
-  }, [loading, error, balance, user?.id]);
-
-  const fetchHomeData = () => {
-    // Invalidate and refetch all queries
-    queryClient.invalidateQueries({ queryKey: queryKeys.transactionStats });
-    queryClient.invalidateQueries({ queryKey: queryKeys.referralStats });
-    queryClient.invalidateQueries({ queryKey: queryKeys.currentSubscription });
-    queryClient.invalidateQueries({ queryKey: queryKeys.formations });
-    queryClient.invalidateQueries({ queryKey: queryKeys.settings });
-  };
+  }, [statsLoading, statsError, balance, user?.id]);
 
   const presentationPdfUrl = settingsData?.presentationPdf?.fileId
     ? sbcApiService.generateSettingsFileUrl(settingsData.presentationPdf.fileId)
@@ -231,128 +224,59 @@ function Home() {
   return (
     <ProtectedRoute>
       <Header />
-      <div className="p-4 pb-20 flex flex-col gap-6">
-        {loading ? (
-          <div className="flex flex-col gap-4">
-            <Skeleton height="h-32" rounded="rounded-2xl" />
-            <div className="flex gap-3">
-              <Skeleton width="w-20" height="h-20" rounded="rounded-xl" />
-              <Skeleton width="w-20" height="h-20" rounded="rounded-xl" />
-              <Skeleton width="w-20" height="h-20" rounded="rounded-xl" />
-            </div>
-            <Skeleton height="h-32" rounded="rounded-2xl" />
-          </div>
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center h-[60vh] text-gray-500">
-            <p className="text-lg mb-2 text-red-500">Erreur lors du chargement</p>
-            <p className="text-sm mb-4">{error instanceof Error ? error.message : 'Une erreur est survenue'}</p>
-            <button
-              onClick={fetchHomeData}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-            >
-              Réessayer
-            </button>
-          </div>
-        ) : (
-          <>
-            <div className="home-header">
-              <HomeUserCard
-                name={user ? user.name : "Utilisateur"}
-                image={user?.avatar ? user.avatar : user?.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : "https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360"}
-                affiliates={referralStats?.totalReferrals || 0}
-                status={subscriptionStatus}
-                promoCode={user?.referralCode || ""}
-              />
-            </div>
-            <div className="quick-actions flex flex-col gap-4">
-              <h2 className="text-2xl font-bold">Nos services</h2>
-              <div className="flex flex-wrap justify-center gap-x-2 gap-y-2 sm:gap-x-4">
-                <HomeButtons icon={<HugeiconsIcon icon={Book02Icon} size={30} />} title="Formations" onClick={() => setIsFormationsModalOpen(true)} />
-                <HomeButtons icon={<HugeiconsIcon icon={ShoppingCart01Icon} size={30} />} title="Marketplace" onClick={() => navigate("/marketplace")} />
-                <HomeButtons icon={<HugeiconsIcon icon={Megaphone01Icon} size={30} />} title="Ads Network" onClick={() => navigate("/ads-network")} />
-                <HomeButtons icon={<HugeiconsIcon icon={Call02Icon} size={30} />} title="Contacts" onClick={() => navigate("/contacts")} />
-                <HomeButtons
-                  icon={<HugeiconsIcon icon={Mail01Icon} size={30} />}
-                  title="Relance"
-                  onClick={() => {
-                    if (hasRelanceAccess) {
-                      navigate("/relance");
-                    } else {
-                      setShowRelanceModal(true);
-                    }
-                  }}
-                />
-              </div>
-            </div>
-            <div className="balance-card">
-              <HomeBalanceCard
-                balance={balance}
-                usdBalance={usdBalance}
-                icon={<img src={BalanceIcon} alt="Balance" className="size-48" />}
-              />
-            </div>
+      <div className="p-4 pb-24 flex flex-col gap-6">
+        <ProfileHeaderCard
+          name={user?.name ?? 'Utilisateur'}
+          image={
+            user?.avatar
+              ? user.avatar
+              : user?.avatarId
+                ? sbcApiService.generateSettingsFileUrl(user.avatarId)
+                : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'
+          }
+          affiliates={referralLoading ? null : referralStats?.totalReferrals ?? 0}
+          status={subscriptionStatus}
+          promoCode={user?.referralCode ?? ''}
+        />
 
-            {/* Download Presentation Document Button */}
-            <div className="mt-4 text-center">
-              <a
-                href={presentationPdfUrl}
-                download="document_de_presentation_sbc.pdf"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              >
-                Téléchargez le document de présentation de la SBC
-              </a>
-            </div>
+        <BalanceCard balance={balance} usdBalance={usdBalance} />
 
-            {/* Community Channels */}
-            <div className="mt-6">
-              <h2 className="text-2xl font-bold mb-4">Rejoignez-nous</h2>
-              <div className="flex flex-col gap-3">
-                <motion.a
-                  href="https://whatsapp.com/channel/0029Vav3mvCElah05C8QuT03"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl text-white"
-                  style={{ backgroundColor: '#25D366' }}
-                >
-                  <HugeiconsIcon icon={WhatsappIcon} size={32} />
-                  <div>
-                    <div className="font-bold text-base">WhatsApp</div>
-                    <div className="text-sm opacity-90">Rejoignez notre canal WhatsApp</div>
-                  </div>
-                </motion.a>
-                <motion.a
-                  href="https://t.me/sniperbusinesscenterafrica"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl text-white"
-                  style={{ backgroundColor: '#0088cc' }}
-                >
-                  <HugeiconsIcon icon={TelegramIcon} size={32} />
-                  <div>
-                    <div className="font-bold text-base">Telegram</div>
-                    <div className="text-sm opacity-90">Rejoignez notre groupe Telegram</div>
-                  </div>
-                </motion.a>
-                <motion.a
-                  href="https://m.youtube.com/@SniperBusinessCenterSBC"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  whileTap={{ scale: 0.97 }}
-                  className="flex items-center gap-4 p-4 rounded-2xl text-white"
-                  style={{ backgroundColor: '#FF0000' }}
-                >
-                  <HugeiconsIcon icon={YoutubeIcon} size={32} />
-                  <div>
-                    <div className="font-bold text-base">YouTube</div>
-                    <div className="text-sm opacity-90">Abonnez-vous à notre chaîne YouTube</div>
-                  </div>
-                </motion.a>
-              </div>
-            </div>
-          </>
-        )}
+        <PartnersCarousel />
+
+        <ServicesGrid
+          formationsCount={formationsLoading ? null : formations?.length ?? 0}
+          // SBC Love has no route on this branch (it lives on sbc-love), so the
+          // tile stays hidden rather than becoming a dead link. Wire this to
+          // useSbcloveStatus().isOpen when that branch merges.
+          sbcloveOpen={false}
+          hasRelanceAccess={hasRelanceAccess}
+          relanceBadge={null}
+          onFormations={() => setIsFormationsModalOpen(true)}
+          onRelance={() => {
+            if (hasRelanceAccess) {
+              navigate('/relance');
+            } else {
+              setShowRelanceModal(true);
+            }
+          }}
+        />
+
+        <LeaderboardPreview />
+
+        {/* Presentation PDF. Keeps the existing settings-file URL logic and its
+            local fallback verbatim — only the styling changed. */}
+        <a
+          href={presentationPdfUrl}
+          download="document_de_presentation_sbc.pdf"
+          className="w-full bg-accent text-white rounded-card py-3.5 px-4 flex items-center justify-center gap-3 font-semibold"
+        >
+          <span className="size-8 grid place-items-center rounded-pill bg-white text-accent shrink-0">
+            <HugeiconsIcon icon={Download01Icon} size={16} />
+          </span>
+          <span className="text-sm">Téléchargez le document de présentation de la SBC</span>
+        </a>
+
+        <CommunityLinks />
       </div>
 
       {/* Relance credit packs modal */}
