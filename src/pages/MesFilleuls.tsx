@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useQuery, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useOtpInput } from '../hooks/useOtpInput';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import Security from '../assets/icon/Data-security.png';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';

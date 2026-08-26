@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, Heart, MessageCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { Status, StoryGroup } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';

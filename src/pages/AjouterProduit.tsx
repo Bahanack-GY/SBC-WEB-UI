@@ -4,7 +4,7 @@ import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { FiUploadCloud, FiXCircle, FiLoader } from 'react-icons/fi';
 
 const subProducts = [

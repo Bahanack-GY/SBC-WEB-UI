@@ -9,7 +9,7 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import type { Product } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 function MesProduits() {
     const navigate = useNavigate();

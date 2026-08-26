@@ -5,7 +5,7 @@ import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { FiUploadCloud, FiXCircle, FiLoader } from 'react-icons/fi';
 import type { Product } from '../types/api';
 

@@ -6,7 +6,7 @@ import BackButton from '../components/common/BackButton';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 function OTP() {
   const { otp, inputs, handleChange, handleKeyDown, handlePaste, code: otpCode } = useOtpInput();

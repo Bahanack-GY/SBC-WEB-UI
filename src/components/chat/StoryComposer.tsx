@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, Image as ImageIcon, Video as VideoIcon, Trash2, Send, Edit3 } from 'lucide-react';
 import type { StatusCategory } from '../../types/chat';
 import { CATEGORY_CONFIG, USER_CATEGORIES } from '../../types/chat';

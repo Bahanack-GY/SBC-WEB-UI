@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { StoriesBar } from '../components/chat/StoriesBar';
 import { StatusFeed } from '../components/chat/StatusFeed';
 import StoryViewer from '../components/chat/StoryViewer';

@@ -9,7 +9,7 @@ import heroAnnonceur from '../assets/icon/ads-annonceur.jpg';
 import illustrationReview from '../assets/icon/ads-review.jpg';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
 const MIN_AMOUNT = 6000;

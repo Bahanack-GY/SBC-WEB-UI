@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { MotionConfig } from 'framer-motion'
+import { MotionConfig } from 'motion/react'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
 import { AuthProvider, useAuth } from './contexts/AuthContext'

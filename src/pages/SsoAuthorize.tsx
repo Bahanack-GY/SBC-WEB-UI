@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import logo from '../assets/img/logo-sbc.png';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { PlusIcon } from '@heroicons/react/24/solid';
 import type { StoryGroup } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';

@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { FiEdit2, FiMail, FiPhone, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle, FiLoader, FiGift } from 'react-icons/fi';
 import { FaEnvelope, FaWhatsapp } from 'react-icons/fa';
 import { useState, useEffect } from 'react';

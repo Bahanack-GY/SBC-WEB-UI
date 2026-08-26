@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { FiPhone, FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';

@@ -4,7 +4,7 @@ import logo from "../../assets/img/logo-sbc.png";
 import { AiFillWallet } from "react-icons/ai";
 import { FaUser } from "react-icons/fa";
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 function Header() {
   const navigate = useNavigate();

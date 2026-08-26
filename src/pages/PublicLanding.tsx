@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { FaWhatsapp, FaTelegramPlane, FaFacebookF, FaInstagram, FaTiktok, FaYoutube } from 'react-icons/fa';
 import { FiMail, FiPhone, FiMapPin, FiArrowLeft } from 'react-icons/fi';
 import logo from '../assets/img/logo-sbc.png';

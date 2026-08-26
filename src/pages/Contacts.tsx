@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import BackButton from "../components/common/BackButton";
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { FaWhatsapp, FaFilter } from 'react-icons/fa';
 import { FiDownload, FiFilter, FiLoader } from 'react-icons/fi';
 import { sbcApiService } from '../services/SBCApiService';

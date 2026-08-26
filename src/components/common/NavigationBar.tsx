@@ -1,5 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { MdDeviceHub, MdHome, MdShoppingBasket } from 'react-icons/md';
 import { FaEnvelope } from 'react-icons/fa';
 import { HiChatBubbleLeftRight } from 'react-icons/hi2';

@@ -7,7 +7,7 @@ import UnifiedWithdrawalComponent from '../components/UnifiedWithdrawalComponent
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { FaWallet, FaExchangeAlt, FaArrowDown, FaGift, FaArrowUp, FaSpinner, FaCheck } from 'react-icons/fa';
 import { EXCHANGE_RATES } from '../utils/balanceHelpers';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 

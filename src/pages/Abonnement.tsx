@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import iconOne from "../assets/icon/Growth.png";
 import iconTwo from "../assets/icon/analyse.png";
 import iconContact from "../assets/icon/contact.png";

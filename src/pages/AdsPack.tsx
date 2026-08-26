@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from "../components/common/BackButton";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import iconContact from "../assets/icon/contact.png";
 import Skeleton from '../components/common/Skeleton';
 import { HiMiniMinusCircle } from "react-icons/hi2";

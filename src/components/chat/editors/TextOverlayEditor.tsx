@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Type, Palette, AlignLeft, AlignCenter, AlignRight, Check, X } from 'lucide-react';
 
 interface TextOverlay {

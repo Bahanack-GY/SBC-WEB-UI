@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { FiDownload, FiShare2, FiChevronDown, FiChevronUp, FiLoader } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 

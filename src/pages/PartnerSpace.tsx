@@ -7,7 +7,7 @@ import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { FaCrown, FaMedal, FaArrowDown, FaUsers, FaGift, } from 'react-icons/fa';
 import { FiX } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 function formatFCFA(amount: number) {
   return amount.toLocaleString('fr-FR') + ' F';

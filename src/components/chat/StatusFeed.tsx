@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { sbcApiService } from '../../services/SBCApiService';
 import type { Status, StatusCategory } from '../../types/chat';
 import { CATEGORY_CONFIG } from '../../types/chat';

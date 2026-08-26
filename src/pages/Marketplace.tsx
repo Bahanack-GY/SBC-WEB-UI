@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import { PlusIcon } from "@heroicons/react/24/solid";
 import ecommerceIcon from '../assets/icon/Ecommerce.png';
 import MarketplaceProductCard from "../components/MarketplaceProductCard";

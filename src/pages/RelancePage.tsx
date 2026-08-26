@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye, FaChartBar, FaMousePointer, FaEnvelopeOpen, FaSms } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';

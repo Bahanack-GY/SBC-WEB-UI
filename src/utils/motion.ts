@@ -1,4 +1,4 @@
-// Shared framer-motion variants so every page/component animates the same way.
+// Shared motion variants so every page/component animates the same way.
 // Matches the entrance pattern the rest of the app already uses inline (fade +
 // short slide, spring/easeOut, index-staggered lists). Import these instead of
 // re-typing initial/animate/transition objects on each screen.
@@ -10,11 +10,11 @@
 //     {items.map(x => <motion.li key={x.id} variants={listItem}> ... </motion.li>)}
 //   </motion.ul>
 //
-// framer-motion honours the user's prefers-reduced-motion when the app is
+// motion honours the user's prefers-reduced-motion when the app is
 // wrapped in <MotionConfig reducedMotion="user"> (see main.tsx / App), so these
 // variants degrade to opacity-only for users who ask for less motion.
 
-import type { Variants, Transition } from 'framer-motion';
+import type { Variants, Transition } from 'motion/react';
 
 const spring: Transition = { type: 'spring', stiffness: 260, damping: 26 };
 const easeOut: Transition = { duration: 0.35, ease: 'easeOut' };

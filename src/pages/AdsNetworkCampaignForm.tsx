@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { FaSpinner, FaImage, FaShieldAlt } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
 const MIN_AMOUNT = 6000;

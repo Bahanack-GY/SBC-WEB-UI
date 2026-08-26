@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';

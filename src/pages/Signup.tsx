@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { FiUser, FiPhone, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';

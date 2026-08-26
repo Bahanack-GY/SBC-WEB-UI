@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { FiEdit2, FiPhone, FiSave, FiLoader } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';

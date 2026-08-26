@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { FaBullhorn } from 'react-icons/fa';
 import BackButton from '../common/BackButton';
 import illustration from '../../assets/icon/ads-share.jpg';

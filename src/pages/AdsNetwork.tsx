@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { FaBullhorn, FaShareAlt, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { AdsScreen, AdsCardSkeleton, adsItemMotion } from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';

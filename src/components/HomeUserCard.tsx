@@ -2,7 +2,7 @@
 
 import { FaLink, FaStar, FaUserAlt, FaUsers } from "react-icons/fa";
 import { FaWandSparkles } from "react-icons/fa6";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 
 interface HomeUserCardProps {
     name: string;

@@ -4,7 +4,7 @@ import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { FaArrowUp, FaGift, FaSpinner, FaCheck } from 'react-icons/fa';
 import { FaMoneyBillWave } from 'react-icons/fa';
 import { FiShare2, FiX, FiChevronRight } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import Skeleton from '../components/common/Skeleton';
 import { FaMoneyBill1 } from "react-icons/fa6";
 import { sbcApiService } from '../services/SBCApiService';

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer,
   FaBullhorn, FaGift, FaUsers, FaTrophy,

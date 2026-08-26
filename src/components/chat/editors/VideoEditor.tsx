@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { Play, Pause, Check, X, Scissors } from 'lucide-react';
 
 interface VideoEditorProps {

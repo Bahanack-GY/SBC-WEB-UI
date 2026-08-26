@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import {
   FaExclamationTriangle, FaSpinner, FaShareAlt, FaQrcode, FaCheckCircle,
   FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard,

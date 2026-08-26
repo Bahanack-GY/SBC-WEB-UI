@@ -1,6 +1,6 @@
 import { FiLock } from 'react-icons/fi';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { handleApiResponse } from '../utils/apiHelpers';

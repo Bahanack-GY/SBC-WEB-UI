@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
