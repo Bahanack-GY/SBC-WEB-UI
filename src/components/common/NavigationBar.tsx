@@ -1,22 +1,23 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ConnectIcon, Home01Icon, Mail01Icon, Message01Icon, ShoppingBasket01Icon } from '@hugeicons/core-free-icons';
+import {
+  ConnectIcon,
+  Home01Icon,
+  Mail01Icon,
+  Message01Icon,
+  ShoppingBasket01Icon,
+  Target02Icon,
+} from '@hugeicons/core-free-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useMemo } from 'react';
 import { useRelance } from '../../contexts/RelanceContext';
 
-// WhatsApp-style status icon component
-const StatusIcon = ({ size = 24 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
-    <circle cx="12" cy="12" r="10" fill="none" stroke="currentColor" strokeWidth="2" />
-    <circle cx="12" cy="12" r="3" fill="currentColor" />
-  </svg>
-);
-
 interface NavItem {
   label: string;
-  icon: React.ReactNode;
+  icon: typeof Home01Icon;
   path: string;
+  /** Small unread/attention dot, as on the basket in the reference design. */
+  dot?: boolean;
 }
 
 function NavigationBar() {
@@ -27,18 +28,18 @@ function NavigationBar() {
   const navItems = useMemo(() => {
     // Always include chat buttons for all users
     let items: NavItem[] = [
-      { label: 'Publicité', icon: <HugeiconsIcon icon={ConnectIcon} size={24} />, path: '/ads-pack' },
-      { label: 'Messages', icon: <HugeiconsIcon icon={Message01Icon} size={24} />, path: '/chat' },
-      { label: 'Statuts', icon: <StatusIcon size={24} />, path: '/chat?view=status' },
-      { label: 'Accueil', icon: <HugeiconsIcon icon={Home01Icon} size={24} />, path: '/' },
-      { label: 'Marketplace', icon: <HugeiconsIcon icon={ShoppingBasket01Icon} size={24} />, path: '/marketplace' },
+      { label: 'Publicité', icon: ConnectIcon, path: '/ads-pack' },
+      { label: 'Messages', icon: Message01Icon, path: '/chat' },
+      { label: 'Statuts', icon: Target02Icon, path: '/chat?view=status' },
+      { label: 'Accueil', icon: Home01Icon, path: '/' },
+      { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
     ];
 
     // Show Relance entry to users who have credits (or admin/tester via context)
     if (hasCredits) {
       items = [
         ...items,
-        { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} size={24} />, path: '/relance' },
+        { label: 'Relance', icon: Mail01Icon, path: '/relance' },
       ];
     }
 
@@ -50,7 +51,7 @@ function NavigationBar() {
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-[#d7f699] rounded-full flex px-3 py-3 gap-2 mt-3"
+      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-surface border border-border rounded-pill flex items-center px-2 py-2 gap-1"
     >
       {navItems.map((item) => {
         // Handle chat page with query params
@@ -65,14 +66,26 @@ function NavigationBar() {
             key={item.label}
             onClick={() => navigate(item.path)}
             whileTap={{ scale: 0.92 }}
-            className={`flex items-center px-3 py-2 rounded-full transition-colors duration-200 focus:outline-none ${isActive ? 'bg-lime-400 text-green-900 font-bold ' : 'bg-green-700 text-white hover:bg-green-600'}`}
+            className={`relative flex items-center rounded-pill transition-colors duration-200 focus:outline-none ${isActive ? 'px-3.5 py-2 text-white font-semibold' : 'px-2.5 py-2.5 text-ink-3 hover:text-ink-2'}`}
             aria-label={item.label}
-            initial={false}
-            animate={isActive ? { scale: 1.08 } : { scale: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+            aria-current={isActive ? 'page' : undefined}
           >
-            {item.icon}
-            {isActive && <span className="ml-1 text-sm">{item.label}</span>}
+            {/* One shared layoutId slides the pill between tabs — this is why
+                the app consolidated on a single motion instance. */}
+            {isActive && (
+              <motion.span
+                layoutId="navPill"
+                className="absolute inset-0 bg-primary rounded-pill"
+                transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+              />
+            )}
+            <span className="relative z-10 flex items-center">
+              <HugeiconsIcon icon={item.icon} size={22} />
+              {isActive && <span className="ml-1.5 text-sm">{item.label}</span>}
+            </span>
+            {item.dot && !isActive && (
+              <span className="absolute top-1 right-1 size-2 rounded-pill bg-accent" />
+            )}
           </motion.button>
         );
       })}
