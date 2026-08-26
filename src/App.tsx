@@ -24,6 +24,7 @@ import MesProduits from './pages/MesProduits'
 import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
+import Classement from './pages/Classement'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
 import { useEffect, useRef } from 'react'
 import VerifyOtp from './pages/VerifyOtp'
@@ -214,6 +215,7 @@ function AppContent() {
           <Route path="/mes-produits" element={<MesProduits />} />
           <Route path="/modifier-produit/:id" element={<ModifierProduit />} />
           <Route path="/filleuls" element={<MesFilleuls />} />
+          <Route path="/classement" element={<Classement />} />
           <Route path="/partenaire" element={<PartnerSpace />} />
           <Route path="/relance" element={<RelancePage />} />
           <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />

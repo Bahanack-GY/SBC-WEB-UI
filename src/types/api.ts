@@ -337,3 +337,21 @@ export interface TransactionFilters {
   page?: number;
   limit?: number;
 }
+
+/** One row of the monthly affiliate leaderboard ("Classement Général"). */
+export interface LeaderboardEntry {
+    userId: string;
+    name: string;
+    avatar?: string;
+    avatarId?: string;
+    country?: string;
+    city?: string;
+    /** Referrals across ALL levels (1 + 2 + 3) for the current month. */
+    referralCount: number;
+    level1: number;
+    level2: number;
+    level3: number;
+    /** Estimated FCFA earned this month. Server-side estimate, labelled as such. */
+    earnings: number;
+    rank: number;
+}

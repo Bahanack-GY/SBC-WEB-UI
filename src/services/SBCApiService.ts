@@ -163,6 +163,14 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * Monthly affiliate leaderboard ("Classement Général"). Same payload for
+   * every caller — the server caches one snapshot for an hour.
+   */
+  async getLeaderboard(): Promise<ApiResponse> {
+    return await this.get('/users/leaderboard');
+  }
+
+  /**
    * Get referred users
    */
   async getReferredUsers(filters?: Record<string, any>): Promise<ApiResponse> {
