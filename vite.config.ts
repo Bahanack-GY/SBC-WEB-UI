@@ -5,6 +5,10 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // ponytail: import.meta.url instead of path.resolve — same result, no @types/node dep
+  resolve: {
+    alias: { '@': new URL('./src', import.meta.url).pathname },
+  },
   server: {
     port: 5173,
     host: true,
