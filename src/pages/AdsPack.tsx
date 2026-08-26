@@ -1,10 +1,11 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MinusSignCircleIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from "../components/common/BackButton";
 import { motion } from "motion/react";
 import iconContact from "../assets/icon/contact.png";
 import Skeleton from '../components/common/Skeleton';
-import { HiMiniMinusCircle } from "react-icons/hi2";
 import { useRelance } from '../contexts/RelanceContext';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
 
@@ -64,31 +65,31 @@ function AdsPack() {
                                 {/* Features List */}
                                 <ul className="mt-3 mb-4 space-y-1">
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Messages automatiques pendant 7 jours</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Relance intelligente des filleuls non-payants</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Augmente vos chances de conversion</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Emails personnalisés avec campagnes ciblées</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Contrôle total: activer/suspendre à tout moment</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Suivi en temps réel des messages envoyés</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Économisez du temps et maximisez vos revenus</span>
                                     </li>
                                 </ul>

@@ -1,11 +1,9 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, ChampionIcon, Cursor01Icon, EyeIcon, GiftIcon, LinkSquare01Icon, Loading03Icon, Megaphone01Icon, PlusSignIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer,
-  FaBullhorn, FaGift, FaUsers, FaTrophy,
-} from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton, AdsStatCard, adsItemMotion, adsHeaderMotion } from '../components/ads/AdsScreen';
 import illustrationEmpty from '../assets/icon/ads-empty.jpg';
@@ -179,7 +177,7 @@ function AdsNetworkAnnonceur() {
             onClick={() => navigate('/ads-network/annonceur/nouvelle-campagne')}
             className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-4 py-2 text-sm font-medium shadow-md shadow-blue-200"
           >
-            <FaPlus size={12} /> Nouvelle
+            <HugeiconsIcon icon={PlusSignIcon} size={12} /> Nouvelle
           </motion.button>
         </div>
 
@@ -195,9 +193,9 @@ function AdsNetworkAnnonceur() {
               {...adsHeaderMotion}
               className="relative overflow-hidden bg-gradient-to-br from-[#115CF6] to-blue-500 text-white rounded-2xl p-5 mt-4 shadow-lg"
             >
-              <FaBullhorn className="absolute -right-4 -bottom-4 text-white/10" size={110} />
+              <HugeiconsIcon icon={Megaphone01Icon} className="absolute -right-4 -bottom-4 text-white/10" size={110} />
               <div className="flex items-center gap-2 text-blue-100 text-sm">
-                <FaBullhorn /> Budget restant
+                <HugeiconsIcon icon={Megaphone01Icon} /> Budget restant
               </div>
               {/* What is still working for them: unconsumed budget of live
                   campaigns plus banked credit. Total spend is the subtitle —
@@ -302,15 +300,15 @@ function AdsNetworkAnnonceur() {
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
-                            <FaEye size={10} className="text-[#115CF6]" />
+                            <HugeiconsIcon icon={EyeIcon} size={10} className="text-[#115CF6]" />
                             {c.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}/{c.progress.targetUniqueViews.toLocaleString('fr-FR')} uniques
                           </span>
                           <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
-                            <FaGift size={10} className="text-purple-500" />
+                            <HugeiconsIcon icon={GiftIcon} size={10} className="text-purple-500" />
                             {c.progress.repeatViewsDelivered.toLocaleString('fr-FR')} offertes
                           </span>
                           <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
-                            <FaMousePointer size={10} className="text-green-600" />
+                            <HugeiconsIcon icon={Cursor01Icon} size={10} className="text-green-600" />
                             {c.clicksTotal} clic{c.clicksTotal > 1 ? 's' : ''}
                           </span>
                         </div>
@@ -382,7 +380,7 @@ function AdsNetworkAnnonceur() {
                         onClick={() => setDetail(c)}
                         className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
                       >
-                        <FaUsers size={13} /> Voir les diffuseurs
+                        <HugeiconsIcon icon={UserGroupIcon} size={13} /> Voir les diffuseurs
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.97 }}
@@ -400,7 +398,7 @@ function AdsNetworkAnnonceur() {
                       onClick={() => setDetail(c)}
                       className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
                     >
-                      <FaTrophy size={13} /> Voir les résultats
+                      <HugeiconsIcon icon={ChampionIcon} size={13} /> Voir les résultats
                     </motion.button>
                   )}
                   {c.landingPageUrl && (
@@ -410,7 +408,7 @@ function AdsNetworkAnnonceur() {
                       rel="noreferrer"
                       className="px-4 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm flex items-center gap-2"
                     >
-                      <FaExternalLinkAlt size={11} /> Ma page
+                      <HugeiconsIcon icon={LinkSquare01Icon} size={11} /> Ma page
                     </a>
                   )}
                 </div>
@@ -553,7 +551,7 @@ function AdsNetworkAnnonceur() {
                     onClick={() => setDetail(null)}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500"
                   >
-                    <FaTimes size={13} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={13} />
                   </button>
                 </div>
               </div>
@@ -562,7 +560,7 @@ function AdsNetworkAnnonceur() {
                 <div className="grid grid-cols-3 gap-2 mb-5">
                   <motion.div {...adsItemMotion(0, 0.05)} className="bg-blue-50 border border-blue-100 rounded-2xl p-3">
                     <div className="w-7 h-7 rounded-full bg-[#115CF6] text-white flex items-center justify-center mb-2">
-                      <FaEye size={11} />
+                      <HugeiconsIcon icon={EyeIcon} size={11} />
                     </div>
                     <p className="text-xl font-bold text-gray-900 leading-none">
                       {detail.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}
@@ -573,7 +571,7 @@ function AdsNetworkAnnonceur() {
                   </motion.div>
                   <motion.div {...adsItemMotion(1, 0.05)} className="bg-purple-50 border border-purple-100 rounded-2xl p-3">
                     <div className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center mb-2">
-                      <FaGift size={11} />
+                      <HugeiconsIcon icon={GiftIcon} size={11} />
                     </div>
                     <p className="text-xl font-bold text-gray-900 leading-none">
                       {detail.progress.totalViewsDelivered.toLocaleString('fr-FR')}
@@ -584,7 +582,7 @@ function AdsNetworkAnnonceur() {
                   </motion.div>
                   <motion.div {...adsItemMotion(2, 0.05)} className="bg-green-50 border border-green-100 rounded-2xl p-3">
                     <div className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center mb-2">
-                      <FaMousePointer size={11} />
+                      <HugeiconsIcon icon={Cursor01Icon} size={11} />
                     </div>
                     <p className="text-xl font-bold text-gray-900 leading-none">{detail.clicksTotal}</p>
                     <p className="text-[11px] text-gray-500 mt-1 leading-tight">Clics<br />reçus</p>
@@ -592,7 +590,7 @@ function AdsNetworkAnnonceur() {
                 </div>
 
                 <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
-                  <FaUsers size={13} className="text-[#115CF6]" /> Par diffuseur
+                  <HugeiconsIcon icon={UserGroupIcon} size={13} className="text-[#115CF6]" /> Par diffuseur
                 </h3>
                 <p className="text-xs text-gray-500 mb-3">
                   Le taux de clic distingue ceux qui apportent des contacts de ceux qui
@@ -600,11 +598,11 @@ function AdsNetworkAnnonceur() {
                 </p>
 
                 {perfLoading ? (
-                  <div className="flex justify-center py-8"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
+                  <div className="flex justify-center py-8"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-[#115CF6]" /></div>
                 ) : !performance?.diffuseurs?.length ? (
                   <div className="text-center py-6">
                     <div className="w-14 h-14 rounded-full bg-blue-50 text-[#115CF6] flex items-center justify-center mx-auto mb-3">
-                      <FaBullhorn size={20} />
+                      <HugeiconsIcon icon={Megaphone01Icon} size={20} />
                     </div>
                     <p className="text-sm font-medium text-gray-700">Diffusion en préparation</p>
                     <p className="text-xs text-gray-500 mt-1 max-w-[240px] mx-auto">

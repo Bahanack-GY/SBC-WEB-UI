@@ -1,6 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, PencilEdit01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence } from 'motion/react';
-import { FiEdit2, FiMail, FiPhone, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle, FiLoader, FiGift } from 'react-icons/fi';
-import { FaEnvelope, FaWhatsapp } from 'react-icons/fa';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -23,17 +23,17 @@ type ActionItem = {
 };
 
 const baseActions: ActionItem[] = [
-  { label: 'Modifier le profil', icon: <FiEdit2 className="text-[#115CF6]" />, to: '/modifier-le-profil' },
-  { label: 'Modifier mon email', icon: <FiMail className="text-[#115CF6]" />, to: '/modifier-email' },
-  { label: 'Changer le numéro de téléphone', icon: <FiPhone className="text-[#115CF6]" />, to: '/change-phone' },
-  { label: 'Modifier mon mot de passe', icon: <FiLock className="text-[#115CF6]" />, to: '/change-password' },
-  { label: 'Mon Abonnement', icon: <FiCreditCard className="text-[#115CF6]" />, to: '/changer-abonnement' },
-  { label: 'Solde d\'Activation', icon: <FiGift className="text-amber-500" />, to: '/activation-balance' },
-  { label: 'Mes Contacts', icon: <FiPhone className="text-[#115CF6]" />, to: '/contacts' },
-  { label: 'Mes filleuls', icon: <FiUsers className="text-[#115CF6]" />, to: '/filleuls' },
-  { label: 'Mon Parrain', icon: <FiUserCheck className="text-[#115CF6]" />, to: '/parrain' },
-  { label: 'Espace partenaire', icon: <FiBriefcase className="text-[#115CF6]" />, to: '/partenaire' },
-  { label: 'Rejoindre la communauté', icon: <FaWhatsapp className="text-green-500" />, to: 'https://www.whatsapp.com/channel/0029Vav3mvCElah05C8QuT03', external: true },
+  { label: 'Modifier le profil', icon: <HugeiconsIcon icon={PencilEdit01Icon} className="text-[#115CF6]" />, to: '/modifier-le-profil' },
+  { label: 'Modifier mon email', icon: <HugeiconsIcon icon={Mail01Icon} className="text-[#115CF6]" />, to: '/modifier-email' },
+  { label: 'Changer le numéro de téléphone', icon: <HugeiconsIcon icon={Call02Icon} className="text-[#115CF6]" />, to: '/change-phone' },
+  { label: 'Modifier mon mot de passe', icon: <HugeiconsIcon icon={LockIcon} className="text-[#115CF6]" />, to: '/change-password' },
+  { label: 'Mon Abonnement', icon: <HugeiconsIcon icon={CreditCardIcon} className="text-[#115CF6]" />, to: '/changer-abonnement' },
+  { label: 'Solde d\'Activation', icon: <HugeiconsIcon icon={GiftIcon} className="text-amber-500" />, to: '/activation-balance' },
+  { label: 'Mes Contacts', icon: <HugeiconsIcon icon={Call02Icon} className="text-[#115CF6]" />, to: '/contacts' },
+  { label: 'Mes filleuls', icon: <HugeiconsIcon icon={UserGroupIcon} className="text-[#115CF6]" />, to: '/filleuls' },
+  { label: 'Mon Parrain', icon: <HugeiconsIcon icon={UserCheck01Icon} className="text-[#115CF6]" />, to: '/parrain' },
+  { label: 'Espace partenaire', icon: <HugeiconsIcon icon={Briefcase01Icon} className="text-[#115CF6]" />, to: '/partenaire' },
+  { label: 'Rejoindre la communauté', icon: <HugeiconsIcon icon={WhatsappIcon} className="text-green-500" />, to: 'https://www.whatsapp.com/channel/0029Vav3mvCElah05C8QuT03', external: true },
 ];
 
 function Profile() {
@@ -70,7 +70,7 @@ function Profile() {
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
     ...baseActions.slice(0, 7), // Up to "Mes Contacts"
-    { label: 'Relance', icon: <FaEnvelope className="text-[#115CF6]" />, to: '/relance' },
+    { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} className="text-[#115CF6]" />, to: '/relance' },
     ...baseActions.slice(7), // Rest of the actions
   ];
 
@@ -289,7 +289,7 @@ function Profile() {
                   className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg"
                 />
                 <button className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white shadow text-white hover:bg-blue-800 transition-colors">
-                  <FiEdit2 size={16} />
+                  <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
                 </button>
               </div>
             </div>
@@ -326,7 +326,7 @@ function Profile() {
                 className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow hover:bg-green-50 transition-colors"
               >
                 <span className="bg-green-100 text-green-600 rounded-full p-2">
-                  <FiCopy />
+                  <HugeiconsIcon icon={Copy01Icon} />
                 </span>
                 <span className="flex-1 font-medium text-gray-700 text-left">Copier mon code parrain</span>
                 {copied === 'code' ? (
@@ -338,7 +338,7 @@ function Profile() {
                 className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow hover:bg-blue-50 transition-colors"
               >
                 <span className="bg-blue-100 text-blue-600 rounded-full p-2">
-                  <FiLink />
+                  <HugeiconsIcon icon={Link01Icon} />
                 </span>
                 <span className="flex-1 font-medium text-gray-700 text-left">Copier mon lien</span>
                 {copied === 'link' ? (
@@ -354,7 +354,7 @@ function Profile() {
                 onClick={() => setShowChangeReferralCodeModal(true)}
                 className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-indigo-600 text-white rounded-xl px-4 py-3 shadow-lg hover:from-green-700 hover:to-indigo-700 transition-all font-bold"
               >
-                <FiEdit2 size={18} />
+                <HugeiconsIcon icon={PencilEdit01Icon} size={18} />
                 Changer mon code parrain
               </button>
             </div>
@@ -376,7 +376,7 @@ function Profile() {
                     {action.badge}
                   </span>
                 )}
-                <FiChevronRight className="text-gray-400" />
+                <HugeiconsIcon icon={ArrowRight01Icon} className="text-gray-400" />
               </motion.button>
             ))}
             <div className="px-6 pt-6 space-y-3">
@@ -385,7 +385,7 @@ function Profile() {
                 disabled={!hasSeenTour}
                 className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-medium py-3 rounded-xl hover:bg-blue-100 transition"
               >
-                <FiHelpCircle size={20} />
+                <HugeiconsIcon icon={HelpCircleIcon} size={20} />
                 <span>Voir le guide d'utilisation</span>
               </button>
               <button
@@ -446,7 +446,7 @@ function Profile() {
                       className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
                       disabled={changeCodeLoading}
                     >
-                      {changeCodeLoading ? <FiLoader className="animate-spin" /> : 'Sauvegarder'}
+                      {changeCodeLoading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Sauvegarder'}
                     </button>
                     <button
                       type="button"

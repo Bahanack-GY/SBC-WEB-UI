@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Megaphone01Icon, Share08Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { FaBullhorn, FaShareAlt, FaArrowRight, FaCheck } from 'react-icons/fa';
 import { AdsScreen, AdsCardSkeleton, adsItemMotion } from '../components/ads/AdsScreen';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import illustrationNetwork from '../assets/icon/ads-share.jpg';
@@ -24,7 +25,7 @@ function AdsNetwork() {
             heldLabel: 'Mon espace annonceur',
             newLabel: 'Devenir annonceur',
             blurb: "Faites voir votre produit par des milliers de personnes. Vous ne payez que les vues uniques ; les rediffusions des jours 2 et 3 sont offertes.",
-            icon: <FaBullhorn size={22} />,
+            icon: <HugeiconsIcon icon={Megaphone01Icon} size={22} />,
             className: 'bg-gradient-to-br from-[#115CF6] to-blue-500',
             to: roles.isAnnonceur ? '/ads-network/annonceur' : '/ads-network/annonceur/onboarding',
         },
@@ -34,7 +35,7 @@ function AdsNetwork() {
             heldLabel: 'Mon espace diffuseur',
             newLabel: 'Devenir diffuseur',
             blurb: "Publiez les campagnes sur votre statut WhatsApp pendant 3 jours et gagnez selon le nombre de personnes qui les ont vues.",
-            icon: <FaShareAlt size={20} />,
+            icon: <HugeiconsIcon icon={Share08Icon} size={20} />,
             className: 'bg-gradient-to-br from-green-600 to-emerald-500',
             to: roles.isDiffuseur ? '/ads-network/diffuseur' : '/ads-network/diffuseur/onboarding',
         },
@@ -67,13 +68,13 @@ function AdsNetwork() {
                                 </span>
                                 {card.held && (
                                     <span className="ml-auto flex items-center gap-1 text-xs bg-white/20 rounded-full px-2 py-1">
-                                        <FaCheck size={10} /> Actif
+                                        <HugeiconsIcon icon={Tick02Icon} size={10} /> Actif
                                     </span>
                                 )}
                             </div>
                             <p className="text-sm text-white/85 mt-2">{card.blurb}</p>
                             <span className="inline-flex items-center gap-2 text-sm mt-3 font-medium">
-                                {card.held ? 'Ouvrir' : 'Commencer'} <FaArrowRight size={12} />
+                                {card.held ? 'Ouvrir' : 'Commencer'} <HugeiconsIcon icon={ArrowRight01Icon} size={12} />
                             </span>
                         </motion.button>
                     ))}

@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowDown01Icon, ArrowUp01Icon, Exchange01Icon, GiftIcon, Loading03Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -5,7 +7,6 @@ import BackButton from '../components/common/BackButton';
 import CurrencyConverterComponent from '../components/CurrencyConverterComponent';
 import UnifiedWithdrawalComponent from '../components/UnifiedWithdrawalComponent';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { FaWallet, FaExchangeAlt, FaArrowDown, FaGift, FaArrowUp, FaSpinner, FaCheck } from 'react-icons/fa';
 import { EXCHANGE_RATES } from '../utils/balanceHelpers';
 import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
@@ -61,7 +62,7 @@ function Money() {
                                 <h3 className="text-sm opacity-80">Solde FCFA</h3>
                                 <p className="text-2xl font-bold">{balance.toLocaleString('fr-FR')} F</p>
                             </div>
-                            <FaWallet size={32} className="opacity-80" />
+                            <HugeiconsIcon icon={Wallet01Icon} size={32} className="opacity-80" />
                         </div>
                         <div className="text-xs opacity-70">Franc CFA</div>
                     </div>
@@ -73,7 +74,7 @@ function Money() {
                                 <h3 className="text-sm opacity-80">Solde USD</h3>
                                 <p className="text-2xl font-bold">${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                             </div>
-                            <FaWallet size={32} className="opacity-80" />
+                            <HugeiconsIcon icon={Wallet01Icon} size={32} className="opacity-80" />
                         </div>
                         <div className="text-xs opacity-70">Dollar américain</div>
                     </div>
@@ -87,7 +88,7 @@ function Money() {
                             onClick={() => setShowCurrencyConverter(true)}
                             className="flex flex-col items-center justify-center bg-orange-500 hover:bg-orange-600 text-white p-6 rounded-2xl shadow-lg transition-colors"
                         >
-                            <FaExchangeAlt size={32} className="mb-2" />
+                            <HugeiconsIcon icon={Exchange01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Convertir</span>
                             <span className="text-xs opacity-80">FCFA ⇄ USD</span>
                         </button>
@@ -96,7 +97,7 @@ function Money() {
                             onClick={() => setShowUnifiedWithdrawal(true)}
                             className="flex flex-col items-center justify-center bg-green-500 hover:bg-green-600 text-white p-6 rounded-2xl shadow-lg transition-colors"
                         >
-                            <FaArrowDown size={32} className="mb-2" />
+                            <HugeiconsIcon icon={ArrowDown01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Retirer</span>
                             <span className="text-xs opacity-80">MoMo & Crypto</span>
                         </button>
@@ -105,7 +106,7 @@ function Money() {
                             onClick={() => navigate('/wallet')}
                             className="flex flex-col items-center justify-center bg-purple-500 hover:bg-purple-600 text-white p-6 rounded-2xl shadow-lg transition-colors"
                         >
-                            <FaWallet size={32} className="mb-2" />
+                            <HugeiconsIcon icon={Wallet01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Portefeuille</span>
                             <span className="text-xs opacity-80">Transactions</span>
                         </button>
@@ -114,7 +115,7 @@ function Money() {
                             onClick={handleFundActivationClick}
                             className="flex flex-col items-center justify-center bg-[#115CF6] hover:bg-blue-700 text-white p-6 rounded-2xl shadow-lg transition-colors"
                         >
-                            <FaArrowUp size={32} className="mb-2" />
+                            <HugeiconsIcon icon={ArrowUp01Icon} size={32} className="mb-2" />
                             <span className="font-semibold">Alimenter</span>
                             <span className="text-xs opacity-80">Solde Activation</span>
                         </button>
@@ -127,7 +128,7 @@ function Money() {
                     >
                         <div className="flex items-center gap-3">
                             <div className="bg-blue-100 p-3 rounded-full">
-                                <FaGift size={24} className="text-[#115CF6]" />
+                                <HugeiconsIcon icon={GiftIcon} size={24} className="text-[#115CF6]" />
                             </div>
                             <div className="text-left">
                                 <span className="font-semibold text-gray-900 block">Solde d'Activation</span>
@@ -264,7 +265,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
                 {success ? (
                     <div className="text-center py-6">
                         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <FaCheck className="text-green-600" size={32} />
+                            <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
                         </div>
                         <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
                         <p className="text-gray-600">Votre solde d'activation a été alimenté.</p>
@@ -318,7 +319,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
                                 disabled={loading || !amount}
                                 className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                             >
-                                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
                             </button>
                         </div>
                     </>

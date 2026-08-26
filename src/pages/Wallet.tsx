@@ -1,12 +1,10 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneySend01Icon, Share08Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import BackButton from "../components/common/BackButton";
 import { useState, useEffect, useRef } from "react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { FaArrowUp, FaGift, FaSpinner, FaCheck } from 'react-icons/fa';
-import { FaMoneyBillWave } from 'react-icons/fa';
-import { FiShare2, FiX, FiChevronRight } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'motion/react';
 import Skeleton from '../components/common/Skeleton';
-import { FaMoneyBill1 } from "react-icons/fa6";
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import type { Transaction } from '../types/api';
@@ -918,7 +916,7 @@ function Wallet() {
                 onClick={() => setShowFundActivationModal(true)}
                 className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 shadow hover:bg-blue-800 transition-colors"
               >
-                <FaArrowUp size={20} className="mb-1" />
+                <HugeiconsIcon icon={ArrowUp01Icon} size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Activation</span>
               </button>
               <button
@@ -940,7 +938,7 @@ function Wallet() {
                     : 'bg-[#94B027] hover:bg-green-700'
                 }`}
               >
-                <FaMoneyBillWave size={20} className="mb-1" />
+                <HugeiconsIcon icon={MoneySend01Icon} size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Retrait</span>
               </button>
               <button
@@ -1058,7 +1056,7 @@ function Wallet() {
                         : 'bg-[#115CF6] text-white hover:bg-blue-800'
                     }`}
                   >
-                    {isSubmittingWithdrawal ? <FaSpinner className="animate-spin" size={24} /> : <FaMoneyBill1 size={24} />}
+                    {isSubmittingWithdrawal ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" size={24} /> : <HugeiconsIcon icon={Money01Icon} size={24} />}
                   </button>
                 </div>
 
@@ -1126,7 +1124,7 @@ function Wallet() {
             >
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-3 rounded-full">
-                  <FaGift size={20} />
+                  <HugeiconsIcon icon={GiftIcon} size={20} />
                 </div>
                 <div className="text-left">
                   <span className="font-bold block">Solde d'Activation</span>
@@ -1134,7 +1132,7 @@ function Wallet() {
                 </div>
               </div>
               <div className="bg-white/20 p-2 rounded-full">
-                <FiChevronRight size={20} />
+                <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
               </div>
             </button>
 
@@ -1349,7 +1347,7 @@ function Wallet() {
                       className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
                       onClick={closeModal}
                     >
-                      <FiX size={22} />
+                      <HugeiconsIcon icon={Cancel01Icon} size={22} />
                     </button>
                     <div className="mb-4">
                       <div className="text-xs text-gray-400 mb-1">ID de la transaction</div>
@@ -1416,7 +1414,7 @@ function Wallet() {
                           className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
                           onClick={handleShare}
                         >
-                          <FiShare2 className="inline mr-2" />Partager
+                          <HugeiconsIcon icon={Share08Icon} className="inline mr-2" />Partager
                         </button>
                         {/* Cancel button - only if cancellation is allowed (pending or pending_otp_verification) */}
                         {selectedTx.type === 'withdrawal' && canCancelWithdrawal(selectedTx.status) && (
@@ -1481,7 +1479,7 @@ function Wallet() {
                         className="text-gray-400 hover:text-white"
                         onClick={closeAllTransactionsModal}
                       >
-                        <FiX size={24} />
+                        <HugeiconsIcon icon={Cancel01Icon} size={24} />
                       </button>
                     </div>
                     <div ref={allTransactionsScrollRef} className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
@@ -1726,7 +1724,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
             <p className="text-gray-600">Votre solde d'activation a été alimenté.</p>
@@ -1780,7 +1778,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
                 disabled={loading || !amount}
                 className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>
             </div>
           </>

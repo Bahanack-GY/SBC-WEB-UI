@@ -1,9 +1,10 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Delete02Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import BackButton from "../components/common/BackButton";
 import MarketplaceProductCard from "../components/MarketplaceProductCard";
 import iconGrowth from "../assets/icon/Ecommerce.png";
 import { useNavigate } from 'react-router-dom';
-import { PencilIcon, TrashIcon } from "@heroicons/react/24/solid";
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -129,7 +130,7 @@ function MesProduits() {
                                         className="bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors"
                                         title="Modifier"
                                     >
-                                        <PencilIcon className="w-4 h-4 text-green-600" />
+                                        <HugeiconsIcon icon={PencilEdit01Icon} className="w-4 h-4 text-green-600" />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(product._id)}
@@ -137,7 +138,7 @@ function MesProduits() {
                                         className="bg-white p-2 rounded-full shadow-md hover:bg-gray-50 transition-colors disabled:opacity-50"
                                         title="Supprimer"
                                     >
-                                        <TrashIcon className="w-4 h-4 text-red-600" />
+                                        <HugeiconsIcon icon={Delete02Icon} className="w-4 h-4 text-red-600" />
                                     </button>
                                 </div>
                                 {product.isActive === false && (

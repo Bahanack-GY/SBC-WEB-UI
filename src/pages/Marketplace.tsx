@@ -1,8 +1,9 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from "motion/react";
-import { PlusIcon } from "@heroicons/react/24/solid";
 import ecommerceIcon from '../assets/icon/Ecommerce.png';
 import MarketplaceProductCard from "../components/MarketplaceProductCard";
 import Skeleton from '../components/common/Skeleton';
@@ -263,7 +264,7 @@ function Marketplace() {
                         className="bg-green-600 text-white rounded-full p-4 shadow-lg hover:bg-green-700 transition-colors"
                         whileTap={{ scale: 0.95 }}
                     >
-                        <PlusIcon className="w-6 h-6" />
+                        <HugeiconsIcon icon={PlusSignIcon} className="w-6 h-6" />
                     </motion.button>
 
                     <AnimatePresence>

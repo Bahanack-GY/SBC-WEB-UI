@@ -1,4 +1,5 @@
-import { FiLock } from 'react-icons/fi';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { LockIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
@@ -90,7 +91,7 @@ function ResetPassword() {
             >
                 <div className="flex flex-col items-center mt-8 mb-6">
                     <div className="bg-green-100 rounded-full w-24 h-24 flex items-center justify-center mb-4">
-                        <FiLock className="text-green-500" size={40} />
+                        <HugeiconsIcon icon={LockIcon} className="text-green-500" size={40} />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800 mb-2">Définir un nouveau mot de passe</h2>
                     <p className="text-center text-gray-600 text-sm">
@@ -168,7 +169,7 @@ function ResetPassword() {
                             <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
                                 modalContent.type === 'success' ? 'bg-green-100' : 'bg-red-100'
                             }`}>
-                                <FiLock className={`${
+                                <HugeiconsIcon icon={LockIcon} className={`${
                                     modalContent.type === 'success' ? 'text-green-500' : 'text-red-500'
                                 }`} size={32} />
                             </div>

@@ -1,9 +1,10 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowDown01Icon, ArrowUp01Icon, Cancel01Icon, ChartLineData02Icon, FilterIcon, Search01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
 import { useQuery, useInfiniteQuery, type InfiniteData } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
-import { FaWhatsapp, FaFilter, FaSearch, FaTimes, FaChartLine, FaUsers, FaUserCheck, FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import Skeleton from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -250,9 +251,9 @@ function MesFilleuls() {
           <div className="flex items-center gap-2">
             <span className="text-xs text-gray-500">Jan - {currentDate.toLocaleDateString('fr-FR', { month: 'short' })}</span>
             {showChart ? (
-              <FaChevronUp className="text-gray-500" size={14} />
+              <HugeiconsIcon icon={ArrowUp01Icon} className="text-gray-500" size={14} />
             ) : (
-              <FaChevronDown className="text-gray-500" size={14} />
+              <HugeiconsIcon icon={ArrowDown01Icon} className="text-gray-500" size={14} />
             )}
           </div>
         </button>
@@ -437,7 +438,7 @@ function MesFilleuls() {
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
               </svg>
             ) : (
-              <FaSearch className="h-4 w-4 text-gray-400" />
+              <HugeiconsIcon icon={Search01Icon} className="h-4 w-4 text-gray-400" />
             )}
           </div>
           <input
@@ -452,7 +453,7 @@ function MesFilleuls() {
               onClick={() => setSearchInput('')}
               className="absolute inset-y-0 right-0 pr-3 flex items-center"
             >
-              <FaTimes className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+              <HugeiconsIcon icon={Cancel01Icon} className="h-4 w-4 text-gray-400 hover:text-gray-600" />
             </button>
           )}
         </div>
@@ -482,21 +483,21 @@ function MesFilleuls() {
               <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
-                    <FaUsers className="text-gray-300 mr-1" size={12} />
+                    <HugeiconsIcon icon={UserGroupIcon} className="text-gray-300 mr-1" size={12} />
                   </div>
                   <Skeleton width="w-12" height="h-6" rounded="rounded" className="mx-auto mb-1" />
                   <div className="text-xs text-gray-500">Total</div>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
-                    <FaUserCheck className="text-gray-300 mr-1" size={12} />
+                    <HugeiconsIcon icon={UserCheck01Icon} className="text-gray-300 mr-1" size={12} />
                   </div>
                   <Skeleton width="w-12" height="h-6" rounded="rounded" className="mx-auto mb-1" />
                   <div className="text-xs text-gray-500">Abonnés</div>
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
-                    <FaChartLine className="text-gray-300 mr-1" size={12} />
+                    <HugeiconsIcon icon={ChartLineData02Icon} className="text-gray-300 mr-1" size={12} />
                   </div>
                   <Skeleton width="w-10" height="h-6" rounded="rounded" className="mx-auto mb-1" />
                   <div className="text-xs text-gray-500">Taux</div>
@@ -531,7 +532,7 @@ function MesFilleuls() {
               <div className="grid grid-cols-3 gap-3 pt-3 border-t border-gray-100">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
-                    <FaUsers className="text-gray-500 mr-1" size={12} />
+                    <HugeiconsIcon icon={UserGroupIcon} className="text-gray-500 mr-1" size={12} />
                   </div>
                   <div className="text-lg font-semibold text-gray-800">
                     {stats?.total?.toLocaleString() ?? '0'}
@@ -540,7 +541,7 @@ function MesFilleuls() {
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
-                    <FaUserCheck className="text-green-500 mr-1" size={12} />
+                    <HugeiconsIcon icon={UserCheck01Icon} className="text-green-500 mr-1" size={12} />
                   </div>
                   <div className="text-lg font-semibold text-green-600">
                     {stats?.totalActiveSubscribers?.toLocaleString() ?? '0'}
@@ -549,7 +550,7 @@ function MesFilleuls() {
                 </div>
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-1">
-                    <FaChartLine className="text-purple-500 mr-1" size={12} />
+                    <HugeiconsIcon icon={ChartLineData02Icon} className="text-purple-500 mr-1" size={12} />
                   </div>
                   <div className="text-lg font-semibold text-purple-600">
                     {`${stats?.totalActiveSubscribers && stats?.total ? Math.round((stats.totalActiveSubscribers / stats.total) * 100) : 0}%`}
@@ -613,7 +614,7 @@ function MesFilleuls() {
             className="flex items-center gap-2 bg-white border border-gray-200 rounded-lg px-3 py-2 text-gray-700 hover:bg-gray-50 transition-colors"
             onClick={() => setModalOpen(true)}
           >
-            <FaFilter className="text-gray-500" size={14} />
+            <HugeiconsIcon icon={FilterIcon} className="text-gray-500" size={14} />
             <span className="text-sm">Filtrer</span>
           </button>
         </div>
@@ -645,7 +646,7 @@ function MesFilleuls() {
                     onClick={() => setModalOpen(false)}
                     className="text-gray-400 hover:text-gray-600"
                   >
-                    <FaTimes size={20} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={20} />
                   </button>
                 </div>
 
@@ -753,7 +754,7 @@ function MesFilleuls() {
                         className="flex items-center justify-center w-12 h-12 bg-green-500 hover:bg-green-600 text-white rounded-full transition-colors"
                         title="Contacter sur WhatsApp"
                       >
-                        <FaWhatsapp size={20} />
+                        <HugeiconsIcon icon={WhatsappIcon} size={20} />
                       </a>
                     </div>
                   </motion.div>

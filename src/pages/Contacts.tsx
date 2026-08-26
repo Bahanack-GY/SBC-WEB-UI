@@ -1,9 +1,9 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Download01Icon, FilterIcon, Loading03Icon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import BackButton from "../components/common/BackButton";
 import { motion, AnimatePresence } from 'motion/react';
-import { FaWhatsapp, FaFilter } from 'react-icons/fa';
-import { FiDownload, FiFilter, FiLoader } from 'react-icons/fi';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelpers';
 import type { User } from '../types/api';
@@ -400,7 +400,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         className="bg-gray-100 px-4 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200"
                         onClick={() => setModalOpen(true)}
                     >
-                        <FaFilter className="text-green-700" />
+                        <HugeiconsIcon icon={FilterIcon} className="text-green-700" />
                         <span className="font-bold">Trier</span>
                     </button>
                     <span className="text-gray-500">A-Z</span>
@@ -410,7 +410,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         title="Télécharger les contacts"
                         disabled={downloading}
                     >
-                        <FiDownload size={18} />
+                        <HugeiconsIcon icon={Download01Icon} size={18} />
                     </button>
                     <button
                         className="bg-gray-100 px-3 py-2 rounded-lg text-gray-700 font-semibold flex items-center gap-2 border border-gray-200 hover:bg-gray-200"
@@ -418,7 +418,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         title="Télécharger les contacts filtrés"
                         disabled={downloading}
                     >
-                        <FiFilter size={18} />
+                        <HugeiconsIcon icon={FilterIcon} size={18} />
                     </button>
                 </div>
                 <AnimatePresence>
@@ -691,7 +691,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                 </AnimatePresence>
                 {isLoading ? (
                     <div className="flex justify-center items-center p-10">
-                        <FiLoader className="animate-spin text-4xl text-green-700" />
+                        <HugeiconsIcon icon={Loading03Icon} size={36} className="animate-spin text-green-700" />
                     </div>
                 ) : error ? (
                     <div className="text-center py-8 text-red-500">
@@ -718,7 +718,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                     onClick={() => handleWhatsapp(c.phoneNumber || '')}
                                     title="Discuter sur WhatsApp"
                                 >
-                                    <FaWhatsapp size={20} />
+                                    <HugeiconsIcon icon={WhatsappIcon} size={20} />
                                 </button>
                             </div>
                         ))}

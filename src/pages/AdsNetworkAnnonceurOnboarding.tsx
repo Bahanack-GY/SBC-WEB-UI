@@ -1,7 +1,8 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FaSpinner, FaArrowRight } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton } from '../components/ads/AdsScreen';
 import { AdsHero, AdsStep } from '../components/ads/AdsSteps';
@@ -133,7 +134,7 @@ Vues et clics, diffuseur par diffuseur.
             <div className="bg-gray-50 rounded-xl p-3 mt-3 text-sm text-gray-800">
               {isFetching ? (
                 <span className="flex items-center gap-2 text-gray-500">
-                  <FaSpinner className="animate-spin" /> Calcul…
+                  <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> Calcul…
                 </span>
               ) : quote ? (
                 <>
@@ -157,7 +158,7 @@ Vues et clics, diffuseur par diffuseur.
             disabled={!validAmount}
             className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400 flex items-center justify-center gap-2"
           >
-            Créer mon annonce <FaArrowRight size={12} />
+            Créer mon annonce <HugeiconsIcon icon={ArrowRight01Icon} size={12} />
           </button>
         </div>
       </div>

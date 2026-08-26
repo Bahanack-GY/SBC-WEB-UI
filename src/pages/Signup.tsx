@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Call02Icon, Cancel01Icon, EyeIcon, User02Icon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useCallback } from 'react';
-import { FiUser, FiPhone, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -678,8 +679,8 @@ function Signup() {
   };
 
   const stepIcons = [
-    <FiUser size={40} className="text-[#115CF6] mx-auto" />,
-    <FiPhone size={40} className="text-[#115CF6] mx-auto" />,
+    <HugeiconsIcon icon={User02Icon} size={40} className="text-[#115CF6] mx-auto" />,
+    <HugeiconsIcon icon={Call02Icon} size={40} className="text-[#115CF6] mx-auto" />,
   ];
 
   return (
@@ -737,7 +738,7 @@ function Signup() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showPassword ? <HugeiconsIcon icon={ViewOffIcon} size={18} /> : <HugeiconsIcon icon={EyeIcon} size={18} />}
                   </button>
                 </div>
                 {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
@@ -758,7 +759,7 @@ function Signup() {
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showConfirmPassword ? <HugeiconsIcon icon={ViewOffIcon} size={18} /> : <HugeiconsIcon icon={EyeIcon} size={18} />}
                   </button>
                 </div>
                 {errors.confirmPassword && <div className="text-red-500 text-xs">{errors.confirmPassword}</div>}
@@ -859,7 +860,7 @@ function Signup() {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
           <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full p-6 relative animate-fadeIn">
-            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"><FiX /></button>
+            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"><HugeiconsIcon icon={Cancel01Icon} /></button>
             <h3 className="text-xl font-bold mb-4 text-center">Conditions d'utilisation</h3>
             <div className="text-gray-700 text-sm max-h-[60vh] overflow-y-auto px-1">
               {settingsLoading ? (

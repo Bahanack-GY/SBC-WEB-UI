@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { EyeIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -185,7 +186,7 @@ function Connexion() {
                 onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
               >
-                {showPassword ? <FiEyeOff /> : <FiEye />}
+                {showPassword ? <HugeiconsIcon icon={ViewOffIcon} /> : <HugeiconsIcon icon={EyeIcon} />}
               </button>
             </div>
             {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}

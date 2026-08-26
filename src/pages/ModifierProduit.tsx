@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CancelCircleIcon, CloudUploadIcon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import BackButton from "../components/common/BackButton";
@@ -6,7 +8,6 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { motion } from 'motion/react';
-import { FiUploadCloud, FiXCircle, FiLoader } from 'react-icons/fi';
 import type { Product } from '../types/api';
 
 const subProducts = [
@@ -338,14 +339,14 @@ function ModifierProduit() {
                                             className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                                             title="Supprimer cette nouvelle image"
                                         >
-                                            <FiXCircle size={14} />
+                                            <HugeiconsIcon icon={CancelCircleIcon} size={14} />
                                         </button>
                                     </div>
                                 ))}
                                 {/* If more new images can be added, show a placeholder */}
                                 {(existingImageUrls.length + newImages.length) < 10 && (
                                     <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
-                                        <FiUploadCloud size={24} />
+                                        <HugeiconsIcon icon={CloudUploadIcon} size={24} />
                                         <input type="file" multiple accept="image/*" onChange={handleNewFileChange} className="hidden" />
                                     </label>
                                 )}
@@ -367,7 +368,7 @@ function ModifierProduit() {
                             className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
                             disabled={saving}
                         >
-                            {saving ? <FiLoader className="animate-spin" /> : 'Mettre à jour le produit'}
+                            {saving ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Mettre à jour le produit'}
                         </button>
                     </form>
                 </motion.div>

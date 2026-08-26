@@ -1,7 +1,8 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Image01Icon, Loading03Icon, Shield01Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FaSpinner, FaImage, FaShieldAlt } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
 import { motion } from 'motion/react';
@@ -156,7 +157,7 @@ function AdsNetworkCampaignForm() {
         </motion.div>
 
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-3 text-sm text-blue-900 flex items-start gap-2">
-          <FaShieldAlt className="mt-0.5 shrink-0" />
+          <HugeiconsIcon icon={Shield01Icon} className="mt-0.5 shrink-0" />
           <span>
             Votre annonce sera relue par notre équipe avant d'être diffusée. Vous
             paierez une fois qu'elle sera validée.
@@ -171,7 +172,7 @@ function AdsNetworkCampaignForm() {
                 <img src={preview} alt="Aperçu" className="max-h-56 rounded-xl" />
               ) : (
                 <>
-                  <FaImage className="text-gray-400" size={28} />
+                  <HugeiconsIcon icon={Image01Icon} className="text-gray-400" size={28} />
                   <span className="text-sm text-gray-500 mt-2">Choisir une image ou une vidéo</span>
                 </>
               )}
@@ -367,7 +368,7 @@ function AdsNetworkCampaignForm() {
           disabled={submitting}
           className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-5 disabled:bg-gray-400 flex items-center justify-center gap-2"
         >
-          {submitting && <FaSpinner className="animate-spin" />}
+          {submitting && <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />}
           Envoyer à la validation
         </button>
       </div>

@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Call02Icon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { FiPhone, FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -145,7 +146,7 @@ function ChangePhoneNumber() {
         >
           <div className="flex flex-col items-center mt-8 mb-6">
             <div className="bg-blue-100 rounded-full w-24 h-24 flex items-center justify-center mb-4">
-              <FiPhone className="text-blue-500" size={40} />
+              <HugeiconsIcon icon={Call02Icon} className="text-blue-500" size={40} />
             </div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">
               {step === 'request' ? 'Nouveau numéro' : 'Vérification'}
@@ -194,7 +195,7 @@ function ChangePhoneNumber() {
                 className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 disabled={loading}
               >
-                {loading ? <FiLoader className="animate-spin" /> : <FiPhone />}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={Call02Icon} />}
                 {loading ? 'Envoi en cours...' : 'Envoyer le code via WhatsApp'}
               </button>
             </form>
@@ -235,7 +236,7 @@ function ChangePhoneNumber() {
                 className="w-full bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 disabled={loading}
               >
-                {loading ? <FiLoader className="animate-spin" /> : null}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : null}
                 {loading ? 'Vérification...' : 'Confirmer le changement'}
               </button>
 

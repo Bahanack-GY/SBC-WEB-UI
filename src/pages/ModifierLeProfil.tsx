@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Call02Icon, FloppyDiskIcon, Loading03Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'motion/react';
-import { FiEdit2, FiPhone, FiSave, FiLoader } from 'react-icons/fi';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
@@ -415,7 +416,7 @@ function ModifierLeProfil() {
                 className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white shadow text-white hover:bg-blue-800 transition-colors disabled:bg-gray-400"
                 disabled={avatarUploading}
               >
-                {avatarUploading ? <FiLoader className="animate-spin" /> : <FiEdit2 size={16} />}
+                {avatarUploading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={PencilEdit01Icon} size={16} />}
               </button>
               <input
                 ref={fileInputRef}
@@ -451,7 +452,7 @@ function ModifierLeProfil() {
                   className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none pr-10"
                   placeholder="Ex: 675080477" // Example placeholder
                 />
-                <FiPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <HugeiconsIcon icon={Call02Icon} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
             <div>
@@ -713,7 +714,7 @@ function ModifierLeProfil() {
                 disabled={loading || avatarUploading}
                 className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
               >
-                {loading ? <FiLoader className="animate-spin" /> : <FiSave />}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={FloppyDiskIcon} />}
                 {loading ? 'Sauvegarde...' : 'Sauvegarder'}
               </button>
             </footer>

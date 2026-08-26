@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { FiArrowLeft } from 'react-icons/fi';
 import logo from '../assets/img/logo-sbc.png';
 import PublicFooter from '../components/common/PublicFooter';
 import { pageFade, headerDrop, sectionRise } from '../utils/motion';
@@ -11,7 +12,7 @@ export default function PublicPrivacy() {
       <div className="max-w-3xl mx-auto px-5 py-6">
         <motion.header variants={headerDrop} className="flex items-center justify-between mb-6">
           <Link to="/a-propos" aria-label="Retour" className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm hover:bg-white">
-            <FiArrowLeft size={20} />
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <img src={logo} alt="SBC" className="h-9 w-9 object-contain" />
           <Link to="/connexion" className="text-sm font-semibold text-[#115CF6] hover:underline">

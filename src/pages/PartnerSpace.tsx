@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowDown01Icon, Cancel01Icon, CrownIcon, GiftIcon, Medal01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useQuery } from '@tanstack/react-query';
 import { sbcApiService } from '../services/SBCApiService';
 import Skeleton from '../components/common/Skeleton';
@@ -5,8 +7,6 @@ import { useState, useEffect, useRef } from 'react';
 import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
-import { FaCrown, FaMedal, FaArrowDown, FaUsers, FaGift, } from 'react-icons/fa';
-import { FiX } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'motion/react';
 
 function formatFCFA(amount: number) {
@@ -117,7 +117,7 @@ const PartnerSpace = () => {
 
   // Helper functions
   const getPackIcon = (pack: string) => {
-    return pack === 'gold' ? <FaCrown className="text-yellow-500" /> : <FaMedal className="text-gray-400" />;
+    return pack === 'gold' ? <HugeiconsIcon icon={CrownIcon} className="text-yellow-500" /> : <HugeiconsIcon icon={Medal01Icon} className="text-gray-400" />;
   };
 
   const getPackColor = (pack: string) => {
@@ -268,7 +268,7 @@ const PartnerSpace = () => {
   const BecomePartnerView = () => (
     <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
       <div className="mb-6">
-        <FaUsers className="text-6xl text-blue-500 mx-auto mb-4" />
+        <HugeiconsIcon icon={UserGroupIcon} size={60} className="text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Devenez Partenaire SBC</h2>
         <p className="text-gray-600">
           Rejoignez notre programme de partenariat et commencez à gagner des commissions sur les parrainages !
@@ -277,7 +277,7 @@ const PartnerSpace = () => {
 
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         <div className="bg-gray-50 rounded-xl p-6">
-          <FaMedal className="text-3xl text-gray-500 mx-auto mb-3" />
+          <HugeiconsIcon icon={Medal01Icon} size={30} className="text-gray-500 mx-auto mb-3" />
           <h3 className="font-bold text-lg mb-2">Pack Silver</h3>
           <p className="text-gray-600 text-sm mb-4">Commissions de base sur vos filleuls</p>
           <ul className="text-left text-sm text-gray-600 space-y-1">
@@ -288,7 +288,7 @@ const PartnerSpace = () => {
         </div>
 
         <div className="bg-yellow-50 rounded-xl p-6 border-2 border-yellow-200">
-          <FaCrown className="text-3xl text-yellow-500 mx-auto mb-3" />
+          <HugeiconsIcon icon={CrownIcon} size={30} className="text-yellow-500 mx-auto mb-3" />
           <h3 className="font-bold text-lg mb-2">Pack Gold</h3>
           <p className="text-gray-600 text-sm mb-4">Commissions maximales sur 3 niveaux</p>
           <ul className="text-left text-sm text-gray-600 space-y-1">
@@ -352,7 +352,7 @@ const PartnerSpace = () => {
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-700">Solde Actuel</h3>
-                  <FaGift className="text-2xl text-green-500" />
+                  <HugeiconsIcon icon={GiftIcon} size={24} className="text-green-500" />
                 </div>
                 <p className="text-3xl font-bold text-green-600">{formatFCFA(partnerData.amount || 0)}</p>
                 <p className="text-gray-500 text-sm mt-1">Commissions disponibles</p>
@@ -374,7 +374,7 @@ const PartnerSpace = () => {
               <div className="bg-white rounded-2xl shadow-lg p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-700">Total Retiré</h3>
-                  <FaArrowDown className="text-2xl text-blue-500" />
+                  <HugeiconsIcon icon={ArrowDown01Icon} size={24} className="text-blue-500" />
                 </div>
                 <p className="text-3xl font-bold text-blue-600">
                   {formatFCFA(partnerData.totalPartnerWithdrawals || 0)}
@@ -496,7 +496,7 @@ const PartnerSpace = () => {
                   className="text-gray-400 hover:text-white"
                   onClick={closeAllTransactionsModal}
                 >
-                  <FiX size={24} />
+                  <HugeiconsIcon icon={Cancel01Icon} size={24} />
                 </button>
               </div>
               <div ref={allTransactionsScrollRef} className="flex-1 overflow-y-auto pr-2 custom-scrollbar">

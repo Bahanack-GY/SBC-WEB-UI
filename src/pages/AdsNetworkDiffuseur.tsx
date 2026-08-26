@@ -1,11 +1,9 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Alert02Icon, Cancel01Icon, CheckmarkCircle02Icon, Download01Icon, HourglassIcon, KeyboardIcon, Loading03Icon, QrCodeIcon, Share08Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
-import {
-  FaExclamationTriangle, FaSpinner, FaShareAlt, FaQrcode, FaCheckCircle,
-  FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard,
-} from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import {
   AdsCardSkeleton, AdsStatCard, AdsDayPips, relativeDate, adsItemMotion, adsHeaderMotion,
@@ -235,7 +233,7 @@ function AdsNetworkDiffuseur() {
         {/* Earnings */}
         <motion.div {...adsHeaderMotion} className="bg-[#115CF6] text-white rounded-2xl p-5 mt-4 shadow-lg">
           <div className="flex items-center gap-2 text-blue-100 text-sm">
-            <FaWallet /> Solde publicitaire
+            <HugeiconsIcon icon={Wallet01Icon} /> Solde publicitaire
           </div>
           <p className="text-3xl font-bold mt-1">{formatFCFA(balance?.advertisingBalance ?? 0)}</p>
           <p className="text-xs text-blue-100 mt-1">
@@ -258,7 +256,7 @@ function AdsNetworkDiffuseur() {
                   test campaign is still outstanding, not because SBC forgot them. */}
               <div className="flex items-center gap-2 mb-2">
                 <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${profile.verification?.verified ? 'bg-white text-green-700' : 'bg-white/20 text-white'}`}>
-                  {profile.verification?.verified ? <FaCheckCircle size={11} /> : <FaHourglassHalf size={11} />}
+                  {profile.verification?.verified ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={11} /> : <HugeiconsIcon icon={HourglassIcon} size={11} />}
                   {profile.verification?.label ?? 'Statut inconnu'}
                 </span>
               </div>
@@ -457,7 +455,7 @@ function AdsNetworkDiffuseur() {
                               onClick={() => setSharing(p)}
                               className="w-full bg-green-600 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
                             >
-                              <FaShareAlt /> Publier le jour {day?.day}
+                              <HugeiconsIcon icon={Share08Icon} /> Publier le jour {day?.day}
                             </button>
                           )}
                           {!windowOpen && !awaiting && (
@@ -474,7 +472,7 @@ function AdsNetworkDiffuseur() {
                                 onClick={() => setVerifying(p)}
                                 className="w-full bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
                               >
-                                <FaQrcode /> Vérifier le jour {awaiting.day}
+                                <HugeiconsIcon icon={QrCodeIcon} /> Vérifier le jour {awaiting.day}
                               </button>
                               {/* Escape hatch for a premature « J'ai publié » —
                                   without it the day is stuck in verification
@@ -575,7 +573,7 @@ function AdsNetworkDiffuseur() {
                     {/* Scroll sentinel: crossing it loads the next page. */}
                     <div ref={loadMoreRef} className="h-1" />
                     {isFetchingNextPage && (
-                      <div className="flex justify-center py-3"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
+                      <div className="flex justify-center py-3"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-[#115CF6]" /></div>
                     )}
                   </div>
                 )
@@ -888,14 +886,14 @@ function ShareSheet({
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-lg text-gray-900">Publier sur votre statut</h2>
-          <button onClick={onClose} className="text-gray-400"><FaTimes /></button>
+          <button onClick={onClose} className="text-gray-400"><HugeiconsIcon icon={Cancel01Icon} /></button>
         </div>
 
         <img src={illustrationShare} alt="" aria-hidden="true" className="w-40 mx-auto -mt-2 mb-1" />
 
         <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 mb-4">
           <p className="flex items-start gap-2 font-medium">
-            <FaExclamationTriangle className="mt-0.5 shrink-0" />
+            <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 shrink-0" />
             Ne modifiez pas le texte, et surtout pas le lien.
           </p>
           <p className="mt-1">
@@ -923,7 +921,7 @@ function ShareSheet({
           disabled={busy}
           className="w-full bg-green-600 text-white rounded-xl py-3 font-medium mt-4 flex items-center justify-center gap-2 disabled:bg-gray-400"
         >
-          {busy ? <FaSpinner className="animate-spin" /> : <FaShareAlt />}
+          {busy ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={Share08Icon} />}
           Partager sur WhatsApp
         </button>
 
@@ -932,7 +930,7 @@ function ShareSheet({
           download
           className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-2 flex items-center justify-center gap-2"
         >
-          <FaDownload /> Télécharger l'image
+          <HugeiconsIcon icon={Download01Icon} /> Télécharger l'image
         </a>
 
         <button
@@ -1108,7 +1106,7 @@ function VerifySheet({
     if (retrying && !error && !result) {
       return (
         <div className="py-8 text-center">
-          <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-[#115CF6]" size={28} />
           <p className="font-medium text-gray-900 mt-4">Reconnexion à WhatsApp…</p>
           <p className="text-sm text-gray-600 mt-1">
             La connexion a été interrompue. Nouvelle tentative en cours ({attempt + 1}/{MAX_ATTEMPTS}).
@@ -1135,7 +1133,7 @@ function VerifySheet({
       return (
         <div>
           <div className="flex items-center gap-2 text-green-700 font-medium">
-            <FaCheckCircle /> Vérification terminée
+            <HugeiconsIcon icon={CheckmarkCircle02Icon} /> Vérification terminée
           </div>
           <p className="text-3xl font-bold text-gray-900 mt-3">{result.totalViews} vues</p>
           <p className="text-sm text-gray-600">{formatFCFA(result.totalEarned)} pour cette vérification</p>
@@ -1170,7 +1168,7 @@ function VerifySheet({
             className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
-              <FaKeyboard className="text-[#115CF6]" /> Code à 8 caractères
+              <HugeiconsIcon icon={KeyboardIcon} className="text-[#115CF6]" /> Code à 8 caractères
               <span className="ml-auto text-[10px] uppercase tracking-wide bg-[#115CF6] text-white rounded-full px-2 py-0.5">
                 Conseillé
               </span>
@@ -1234,7 +1232,7 @@ function VerifySheet({
             className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
-              <FaQrcode className="text-[#115CF6]" /> Code QR
+              <HugeiconsIcon icon={QrCodeIcon} className="text-[#115CF6]" /> Code QR
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Pratique depuis un ordinateur ou un second téléphone.
@@ -1257,7 +1255,7 @@ function VerifySheet({
     if (state === 'queued') {
       return (
         <div className="py-8 text-center">
-          <FaHourglassHalf className="mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={HourglassIcon} className="mx-auto text-[#115CF6]" size={28} />
           <p className="font-medium text-gray-900 mt-4">
             {queuePosition && queuePosition > 1
               ? `Vous êtes ${queuePosition}ᵉ dans la file`
@@ -1277,7 +1275,7 @@ function VerifySheet({
     if (state === 'reading') {
       return (
         <div className="py-8 text-center">
-          <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-[#115CF6]" size={28} />
           <p className="font-medium text-gray-900 mt-4">Appareil connecté</p>
           <p className="text-sm text-gray-600 mt-1">Lecture de vos statuts et de leurs vues…</p>
           <p className="text-xs text-gray-400 mt-3">Cela prend généralement moins d'une minute.</p>
@@ -1324,7 +1322,7 @@ function VerifySheet({
 
     return (
       <div className="py-8 text-center text-gray-500">
-        <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={24} />
+        <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-[#115CF6]" size={24} />
         <p className="text-sm mt-3">
           {state === 'reading'
             ? 'Lecture de vos statuts…'
@@ -1347,7 +1345,7 @@ function VerifySheet({
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-lg text-gray-900">Vérifier ma publication</h2>
-          <button onClick={onClose} className="text-gray-400"><FaTimes /></button>
+          <button onClick={onClose} className="text-gray-400"><HugeiconsIcon icon={Cancel01Icon} /></button>
         </div>
         {body()}
       </motion.div>

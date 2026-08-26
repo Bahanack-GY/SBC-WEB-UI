@@ -1,4 +1,5 @@
-import { FiLock, FiHelpCircle } from 'react-icons/fi';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { HelpCircleIcon, LockIcon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
@@ -74,8 +75,8 @@ function ForgotPassword() {
             >
                 <div className="flex flex-col items-center mt-8 mb-6">
                     <div className="bg-yellow-100 rounded-full w-24 h-24 flex items-center justify-center mb-4 relative">
-                        <FiLock className="text-yellow-500" size={40} />
-                        <FiHelpCircle className="text-yellow-500 absolute ml-8 mt-8" size={24} />
+                        <HugeiconsIcon icon={LockIcon} className="text-yellow-500" size={40} />
+                        <HugeiconsIcon icon={HelpCircleIcon} className="text-yellow-500 absolute ml-8 mt-8" size={24} />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800 mb-2">Réinitialiser le mot de passe</h2>
                     <p className="text-center text-gray-600 text-sm">

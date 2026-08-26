@@ -1,10 +1,11 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MinusSignCircleIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import iconOne from "../assets/icon/Growth.png";
 import iconTwo from "../assets/icon/analyse.png";
 import iconContact from "../assets/icon/contact.png";
 import BackButton from "../components/common/BackButton";
-import { HiMiniMinusCircle } from "react-icons/hi2";
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -240,82 +241,82 @@ function Abonnement() {
                                             {plan.type === 'CLASSIQUE' ? (
                                                 <>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Possibilité de gagner 5000fcfa à 10.000fcfa/jour</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en trading</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation sur l'achat en chine</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en art oratoire</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en marketing digital</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation création des bots WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Accès marketplace</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Contacts WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
                                                     </li>
                                                 </>
                                             ) : (
                                                 <>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Possibilité de gagner 12.500fcfa à 25.000fcfa/jour</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en trading</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation sur l'achat en chine</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en art oratoire</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en marketing digital</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation création des bots WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Accès marketplace</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Contacts WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation SBC IA CREATOR</span>
                                                     </li>
                                                 </>
@@ -368,23 +369,23 @@ function Abonnement() {
                                     {/* Features List */}
                                     <ul className="mt-3 mb-2 space-y-1">
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Accès à toutes les offres du pack ciblé</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Accès à la méthode Atem (formation en création de contenu + page de capture + page de vente)</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Relance des prospects automatiquement à vie</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Accès au système d'affiliation</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Plus de 1000 vues en statut WhatsApp</span>
                                         </li>
                                     </ul>

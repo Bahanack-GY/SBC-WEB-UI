@@ -1,7 +1,8 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft } from 'react-icons/fi';
 import splash1 from '../assets/img/splash-1.png';
 import splash2 from '../assets/img/splash-2.png';
 import splash3 from '../assets/img/splash-3.png';
@@ -117,7 +118,7 @@ function SplashScreen() {
                 aria-label="Précédent"
                 className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm hover:bg-white transition-colors"
               >
-                <FiArrowLeft size={20} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
               </button>
             ) : (
               <div className="h-9 w-9" /> /* placeholder to keep logo centered */

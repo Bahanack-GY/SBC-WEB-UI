@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Cancel01Icon, ChartBarLineIcon, CheckmarkCircle02Icon, Cursor01Icon, Delete02Icon, EyeIcon, Mail01Icon, MailOpen01Icon, PauseIcon, PlayIcon, PlusSignIcon, RefreshIcon, SendIcon, Settings02Icon, SmsCodeIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FaEnvelope, FaPlus, FaPlay, FaPause, FaTimes, FaChevronRight, FaSync, FaTrash, FaUsers, FaPaperPlane, FaCheckCircle, FaCog, FaEye, FaChartBar, FaMousePointer, FaEnvelopeOpen, FaSms } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
@@ -560,14 +561,14 @@ function RelancePage() {
       return (
         <div className="flex gap-2">
           <button onClick={() => handleStartCampaign(campaign._id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">
-            <FaPlay className="inline mr-1" /> Démarrer
+            <HugeiconsIcon icon={PlayIcon} className="inline mr-1" /> Démarrer
           </button>
           <button
             onClick={() => handleDeleteCampaign(campaign._id, campaign.name, campaign.status)}
             disabled={deleting === campaign._id}
             className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 disabled:opacity-50"
           >
-            <FaTrash className="inline mr-1" /> Supprimer
+            <HugeiconsIcon icon={Delete02Icon} className="inline mr-1" /> Supprimer
           </button>
         </div>
       );
@@ -575,10 +576,10 @@ function RelancePage() {
       return (
         <div className="flex gap-2">
           <button onClick={() => handlePauseCampaign(campaign._id)} className="bg-yellow-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-yellow-600">
-            <FaPause className="inline mr-1" /> Pause
+            <HugeiconsIcon icon={PauseIcon} className="inline mr-1" /> Pause
           </button>
           <button onClick={() => handleCancelCampaign(campaign._id)} className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">
-            <FaTimes className="inline mr-1" /> Annuler
+            <HugeiconsIcon icon={Cancel01Icon} className="inline mr-1" /> Annuler
           </button>
         </div>
       );
@@ -586,10 +587,10 @@ function RelancePage() {
       return (
         <div className="flex gap-2">
           <button onClick={() => handleResumeCampaign(campaign._id)} className="bg-green-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-green-600">
-            <FaPlay className="inline mr-1" /> Reprendre
+            <HugeiconsIcon icon={PlayIcon} className="inline mr-1" /> Reprendre
           </button>
           <button onClick={() => handleCancelCampaign(campaign._id)} className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600">
-            <FaTimes className="inline mr-1" /> Annuler
+            <HugeiconsIcon icon={Cancel01Icon} className="inline mr-1" /> Annuler
           </button>
         </div>
       );
@@ -600,7 +601,7 @@ function RelancePage() {
           disabled={deleting === campaign._id}
           className="bg-red-500 text-white px-3 py-1 rounded-lg text-sm hover:bg-red-600 disabled:opacity-50"
         >
-          <FaTrash className="inline mr-1" /> {deleting === campaign._id ? 'Suppression...' : 'Supprimer'}
+          <HugeiconsIcon icon={Delete02Icon} className="inline mr-1" /> {deleting === campaign._id ? 'Suppression...' : 'Supprimer'}
         </button>
       );
     }
@@ -683,7 +684,7 @@ function RelancePage() {
             className="p-2 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
             title="Actualiser"
           >
-            <FaSync className={`text-gray-600 ${refreshing ? 'animate-spin' : ''}`} size={20} />
+            <HugeiconsIcon icon={RefreshIcon} className={`text-gray-600 ${refreshing ? 'animate-spin' : ''}`} size={20} />
           </button>
         </div>
 
@@ -726,7 +727,7 @@ function RelancePage() {
               data-tour="sms-links"
               className="mt-3 flex items-center justify-center gap-2 w-full min-h-[44px] px-4 py-2 rounded-xl bg-white/10 backdrop-blur-sm text-white text-sm font-semibold border border-white/20 hover:bg-white/20 active:bg-white/25 transition-colors"
             >
-              <FaSms className="w-4 h-4" />
+              <HugeiconsIcon icon={SmsCodeIcon} className="w-4 h-4" />
               <span>Configurer vos liens SMS</span>
             </Link>
           )}
@@ -740,7 +741,7 @@ function RelancePage() {
         }`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FaEnvelope size={32} />
+              <HugeiconsIcon icon={Mail01Icon} size={32} />
               <div>
                 <div className="font-bold text-lg flex items-center gap-2 flex-wrap">
                   <span>{status?.enabled ? '✅ Relance Activée' : '⏸️ Relance Désactivée'}</span>
@@ -782,7 +783,7 @@ function RelancePage() {
         {/* Controls Card */}
         <div className="relance-controls bg-white rounded-2xl shadow-lg border border-gray-100 p-4 mb-6">
           <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-            <FaCog className="text-gray-600" />
+            <HugeiconsIcon icon={Settings02Icon} className="text-gray-600" />
             Contrôles
           </h4>
           <div className="space-y-3">
@@ -877,20 +878,20 @@ function RelancePage() {
         {defaultStats && (
           <div className="relance-stats mb-6">
             <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
-              <FaPaperPlane className="text-blue-500" />
+              <HugeiconsIcon icon={SendIcon} className="text-blue-500" />
               Statistiques (Relance par défaut)
             </h4>
             <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaUsers className="text-blue-500" />
+                  <HugeiconsIcon icon={UserGroupIcon} className="text-blue-500" />
                   <span className="text-xs text-blue-600">En cours de relance</span>
                 </div>
                 <div className="text-2xl font-bold text-blue-700">{defaultStats.activeTargets}</div>
               </div>
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaPaperPlane className="text-green-500" />
+                  <HugeiconsIcon icon={SendIcon} className="text-green-500" />
                   <span className="text-xs text-green-600">Envoyés</span>
                 </div>
                 {hasSmsAccess ? (
@@ -910,7 +911,7 @@ function RelancePage() {
               </div>
               <div className="bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl p-4 border border-orange-200">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaCheckCircle className="text-orange-500" />
+                  <HugeiconsIcon icon={CheckmarkCircle02Icon} className="text-orange-500" />
                   <span className="text-xs text-orange-600">Taux de livraison</span>
                 </div>
                 {hasSmsAccess ? (
@@ -934,7 +935,7 @@ function RelancePage() {
               </div>
               <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl p-4 border border-green-200">
                 <div className="flex items-center gap-2 mb-1">
-                  <FaCheckCircle className="text-green-500" />
+                  <HugeiconsIcon icon={CheckmarkCircle02Icon} className="text-green-500" />
                   <span className="text-xs text-green-600">Conversions (Payés)</span>
                 </div>
                 <div className="text-2xl font-bold text-green-700">{defaultStats.targetsConverted || 0}</div>
@@ -948,13 +949,13 @@ function RelancePage() {
                 className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
               >
                 <div className="flex items-center gap-2">
-                  <FaChartBar className="text-purple-500" />
+                  <HugeiconsIcon icon={ChartBarLineIcon} className="text-purple-500" />
                   <span className="font-bold text-sm text-gray-700">Engagement des emails</span>
                   {defaultStats.totalMessagesOpened === undefined && (
                     <span className="text-xs text-gray-400 italic">(En attente de données)</span>
                   )}
                 </div>
-                <FaChevronRight className={`transition-transform text-gray-600 ${showEngagementStats ? 'rotate-90' : ''}`} />
+                <HugeiconsIcon icon={ArrowRight01Icon} className={`transition-transform text-gray-600 ${showEngagementStats ? 'rotate-90' : ''}`} />
               </button>
 
               {showEngagementStats && (
@@ -963,17 +964,17 @@ function RelancePage() {
                     {/* Key Engagement Metrics */}
                     <div className="grid grid-cols-3 gap-3 mb-4">
                       <div className="bg-blue-50 rounded-lg p-3 text-center">
-                        <FaEnvelopeOpen className="text-blue-500 mx-auto mb-1" />
+                        <HugeiconsIcon icon={MailOpen01Icon} className="text-blue-500 mx-auto mb-1" />
                         <div className="text-xs text-blue-600 mb-1">Taux d'ouverture</div>
                         <div className="text-xl font-bold text-blue-700">{defaultStats.openRate?.toFixed(1) || 0}%</div>
                       </div>
                       <div className="bg-purple-50 rounded-lg p-3 text-center">
-                        <FaMousePointer className="text-purple-500 mx-auto mb-1" />
+                        <HugeiconsIcon icon={Cursor01Icon} className="text-purple-500 mx-auto mb-1" />
                         <div className="text-xs text-purple-600 mb-1">Taux de clic</div>
                         <div className="text-xl font-bold text-purple-700">{defaultStats.clickRate?.toFixed(1) || 0}%</div>
                       </div>
                       <div className="bg-green-50 rounded-lg p-3 text-center">
-                        <FaCheckCircle className="text-green-500 mx-auto mb-1" />
+                        <HugeiconsIcon icon={CheckmarkCircle02Icon} className="text-green-500 mx-auto mb-1" />
                         <div className="text-xs text-green-600 mb-1">CTR</div>
                         <div className="text-xl font-bold text-green-700">{defaultStats.clickThroughRate?.toFixed(1) || 0}%</div>
                       </div>
@@ -1026,7 +1027,7 @@ function RelancePage() {
                 ) : (
                   <div className="p-4 pt-0 border-t border-gray-100">
                     <div className="text-center py-6 text-gray-500">
-                      <FaChartBar className="mx-auto text-3xl mb-2 text-gray-300" />
+                      <HugeiconsIcon icon={ChartBarLineIcon} size={30} className="mx-auto mb-2 text-gray-300" />
                       <p className="text-sm">Les données d'engagement seront disponibles une fois que les emails commencent à être suivis.</p>
                       <p className="text-xs mt-1 text-gray-400">Le suivi des ouvertures et clics sera automatique.</p>
                     </div>
@@ -1074,7 +1075,7 @@ function RelancePage() {
               }}
               className="relance-targets-btn w-full bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 rounded-xl font-medium hover:from-blue-600 hover:to-green-600 transition-all shadow-md flex items-center justify-center gap-2"
             >
-              <FaUsers /> Voir les cibles actives
+              <HugeiconsIcon icon={UserGroupIcon} /> Voir les cibles actives
             </button>
 
             {/* Recent Messages Button */}
@@ -1085,7 +1086,7 @@ function RelancePage() {
               }}
               className="relance-recent-messages w-full mt-3 bg-white border-2 border-blue-500 text-blue-600 py-3 rounded-xl font-medium hover:bg-blue-50 transition-all shadow-sm flex items-center justify-center gap-2"
             >
-              <FaPaperPlane /> Derniers emails envoyés
+              <HugeiconsIcon icon={SendIcon} /> Derniers emails envoyés
             </button>
           </div>
         )}
@@ -1098,13 +1099,13 @@ function RelancePage() {
               onClick={handleOpenWizard}
               className="relance-new-campaign flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-blue-500 text-white hover:bg-blue-600"
             >
-              <FaPlus /> Nouvelle Campagne
+              <HugeiconsIcon icon={PlusSignIcon} /> Nouvelle Campagne
             </button>
           </div>
 
           {campaigns.length === 0 ? (
             <div className="bg-gray-100 rounded-xl p-8 text-center text-gray-500">
-              <FaEnvelope className="mx-auto text-4xl mb-3 text-gray-400" />
+              <HugeiconsIcon icon={Mail01Icon} size={36} className="mx-auto mb-3 text-gray-400" />
               <p className="mb-2">Aucune campagne créée</p>
               <p className="text-sm">Créez une campagne pour cibler des utilisateurs spécifiques</p>
             </div>
@@ -1136,7 +1137,7 @@ function RelancePage() {
                             onClick={() => setExpandedCampaign(expandedCampaign === campaign._id ? null : campaign._id)}
                             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
                           >
-                            <FaChevronRight className={`transition-transform text-gray-600 ${expandedCampaign === campaign._id ? 'rotate-90' : ''}`} />
+                            <HugeiconsIcon icon={ArrowRight01Icon} className={`transition-transform text-gray-600 ${expandedCampaign === campaign._id ? 'rotate-90' : ''}`} />
                           </button>
                         </div>
                       </div>
@@ -1172,7 +1173,7 @@ function RelancePage() {
                             }}
                             className="w-full bg-blue-50 text-blue-600 border border-blue-200 py-2 rounded-xl font-medium hover:bg-blue-100 transition-colors flex items-center justify-center gap-2"
                           >
-                            <FaEye /> Voir les détails
+                            <HugeiconsIcon icon={EyeIcon} /> Voir les détails
                           </button>
                           {getCampaignActions(campaign)}
                         </motion.div>
@@ -1216,7 +1217,7 @@ function RelancePage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-gray-800">Cibles actives</h3>
                     <button onClick={() => setShowTargetsModal(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                      <FaTimes className="text-gray-600" size={20} />
+                      <HugeiconsIcon icon={Cancel01Icon} className="text-gray-600" size={20} />
                     </button>
                   </div>
                 </div>
@@ -1229,7 +1230,7 @@ function RelancePage() {
                     </div>
                   ) : targets.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                      <FaUsers className="mx-auto text-4xl mb-3 text-gray-400" />
+                      <HugeiconsIcon icon={UserGroupIcon} size={36} className="mx-auto mb-3 text-gray-400" />
                       <p>Aucune cible active</p>
                     </div>
                   ) : (
@@ -1247,7 +1248,7 @@ function RelancePage() {
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
-                                  <FaUsers className="text-blue-500 text-xs" />
+                                  <HugeiconsIcon icon={UserGroupIcon} size={14} className="text-blue-500" />
                                 </div>
                                 <div>
                                   <div className="font-medium text-gray-800 text-sm">
@@ -1339,7 +1340,7 @@ function RelancePage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-gray-800">Derniers emails envoyés</h3>
                     <button onClick={() => setShowRecentMessages(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                      <FaTimes className="text-gray-600" size={20} />
+                      <HugeiconsIcon icon={Cancel01Icon} className="text-gray-600" size={20} />
                     </button>
                   </div>
                 </div>
@@ -1352,7 +1353,7 @@ function RelancePage() {
                     </div>
                   ) : recentMessages.length === 0 ? (
                     <div className="text-center py-8 text-gray-500">
-                      <FaPaperPlane className="mx-auto text-4xl mb-3 text-gray-400" />
+                      <HugeiconsIcon icon={SendIcon} size={36} className="mx-auto mb-3 text-gray-400" />
                       <p>Aucun email envoyé récemment</p>
                     </div>
                   ) : (
@@ -1368,7 +1369,7 @@ function RelancePage() {
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${isDelivered ? 'bg-green-100' : 'bg-red-100'}`}>
-                                  <FaPaperPlane className={`text-xs ${isDelivered ? 'text-green-500' : 'text-red-500'}`} />
+                                  <HugeiconsIcon icon={SendIcon} className={`text-xs ${isDelivered ? 'text-green-500' : 'text-red-500'}`} />
                                 </div>
                                 <div>
                                   <div className="font-medium text-gray-800 text-sm">
@@ -1769,7 +1770,7 @@ function RelancePage() {
                                     }}
                                     className="text-red-500 hover:text-red-700 p-1"
                                   >
-                                    <FaTimes size={12} />
+                                    <HugeiconsIcon icon={Cancel01Icon} size={12} />
                                   </button>
                                 </div>
                               ))}
@@ -1784,7 +1785,7 @@ function RelancePage() {
                                   }}
                                   className="text-blue-600 text-sm font-medium hover:text-blue-700 flex items-center gap-1"
                                 >
-                                  <FaPlus size={10} /> Ajouter un bouton
+                                  <HugeiconsIcon icon={PlusSignIcon} size={10} /> Ajouter un bouton
                                 </button>
                               )}
                             </div>
@@ -1806,7 +1807,7 @@ function RelancePage() {
                             disabled={loadingPreview || (!customMessages[activeMessageDay - 1]?.messageTemplate.fr && !customMessages[activeMessageDay - 1]?.messageTemplate.en)}
                             className="w-full bg-orange-500 text-white py-2.5 rounded-xl font-medium hover:bg-orange-600 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                           >
-                            <FaEye /> {loadingPreview ? 'Chargement...' : 'Aperçu de l\'email'}
+                            <HugeiconsIcon icon={EyeIcon} /> {loadingPreview ? 'Chargement...' : 'Aperçu de l\'email'}
                           </button>
                         </div>
                       </div>
@@ -1952,7 +1953,7 @@ function RelancePage() {
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-bold text-gray-800">Historique des campagnes</h3>
                     <button onClick={() => setShowCampaignHistory(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                      <FaTimes className="text-gray-600" size={20} />
+                      <HugeiconsIcon icon={Cancel01Icon} className="text-gray-600" size={20} />
                     </button>
                   </div>
                 </div>
@@ -2039,7 +2040,7 @@ function RelancePage() {
                             </div>
                           </div>
                           <button onClick={() => { setSelectedCampaignDetail(null); setShowCampaignMessages(false); setCampaignStats(null); }} className="p-2 hover:bg-gray-100 rounded-full">
-                            <FaTimes className="text-gray-600" size={20} />
+                            <HugeiconsIcon icon={Cancel01Icon} className="text-gray-600" size={20} />
                           </button>
                         </div>
                       </div>
@@ -2128,7 +2129,7 @@ function RelancePage() {
                             {/* Email Engagement Stats */}
                             <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-xl p-4 shadow-sm border border-purple-100 mb-4">
                               <div className="flex items-center gap-2 mb-3">
-                                <FaChartBar className="text-purple-500" />
+                                <HugeiconsIcon icon={ChartBarLineIcon} className="text-purple-500" />
                                 <h5 className="font-bold text-sm text-gray-700">Engagement des emails</h5>
                                 {stats?.totalMessagesOpened === undefined && (
                                   <span className="text-xs text-gray-400 italic">(En attente)</span>
@@ -2158,7 +2159,7 @@ function RelancePage() {
                                 <div className="space-y-2 text-xs">
                                   <div>
                                     <div className="flex justify-between text-gray-600 mb-1">
-                                      <span><FaEnvelopeOpen className="inline mr-1" />Ouverts (uniques)</span>
+                                      <span><HugeiconsIcon icon={MailOpen01Icon} className="inline mr-1" />Ouverts (uniques)</span>
                                       <span className="font-bold">{stats.totalMessagesOpened || 0} / {stats.totalMessagesDelivered}</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -2168,7 +2169,7 @@ function RelancePage() {
 
                                   <div>
                                     <div className="flex justify-between text-gray-600 mb-1">
-                                      <span><FaMousePointer className="inline mr-1" />Cliqués (uniques)</span>
+                                      <span><HugeiconsIcon icon={Cursor01Icon} className="inline mr-1" />Cliqués (uniques)</span>
                                       <span className="font-bold">{stats.totalMessagesClicked || 0} / {stats.totalMessagesDelivered}</span>
                                     </div>
                                     <div className="w-full bg-gray-200 rounded-full h-1.5">
@@ -2224,7 +2225,7 @@ function RelancePage() {
                               }}
                               className="w-full mb-4 bg-white border-2 border-blue-500 text-blue-600 py-2.5 rounded-xl font-medium hover:bg-blue-50 transition-all flex items-center justify-center gap-2"
                             >
-                              <FaPaperPlane /> {showCampaignMessages ? 'Masquer les emails' : 'Voir les derniers emails'}
+                              <HugeiconsIcon icon={SendIcon} /> {showCampaignMessages ? 'Masquer les emails' : 'Voir les derniers emails'}
                             </button>
 
                             {showCampaignMessages && (
@@ -2251,7 +2252,7 @@ function RelancePage() {
                                           <div className="flex items-center justify-between mb-1">
                                             <div className="flex items-center gap-2">
                                               <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isDelivered ? 'bg-green-100' : 'bg-red-100'}`}>
-                                                <FaPaperPlane className={`text-[10px] ${isDelivered ? 'text-green-500' : 'text-red-500'}`} />
+                                                <HugeiconsIcon icon={SendIcon} className={`text-[10px] ${isDelivered ? 'text-green-500' : 'text-red-500'}`} />
                                               </div>
                                               <div>
                                                 <div className="font-medium text-gray-800 text-sm">
@@ -2325,7 +2326,7 @@ function RelancePage() {
                 <div className="p-4 border-b border-gray-200 flex items-center justify-between">
                   <h3 className="text-lg font-bold text-gray-800">Aperçu de l'email</h3>
                   <button onClick={() => setShowEmailPreview(false)} className="p-2 hover:bg-gray-100 rounded-full">
-                    <FaTimes className="text-gray-600" size={18} />
+                    <HugeiconsIcon icon={Cancel01Icon} className="text-gray-600" size={18} />
                   </button>
                 </div>
                 <div className="flex-1 overflow-auto p-1">

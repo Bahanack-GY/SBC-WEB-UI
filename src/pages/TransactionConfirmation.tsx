@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowDown01Icon, ArrowUp01Icon, Download01Icon, Loading03Icon, Share08Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
-import { FiDownload, FiShare2, FiChevronDown, FiChevronUp, FiLoader } from 'react-icons/fi';
 import { motion, AnimatePresence } from 'motion/react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
@@ -70,7 +71,7 @@ function TransactionConfirmation() {
       {/* Processing indicator */}
       <motion.div initial={{ rotate: 0 }} animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 2, ease: "linear" }} className="mb-4">
         <div className="bg-yellow-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto">
-          <FiLoader size={48} className="text-yellow-500 animate-spin" />
+          <HugeiconsIcon icon={Loading03Icon} size={48} className="text-yellow-500 animate-spin" />
         </div>
       </motion.div>
       {/* Processing message */}
@@ -80,17 +81,17 @@ function TransactionConfirmation() {
       </div>
       <div className="flex gap-3 mb-6">
         <button onClick={handleDownload} className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-5 py-2 font-bold shadow hover:bg-blue-800 transition-colors">
-          <FiDownload /> Télécharger PDF
+          <HugeiconsIcon icon={Download01Icon} /> Télécharger PDF
         </button>
         <button onClick={handleShare} className="flex items-center gap-2 bg-green-600 text-white rounded-xl px-5 py-2 font-bold shadow hover:bg-green-700 transition-colors">
-          <FiShare2 /> Partager
+          <HugeiconsIcon icon={Share08Icon} /> Partager
         </button>
       </div>
       <button
         className="flex items-center gap-2 text-[#115CF6] font-semibold mb-2 focus:outline-none"
         onClick={() => setShowDetails(v => !v)}
       >
-        {showDetails ? <FiChevronUp /> : <FiChevronDown />} Voir plus
+        {showDetails ? <HugeiconsIcon icon={ArrowUp01Icon} /> : <HugeiconsIcon icon={ArrowDown01Icon} />} Voir plus
       </button>
       <AnimatePresence>
         {showDetails && (

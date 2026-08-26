@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CancelCircleIcon, CloudUploadIcon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
@@ -5,7 +7,6 @@ import ProtectedRoute from '../components/common/ProtectedRoute';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { motion } from 'motion/react';
-import { FiUploadCloud, FiXCircle, FiLoader } from 'react-icons/fi';
 
 const subProducts = [
     "mode et vêtements", "électronique et gadgets", "maison et jardin",
@@ -256,13 +257,13 @@ function AjouterProduit() {
                                             className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                                             title="Supprimer l'image"
                                         >
-                                            <FiXCircle size={14} />
+                                            <HugeiconsIcon icon={CancelCircleIcon} size={14} />
                                         </button>
                                     </div>
                                 ))}
                                 {images.length < 10 && ( // Allow adding more images if limit not reached
                                     <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
-                                        <FiUploadCloud size={24} />
+                                        <HugeiconsIcon icon={CloudUploadIcon} size={24} />
                                         {/* Hidden input to trigger file selection when label is clicked */}
                                         <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
                                     </label>
@@ -285,7 +286,7 @@ function AjouterProduit() {
                             className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
                             disabled={loading} // Disable button during submission
                         >
-                            {loading ? <FiLoader className="animate-spin" /> : 'Ajouter le produit'}
+                            {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Ajouter le produit'}
                         </button>
                     </form>
                 </motion.div>

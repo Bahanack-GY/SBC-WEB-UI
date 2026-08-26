@@ -1,8 +1,9 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Alert02Icon, CheckmarkCircle02Icon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { motion } from 'motion/react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FaCheckCircle, FaExclamationTriangle, FaSpinner } from 'react-icons/fa';
 import { AdsCardSkeleton, adsItemMotion } from '../components/ads/AdsScreen';
 import { AdsHero, AdsStep, AdsWarning } from '../components/ads/AdsSteps';
 import heroDiffuseur from '../assets/icon/ads-diffuseur.jpg';
@@ -126,7 +127,7 @@ Sur votre solde publicitaire, transférable ensuite.
         <div className="mt-4">
           <AdsWarning>
             <p className="font-medium flex items-start gap-2">
-              <FaExclamationTriangle className="mt-0.5 shrink-0" />
+              <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 shrink-0" />
               Ne modifiez jamais le lien du texte.
             </p>
             <p className="mt-1">
@@ -137,7 +138,7 @@ Sur votre solde publicitaire, transférable ensuite.
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-10"><FaSpinner className="animate-spin text-[#115CF6]" size={24} /></div>
+          <div className="flex justify-center py-10"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-[#115CF6]" size={24} /></div>
         ) : eligibility && !eligibility.eligible ? (
           <div className="bg-red-50 border border-red-200 rounded-2xl p-4 mt-5">
             <h2 className="font-semibold text-red-900 mb-2">Profil incomplet</h2>
@@ -160,7 +161,7 @@ Sur votre solde publicitaire, transférable ensuite.
         ) : (
           <div className="bg-white border border-gray-200 rounded-2xl p-4 mt-5 shadow-sm">
             <div className="flex items-center gap-2 text-green-700 text-sm mb-4">
-              <FaCheckCircle />
+              <HugeiconsIcon icon={CheckmarkCircle02Icon} />
               <span>Votre profil est complet.</span>
             </div>
 
@@ -190,7 +191,7 @@ Sur votre solde publicitaire, transférable ensuite.
               disabled={submitting}
               className="w-full bg-green-600 text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400 flex items-center justify-center gap-2"
             >
-              {submitting && <FaSpinner className="animate-spin" />}
+              {submitting && <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />}
               Devenir diffuseur
             </button>
           </div>

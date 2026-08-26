@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Cancel01Icon, Exchange01Icon, GiftIcon, HistoryIcon, Loading03Icon, Search01Icon, Tick02Icon, UserAdd01Icon, UserGroupIcon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
@@ -7,7 +9,6 @@ import Skeleton from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import { FaWallet, FaUsers, FaGift, FaHistory, FaArrowRight, FaSearch, FaTimes, FaUserPlus, FaExchangeAlt, FaCheck, FaSpinner } from 'react-icons/fa';
 
 // Types
 interface ActivationReferral {
@@ -226,7 +227,7 @@ function ActivationBalance() {
                 )}
               </div>
               <div className="bg-white/20 p-3 rounded-full">
-                <FaGift size={28} />
+                <HugeiconsIcon icon={GiftIcon} size={28} />
               </div>
             </div>
 
@@ -248,14 +249,14 @@ function ActivationBalance() {
               onClick={() => setShowFundModal(true)}
               className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl shadow transition-colors"
             >
-              <FaWallet size={18} />
+              <HugeiconsIcon icon={Wallet01Icon} size={18} />
               <span className="font-medium">Alimenter</span>
             </button>
             <button
               onClick={() => setShowP2PModal(true)}
               className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-xl shadow transition-colors"
             >
-              <FaExchangeAlt size={18} />
+              <HugeiconsIcon icon={Exchange01Icon} size={18} />
               <span className="font-medium">Transférer</span>
             </button>
           </div>
@@ -282,9 +283,9 @@ function ActivationBalance() {
           {/* Tabs */}
           <div className="flex bg-gray-200 rounded-xl p-1 mb-4">
             {[
-              { key: 'overview', label: 'Aperçu', icon: FaWallet },
-              { key: 'referrals', label: 'Filleuls', icon: FaUsers },
-              { key: 'history', label: 'Historique', icon: FaHistory },
+              { key: 'overview', label: 'Aperçu', icon: Wallet01Icon },
+              { key: 'referrals', label: 'Filleuls', icon: UserGroupIcon },
+              { key: 'history', label: 'Historique', icon: HistoryIcon },
             ].map(tab => (
               <button
                 key={tab.key}
@@ -294,7 +295,7 @@ function ActivationBalance() {
                   : 'text-gray-600 hover:text-gray-800'
                   }`}
               >
-                <tab.icon size={14} />
+                <HugeiconsIcon icon={tab.icon} size={14} />
                 {tab.label}
               </button>
             ))}
@@ -373,7 +374,7 @@ function ActivationBalance() {
                 {/* Search & Filter */}
                 <div className="mb-4 space-y-3">
                   <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Rechercher un filleul..."
@@ -386,7 +387,7 @@ function ActivationBalance() {
                         onClick={() => setSearchQuery('')}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        <FaTimes />
+                        <HugeiconsIcon icon={Cancel01Icon} />
                       </button>
                     )}
                   </div>
@@ -420,7 +421,7 @@ function ActivationBalance() {
                   </div>
                 ) : filteredReferrals.length === 0 ? (
                   <div className="text-center py-12">
-                    <FaUsers className="mx-auto text-gray-300 mb-4" size={48} />
+                    <HugeiconsIcon icon={UserGroupIcon} className="mx-auto text-gray-300 mb-4" size={48} />
                     <p className="text-gray-500">
                       {filter === 'all'
                         ? 'Aucun filleul trouvé'
@@ -469,7 +470,7 @@ function ActivationBalance() {
                               onClick={() => handleSponsorClick(referral)}
                               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
                             >
-                              <FaUserPlus size={14} />
+                              <HugeiconsIcon icon={UserAdd01Icon} size={14} />
                               Activer
                             </button>
                           ) : referral.canUpgrade ? (
@@ -477,12 +478,12 @@ function ActivationBalance() {
                               onClick={() => handleSponsorClick(referral)}
                               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
                             >
-                              <FaArrowRight size={14} />
+                              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
                               Upgrade
                             </button>
                           ) : (
                             <span className="text-[#115CF6] text-sm font-medium flex items-center gap-1">
-                              <FaCheck size={14} />
+                              <HugeiconsIcon icon={Tick02Icon} size={14} />
                               Actif
                             </span>
                           )}
@@ -491,7 +492,7 @@ function ActivationBalance() {
                     ))}
                     {isFetchingNextPage && (
                       <div className="flex justify-center py-4">
-                        <FaSpinner className="animate-spin text-amber-500" size={24} />
+                        <HugeiconsIcon icon={Loading03Icon} className="animate-spin text-amber-500" size={24} />
                       </div>
                     )}
                   </div>
@@ -516,7 +517,7 @@ function ActivationBalance() {
                   </div>
                 ) : allHistory.length === 0 ? (
                   <div className="bg-[#192040] rounded-2xl p-8 text-center">
-                    <FaHistory className="mx-auto text-gray-500 mb-4" size={48} />
+                    <HugeiconsIcon icon={HistoryIcon} className="mx-auto text-gray-500 mb-4" size={48} />
                     <p className="text-gray-400">Aucun historique d'activation</p>
                   </div>
                 ) : (
@@ -617,7 +618,7 @@ function ActivationBalance() {
                     })}
                     {isFetchingNextHistoryPage && (
                       <div className="flex justify-center py-4">
-                        <FaSpinner className="animate-spin text-blue-400" size={24} />
+                        <HugeiconsIcon icon={Loading03Icon} className="animate-spin text-blue-400" size={24} />
                       </div>
                     )}
                   </div>
@@ -735,7 +736,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, minimumAmount, onSu
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
             <p className="text-gray-600">Votre solde d'activation a été alimenté.</p>
@@ -789,7 +790,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, minimumAmount, onSu
                 disabled={loading || !amount}
                 className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>
             </div>
           </>
@@ -944,7 +945,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
             <p className="text-gray-600">Le solde d'activation a été transféré.</p>
@@ -980,7 +981,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                     onClick={handleClearSelection}
                     className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                   >
-                    <FaTimes size={14} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={14} />
                   </button>
                 </div>
               </div>
@@ -990,7 +991,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                   Rechercher un destinataire
                 </label>
                 <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     value={searchQuery}
@@ -1002,7 +1003,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                     className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                   {searching && (
-                    <FaSpinner className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" />
+                    <HugeiconsIcon icon={Loading03Icon} className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" />
                   )}
                 </div>
 
@@ -1071,7 +1072,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                 disabled={loading || !selectedUser || !amount}
                 className="flex-1 bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>
             </div>
           </>
@@ -1184,7 +1185,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Sponsoring réussi !</h4>
             <p className="text-gray-600">{referral.name} a été activé avec succès.</p>
@@ -1286,7 +1287,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
                 disabled={loading || !selectedType || !canAfford}
                 className="flex-1 bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Confirmer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Confirmer'}
               </button>
             </div>
           </>
