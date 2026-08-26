@@ -1,7 +1,7 @@
 //Here is the card on the home page
 
-import { FaLink, FaStar, FaUserAlt, FaUsers } from "react-icons/fa";
-import { FaWandSparkles } from "react-icons/fa6";
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Link01Icon, MagicWand01Icon, StarIcon, User02Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { motion } from "motion/react";
 
 interface HomeUserCardProps {
@@ -42,7 +42,7 @@ function HomeUserCard({name, image, affiliates, status, promoCode}: HomeUserCard
                 transition={{ delay: 0.2 }}
                 className="text-white capitalize flex items-center gap-2 text-lg ml-4"
             >
-                <FaUserAlt />Votre profil
+                <HugeiconsIcon icon={User02Icon} />Votre profil
             </motion.p>
             <motion.button 
                 whileHover={{ scale: 1.1 }}
@@ -50,7 +50,7 @@ function HomeUserCard({name, image, affiliates, status, promoCode}: HomeUserCard
                 className="text-[#F68F0F] bg-white rounded-full p-3" 
                 onClick={() => copyLink(`https://sniperbuisnesscenter.com/signup?affiliationCode=${promoCode}`)}
             >
-                <FaLink />
+                <HugeiconsIcon icon={Link01Icon} />
             </motion.button>
             </div>
             
@@ -89,9 +89,9 @@ function HomeUserCard({name, image, affiliates, status, promoCode}: HomeUserCard
                 transition={{ delay: 0.6 }}
                 className="flex gap-3"
             >
-            <p className="text-white text-sm flex items-center gap-1"><FaStar />{status}</p>
-            <p className="text-white text-sm flex items-center gap-1"><FaUsers />{affiliates}</p>
-            <p className="text-white text-sm flex items-center gap-1"><FaWandSparkles />{promoCode}</p>
+            <p className="text-white text-sm flex items-center gap-1"><HugeiconsIcon icon={StarIcon} />{status}</p>
+            <p className="text-white text-sm flex items-center gap-1"><HugeiconsIcon icon={UserGroupIcon} />{affiliates}</p>
+            <p className="text-white text-sm flex items-center gap-1"><HugeiconsIcon icon={MagicWand01Icon} />{promoCode}</p>
             </motion.div>
             </div>
             </motion.div>

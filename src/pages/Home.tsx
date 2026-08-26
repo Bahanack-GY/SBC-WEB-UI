@@ -1,10 +1,10 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Book02Icon, Call02Icon, Loading03Icon, LockIcon, Mail01Icon, Megaphone01Icon, ShoppingCart01Icon, TelegramIcon, WhatsappIcon, YoutubeIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import HomeUserCard from "../components/HomeUserCard"
 import HomeButtons from "../components/HomeButtons"
 import BalanceIcon from "../assets/icon/balance.png"
-import { FaBook, FaEnvelope, FaPhone, FaWhatsapp, FaTelegramPlane, FaYoutube, FaLock, FaBullhorn } from "react-icons/fa";
 import HomeBalanceCard from "../components/HomeBalanceCard";
-import { FaCartShopping } from "react-icons/fa6";
 import Header from '../components/common/Header'
 import Skeleton from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
@@ -12,7 +12,6 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { motion, AnimatePresence } from 'motion/react';
-import { FiLoader } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
@@ -269,12 +268,12 @@ function Home() {
             <div className="quick-actions flex flex-col gap-4">
               <h2 className="text-2xl font-bold">Nos services</h2>
               <div className="flex flex-wrap justify-center gap-x-2 gap-y-2 sm:gap-x-4">
-                <HomeButtons icon={<FaBook size={30} />} title="Formations" onClick={() => setIsFormationsModalOpen(true)} />
-                <HomeButtons icon={<FaCartShopping size={30} />} title="Marketplace" onClick={() => navigate("/marketplace")} />
-                <HomeButtons icon={<FaBullhorn size={30} />} title="Ads Network" onClick={() => navigate("/ads-network")} />
-                <HomeButtons icon={<FaPhone size={30} />} title="Contacts" onClick={() => navigate("/contacts")} />
+                <HomeButtons icon={<HugeiconsIcon icon={Book02Icon} size={30} />} title="Formations" onClick={() => setIsFormationsModalOpen(true)} />
+                <HomeButtons icon={<HugeiconsIcon icon={ShoppingCart01Icon} size={30} />} title="Marketplace" onClick={() => navigate("/marketplace")} />
+                <HomeButtons icon={<HugeiconsIcon icon={Megaphone01Icon} size={30} />} title="Ads Network" onClick={() => navigate("/ads-network")} />
+                <HomeButtons icon={<HugeiconsIcon icon={Call02Icon} size={30} />} title="Contacts" onClick={() => navigate("/contacts")} />
                 <HomeButtons
-                  icon={<FaEnvelope size={30} />}
+                  icon={<HugeiconsIcon icon={Mail01Icon} size={30} />}
                   title="Relance"
                   onClick={() => {
                     if (hasRelanceAccess) {
@@ -327,7 +326,7 @@ function Home() {
                   className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
                   style={{ backgroundColor: '#25D366' }}
                 >
-                  <FaWhatsapp size={32} />
+                  <HugeiconsIcon icon={WhatsappIcon} size={32} />
                   <div>
                     <div className="font-bold text-base">WhatsApp</div>
                     <div className="text-sm opacity-90">Rejoignez notre canal WhatsApp</div>
@@ -341,7 +340,7 @@ function Home() {
                   className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
                   style={{ backgroundColor: '#0088cc' }}
                 >
-                  <FaTelegramPlane size={32} />
+                  <HugeiconsIcon icon={TelegramIcon} size={32} />
                   <div>
                     <div className="font-bold text-base">Telegram</div>
                     <div className="text-sm opacity-90">Rejoignez notre groupe Telegram</div>
@@ -355,7 +354,7 @@ function Home() {
                   className="flex items-center gap-4 p-4 rounded-2xl text-white shadow-md"
                   style={{ backgroundColor: '#FF0000' }}
                 >
-                  <FaYoutube size={32} />
+                  <HugeiconsIcon icon={YoutubeIcon} size={32} />
                   <div>
                     <div className="font-bold text-base">YouTube</div>
                     <div className="text-sm opacity-90">Abonnez-vous à notre chaîne YouTube</div>
@@ -392,7 +391,7 @@ function Home() {
               <h4 className="text-lg font-bold mb-4">Formations Disponibles</h4>
               {formationsLoading ? (
                 <div className="flex justify-center items-center py-8">
-                  <FiLoader className="animate-spin text-4xl text-green-700" />
+                  <HugeiconsIcon icon={Loading03Icon} size={36} className="animate-spin text-green-700" />
                 </div>
               ) : formationsError ? (
                 <div className="text-red-500 text-center">
@@ -423,7 +422,7 @@ function Home() {
                                   🔒 {tier}
                                 </span>
                               )}
-                              <FaLock className="text-gray-500" />
+                              <HugeiconsIcon icon={LockIcon} className="text-gray-500" />
                             </div>
                           </div>
                           {variant.badge && (
@@ -489,7 +488,7 @@ function Home() {
             >
               <div className="flex justify-center mb-3">
                 <div className="w-12 h-12 rounded-full bg-purple-100 flex items-center justify-center">
-                  <FaLock className="text-purple-600 text-xl" />
+                  <HugeiconsIcon icon={LockIcon} size={22} className="text-purple-600" />
                 </div>
               </div>
               <h4 className="text-lg font-bold text-center mb-1">Contenu réservé</h4>

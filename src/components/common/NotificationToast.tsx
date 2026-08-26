@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { AlertCircleIcon, Cancel01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
 
 interface NotificationToastProps {
   isOpen: boolean;
@@ -34,13 +35,13 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <FiCheck size={20} />;
+        return <HugeiconsIcon icon={Tick02Icon} size={20} />;
       case 'error':
-        return <FiX size={20} />;
+        return <HugeiconsIcon icon={Cancel01Icon} size={20} />;
       case 'info':
-        return <FiAlertCircle size={20} />;
+        return <HugeiconsIcon icon={AlertCircleIcon} size={20} />;
       default:
-        return <FiCheck size={20} />;
+        return <HugeiconsIcon icon={Tick02Icon} size={20} />;
     }
   };
 
@@ -106,7 +107,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
                 onClick={onClose}
                 className={`${colors.text} opacity-70 hover:opacity-100 ml-2`}
               >
-                <FiX size={16} />
+                <HugeiconsIcon icon={Cancel01Icon} size={16} />
               </button>
             </div>
           </div>

@@ -1,8 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ConnectIcon, Home01Icon, Mail01Icon, Message01Icon, ShoppingBasket01Icon } from '@hugeicons/core-free-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { MdDeviceHub, MdHome, MdShoppingBasket } from 'react-icons/md';
-import { FaEnvelope } from 'react-icons/fa';
-import { HiChatBubbleLeftRight } from 'react-icons/hi2';
 import { useMemo } from 'react';
 import { useRelance } from '../../contexts/RelanceContext';
 
@@ -28,18 +27,18 @@ function NavigationBar() {
   const navItems = useMemo(() => {
     // Always include chat buttons for all users
     let items: NavItem[] = [
-      { label: 'Publicité', icon: <MdDeviceHub size={24} />, path: '/ads-pack' },
-      { label: 'Messages', icon: <HiChatBubbleLeftRight size={24} />, path: '/chat' },
+      { label: 'Publicité', icon: <HugeiconsIcon icon={ConnectIcon} size={24} />, path: '/ads-pack' },
+      { label: 'Messages', icon: <HugeiconsIcon icon={Message01Icon} size={24} />, path: '/chat' },
       { label: 'Statuts', icon: <StatusIcon size={24} />, path: '/chat?view=status' },
-      { label: 'Accueil', icon: <MdHome size={24} />, path: '/' },
-      { label: 'Marketplace', icon: <MdShoppingBasket size={24} />, path: '/marketplace' },
+      { label: 'Accueil', icon: <HugeiconsIcon icon={Home01Icon} size={24} />, path: '/' },
+      { label: 'Marketplace', icon: <HugeiconsIcon icon={ShoppingBasket01Icon} size={24} />, path: '/marketplace' },
     ];
 
     // Show Relance entry to users who have credits (or admin/tester via context)
     if (hasCredits) {
       items = [
         ...items,
-        { label: 'Relance', icon: <FaEnvelope size={24} />, path: '/relance' },
+        { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} size={24} />, path: '/relance' },
       ];
     }
 

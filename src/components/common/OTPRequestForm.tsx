@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import { FiLoader } from 'react-icons/fi';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
 
@@ -109,7 +110,7 @@ function OTPRequestForm({
         className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl text-lg shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
         disabled={loading}
       >
-        {loading ? <FiLoader className="animate-spin" /> : null}
+        {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : null}
         {loading ? 'Envoi en cours...' : buttonText}
       </button>
     </form>
