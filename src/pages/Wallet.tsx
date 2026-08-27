@@ -2,7 +2,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowReloadHorizontalIcon, ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, CreditCardIcon, Exchange01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneyReceive01Icon, MoneySend01Icon, Share08Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import BackButton from "../components/common/BackButton";
 import { useState, useEffect, useRef } from "react";
-import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { AreaChart, Area, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -1178,7 +1178,11 @@ function Wallet() {
               </div>
               <div className="relative w-full h-[160px]">
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={chartData} barCategoryGap={chartTimeframe === 'daily' ? 30 : 10} barGap={8}>
+                  <AreaChart data={chartData} margin={{ top: 8, right: 16, left: 16, bottom: 0 }}>
+                    {/* Flat fills with opacity rather than gradient defs — the
+                        rest of the app dropped gradients, and a solid tint reads
+                        the same at this size. */}
+                    <CartesianGrid vertical={false} stroke="#E6E9EF" strokeDasharray="3 3" />
                     <XAxis
                       dataKey="name"
                       stroke="#bbb"
@@ -1191,13 +1195,33 @@ function Wallet() {
                       dy={10}
                     />
                     {chartType === 'Reçu' && (
-                      <Bar dataKey="Dépôt" fill="#115CF6" radius={[20, 20, 20, 20]} barSize={32} isAnimationActive={true} />
+                      <Area
+                        type="monotone"
+                        dataKey="Dépôt"
+                        stroke="#115CF6"
+                        strokeWidth={2}
+                        fill="#115CF6"
+                        fillOpacity={0.12}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 0 }}
+                        isAnimationActive={true}
+                      />
                     )}
                     {chartType === 'Retrait' && (
-                      <Bar dataKey="Retrait" fill="#FFB200" radius={[20, 20, 20, 20]} barSize={32} isAnimationActive={true} />
+                      <Area
+                        type="monotone"
+                        dataKey="Retrait"
+                        stroke="#F68F0F"
+                        strokeWidth={2}
+                        fill="#F68F0F"
+                        fillOpacity={0.12}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 0 }}
+                        isAnimationActive={true}
+                      />
                     )}
                     <Tooltip
-                      cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                      cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '3 3' }}
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
                           const dataPoint = chartData.find(d => d.name === label); // Find the full data point
@@ -1248,7 +1272,7 @@ function Wallet() {
                         return null;
                       }}
                     />
-                  </BarChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
               <div className="mt-2 text-xs text-gray-500 text-center">
