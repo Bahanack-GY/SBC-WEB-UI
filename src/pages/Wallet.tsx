@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneySend01Icon, Share08Icon, Tick02Icon } from '@hugeicons/core-free-icons';
+import { ArrowReloadHorizontalIcon, ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, CreditCardIcon, Exchange01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneyReceive01Icon, MoneySend01Icon, Share08Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import BackButton from "../components/common/BackButton";
 import { useState, useEffect, useRef } from "react";
 import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
@@ -700,12 +700,12 @@ function Wallet() {
 
   const formatTransactionIcon = (transaction: Transaction) => {
     switch (transaction.type) {
-      case 'deposit': return '💰';
-      case 'withdrawal': return '💸';
-      case 'payment': return '💳';
-      case 'refund': return '🔄';
-      case 'conversion': return '🔀'; // Currency conversion icon (shuffle/exchange arrows)
-      default: return '💼';
+      case 'deposit': return MoneyReceive01Icon;
+      case 'withdrawal': return MoneySend01Icon;
+      case 'payment': return CreditCardIcon;
+      case 'refund': return ArrowReloadHorizontalIcon;
+      case 'conversion': return Exchange01Icon;
+      default: return Wallet01Icon;
     }
   };
 
@@ -1256,31 +1256,31 @@ function Wallet() {
               </div>
             </div>
             {/* Recent Transactions */}
-            <div className="transaction-list bg-ink rounded-2xl p-4">
-              <div className="font-semibold mb-2 text-white">Transactions récentes</div>
+            <div className="transaction-list bg-surface border border-border rounded-2xl p-4">
+              <div className="font-semibold mb-2 text-ink">Transactions récentes</div>
               {!transactions || transactions.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-ink-3">
                   Aucune transaction récente
                 </div>
               ) : (
                 transactions.map((tx: Transaction) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 hover:bg-white/10 rounded-lg transition-colors"
+                    className="flex items-center justify-between py-2 border-b border-border last:border-b-0 hover:bg-surface-2 rounded-lg transition-colors"
                   >
                     <div
                       className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
                       onClick={() => openModal(tx)}
                     >
                       <div className={getStatusIconWrapperClasses(String(tx.status))}>
-                        <span className="text-2xl">{formatTransactionIcon(tx)}</span>
+                        <HugeiconsIcon icon={formatTransactionIcon(tx)} size={20} />
                       </div>
                       <div className="min-w-0">
-                        <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-white' :
-                          (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-yellow-400' :
-                            String(tx.status) === 'failed' ? 'text-red-400' : 'text-white'
+                        <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-ink' :
+                          (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-accent' :
+                            String(tx.status) === 'failed' ? 'text-danger' : 'text-ink'
                           } text-sm truncate max-w-[160px]`}>{formatTransactionName(tx)}</div>
-                        <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
+                        <div className="text-xs text-ink-3">{formatDate(tx.createdAt)}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1467,7 +1467,7 @@ function Wallet() {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="bg-ink rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
+                    className="bg-surface border border-border rounded-t-2xl p-4 w-full h-[80vh] text-ink relative flex flex-col"
                     initial={{ y: '100%' }}
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
@@ -1476,7 +1476,7 @@ function Wallet() {
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="text-xl font-bold">Historique des transactions</h2>
                       <button
-                        className="text-gray-400 hover:text-white"
+                        className="text-ink-3 hover:text-ink"
                         onClick={closeAllTransactionsModal}
                       >
                         <HugeiconsIcon icon={Cancel01Icon} size={24} />
@@ -1484,14 +1484,14 @@ function Wallet() {
                     </div>
                     <div ref={allTransactionsScrollRef} className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                       {!allTransactions || allTransactions.length === 0 && !allTransactionsLoadingMore ? (
-                        <div className="text-center py-8 text-gray-400">
+                        <div className="text-center py-8 text-ink-3">
                           Aucune transaction trouvée.
                         </div>
                       ) : (
                         allTransactions.map((tx: Transaction) => (
                           <div
                             key={tx.id}
-                            className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 hover:bg-white/10 rounded-lg transition-colors"
+                            className="flex items-center justify-between py-2 border-b border-border last:border-b-0 hover:bg-surface-2 rounded-lg transition-colors"
                           >
                             <div
                               className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
@@ -1500,14 +1500,14 @@ function Wallet() {
                               }}
                             >
                               <div className={getStatusIconWrapperClasses(String(tx.status))}>
-                                <span className="text-2xl">{formatTransactionIcon(tx)}</span>
+                                <HugeiconsIcon icon={formatTransactionIcon(tx)} size={20} />
                               </div>
                               <div className="min-w-0">
-                                <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-white' :
-                                  (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-yellow-400' :
-                                    String(tx.status) === 'failed' ? 'text-red-400' : 'text-white'
+                                <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-ink' :
+                                  (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-accent' :
+                                    String(tx.status) === 'failed' ? 'text-danger' : 'text-ink'
                                   } text-sm truncate max-w-[160px]`}>{formatTransactionName(tx)}</div>
-                                <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
+                                <div className="text-xs text-ink-3">{formatDate(tx.createdAt)}</div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -1545,7 +1545,7 @@ function Wallet() {
                       )}
                       {allTransactionsLoadingMore && allTransactionsHasMore && (
                         <div className="flex justify-center py-4">
-                          <svg className="animate-spin h-8 w-8 text-white" viewBox="0 0 24 24">
+                          <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                           </svg>
