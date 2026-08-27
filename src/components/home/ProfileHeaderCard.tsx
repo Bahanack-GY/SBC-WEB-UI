@@ -48,11 +48,8 @@ function ProfileHeaderCard({ name, image, affiliates, status, promoCode, memberS
       role="button"
       tabIndex={0}
       onKeyDown={(e) => e.key === 'Enter' && navigate('/profile')}
-      className="relative overflow-hidden bg-surface border border-border rounded-card p-4 pl-5 flex items-center gap-3 cursor-pointer"
+      className="bg-surface border border-border rounded-card p-4 flex items-center gap-3 cursor-pointer"
     >
-      {/* An accent BAR, not a border — the flat rules allow this. */}
-      <span className="absolute left-0 inset-y-0 w-1 bg-primary" aria-hidden />
-
       <div className="relative shrink-0">
         <img
           src={image}
