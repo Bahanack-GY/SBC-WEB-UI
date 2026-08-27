@@ -5,6 +5,7 @@ import ProfileHeaderCard from '../components/home/ProfileHeaderCard';
 import BalanceCard from '../components/home/BalanceCard';
 import ServicesGrid from '../components/home/ServicesGrid';
 import LeaderboardPreview from '../components/home/LeaderboardPreview';
+import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import CommunityLinks from '../components/home/CommunityLinks';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -261,6 +262,16 @@ function Home() {
         <div className="leaderboard-preview">
           <LeaderboardPreview />
         </div>
+
+        {/* Presentation video, restored below the classement. */}
+        <section className="flex flex-col gap-3">
+          <h2 className="text-xl font-bold text-ink">Présentation</h2>
+          <CustomVideoPlayer
+            src="/sbc presentation.mp4"
+            poster="/sbc_presentation_thumbnail.jpg"
+            title="Présentation SBC"
+          />
+        </section>
 
         {/* Presentation PDF. Keeps the existing settings-file URL logic and its
             local fallback verbatim — only the styling changed. */}
