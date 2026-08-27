@@ -76,7 +76,10 @@ function ShopCard({ shop, index }: { shop: Shop; index: number }) {
             nothing, so the banner is not covered by an empty plate. */}
         <span
           className={cn(
-            'shrink-0 -mt-6 mb-1.5 size-12 rounded-tile overflow-hidden block',
+            // relative z-10 is load-bearing: the banner above is position:
+            // relative, so it paints over a static sibling no matter the DOM
+            // order, and the logo's top half disappeared behind it.
+            'relative z-10 shrink-0 -mt-6 mb-1.5 size-12 rounded-tile overflow-hidden block',
             showLogo && 'border-2 border-surface bg-surface',
           )}
         >
