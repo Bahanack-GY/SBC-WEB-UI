@@ -169,8 +169,13 @@ function AppContent() {
   const hideHeader = HEADERLESS.includes(location.pathname) || isInChatConversation;
 
   const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || isInChatConversation;
+  // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
+  // be reserved by whatever scrolls underneath. Done here rather than per page:
+  // the nav is rendered globally, so every page showing it needs the padding,
+  // and four shipped without it (Wallet, Money, PartnerSpace, AdsPack) — the
+  // Wallet "Voir toutes les transactions" button sat underneath the pill.
   return (
-    <div className="bg-white relative">
+    <div className={`bg-white relative ${hideNav ? '' : 'pb-24'}`}>
       {showLogout && (
         <button
           onClick={async () => { await logout(); window.location.replace('/connexion'); }}

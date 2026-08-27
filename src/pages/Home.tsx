@@ -221,7 +221,7 @@ function Home() {
 
   return (
     <ProtectedRoute>
-      <div className="p-4 pb-24 flex flex-col gap-6">
+      <div className="p-4 flex flex-col gap-6">
         <div className="home-header">
           <ProfileHeaderCard
           name={user?.name ?? 'Utilisateur'}

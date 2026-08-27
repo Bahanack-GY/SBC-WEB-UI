@@ -43,7 +43,7 @@ function Marketplace() {
 
   return (
     <ProtectedRoute>
-      <div className="p-4 pb-28 flex flex-col gap-4">
+      <div className="p-4 flex flex-col gap-4">
         <div>
           <h1 className="text-xl font-bold text-ink">SBC Shop</h1>
           <p className="text-xs text-ink-3">
