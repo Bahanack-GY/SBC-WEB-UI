@@ -33,8 +33,8 @@ function MyRankRow({ me, name }: { me: MyLeaderboardRank; name?: string }) {
         </span>
         <span className="block text-[11px] text-white/80">
           {unranked
-            ? 'Aucun filleul direct ce mois-ci'
-            : `${me.referralCount} filleul${me.referralCount > 1 ? 's' : ''} direct${me.referralCount > 1 ? 's' : ''} · sur ${me.totalRanked} classés`}
+            ? 'Aucun filleul direct payé ce mois-ci'
+            : `${me.referralCount} filleul${me.referralCount > 1 ? 's' : ''} payé${me.referralCount > 1 ? 's' : ''} · sur ${me.totalRanked} classés`}
         </span>
       </span>
 

@@ -27,7 +27,7 @@ function Classement() {
               Classement Général
               <HugeiconsIcon icon={ChampionIcon} size={20} className="text-accent" />
             </h1>
-            <p className="text-xs text-ink-3">Filleuls directs du mois</p>
+            <p className="text-xs text-ink-3">Filleuls directs qui ont payé ce mois-ci</p>
           </div>
         </div>
 
