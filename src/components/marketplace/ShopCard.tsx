@@ -88,7 +88,10 @@ function ShopCard({ shop, index }: { shop: Shop; index: number }) {
               loading="lazy"
               decoding="async"
               onError={() => setLogoFailed(true)}
-              className="h-full w-full object-cover"
+              // object-contain, NOT cover: most shop logos are wide wordmarks,
+              // and covering a square tile crops them down to their middle
+              // sliver — the logo reads as missing. Contain letterboxes it.
+              className="h-full w-full object-contain p-1"
             />
           )}
         </span>

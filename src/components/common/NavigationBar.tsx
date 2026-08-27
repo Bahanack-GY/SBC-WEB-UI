@@ -5,7 +5,7 @@ import {
   Mail01Icon,
   Message01Icon,
   ShoppingBasket01Icon,
-  Target02Icon,
+  Wallet01Icon,
 } from '@hugeicons/core-free-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -30,9 +30,9 @@ function NavigationBar() {
     let items: NavItem[] = [
       { label: 'Accueil', icon: Home01Icon, path: '/' },
       { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
+      { label: 'Wallet', icon: Wallet01Icon, path: '/wallet' },
       { label: 'Publicité', icon: ConnectIcon, path: '/ads-pack' },
       { label: 'Messages', icon: Message01Icon, path: '/chat' },
-      { label: 'Statuts', icon: Target02Icon, path: '/chat?view=status' },
     ];
 
     // Show Relance entry to users who have credits (or admin/tester via context)
@@ -58,8 +58,8 @@ function NavigationBar() {
         const currentPath = location.pathname + location.search;
         const isActive = currentPath === item.path ||
                         (item.path === '/' && location.pathname === '/') ||
-                        (item.path === '/chat' && location.pathname === '/chat' && !location.search) ||
-                        (item.path === '/chat?view=status' && location.pathname === '/chat' && location.search.includes('view=status'));
+                        (item.path === '/wallet' && location.pathname === '/wallet') ||
+                        (item.path === '/chat' && location.pathname === '/chat' && !location.search);
 
         return (
           <motion.button
