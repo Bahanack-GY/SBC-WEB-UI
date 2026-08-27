@@ -29,6 +29,12 @@
   --color-success-soft: #E8F7EE;
   --color-success-dot: #22C55E; /* online indicator only, never a text bg */
 
+  /* Balance card fill. White text on this is 2.46:1, below WCAG AA (4.5:1) —
+     used that way by explicit request. --color-balance-strong is the darker
+     step that does carry white text (4.64:1). */
+  --color-balance: #92b127;
+  --color-balance-strong: #677D1C;
+
   --color-danger: #DC2626;
   --color-danger-soft: #FEE2E2;
 
