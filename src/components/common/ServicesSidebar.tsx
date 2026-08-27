@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Cancel01Icon, ConnectIcon, Home01Icon, Store01Icon, Megaphone01Icon, Call02Icon,
-  FavouriteIcon, Task01Icon, Mail01Icon, Wallet01Icon, UserGroupIcon,
+  FavouriteIcon, Mail01Icon, Wallet01Icon, UserGroupIcon,
   ChampionIcon, CreditCardIcon, Coins01Icon, Message01Icon, User02Icon,
   HandshakeIcon, ArrowRight01Icon, StatusIcon,
 } from '@hugeicons/core-free-icons';
@@ -33,7 +33,6 @@ const GROUPS: { title: string; items: Item[] }[] = [
     title: 'Boutique',
     items: [
       { label: 'SBC Shop', to: '/marketplace', icon: Store01Icon, tint: 'bg-accent-soft text-accent' },
-      { label: 'Mes produits', to: '/mes-produits', icon: Task01Icon, tint: 'bg-surface-2 text-ink-2' },
     ],
   },
   {

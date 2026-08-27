@@ -20,7 +20,8 @@ function RewardSystem({ mySales }: { mySales?: number }) {
         <h2 className="text-base font-bold text-ink">Système de récompense</h2>
       </div>
       <p className="text-xs text-ink-3 -mt-1">
-        Les badges se gagnent sur vos ventes du mois.
+        Les badges se gagnent sur vos ventes du mois. Le bonus est versé sur votre
+        <strong className="font-semibold text-ink-2"> solde d'activation</strong>, pour activer vos filleuls.
       </p>
 
       <ul className="flex flex-col gap-2 mt-1">

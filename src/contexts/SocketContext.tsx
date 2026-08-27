@@ -7,6 +7,7 @@ import type {
   Status,
   TypingEvent,
   MessageStatusEvent,
+  MessagesReadEvent,
   MessageDeletedEvent,
   UserPresenceEvent,
   SocketError,
@@ -39,6 +40,7 @@ interface SocketContextType {
   onNewMessage: (callback: (message: Message) => void) => () => void;
   onMessageSent: (callback: (message: Message) => void) => () => void;
   onMessageStatus: (callback: (event: MessageStatusEvent) => void) => () => void;
+  onMessagesRead: (callback: (event: MessagesReadEvent) => void) => () => void;
   onMessageDeleted: (callback: (event: MessageDeletedEvent) => void) => () => void;
   onTyping: (callback: (event: TypingEvent) => void) => () => void;
   onStoppedTyping: (callback: (event: TypingEvent) => void) => () => void;
@@ -222,6 +224,14 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     return () => { socket?.off('message:status', callback); };
   }, [socket]);
 
+  // The server emits `message:read` (not `message:status`) when someone reads a
+  // conversation, and it carries the conversationId — which is what lets the
+  // list clear the right badge instead of all of them.
+  const onMessagesRead = useCallback((callback: (event: MessagesReadEvent) => void) => {
+    socket?.on('message:read', callback);
+    return () => { socket?.off('message:read', callback); };
+  }, [socket]);
+
   const onMessageDeleted = useCallback((callback: (event: MessageDeletedEvent) => void) => {
     socket?.on('message:deleted', callback);
     return () => { socket?.off('message:deleted', callback); };
@@ -291,6 +301,7 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
     onNewMessage,
     onMessageSent,
     onMessageStatus,
+    onMessagesRead,
     onMessageDeleted,
     onTyping,
     onStoppedTyping,

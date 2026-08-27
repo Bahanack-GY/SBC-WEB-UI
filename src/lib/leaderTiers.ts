@@ -10,7 +10,7 @@ export interface LeaderTier {
   label: string;
   /** Minimum sales in the month to hold this badge. */
   minSales: number;
-  /** Cash bonus in FCFA. */
+  /** Bonus in FCFA, credited to the activation balance (not withdrawable). */
   bonusXaf: number;
   /** Extra reward on top of the cash, if any. */
   extra?: string;

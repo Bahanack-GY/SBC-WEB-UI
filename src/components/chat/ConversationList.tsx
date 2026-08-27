@@ -30,7 +30,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
   const navigate = useNavigate();
   const { user } = useAuth();
   const isAdmin = user?.role === 'admin';
-  const { onNewMessage, onMessageStatus, onUserOnline, onUserOffline, onlineUsers, isConnected } = useSocket();
+  const { onNewMessage, onMessagesRead, onUserOnline, onUserOffline, onlineUsers, isConnected } = useSocket();
 
   // State management
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -189,15 +189,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
       });
     });
 
-    const unsubscribeMessageStatus = onMessageStatus((event) => {
-      if (event.status === 'read') {
-        setConversations(prev =>
-          prev.map(conv => ({
-            ...conv,
-            unreadCount: 0, // Reset unread when messages are read
-          }))
-        );
-      }
+    // Someone (usually this user, on another device) read a conversation: clear
+    // the badge for THAT conversation. The previous handler listened for a
+    // `message:status` event the server never emits, and zeroed every
+    // conversation's badge when it did fire.
+    const unsubscribeMessagesRead = onMessagesRead((event) => {
+      if (event.readBy && user?._id && event.readBy !== user._id) return;
+      setConversations(prev =>
+        prev.map(conv => (conv._id === event.conversationId ? { ...conv, unreadCount: 0 } : conv))
+      );
     });
 
     const unsubscribeUserOnline = onUserOnline((event) => {
@@ -224,11 +224,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
 
     return () => {
       unsubscribeNewMessage();
-      unsubscribeMessageStatus();
+      unsubscribeMessagesRead();
       unsubscribeUserOnline();
       unsubscribeUserOffline();
     };
-  }, [onNewMessage, onMessageStatus, onUserOnline, onUserOffline]);
+  }, [onNewMessage, onMessagesRead, onUserOnline, onUserOffline, user?._id]);
 
   // Infinite scroll
   const handleScroll = useCallback(() => {
@@ -491,6 +491,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
     if (selectionMode) {
       toggleConversationSelection(conv._id);
     } else {
+      // Opening it IS reading it — drop the badge now rather than waiting for
+      // the socket round trip, so the list never comes back still shouting
+      // about messages the user has just read.
+      if (conv.unreadCount > 0) {
+        setConversations(prev =>
+          prev.map(c => (c._id === conv._id ? { ...c, unreadCount: 0 } : c))
+        );
+      }
       if (onConversationClick) {
         onConversationClick(conv);
       } else {
@@ -770,7 +778,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                       <p className={`text-sm truncate ${
                         conv.unreadCount > 0 ? 'font-medium text-gray-900' : 'text-gray-600'
                       }`}>
-                        {conv.lastMessage?.content || 'Aucun message'}
+                        {/* SBC Love conversations deliberately store no preview —
+                            the plaintext must not leak out of the encrypted message
+                            doc — so an empty preview on a conversation that HAS a
+                            last message means "private", not "empty". */}
+                        {conv.lastMessage?.content
+                          || (conv.lastMessageAt ? 'Message privé' : 'Aucun message')}
                       </p>
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         {/* Acceptance badge - shown to recipients who need to accept */}

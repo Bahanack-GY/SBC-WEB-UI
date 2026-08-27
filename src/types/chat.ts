@@ -153,6 +153,14 @@ export interface MessageStatusEvent {
   readBy: string[];
 }
 
+/** `message:read` — emitted to a conversation room when a participant reads it. */
+export interface MessagesReadEvent {
+  conversationId: string;
+  messageIds?: string[];
+  readBy: string;
+  readAt: string;
+}
+
 export interface MessageDeletedEvent {
   messageId: string;
   conversationId: string;
