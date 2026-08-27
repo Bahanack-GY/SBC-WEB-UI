@@ -46,10 +46,23 @@ export type ShopBusinessType =
   | 'food' | 'apparel' | 'cosmetics' | 'jewelry' | 'electronics' | 'general' | 'digital';
 
 export interface Shop {
+  /**
+   * The shop's subdomain label. NOT a stable identifier — an owner can rename
+   * it and there is no alias, so never store it as a key. It is shown and used
+   * for search only.
+   */
   slug: string;
   name: string;
   businessType: ShopBusinessType;
+  /**
+   * Link to this rather than building a URL from the slug: a shop on its own
+   * custom domain returns that domain here.
+   */
   url: string;
+  /** Absolute URL, or null when the owner never uploaded one (~41% of shops). */
+  logoUrl: string | null;
+  /** Absolute storefront hero, or null (~66% of shops). Video heroes report null. */
+  bannerUrl: string | null;
   createdAt: string;
 }
 
