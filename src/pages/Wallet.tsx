@@ -1,6 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowReloadHorizontalIcon, ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, CreditCardIcon, Exchange01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneyReceive01Icon, MoneySend01Icon, Share08Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import BackButton from "../components/common/BackButton";
+import WalletCardStack from "../components/wallet/WalletCardStack";
 import { useState, useEffect, useRef } from "react";
 import { AreaChart, Area, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
 import { motion, AnimatePresence } from 'motion/react';
@@ -860,54 +861,34 @@ function Wallet() {
           </div>
         ) : (
           <>
-            {/* Balance Card */}
-            <div className="bg-primary wallet-balance rounded-2xl p-5 mb-6">
-              <div className="text-sm opacity-80">Vos soldes</div>
-              <div className="flex flex-col gap-2 mb-3">
-                <div className="flex justify-between items-center">
-                  <div className={`text-2xl font-bold ${balance < 0 ? 'text-red-300' : ''}`}>
-                    {balance.toLocaleString('fr-FR')} F
-                  </div>
-                  <div className="text-xs opacity-80">FCFA</div>
+            {/* Balance Card — the two wallets as a card stack */}
+            <div className="wallet-balance mb-6">
+              <WalletCardStack balanceXaf={balance} balanceUsd={usdBalance} />
+            </div>
+
+            {/* Bénéfices / Retraits summary, kept from the old card */}
+            <div className="bg-surface border border-border rounded-2xl p-4 mb-6 flex justify-between text-sm">
+              <div>
+                <div className="text-ink-3 text-xs mb-1">Bénéfices</div>
+                <div className="font-bold text-ink">
+                  {(Number(stats?.overall?.deposit?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
                 </div>
-                <div className="flex justify-between items-center">
-                  <div className={`text-xl font-bold ${usdBalance < 0 ? 'text-red-300' : ''}`}>
-                    ${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount > 0 && (
+                  <div className="font-semibold text-xs text-success">
+                    ${(Number(stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
                   </div>
-                  <div className="text-xs opacity-80">USD</div>
-                </div>
+                )}
               </div>
-              <div className="flex justify-between text-sm mt-2">
-                <div>
-                  <div className="opacity-80">Bénéfices</div>
-                  <div className="space-y-1">
-                    {/* FCFA Deposits */}
-                    <div className="font-bold text-xs">
-                      {(Number(stats?.overall?.deposit?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
-                    </div>
-                    {/* USD Deposits */}
-                    {stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount > 0 && (
-                      <div className="font-bold text-xs text-green-400">
-                        ${(Number(stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
-                      </div>
-                    )}
-                  </div>
+              <div className="text-right">
+                <div className="text-ink-3 text-xs mb-1">Retraits</div>
+                <div className="font-bold text-ink">
+                  {(Number(stats?.overall?.withdrawal?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
                 </div>
-                <div>
-                  <div className="opacity-80">Retraits</div>
-                  <div className="space-y-1">
-                    {/* FCFA Withdrawals */}
-                    <div className="font-bold text-xs">
-                      {(Number(stats?.overall?.withdrawal?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
-                    </div>
-                    {/* USD Withdrawals */}
-                    {stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount > 0 && (
-                      <div className="font-bold text-xs text-red-400">
-                        ${(Number(stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
-                      </div>
-                    )}
+                {stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount > 0 && (
+                  <div className="font-semibold text-xs text-danger">
+                    ${(Number(stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
                   </div>
-                </div>
+                )}
               </div>
             </div>
             {/* Action Buttons */}
