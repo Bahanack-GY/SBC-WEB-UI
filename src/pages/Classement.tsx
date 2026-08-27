@@ -1,10 +1,11 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ChampionIcon, GiftIcon } from '@hugeicons/core-free-icons';
+import { ChampionIcon } from '@hugeicons/core-free-icons';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import BackButton from '../components/common/BackButton';
 import Podium from '../components/leaderboard/Podium';
 import LeaderboardRow from '../components/leaderboard/LeaderboardRow';
 import { LeaderboardSkeleton, LeaderboardEmpty, LeaderboardError } from '../components/leaderboard/LeaderboardStates';
+import RewardSystem from '../components/leaderboard/RewardSystem';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -52,15 +53,12 @@ function Classement() {
           </>
         )}
 
-        <div className="bg-accent-soft rounded-card p-3 flex gap-3 items-start mt-2">
-          <HugeiconsIcon icon={GiftIcon} size={20} className="text-accent shrink-0 mt-0.5" />
-          <p className="text-xs text-ink-2 leading-relaxed">
-            <span className="font-semibold text-ink">Prix à gagner ce mois.</span> Le top 10 des
-            affiliés reçoit jusqu'à 1 500 000 FCFA + bonus paliers. Classement mis à jour chaque
-            heure, remis à zéro le 1<sup>er</sup> de chaque mois. Les montants affichés sont une
-            estimation.
-          </p>
-        </div>
+        <RewardSystem />
+
+        <p className="text-[11px] text-ink-3 text-center">
+          Classement mis à jour chaque heure, remis à zéro le 1<sup>er</sup> de chaque mois.
+          Les montants affichés sont une estimation.
+        </p>
       </div>
     </ProtectedRoute>
   );

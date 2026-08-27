@@ -3,6 +3,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { CrownIcon } from '@hugeicons/core-free-icons';
 import Avatar from './Avatar';
 import { fcfa, flag, cn } from '../../lib/utils';
+import { tierForSales } from '../../lib/leaderTiers';
 import type { LeaderboardEntry } from '../../types/api';
 
 /** Visual order is 2nd, 1st, 3rd — the winner sits in the middle and taller. */
@@ -10,6 +11,7 @@ const SLOTS = [1, 0, 2] as const;
 
 function Block({ entry, place }: { entry: LeaderboardEntry; place: number }) {
   const isWinner = place === 0;
+  const tier = tierForSales(entry.referralCount);
   return (
     <motion.div
       initial={{ opacity: 0, y: 16 }}
@@ -55,6 +57,11 @@ function Block({ entry, place }: { entry: LeaderboardEntry; place: number }) {
         </p>
         <p className="text-[11px] text-ink-3">filleuls</p>
         <p className="mt-1 text-[11px] font-semibold text-accent">{fcfa(entry.earnings)}</p>
+        {tier && (
+          <span className={cn('mt-1 inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-pill', tier.tint)}>
+            {tier.label}
+          </span>
+        )}
       </div>
     </motion.div>
   );

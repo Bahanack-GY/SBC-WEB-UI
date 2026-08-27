@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import Avatar from './Avatar';
-import { fcfa, flag } from '../../lib/utils';
+import { fcfa, flag, cn } from '../../lib/utils';
+import { tierForSales } from '../../lib/leaderTiers';
 import type { LeaderboardEntry } from '../../types/api';
 
 /** Ranks 4 and below: a row with a progress bar relative to the leader. */
@@ -10,6 +11,7 @@ function LeaderboardRow({ entry, leaderCount, index }: {
   index: number;
 }) {
   const pct = leaderCount > 0 ? Math.min(100, Math.round((entry.referralCount / leaderCount) * 100)) : 0;
+  const tier = tierForSales(entry.referralCount);
 
   return (
     <motion.li
@@ -23,8 +25,14 @@ function LeaderboardRow({ entry, leaderCount, index }: {
 
       <div className="min-w-0 flex-1">
         <div className="flex items-baseline justify-between gap-2">
-          <p className="text-sm font-semibold text-ink truncate">
-            {entry.name} <span className="font-normal">{flag(entry.country)}</span>
+          <p className="text-sm font-semibold text-ink truncate flex items-center gap-1.5 min-w-0">
+            <span className="truncate">{entry.name}</span>
+            <span className="font-normal shrink-0">{flag(entry.country)}</span>
+            {tier && (
+              <span className={cn('shrink-0 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-pill', tier.tint)}>
+                {tier.label}
+              </span>
+            )}
           </p>
           <p className="text-sm font-semibold text-success shrink-0">{entry.referralCount} filleuls</p>
         </div>
