@@ -1,6 +1,6 @@
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiEdit2, FiMail, FiPhone, FiCreditCard, FiUsers, FiUserCheck, FiBriefcase, FiChevronRight, FiCopy, FiLink, FiLock, FiHelpCircle, FiLoader, FiGift } from 'react-icons/fi';
-import { FaEnvelope, FaWhatsapp } from 'react-icons/fa';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, PencilEdit01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -23,17 +23,17 @@ type ActionItem = {
 };
 
 const baseActions: ActionItem[] = [
-  { label: 'Modifier le profil', icon: <FiEdit2 className="text-[#115CF6]" />, to: '/modifier-le-profil' },
-  { label: 'Modifier mon email', icon: <FiMail className="text-[#115CF6]" />, to: '/modifier-email' },
-  { label: 'Changer le numéro de téléphone', icon: <FiPhone className="text-[#115CF6]" />, to: '/change-phone' },
-  { label: 'Modifier mon mot de passe', icon: <FiLock className="text-[#115CF6]" />, to: '/change-password' },
-  { label: 'Mon Abonnement', icon: <FiCreditCard className="text-[#115CF6]" />, to: '/changer-abonnement' },
-  { label: 'Solde d\'Activation', icon: <FiGift className="text-amber-500" />, to: '/activation-balance' },
-  { label: 'Mes Contacts', icon: <FiPhone className="text-[#115CF6]" />, to: '/contacts' },
-  { label: 'Mes filleuls', icon: <FiUsers className="text-[#115CF6]" />, to: '/filleuls' },
-  { label: 'Mon Parrain', icon: <FiUserCheck className="text-[#115CF6]" />, to: '/parrain' },
-  { label: 'Espace partenaire', icon: <FiBriefcase className="text-[#115CF6]" />, to: '/partenaire' },
-  { label: 'Rejoindre la communauté', icon: <FaWhatsapp className="text-green-500" />, to: 'https://www.whatsapp.com/channel/0029Vav3mvCElah05C8QuT03', external: true },
+  { label: 'Modifier le profil', icon: <HugeiconsIcon icon={PencilEdit01Icon} className="text-primary" />, to: '/modifier-le-profil' },
+  { label: 'Modifier mon email', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/modifier-email' },
+  { label: 'Changer le numéro de téléphone', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/change-phone' },
+  { label: 'Modifier mon mot de passe', icon: <HugeiconsIcon icon={LockIcon} className="text-primary" />, to: '/change-password' },
+  { label: 'Mon Abonnement', icon: <HugeiconsIcon icon={CreditCardIcon} className="text-primary" />, to: '/changer-abonnement' },
+  { label: 'Solde d\'Activation', icon: <HugeiconsIcon icon={GiftIcon} className="text-amber-500" />, to: '/activation-balance' },
+  { label: 'Mes Contacts', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/contacts' },
+  { label: 'Mes filleuls', icon: <HugeiconsIcon icon={UserGroupIcon} className="text-primary" />, to: '/filleuls' },
+  { label: 'Mon Parrain', icon: <HugeiconsIcon icon={UserCheck01Icon} className="text-primary" />, to: '/parrain' },
+  { label: 'Espace partenaire', icon: <HugeiconsIcon icon={Briefcase01Icon} className="text-primary" />, to: '/partenaire' },
+  { label: 'Rejoindre la communauté', icon: <HugeiconsIcon icon={WhatsappIcon} className="text-green-500" />, to: 'https://www.whatsapp.com/channel/0029Vav3mvCElah05C8QuT03', external: true },
 ];
 
 function Profile() {
@@ -70,7 +70,7 @@ function Profile() {
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
     ...baseActions.slice(0, 7), // Up to "Mes Contacts"
-    { label: 'Relance', icon: <FaEnvelope className="text-[#115CF6]" />, to: '/relance' },
+    { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/relance' },
     ...baseActions.slice(7), // Rest of the actions
   ];
 
@@ -169,7 +169,7 @@ function Profile() {
             href="${escape(groupLink)}"
             target="_blank"
             rel="noopener noreferrer"
-            class="inline-flex items-center justify-center gap-2 w-full min-h-[48px] mt-2 px-4 rounded-xl bg-[#25D366] hover:bg-[#128C7E] text-white font-bold text-sm"
+            class="inline-flex items-center justify-center gap-2 w-full min-h-[48px] mt-2 px-4 rounded-xl bg-whatsapp hover:bg-[#128C7E] text-white font-bold text-sm"
           >
             📱 Rejoindre le groupe WhatsApp
           </a>
@@ -179,7 +179,7 @@ function Profile() {
         `;
       setAffiliatorModalContent(`
         <div class="flex flex-col items-center justify-center p-4">
-          <img src="${escape(avatarUrl)}" alt="avatar" class="w-20 h-20 rounded-full object-cover mb-4 border-2 border-gray-200"/>
+          <img src="${escape(avatarUrl)}" alt="avatar" class="w-20 h-20 rounded-full object-cover mb-4 border-2 border-border"/>
           <p class="text-lg font-bold mb-1">${escape(affiliator.name)}</p>
           <p class="text-sm text-gray-600 mb-1">${escape(affiliator.email)}</p>
           ${contactBlock}
@@ -246,9 +246,9 @@ function Profile() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-0">
+      <div className="min-h-screen bg-bg flex flex-col items-center py-0">
         <div className="w-full max-w-md mx-auto rounded-b-3xl overflow-hidden pb-6">
-          <div className="relative bg-gradient-to-tr from-[#115CF6] to-[#4F8CFF] h-32 rounded-b-3xl flex flex-col items-center justify-end">
+          <div className="bg-primary relative h-32 rounded-b-3xl flex flex-col items-center justify-end">
             <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2">
               <Skeleton width="w-24" height="h-24" rounded="rounded-full" />
             </div>
@@ -269,7 +269,7 @@ function Profile() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-0">
+      <div className="min-h-screen bg-bg flex flex-col items-center py-0">
         <motion.div
           initial={{ opacity: 0, y: -30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -280,16 +280,16 @@ function Profile() {
             <BackButton />
             <h3 className="text-xl font-medium text-center w-full text-gray-900">Mon profil</h3>
           </div>
-          <div className="relative bg-gradient-to-tr from-[#115CF6] to-[#4F8CFF] h-32 rounded-b-3xl flex flex-col items-center justify-end">
+          <div className="bg-primary relative h-32 rounded-b-3xl flex flex-col items-center justify-end">
             <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2">
               <div className="relative">
                 <img
                   src={ user?.avatar ? user.avatar : user?.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
                   alt="avatar"
-                  className="w-24 h-24 rounded-full border-4 border-white object-cover shadow-lg"
+                  className="w-24 h-24 rounded-full border-4 border-white object-cover"
                 />
-                <button className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white shadow text-white hover:bg-blue-800 transition-colors">
-                  <FiEdit2 size={16} />
+                <button className="absolute bottom-2 right-2 bg-primary p-2 rounded-full border-2 border-white text-white hover:bg-blue-800 transition-colors">
+                  <HugeiconsIcon icon={PencilEdit01Icon} size={16} />
                 </button>
               </div>
             </div>
@@ -323,10 +323,10 @@ function Profile() {
             <div className="mt-6 mx-4 flex gap-3">
               <button
                 onClick={() => handleCopy('code')}
-                className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow hover:bg-green-50 transition-colors"
+                className="flex-1 flex items-center gap-2 bg-white border border-border rounded-xl px-4 py-3 hover:bg-green-50 transition-colors"
               >
                 <span className="bg-green-100 text-green-600 rounded-full p-2">
-                  <FiCopy />
+                  <HugeiconsIcon icon={Copy01Icon} />
                 </span>
                 <span className="flex-1 font-medium text-gray-700 text-left">Copier mon code parrain</span>
                 {copied === 'code' ? (
@@ -335,10 +335,10 @@ function Profile() {
               </button>
               <button
                 onClick={() => handleCopy('link')}
-                className="flex-1 flex items-center gap-2 bg-white border border-gray-200 rounded-xl px-4 py-3 shadow hover:bg-blue-50 transition-colors"
+                className="flex-1 flex items-center gap-2 bg-white border border-border rounded-xl px-4 py-3 hover:bg-blue-50 transition-colors"
               >
                 <span className="bg-blue-100 text-blue-600 rounded-full p-2">
-                  <FiLink />
+                  <HugeiconsIcon icon={Link01Icon} />
                 </span>
                 <span className="flex-1 font-medium text-gray-700 text-left">Copier mon lien</span>
                 {copied === 'link' ? (
@@ -352,9 +352,9 @@ function Profile() {
             <div className="mt-4 mx-4">
               <button
                 onClick={() => setShowChangeReferralCodeModal(true)}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-green-500 to-indigo-600 text-white rounded-xl px-4 py-3 shadow-lg hover:from-green-700 hover:to-indigo-700 transition-all font-bold"
+                className="bg-primary w-full flex items-center justify-center gap-2 text-white rounded-xl px-4 py-3 transition-all font-bold"
               >
-                <FiEdit2 size={18} />
+                <HugeiconsIcon icon={PencilEdit01Icon} size={18} />
                 Changer mon code parrain
               </button>
             </div>
@@ -367,7 +367,7 @@ function Profile() {
                 initial={{ opacity: 0, x: 30 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + i * 0.07, duration: 0.4, type: 'spring' }}
-                className="w-full flex items-center gap-3 px-6 py-4 hover:bg-[#f1f5fd] transition cursor-pointer text-left relative"
+                className="w-full flex items-center gap-3 px-6 py-4 hover:bg-surface-2 transition cursor-pointer text-left relative"
               >
                 {action.icon}
                 <span className="flex-1 text-gray-700 font-medium">{action.label}</span>
@@ -376,7 +376,7 @@ function Profile() {
                     {action.badge}
                   </span>
                 )}
-                <FiChevronRight className="text-gray-400" />
+                <HugeiconsIcon icon={ArrowRight01Icon} className="text-gray-400" />
               </motion.button>
             ))}
             <div className="px-6 pt-6 space-y-3">
@@ -385,7 +385,7 @@ function Profile() {
                 disabled={!hasSeenTour}
                 className="w-full flex items-center justify-center gap-2 bg-blue-50 text-blue-600 font-medium py-3 rounded-xl hover:bg-blue-100 transition"
               >
-                <FiHelpCircle size={20} />
+                <HugeiconsIcon icon={HelpCircleIcon} size={20} />
                 <span>Voir le guide d'utilisation</span>
               </button>
               <button
@@ -411,7 +411,7 @@ function Profile() {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -430,7 +430,7 @@ function Profile() {
                         setNewReferralCode(e.target.value);
                         setChangeCodeFeedback(null); // Clear feedback on input change
                       }}
-                      className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                      className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none"
                       placeholder="Entrez le nouveau code"
                       required
                     />
@@ -443,14 +443,14 @@ function Profile() {
                   <div className="flex gap-3 mt-2">
                     <button
                       type="submit"
-                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
+                      className="flex-1 bg-primary text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors flex items-center justify-center gap-2 disabled:bg-blue-400"
                       disabled={changeCodeLoading}
                     >
-                      {changeCodeLoading ? <FiLoader className="animate-spin" /> : 'Sauvegarder'}
+                      {changeCodeLoading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Sauvegarder'}
                     </button>
                     <button
                       type="button"
-                      className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                      className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                       onClick={() => {
                         setShowChangeReferralCodeModal(false);
                         setNewReferralCode(user?.referralCode || ''); // Reset input to current code
@@ -477,7 +477,7 @@ function Profile() {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -491,7 +491,7 @@ function Profile() {
                 <div className="flex gap-3 mt-2">
                   <button
                     type="button"
-                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                     onClick={() => {
                       setShowAffiliatorModal(false);
                       setAffiliatorModalContent(null);
@@ -514,7 +514,7 @@ function Profile() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+              className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -533,7 +533,7 @@ function Profile() {
                 <div className="flex gap-3 mt-2">
                   <button
                     type="button"
-                    className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                    className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold hover:bg-red-600 transition-colors"
                     onClick={() => {
                       modalContent.onConfirm?.();
                       setShowModal(false);
@@ -543,7 +543,7 @@ function Profile() {
                   </button>
                   <button
                     type="button"
-                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                    className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                     onClick={() => setShowModal(false)}
                   >
                     Annuler
@@ -552,7 +552,7 @@ function Profile() {
               ) : (
                 <button
                   type="button"
-                  className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                  className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                   onClick={() => setShowModal(false)}
                 >
                   Fermer

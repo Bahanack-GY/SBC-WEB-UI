@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Call02Icon, Cancel01Icon, EyeIcon, User02Icon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useCallback } from 'react';
-import { FiUser, FiPhone, FiX, FiEye, FiEyeOff } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
@@ -678,20 +679,20 @@ function Signup() {
   };
 
   const stepIcons = [
-    <FiUser size={40} className="text-[#115CF6] mx-auto" />,
-    <FiPhone size={40} className="text-[#115CF6] mx-auto" />,
+    <HugeiconsIcon icon={User02Icon} size={40} className="text-primary mx-auto" />,
+    <HugeiconsIcon icon={Call02Icon} size={40} className="text-primary mx-auto" />,
   ];
 
   return (
-    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-center bg-[#f8fafc] py-8 px-4">
-      <motion.div variants={sectionRise} className="w-full max-w-md bg-white rounded-3xl shadow-lg p-8">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen flex flex-col items-center justify-center bg-bg py-8 px-4">
+      <motion.div variants={sectionRise} className="w-full max-w-md bg-white rounded-3xl p-8 border border-border">
         {/* Progress indicator */}
         <div className="flex items-center justify-center gap-2 mb-6">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-300 ${
-                i <= step ? 'bg-[#115CF6] w-10' : 'bg-gray-200 w-6'
+                i <= step ? 'bg-primary w-10' : 'bg-gray-200 w-6'
               }`}
             />
           ))}
@@ -710,12 +711,12 @@ function Signup() {
             <>
               <div>
                 <label className="block text-gray-700 mb-1">👤 Nom complet</label>
-                <input name="nom" value={data.nom} onChange={handleChange} placeholder="Ex: Jean Paul" className={`w-full border ${errors.nom ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
+                <input name="nom" value={data.nom} onChange={handleChange} placeholder="Ex: Jean Paul" className={`w-full border ${errors.nom ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.nom && <div className="text-red-500 text-xs">{errors.nom}</div>}
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">📧 Email</label>
-                <input name="email" value={data.email} onChange={handleChange} placeholder="Ex: Jeanpierre@gmail.com" className={`w-full border ${errors.email || errors.emailExists ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`} />
+                <input name="email" value={data.email} onChange={handleChange} placeholder="Ex: Jeanpierre@gmail.com" className={`w-full border ${errors.email || errors.emailExists ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`} />
                 {errors.email && <div className="text-red-500 text-xs">{errors.email}</div>}
                 {errors.emailExists && <div className="text-red-500 text-xs">{errors.emailExists}</div>}
                 {renderRecoveryStatusMessage('email')}
@@ -730,14 +731,14 @@ function Signup() {
                     value={data.password}
                     onChange={handleChange}
                     placeholder="Mot de passe"
-                    className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
+                    className={`w-full border ${errors.password ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
                   />
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    {showPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showPassword ? <HugeiconsIcon icon={ViewOffIcon} size={18} /> : <HugeiconsIcon icon={EyeIcon} size={18} />}
                   </button>
                 </div>
                 {errors.password && <div className="text-red-500 text-xs">{errors.password}</div>}
@@ -751,14 +752,14 @@ function Signup() {
                     value={data.confirmPassword}
                     onChange={handleChange}
                     placeholder="Confirmer mot de passe"
-                    className={`w-full border ${errors.confirmPassword ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
+                    className={`w-full border ${errors.confirmPassword ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 pr-12 focus:outline-none`}
                   />
                   <button
                     type="button"
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   >
-                    {showConfirmPassword ? <FiEyeOff size={18} /> : <FiEye size={18} />}
+                    {showConfirmPassword ? <HugeiconsIcon icon={ViewOffIcon} size={18} /> : <HugeiconsIcon icon={EyeIcon} size={18} />}
                   </button>
                 </div>
                 {errors.confirmPassword && <div className="text-red-500 text-xs">{errors.confirmPassword}</div>}
@@ -772,7 +773,7 @@ function Signup() {
                 <label className="block text-gray-700 mb-1">📱 Numéro WhatsApp</label>
                 <div className="flex gap-2">
                   <select
-                    className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
+                    className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white"
                     name="countryCodeSelect"
                     value={selectedCode.value}
                     onChange={handleChange}
@@ -786,7 +787,7 @@ function Signup() {
                     value={data.whatsapp}
                     onChange={handleChange}
                     placeholder="Ex: 675090755"
-                    className={`flex-1 border ${errors.whatsapp || errors.whatsappExists ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}
+                    className={`flex-1 border ${errors.whatsapp || errors.whatsappExists ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`}
                     style={{ minWidth: 0 }}
                   />
                 </div>
@@ -797,7 +798,7 @@ function Signup() {
               </div>
               <div>
                 <label className="block text-gray-700 mb-1">🌍 Pays</label>
-                <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none`}>
+                <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner le pays</option>
                   {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
@@ -810,7 +811,7 @@ function Signup() {
                   value={data.parrain}
                   onChange={handleChange}
                   placeholder="Code du parrain"
-                  className={`w-full border ${errors.parrain ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-2 focus:outline-none ${isAffiliationCodeDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+                  className={`w-full border ${errors.parrain ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none ${isAffiliationCodeDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   disabled={isAffiliationCodeDisabled}
                 />
                 {affiliateLoading && <div className="text-gray-500 text-xs mt-1">Vérification du code parrain...</div>}
@@ -819,7 +820,7 @@ function Signup() {
               </div>
               <div className="flex items-center gap-2 mt-2">
                 <input type="checkbox" name="cgu" checked={data.cgu} onChange={handleChange} className="accent-[#115CF6]" />
-                <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-[#115CF6] underline bg-transparent">conditions d'utilisation</button></span>
+                <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-primary underline bg-transparent">conditions d'utilisation</button></span>
               </div>
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
             </>
@@ -831,7 +832,7 @@ function Signup() {
             {step < TOTAL_STEPS - 1 && (
               <button
                 onClick={handleNext}
-                className="bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-2 ml-auto"
+                className="bg-primary hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
                 Suivant
               </button>
@@ -840,7 +841,7 @@ function Signup() {
               <button
                 onClick={handleRegister}
                 disabled={loading || checkingExistence || !data.cgu || affiliateLoading}
-                className="bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
+                className="bg-primary hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
                 {loading ? 'Inscription...' : checkingExistence ? 'Vérification...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
               </button>
@@ -848,7 +849,7 @@ function Signup() {
           </div>
         </form>
         <div className="text-center text-sm text-gray-500 mt-6">
-          Déjà un compte ? <a href="/connexion" className="text-[#115CF6] font-semibold hover:underline">Connexion</a>
+          Déjà un compte ? <a href="/connexion" className="text-primary font-semibold hover:underline">Connexion</a>
         </div>
       </motion.div>
 
@@ -858,8 +859,8 @@ function Signup() {
 
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl shadow-lg max-w-lg w-full p-6 relative animate-fadeIn">
-            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"><FiX /></button>
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 relative animate-fadeIn border border-border">
+            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"><HugeiconsIcon icon={Cancel01Icon} /></button>
             <h3 className="text-xl font-bold mb-4 text-center">Conditions d'utilisation</h3>
             <div className="text-gray-700 text-sm max-h-[60vh] overflow-y-auto px-1">
               {settingsLoading ? (

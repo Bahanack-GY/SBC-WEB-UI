@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { AlertCircleIcon, Cancel01Icon, Dollar01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiAlertCircle, FiX, FiUsers, FiDollarSign } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface NegativeBalanceNotificationProps {
   isOpen: boolean;
@@ -39,7 +40,7 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
           transition={{ duration: 0.3 }}
         >
           <motion.div
-            className="bg-white rounded-2xl shadow-2xl max-w-lg w-full max-w-[95vw] sm:max-w-lg mx-auto my-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl max-w-lg w-full max-w-[95vw] sm:max-w-lg mx-auto my-4 p-4 sm:p-6 max-h-[90vh] overflow-y-auto border border-border"
             initial={{ opacity: 0, scale: 0.9, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 20 }}
@@ -47,14 +48,14 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
           >
             <div className="flex items-start mb-3 sm:mb-4">
               <div className="bg-red-100 rounded-full p-2 sm:p-3 mr-3 sm:mr-4 flex-shrink-0">
-                <FiAlertCircle className="text-red-600" size={20} />
+                <HugeiconsIcon icon={AlertCircleIcon} className="text-red-600" size={20} />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="text-base sm:text-lg font-bold text-gray-800 mb-1">
                   ⚠️ Solde Négatif Détecté
                 </h3>
                 <div className="flex items-center text-red-600 text-sm mb-2 sm:mb-3">
-                  <FiDollarSign size={14} className="mr-1 flex-shrink-0" />
+                  <HugeiconsIcon icon={Dollar01Icon} size={14} className="mr-1 flex-shrink-0" />
                   <span className="truncate">-{Math.abs(negativeBalance).toLocaleString()} XAF</span>
                 </div>
               </div>
@@ -62,20 +63,20 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
                 onClick={onClose}
                 className="text-gray-400 hover:text-gray-600 transition-colors flex-shrink-0 ml-2"
               >
-                <FiX size={18} />
+                <HugeiconsIcon icon={Cancel01Icon} size={18} />
               </button>
             </div>
 
-            <div className="bg-red-50 border-l-4 border-red-400 p-3 sm:p-4 rounded-r-lg mb-3 sm:mb-4">
+            <div className="bg-red-50 border-l-4 border-danger p-3 sm:p-4 rounded-r-lg mb-3 sm:mb-4">
               <div className="flex items-start">
-                <FiUsers className="text-red-600 mr-2 sm:mr-3 mt-1 flex-shrink-0" size={18} />
+                <HugeiconsIcon icon={UserGroupIcon} className="text-red-600 mr-2 sm:mr-3 mt-1 flex-shrink-0" size={18} />
                 <div className="text-gray-700 text-sm leading-relaxed">
                   {message}
                 </div>
               </div>
             </div>
 
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+            <div className="bg-blue-50 border border-border rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
               <h4 className="font-semibold text-blue-800 mb-2 sm:mb-3 text-sm">
                 🔧 Comment résoudre ce problème :
               </h4>
@@ -89,7 +90,7 @@ const NegativeBalanceNotification: React.FC<NegativeBalanceNotificationProps> = 
               </div>
             </div>
 
-            <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
+            <div className="bg-green-50 border border-border rounded-lg p-3 sm:p-4 mb-3 sm:mb-4">
               <h4 className="font-semibold text-green-800 mb-2 text-sm">
                 💡 Avantages pour vos filleuls :
               </h4>

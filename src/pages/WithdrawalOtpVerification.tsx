@@ -1,12 +1,13 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Bitcoin01Icon, Cancel01Icon, Loading03Icon, SmartPhone01Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { FaWallet, FaCheck, FaSpinner, FaTimes, FaMobileAlt, FaBitcoin } from 'react-icons/fa';
 import { canCancelWithdrawal } from '../utils/transactionHelpers';
 
 interface WithdrawalOtpState {
@@ -129,7 +130,7 @@ const WithdrawalOtpVerification: React.FC = () => {
 
           <div className="flex flex-col items-center justify-center min-h-[60vh]">
             <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             
             <h2 className="text-2xl font-bold text-green-600 mb-4">Success!</h2>
@@ -174,9 +175,9 @@ const WithdrawalOtpVerification: React.FC = () => {
             <div className="flex items-center space-x-3 mb-4">
               <div className="text-blue-600">
                 {withdrawalState.withdrawalType === 'crypto' ? (
-                  <FaBitcoin size={24} />
+                  <HugeiconsIcon icon={Bitcoin01Icon} size={24} />
                 ) : (
-                  <FaMobileAlt size={24} />
+                  <HugeiconsIcon icon={SmartPhone01Icon} size={24} />
                 )}
               </div>
               <div>
@@ -194,16 +195,16 @@ const WithdrawalOtpVerification: React.FC = () => {
           </div>
 
           {/* OTP Verification Section */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+          <div className="bg-white rounded-2xl border border-border p-6 mb-6">
             <div className="text-center mb-6">
               <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaWallet className="text-blue-600" size={24} />
+                <HugeiconsIcon icon={Wallet01Icon} className="text-blue-600" size={24} />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Enter Verification Code</h4>
               <p className="text-sm text-gray-600">
                 We've sent a verification code to your registered email and phone number.
               </p>
-              <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mt-2">
+              <p className="text-xs text-amber-600 bg-amber-50 border border-border rounded-lg px-3 py-2 mt-2">
                 If you can't find the email, please check your spam or junk folder.
               </p>
             </div>
@@ -225,7 +226,7 @@ const WithdrawalOtpVerification: React.FC = () => {
                   }}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest font-mono"
+                  className="w-full px-4 py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-2xl tracking-widest font-mono"
                   autoFocus
                 />
               </div>
@@ -237,7 +238,7 @@ const WithdrawalOtpVerification: React.FC = () => {
               >
                 {loading ? (
                   <>
-                    <FaSpinner className="animate-spin mr-2" />
+                    <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-2" />
                     Verifying...
                   </>
                 ) : (
@@ -257,7 +258,7 @@ const WithdrawalOtpVerification: React.FC = () => {
                   onClick={handleCancel}
                   className="text-red-600 hover:text-red-700 font-medium flex items-center"
                 >
-                  <FaTimes size={12} className="mr-1" />
+                  <HugeiconsIcon icon={Cancel01Icon} size={12} className="mr-1" />
                   Cancel
                 </button>
               </div>
@@ -266,13 +267,13 @@ const WithdrawalOtpVerification: React.FC = () => {
 
           {/* Error Message */}
           {error && (
-            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+            <div className="mb-4 p-4 bg-red-50 border border-border rounded-xl">
               <p className="text-red-600 text-sm text-center">{error}</p>
             </div>
           )}
 
           {/* Important Notes */}
-          <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+          <div className="bg-yellow-50 border border-border rounded-xl p-4">
             <h5 className="font-semibold text-yellow-800 mb-2">Important Notes:</h5>
             <ul className="text-xs text-yellow-700 space-y-1">
               <li>• The verification code expires in 10 minutes</li>
@@ -294,7 +295,7 @@ const WithdrawalOtpVerification: React.FC = () => {
               onClick={() => setResendModal({ show: false, message: '' })}
             >
               <motion.div
-                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}

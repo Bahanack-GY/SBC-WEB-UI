@@ -1,10 +1,11 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Image01Icon, Loading03Icon, Shield01Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FaSpinner, FaImage, FaShieldAlt } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
 const MIN_AMOUNT = 6000;
@@ -155,8 +156,8 @@ function AdsNetworkCampaignForm() {
           <h1 className="text-2xl font-bold text-gray-900 mt-2">Nouvelle annonce</h1>
         </motion.div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 mt-3 text-sm text-blue-900 flex items-start gap-2">
-          <FaShieldAlt className="mt-0.5 shrink-0" />
+        <div className="bg-blue-50 border border-border rounded-xl p-3 mt-3 text-sm text-blue-900 flex items-start gap-2">
+          <HugeiconsIcon icon={Shield01Icon} className="mt-0.5 shrink-0" />
           <span>
             Votre annonce sera relue par notre équipe avant d'être diffusée. Vous
             paierez une fois qu'elle sera validée.
@@ -166,12 +167,12 @@ function AdsNetworkCampaignForm() {
         <motion.div variants={listContainer} initial="hidden" animate="show" className="space-y-4 mt-5">
           <motion.div variants={listItem}>
             <label className="block text-sm font-medium text-gray-800 mb-1">Visuel à publier</label>
-            <label className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-2xl p-6 cursor-pointer">
+            <label className="flex flex-col items-center justify-center border-2 border-dashed border-border rounded-2xl p-6 cursor-pointer">
               {preview ? (
                 <img src={preview} alt="Aperçu" className="max-h-56 rounded-xl" />
               ) : (
                 <>
-                  <FaImage className="text-gray-400" size={28} />
+                  <HugeiconsIcon icon={Image01Icon} className="text-gray-400" size={28} />
                   <span className="text-sm text-gray-500 mt-2">Choisir une image ou une vidéo</span>
                 </>
               )}
@@ -191,7 +192,7 @@ function AdsNetworkCampaignForm() {
               onChange={(e) => setTitle(e.target.value)}
               maxLength={120}
               placeholder="ex. Promo rentrée — sacs à dos"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </motion.div>
 
@@ -203,7 +204,7 @@ function AdsNetworkCampaignForm() {
               rows={3}
               maxLength={2000}
               placeholder="Ce que voit un prospect sur votre page."
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </motion.div>
 
@@ -217,7 +218,7 @@ function AdsNetworkCampaignForm() {
               rows={3}
               maxLength={600}
               placeholder="Le texte qui accompagnera votre visuel sur leur statut."
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
             />
             <p className="text-xs text-gray-500 mt-1">
               Le lien de suivi de chaque diffuseur y sera ajouté automatiquement.
@@ -231,19 +232,19 @@ function AdsNetworkCampaignForm() {
               value={contactWhatsapp}
               onChange={(e) => setContactWhatsapp(e.target.value)}
               placeholder="WhatsApp (ex. +237600000000)"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-2 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 mb-2 focus:ring-2 focus:ring-primary focus:outline-none"
             />
             <input
               value={contactPhone}
               onChange={(e) => setContactPhone(e.target.value)}
               placeholder="Téléphone"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 mb-2 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 mb-2 focus:ring-2 focus:ring-primary focus:outline-none"
             />
             <input
               value={websiteUrl}
               onChange={(e) => setWebsiteUrl(e.target.value)}
               placeholder="Site web (https://…)"
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
             />
           </motion.div>
 
@@ -259,7 +260,7 @@ function AdsNetworkCampaignForm() {
                   key={c.code}
                   type="button"
                   onClick={() => toggle(countries, c.code, setCountries)}
-                  className={`px-3 py-1.5 rounded-full text-sm border ${countries.includes(c.code) ? 'bg-[#115CF6] text-white border-[#115CF6]' : 'bg-white text-gray-700 border-gray-300'}`}
+                  className={`px-3 py-1.5 rounded-full text-sm border ${countries.includes(c.code) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-border'}`}
                 >
                   {c.label}
                 </button>
@@ -271,7 +272,7 @@ function AdsNetworkCampaignForm() {
                   key={s.v}
                   type="button"
                   onClick={() => toggle(sex, s.v, setSex)}
-                  className={`px-3 py-1.5 rounded-full text-sm border ${sex.includes(s.v) ? 'bg-[#115CF6] text-white border-[#115CF6]' : 'bg-white text-gray-700 border-gray-300'}`}
+                  className={`px-3 py-1.5 rounded-full text-sm border ${sex.includes(s.v) ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-border'}`}
                 >
                   {s.l}
                 </button>
@@ -293,7 +294,7 @@ function AdsNetworkCampaignForm() {
                     }
                   }}
                   placeholder="Villes (Entrée pour ajouter)"
-                  className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                  className="flex-1 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </div>
               {cities.length > 0 && (
@@ -303,7 +304,7 @@ function AdsNetworkCampaignForm() {
                       key={c}
                       type="button"
                       onClick={() => setCities(cities.filter(x => x !== c))}
-                      className="px-3 py-1.5 rounded-full text-sm border bg-[#115CF6] text-white border-[#115CF6]"
+                      className="px-3 py-1.5 rounded-full text-sm border bg-primary text-white border-primary"
                     >
                       {c} ×
                     </button>
@@ -324,7 +325,7 @@ function AdsNetworkCampaignForm() {
                       key={base}
                       type="button"
                       onClick={() => setInterests(selected ? interests.filter(i => i !== base) : [...interests, base])}
-                      className={`px-3 py-1.5 rounded-full text-sm border ${selected ? 'bg-[#115CF6] text-white border-[#115CF6]' : 'bg-white text-gray-700 border-gray-300'}`}
+                      className={`px-3 py-1.5 rounded-full text-sm border ${selected ? 'bg-primary text-white border-primary' : 'bg-white text-gray-700 border-border'}`}
                     >
                       {getInterestDisplayValue(base)}
                     </button>
@@ -337,12 +338,12 @@ function AdsNetworkCampaignForm() {
               <input
                 type="number" inputMode="numeric" value={minAge}
                 onChange={(e) => setMinAge(e.target.value)} placeholder="Âge min."
-                className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                className="flex-1 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
               />
               <input
                 type="number" inputMode="numeric" value={maxAge}
                 onChange={(e) => setMaxAge(e.target.value)} placeholder="Âge max."
-                className="flex-1 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                className="flex-1 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
           </motion.div>
@@ -352,22 +353,22 @@ function AdsNetworkCampaignForm() {
             <input
               type="number" inputMode="numeric" min={MIN_AMOUNT} step={1000}
               value={amount} onChange={(e) => setAmount(e.target.value)}
-              className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+              className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
             />
             {quote && <p className="text-sm text-gray-700 mt-2">{quote.message}</p>}
           </motion.div>
         </motion.div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mt-4">{error}</div>
+          <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800 mt-4">{error}</div>
         )}
 
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-5 disabled:bg-gray-400 flex items-center justify-center gap-2"
+          className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-5 disabled:bg-gray-400 flex items-center justify-center gap-2"
         >
-          {submitting && <FaSpinner className="animate-spin" />}
+          {submitting && <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />}
           Envoyer à la validation
         </button>
       </div>

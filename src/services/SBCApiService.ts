@@ -163,6 +163,14 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * Monthly affiliate leaderboard ("Classement Général"). Same payload for
+   * every caller — the server caches one snapshot for an hour.
+   */
+  async getLeaderboard(): Promise<ApiResponse> {
+    return await this.get('/users/leaderboard');
+  }
+
+  /**
    * Get referred users
    */
   async getReferredUsers(filters?: Record<string, any>): Promise<ApiResponse> {
@@ -2292,6 +2300,89 @@ export class SBCApiService extends ApiService {
   /** The only way out of the advertising balance: transfer to the main balance. */
   async transferAdvertisingBalance(amount: number): Promise<ApiResponse> {
     return await this.post('/advertising-balance/transfer', { body: { amount } });
+  }
+
+  // ==================== SBC LOVE ====================
+  // sbclove-service behind the gateway. Browsing and interests are gated
+  // server-side by the weekly session window (423 Locked outside it); managing
+  // your own profile is allowed anytime.
+
+  /** Kill-switch + weekly window. Drives the Home tile and the page banner. */
+  async getLoveStatus(): Promise<ApiResponse> {
+    return await this.get('/sbclove/status');
+  }
+
+  async getMyLoveProfile(): Promise<ApiResponse> {
+    return await this.get('/sbclove/profiles/me');
+  }
+
+  async createLoveProfile(body: {
+    displayName?: string;
+    intention: string;
+    otherIntentionText?: string;
+    description: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/sbclove/profiles', { body });
+  }
+
+  async updateLoveProfile(body: {
+    displayName?: string;
+    intention?: string;
+    otherIntentionText?: string;
+    description?: string;
+  }): Promise<ApiResponse> {
+    return await this.put('/sbclove/profiles/me', { body });
+  }
+
+  async uploadLovePhotos(files: File[]): Promise<ApiResponse> {
+    return await this.uploadFiles({
+      endpoint: '/sbclove/profiles/me/photos',
+      files,
+      fieldName: 'photos',
+    });
+  }
+
+  /**
+   * fileId travels in the query: stored ids carry a folder prefix ("sbclove/…"),
+   * so the slash cannot sit in the path, and the gateway drops DELETE bodies.
+   */
+  async deleteLovePhoto(fileId: string): Promise<ApiResponse> {
+    return await this.delete(`/sbclove/profiles/me/photos?fileId=${encodeURIComponent(fileId)}`);
+  }
+
+  /** Window-gated. Answers 423 when the weekly session is closed. */
+  async browseLoveProfiles(page = 1, limit = 20): Promise<ApiResponse> {
+    return await this.get('/sbclove/profiles', { queryParameters: { page, limit } });
+  }
+
+  async expressLoveInterest(profileId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/interest`);
+  }
+
+  /** Sent interests; the remaining weekly quota rides in `body.meta`. */
+  async getMyLoveInterests(): Promise<ApiResponse> {
+    return await this.get('/sbclove/interests/me');
+  }
+
+  async getMyLoveMatches(): Promise<ApiResponse> {
+    return await this.get('/sbclove/matches/me');
+  }
+
+  async setLoveContactChoice(matchId: string, choice: 'wants_contact' | 'declined'): Promise<ApiResponse> {
+    return await this.post(`/sbclove/matches/${matchId}/contact-choice`, { body: { choice } });
+  }
+
+  /** Only once contact is unlocked on both sides. Returns a chat conversationId. */
+  async openLoveMatchChat(matchId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/matches/${matchId}/chat`);
+  }
+
+  async reportLoveProfile(profileId: string, reason: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/report`, { body: { reason } });
+  }
+
+  async blockLoveProfile(profileId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/block`);
   }
 }
 

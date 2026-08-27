@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { EyeIcon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import { FiEye, FiEyeOff } from 'react-icons/fi';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -160,7 +161,7 @@ function Connexion() {
             <input
               type="text"
               placeholder={t('pages.connexion.emailOrPhonePlaceholder')}
-              className={`w-full border ${errors.identifier ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400`}
+              className={`w-full border ${errors.identifier ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 placeholder-gray-400`}
               value={identifier}
               onChange={e => setIdentifier(e.target.value)}
             />
@@ -175,7 +176,7 @@ function Connexion() {
               <input
                 type={showPassword ? 'text' : 'password'}
                 placeholder={t('common.password')}
-                className={`w-full border ${errors.password ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#115CF6] text-gray-700 placeholder-gray-400 pr-12`}
+                className={`w-full border ${errors.password ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 placeholder-gray-400 pr-12`}
                 value={password}
                 onChange={e => setPassword(e.target.value)}
               />
@@ -185,18 +186,18 @@ function Connexion() {
                 onClick={() => setShowPassword((v) => !v)}
                 tabIndex={-1}
               >
-                {showPassword ? <FiEyeOff /> : <FiEye />}
+                {showPassword ? <HugeiconsIcon icon={ViewOffIcon} /> : <HugeiconsIcon icon={EyeIcon} />}
               </button>
             </div>
             {errors.password && <div className="text-red-500 text-xs mt-1">{errors.password}</div>}
             <div className="flex justify-end mt-2">
-              <button type="button" className="text-[#115CF6] text-sm font-medium hover:underline bg-transparent" onClick={() => navigate('/forgot-password')}>{t('pages.connexion.forgotPassword')}</button>
+              <button type="button" className="text-primary text-sm font-medium hover:underline bg-transparent" onClick={() => navigate('/forgot-password')}>{t('pages.connexion.forgotPassword')}</button>
             </div>
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#115CF6] hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-lg mt-2 shadow"
+            className="w-full bg-primary hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl text-lg mt-2"
           >
             {loading ? t('common.pleaseWait') : t('pages.connexion.connectButton')}
           </button>
@@ -205,7 +206,7 @@ function Connexion() {
           {t('pages.connexion.noAccount')}{' '}
           <button
             type="button"
-            className="text-[#115CF6] font-semibold hover:underline bg-transparent"
+            className="text-primary font-semibold hover:underline bg-transparent"
             onClick={() => navigate('/signup')}
           >
             {t('common.signup')}

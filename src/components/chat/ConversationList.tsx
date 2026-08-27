@@ -1,13 +1,8 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Archive02Icon, Cancel01Icon, PlusSignIcon, Search01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import {
-  MagnifyingGlassIcon,
-  PlusIcon,
-  XMarkIcon,
-  CheckIcon,
-  ArchiveBoxIcon,
-} from '@heroicons/react/24/outline';
 import type { Conversation } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';
 import { useSocket } from '../../contexts/SocketContext';
@@ -533,14 +528,14 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
     return (
       <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header skeleton */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
           <Skeleton height="h-10" rounded="rounded-lg" />
         </div>
 
         {/* List skeleton */}
         <div className="flex-1 overflow-y-auto">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <div key={i} className="flex items-center gap-3 p-4 border-b border-gray-100">
+            <div key={i} className="flex items-center gap-3 p-4 border-b border-border">
               <Skeleton width="w-12" height="h-12" rounded="rounded-full" />
               <div className="flex-1">
                 <Skeleton width="w-32" height="h-4" className="mb-2" />
@@ -558,7 +553,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
     <>
       <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
         {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-border">
           {selectionMode ? (
             // Selection mode header
             <div className="flex items-center justify-between">
@@ -567,7 +562,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   onClick={exitSelectionMode}
                   className="p-2 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-700" />
+                  <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-700" />
                 </button>
                 <span className="font-medium text-gray-900">
                   {selectedConversations.size} sélectionné{selectedConversations.size > 1 ? 's' : ''}
@@ -595,7 +590,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   className="p-2 text-orange-600 hover:bg-orange-50 rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Archiver"
                 >
-                  <ArchiveBoxIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={Archive02Icon} className="w-5 h-5" />
                 </button>
               </div>
             </div>
@@ -608,13 +603,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   onClick={() => setShowUserSearchModal(true)}
                   className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
                 >
-                  <PlusIcon className="w-5 h-5" />
+                  <HugeiconsIcon icon={PlusSignIcon} className="w-5 h-5" />
                 </button>
               </div>
 
               {/* Search bar */}
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Rechercher des conversations..."
@@ -627,7 +622,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                     onClick={() => setSearchQuery('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-gray-200 rounded-full transition-colors"
                   >
-                    <XMarkIcon className="w-4 h-4 text-gray-500" />
+                    <HugeiconsIcon icon={Cancel01Icon} className="w-4 h-4 text-gray-500" />
                   </button>
                 )}
               </div>
@@ -686,12 +681,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                 <motion.button
                   variants={listItem}
                   onClick={openArchivedModal}
-                  className="w-full p-4 border-b border-gray-100 hover:bg-gray-50 transition-colors text-left"
+                  className="w-full p-4 border-b border-border hover:bg-gray-50 transition-colors text-left"
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-orange-100 flex items-center justify-center">
-                        <ArchiveBoxIcon className="w-6 h-6 text-orange-600" />
+                        <HugeiconsIcon icon={Archive02Icon} className="w-6 h-6 text-orange-600" />
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">Conversations archivées</p>
@@ -717,7 +712,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   onMouseLeave={handleLongPressEnd}
                   onTouchStart={() => !selectionMode && handleLongPressStart(conv._id)}
                   onTouchEnd={handleLongPressEnd}
-                  className={`flex items-center gap-3 p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
+                  className={`flex items-center gap-3 p-4 border-b border-border hover:bg-gray-50 cursor-pointer transition-colors ${
                     conv.unreadCount > 0 ? 'bg-blue-50' : ''
                   }`}
                 >
@@ -726,12 +721,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                     <div
                       className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
                         selectedConversations.has(conv._id)
-                          ? 'bg-blue-600 border-blue-600'
-                          : 'border-gray-300'
+                          ? 'bg-blue-600 border-primary'
+                          : 'border-border'
                       }`}
                     >
                       {selectedConversations.has(conv._id) && (
-                        <CheckIcon className="w-3.5 h-3.5 text-white" />
+                        <HugeiconsIcon icon={Tick02Icon} className="w-3.5 h-3.5 text-white" />
                       )}
                     </div>
                   )}
@@ -821,7 +816,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
               {/* Loading more indicator */}
               {isLoadingMore && (
                 <div className="p-4 text-center">
-                  <div className="inline-block w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="inline-block w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               )}
             </>
@@ -832,9 +827,9 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
       {/* User Search Modal */}
       {showUserSearchModal && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-md max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-lg w-full max-w-md max-h-[80vh] flex flex-col border border-border">
             {/* Modal header */}
-            <div className="p-4 border-b border-gray-200">
+            <div className="p-4 border-b border-border">
               <div className="flex items-center justify-between mb-3">
                 <h2 className="text-lg font-semibold text-gray-900">
                   Nouvelle conversation
@@ -846,13 +841,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   }}
                   className="p-1 hover:bg-gray-100 rounded-full transition-colors"
                 >
-                  <XMarkIcon className="w-5 h-5 text-gray-500" />
+                  <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-500" />
                 </button>
               </div>
 
               {/* Search input */}
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Rechercher un utilisateur..."
@@ -936,7 +931,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
       {/* Archive Confirmation Modal */}
       {showDeleteModal && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-sm p-6">
+          <div className="bg-white rounded-lg w-full max-w-sm p-6 border border-border">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
               Archiver {selectedConversations.size > 1 ? 'les conversations' : 'la conversation'} ?
             </h3>
@@ -968,13 +963,13 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             {/* Header */}
-            <div className="sticky top-0 bg-white border-b border-gray-200 p-4 flex items-center justify-between">
+            <div className="sticky top-0 bg-white border-b border-border p-4 flex items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-900">Informations du profil</h3>
               <button
                 onClick={() => setShowProfileModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <XMarkIcon className="w-5 h-5 text-gray-700" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-700" />
               </button>
             </div>
 
@@ -1064,7 +1059,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
 
                     {/* Subscription Type */}
                     {selectedUserProfile.subscriptionType && (
-                      <div className="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-4 border border-blue-200">
+                      <div className="bg-primary-soft rounded-lg p-4 border border-border">
                         <div className="flex items-center gap-3">
                           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
@@ -1108,15 +1103,15 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
       {/* Archived Conversations Modal */}
       {showArchivedModal && (
         <div className="fixed inset-0 bg-black/30 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div className="bg-white rounded-lg w-full max-w-2xl max-h-[80vh] flex flex-col border border-border">
             {/* Header */}
-            <div className="p-4 border-b border-gray-200 flex items-center justify-between">
+            <div className="p-4 border-b border-border flex items-center justify-between">
               <h2 className="text-lg font-semibold text-gray-900">Conversations archivées</h2>
               <button
                 onClick={() => setShowArchivedModal(false)}
                 className="p-2 hover:bg-gray-100 rounded-full transition-colors"
               >
-                <XMarkIcon className="w-5 h-5 text-gray-500" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5 text-gray-500" />
               </button>
             </div>
 
@@ -1124,12 +1119,12 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
             <div className="flex-1 overflow-y-auto">
               {loadingArchived ? (
                 <div className="flex items-center justify-center py-12">
-                  <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
                 </div>
               ) : archivedConversations.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4">
                   <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <ArchiveBoxIcon className="w-8 h-8 text-gray-400" />
+                    <HugeiconsIcon icon={Archive02Icon} className="w-8 h-8 text-gray-400" />
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">Aucune conversation archivée</h3>
                   <p className="text-gray-500 text-center">

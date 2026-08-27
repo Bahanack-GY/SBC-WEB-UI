@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, PauseIcon, PlayIcon, ScissorsIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { Play, Pause, Check, X, Scissors } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface VideoEditorProps {
   videoUrl: string;
@@ -186,11 +187,11 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
           disabled={isProcessing}
           className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors disabled:opacity-50"
         >
-          <X className="w-6 h-6" />
+          <HugeiconsIcon icon={Cancel01Icon} className="w-6 h-6" />
         </button>
 
         <div className="flex items-center gap-3 text-white">
-          <Scissors className="w-5 h-5" />
+          <HugeiconsIcon icon={ScissorsIcon} className="w-5 h-5" />
           <span className="text-sm font-medium">
             Durée: {formatTime(trimDuration)}
             {trimDuration > 30 && (
@@ -207,7 +208,7 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
           {isProcessing ? (
             <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
           ) : (
-            <Check className="w-6 h-6" />
+            <HugeiconsIcon icon={Tick02Icon} className="w-6 h-6" />
           )}
         </button>
       </div>
@@ -228,9 +229,9 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
         >
           <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center group-hover:bg-white/20 transition-colors">
             {isPlaying ? (
-              <Pause className="w-10 h-10 text-white" />
+              <HugeiconsIcon icon={PauseIcon} className="w-10 h-10 text-white" />
             ) : (
-              <Play className="w-10 h-10 text-white ml-1" />
+              <HugeiconsIcon icon={PlayIcon} className="w-10 h-10 text-white ml-1" />
             )}
           </div>
         </button>
@@ -263,7 +264,7 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
 
             {/* Active area */}
             <div
-              className="absolute top-0 bottom-0 bg-blue-500/20 border-y-2 border-blue-500"
+              className="absolute top-0 bottom-0 bg-blue-500/20 border-y-2 border-primary"
               style={{
                 left: `${(startTime / duration) * 100}%`,
                 right: `${(1 - endTime / duration) * 100}%`,
@@ -283,7 +284,7 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
                 left: `${(startTime / duration) * 100}%`,
               }}
             >
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg" />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white" />
             </div>
 
             {/* End trim handle */}
@@ -299,12 +300,12 @@ export const VideoEditor = ({ videoUrl, onSave, onCancel }: VideoEditorProps) =>
                 left: `${(endTime / duration) * 100}%`,
               }}
             >
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-lg" />
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-blue-500 rounded-full border-2 border-white" />
             </div>
 
             {/* Current time indicator */}
             <div
-              className="absolute top-0 bottom-0 w-0.5 bg-white shadow-lg"
+              className="absolute top-0 bottom-0 w-0.5 bg-white border border-border"
               style={{
                 left: `${(currentTime / duration) * 100}%`,
               }}

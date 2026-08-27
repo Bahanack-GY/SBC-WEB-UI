@@ -1,6 +1,7 @@
-import { FiLock, FiHelpCircle } from 'react-icons/fi';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { HelpCircleIcon, LockIcon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
@@ -74,8 +75,8 @@ function ForgotPassword() {
             >
                 <div className="flex flex-col items-center mt-8 mb-6">
                     <div className="bg-yellow-100 rounded-full w-24 h-24 flex items-center justify-center mb-4 relative">
-                        <FiLock className="text-yellow-500" size={40} />
-                        <FiHelpCircle className="text-yellow-500 absolute ml-8 mt-8" size={24} />
+                        <HugeiconsIcon icon={LockIcon} className="text-yellow-500" size={40} />
+                        <HugeiconsIcon icon={HelpCircleIcon} className="text-yellow-500 absolute ml-8 mt-8" size={24} />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800 mb-2">Réinitialiser le mot de passe</h2>
                     <p className="text-center text-gray-600 text-sm">
@@ -94,7 +95,7 @@ function ForgotPassword() {
                                 setError(''); // Clear error when user types
                             }}
                             placeholder="Ex : jeanpierre@gmail.com ou +237675090755"
-                            className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-yellow-400 text-gray-700 placeholder-gray-400`}
                             required
                         />
                         {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
@@ -118,7 +119,7 @@ function ForgotPassword() {
                                 <select 
                                     value={channel} 
                                     onChange={(e) => setChannel(e.target.value)}
-                                    className="w-full border border-gray-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white text-sm"
+                                    className="w-full border border-border rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400 bg-white text-sm"
                                 >
                                     <option value="">Utiliser ma préférence</option>
                                     <option value="email">📧 Email</option>
@@ -130,7 +131,7 @@ function ForgotPassword() {
 
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-yellow-400 to-yellow-500 hover:from-yellow-500 hover:to-yellow-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="bg-accent w-full text-white font-bold py-3 rounded-xl text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         disabled={loading}
                     >
                         {loading ? 'Envoi en cours...' : 'Envoyer le code'}
@@ -157,7 +158,7 @@ function ForgotPassword() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -171,7 +172,7 @@ function ForgotPassword() {
                             {modalContent.message}
                         </p>
                         {modalContent.type === 'success' && (
-                            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-center mb-4">
+                            <p className="text-xs text-amber-600 bg-amber-50 border border-border rounded-lg px-3 py-2 text-center mb-4">
                                 Si vous ne trouvez pas l'email, vérifiez votre dossier spam ou courrier indésirable.
                             </p>
                         )}
@@ -180,7 +181,7 @@ function ForgotPassword() {
                             className={`w-full ${modalContent.type === 'success'
                                 ? 'bg-green-500 hover:bg-green-600'
                                 : 'bg-red-500 hover:bg-red-600'
-                                } text-white rounded-xl py-2 font-bold shadow transition-colors`}
+                                } text-white rounded-xl py-2 font-bold  transition-colors`}
                             onClick={() => setShowModal(false)}
                         >
                             {modalContent.type === 'success' ? 'Continuer' : 'Réessayer'}

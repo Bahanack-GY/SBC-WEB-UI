@@ -1,11 +1,12 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { CancelCircleIcon, CloudUploadIcon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import { motion } from 'framer-motion';
-import { FiUploadCloud, FiXCircle, FiLoader } from 'react-icons/fi';
+import { motion } from 'motion/react';
 
 const subProducts = [
     "mode et vêtements", "électronique et gadgets", "maison et jardin",
@@ -139,7 +140,7 @@ function AjouterProduit() {
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] p-4">
+            <div className="min-h-screen flex flex-col items-center bg-bg p-4">
                 <div className="w-full max-w-md">
                     <div className="flex items-center mb-4">
                         <BackButton />
@@ -161,7 +162,7 @@ function AjouterProduit() {
                                 value={formData.name}
                                 onChange={handleChange}
                                 placeholder="Ex: Smartphone Samsung Galaxy S23"
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none"
                                 required
                             />
                         </div>
@@ -172,7 +173,7 @@ function AjouterProduit() {
                                 name="category"
                                 value={formData.category}
                                 onChange={handleChange}
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white"
                                 required
                             >
                                 <option value="">Sélectionner une catégorie</option>
@@ -188,7 +189,7 @@ function AjouterProduit() {
                                     name="subcategory"
                                     value={formData.subcategory}
                                     onChange={handleChange}
-                                    className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                                    className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white"
                                     required
                                 >
                                     <option value="">Sélectionner une sous-catégorie</option>
@@ -207,7 +208,7 @@ function AjouterProduit() {
                                 onChange={handleChange}
                                 placeholder="Décrivez votre produit ou service..."
                                 rows={4}
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none resize-none"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none resize-none"
                                 required
                             />
                         </div>
@@ -220,7 +221,7 @@ function AjouterProduit() {
                                 value={formData.price}
                                 onChange={handleChange}
                                 placeholder="Ex: 1200.50"
-                                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none"
                                 step="0.01" // Allow decimal values for currency
                                 min="0" // Ensure price is non-negative
                                 required
@@ -243,7 +244,7 @@ function AjouterProduit() {
                             />
                             <div className="mt-2 flex flex-wrap gap-2">
                                 {images.map((file, index) => (
-                                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                                    <div key={index} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border">
                                         <img
                                             src={URL.createObjectURL(file)}
                                             alt={`preview-${file.name}`}
@@ -256,13 +257,13 @@ function AjouterProduit() {
                                             className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                                             title="Supprimer l'image"
                                         >
-                                            <FiXCircle size={14} />
+                                            <HugeiconsIcon icon={CancelCircleIcon} size={14} />
                                         </button>
                                     </div>
                                 ))}
                                 {images.length < 10 && ( // Allow adding more images if limit not reached
-                                    <label className="w-20 h-20 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
-                                        <FiUploadCloud size={24} />
+                                    <label className="w-20 h-20 border-2 border-dashed border-border rounded-lg flex items-center justify-center text-gray-400 cursor-pointer">
+                                        <HugeiconsIcon icon={CloudUploadIcon} size={24} />
                                         {/* Hidden input to trigger file selection when label is clicked */}
                                         <input type="file" multiple accept="image/*" onChange={handleFileChange} className="hidden" />
                                     </label>
@@ -282,10 +283,10 @@ function AjouterProduit() {
 
                         <button
                             type="submit"
-                            className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
+                            className="w-full bg-primary hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg mt-2 flex items-center justify-center gap-2 disabled:bg-blue-400"
                             disabled={loading} // Disable button during submission
                         >
-                            {loading ? <FiLoader className="animate-spin" /> : 'Ajouter le produit'}
+                            {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Ajouter le produit'}
                         </button>
                     </form>
                 </motion.div>
@@ -298,7 +299,7 @@ function AjouterProduit() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -312,7 +313,7 @@ function AjouterProduit() {
                         </p>
                         <button
                             type="button"
-                            className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                            className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                             onClick={() => setShowModal(false)}
                         >
                             Fermer

@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Call02Icon, FloppyDiskIcon, Loading03Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useEffect, useMemo } from 'react';
-import { motion } from 'framer-motion';
-import { FiEdit2, FiPhone, FiSave, FiLoader } from 'react-icons/fi';
+import { motion } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
@@ -393,7 +394,7 @@ function ModifierLeProfil() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen flex flex-col items-center bg-[#f8fafc] p-4">
+      <div className="min-h-screen flex flex-col items-center bg-bg p-4">
         <div className="w-full max-w-md">
           <div className="flex items-center mb-4">
             <BackButton />
@@ -408,14 +409,14 @@ function ModifierLeProfil() {
         >
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-2">
-              <img src={formData.avatar} alt="avatar" className="w-24 h-24 rounded-full border-4 border-white object-cover shadow" />
+              <img src={formData.avatar} alt="avatar" className="w-24 h-24 rounded-full border-4 border-white object-cover" />
               <button
                 type="button"
                 onClick={handleAvatarButtonClick}
-                className="absolute bottom-2 right-2 bg-[#115CF6] p-2 rounded-full border-2 border-white shadow text-white hover:bg-blue-800 transition-colors disabled:bg-gray-400"
+                className="absolute bottom-2 right-2 bg-primary p-2 rounded-full border-2 border-white text-white hover:bg-blue-800 transition-colors disabled:bg-gray-400"
                 disabled={avatarUploading}
               >
-                {avatarUploading ? <FiLoader className="animate-spin" /> : <FiEdit2 size={16} />}
+                {avatarUploading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={PencilEdit01Icon} size={16} />}
               </button>
               <input
                 ref={fileInputRef}
@@ -429,13 +430,13 @@ function ModifierLeProfil() {
           <form className="flex flex-col gap-4" onSubmit={handleSave}>
             <div>
               <label className="block text-gray-700 mb-1">👤 Nom complet</label>
-              <input name="name" value={formData.name} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
+              <input name="name" value={formData.name} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none" />
             </div>
             <div>
               <label className="block text-gray-700 mb-1">📞 Téléphone</label>
               <div className="relative flex gap-2"> {/* Added flex and gap */}
                 <select
-                  className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-[#115CF6] bg-white"
+                  className="border rounded-xl px-2 py-2 focus:outline-none focus:ring-2 focus:ring-primary bg-white"
                   name="countryCodeSelect" // Unique name for this select
                   value={selectedPhoneCountryCode.value}
                   onChange={handleChange}
@@ -448,10 +449,10 @@ function ModifierLeProfil() {
                   name="phoneNumber" // Name remains phoneNumber for the local part
                   value={formData.phoneNumber}
                   onChange={handleChange}
-                  className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none pr-10"
+                  className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none pr-10"
                   placeholder="Ex: 675080477" // Example placeholder
                 />
-                <FiPhone className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                <HugeiconsIcon icon={Call02Icon} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" />
               </div>
             </div>
             <div>
@@ -460,7 +461,7 @@ function ModifierLeProfil() {
                 name="referralCode"
                 value={formData.referralCode}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none"
               />
             </div>
             <div>
@@ -472,7 +473,7 @@ function ModifierLeProfil() {
                 placeholder="https://chat.whatsapp.com/..."
                 value={formData.whatsappGroupLink}
                 onChange={handleChange}
-                className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none"
+                className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none"
               />
               <div className="text-xs text-gray-500 mt-1">
                 Ce lien remplace votre numéro personnel dans le profil de vos filleuls. Évite les bans WhatsApp.
@@ -480,11 +481,11 @@ function ModifierLeProfil() {
             </div>
             <div>
               <label className="block text-gray-700 mb-1">🎂 Date de naissance</label>
-              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
+              <input type="date" name="birthDate" value={formData.birthDate} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none" />
             </div>
             <div>
               <label className="block text-gray-700 mb-1">⚧️ Sexe</label>
-              <select name="sex" value={formData.sex} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+              <select name="sex" value={formData.sex} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white">
                 <option value="">Sélectionner</option>
                 <option value="male">👨 Homme</option>
                 <option value="female">👩 Femme</option>
@@ -493,24 +494,24 @@ function ModifierLeProfil() {
             </div>
             <div>
               <label className="block text-gray-700 mb-1">🏙️ Ville</label>
-              <input name="city" value={formData.city} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none" />
+              <input name="city" value={formData.city} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none" />
             </div>
             <div>
               <label className="block text-gray-700 mb-1">🌍 Pays</label>
-              <select name="country" value={formData.country} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+              <select name="country" value={formData.country} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white">
                 <option value="">Sélectionner le pays</option>
                 {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-gray-700 mb-1">💼 Profession</label>
-              <select name="profession" value={formData.profession} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+              <select name="profession" value={formData.profession} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white">
                 <option value="">Sélectionner la profession</option>
                 {professionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
             {/* Mobile Money Section with Country Restrictions */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+            <div className="bg-yellow-50 border border-border rounded-xl p-4">
               <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
                 💳 Mobile Money
                 {formData.country && !countrySupportsMomo(countryOptions.find(c => c.value === formData.country)?.code || '') && (
@@ -537,7 +538,7 @@ function ModifierLeProfil() {
                         name="momoNumber" 
                         value={formData.momoNumber} 
                         onChange={handleChange} 
-                        className="w-full border border-gray-300 rounded-xl px-4 py-2 pl-16 focus:outline-none" 
+                        className="w-full border border-border rounded-xl px-4 py-2 pl-16 focus:outline-none" 
                         placeholder="675080477" 
                       />
                     </div>
@@ -548,7 +549,7 @@ function ModifierLeProfil() {
                   
                   <div>
                     <label className="block text-gray-700 mb-1">📱 Opérateur MoMo</label>
-                    <select name="momoOperator" value={formData.momoOperator} onChange={handleChange} className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white">
+                    <select name="momoOperator" value={formData.momoOperator} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white">
                       {availableMomoOperators.map((option) => (
                         <option key={option.value} value={option.value}>{option.label}</option>
                       ))}
@@ -569,7 +570,7 @@ function ModifierLeProfil() {
                       'Sélectionnez d\'abord votre pays pour voir les options disponibles.'
                     )}
                   </div>
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="bg-blue-50 border border-border rounded-lg p-3">
                     <div className="text-sm text-blue-800 font-medium mb-1">✅ Alternative disponible :</div>
                     <div className="text-sm text-blue-700">
                       Vous pouvez toujours utiliser les <strong>retraits crypto</strong> pour convertir votre solde USD en cryptomonnaies.
@@ -580,7 +581,7 @@ function ModifierLeProfil() {
             </div>
 
             {/* Crypto Wallet Section - Available for ALL countries */}
-            <div className="bg-purple-50 border border-purple-200 rounded-xl p-4">
+            <div className="bg-purple-50 border border-border rounded-xl p-4">
               <h3 className="text-lg font-semibold text-purple-800 mb-3 flex items-center gap-2">
                 🪙 Portefeuille Crypto
                 <span className="text-xs font-normal text-green-600 bg-green-100 px-2 py-1 rounded-full">
@@ -598,7 +599,7 @@ function ModifierLeProfil() {
                     name="cryptoWalletCurrency" 
                     value={formData.cryptoWalletCurrency} 
                     onChange={handleChange} 
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none bg-white"
+                    className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white"
                   >
                     <option value="">Sélectionner une cryptomonnaie</option>
                     {supportedCryptoCurrencies.map((crypto) => (
@@ -618,7 +619,7 @@ function ModifierLeProfil() {
                     name="cryptoWalletAddress" 
                     value={formData.cryptoWalletAddress} 
                     onChange={handleChange} 
-                    className="w-full border border-gray-300 rounded-xl px-4 py-2 focus:outline-none font-mono text-sm" 
+                    className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none font-mono text-sm" 
                     placeholder={formData.cryptoWalletCurrency ? `Adresse ${formData.cryptoWalletCurrency}` : "Sélectionnez d'abord une cryptomonnaie"}
                     disabled={!formData.cryptoWalletCurrency}
                   />
@@ -628,7 +629,7 @@ function ModifierLeProfil() {
                 </div>
                 
                 {formData.cryptoWalletAddress && formData.cryptoWalletCurrency && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                  <div className="bg-green-50 border border-border rounded-lg p-3">
                     <div className="text-sm text-green-800 font-medium mb-1">✅ Configuration actuelle:</div>
                     <div className="text-xs text-green-700">
                       <div><strong>Crypto:</strong> {supportedCryptoCurrencies.find(c => c.code === formData.cryptoWalletCurrency)?.name}</div>
@@ -641,7 +642,7 @@ function ModifierLeProfil() {
             
             <div>
               <label className="block text-gray-700 mb-1">❤️ Centres d'intérêt</label>
-              <div className="flex flex-wrap gap-2 p-2 border border-gray-300 rounded-xl">
+              <div className="flex flex-wrap gap-2 p-2 border border-border rounded-xl">
                 {displayedInterests.map((displayInterest) => {
                   const baseInterest = getInterestBaseValue(displayInterest);
                   const isSelected = formData.interests.includes(baseInterest);
@@ -650,7 +651,7 @@ function ModifierLeProfil() {
                       key={displayInterest}
                       type="button"
                       onClick={() => handleInterestClick(displayInterest)}
-                      className={`px-3 py-1 rounded-full border text-xs font-medium ${isSelected ? 'bg-green-700 text-white border-green-700' : 'bg-white text-gray-700 border-gray-300'}`}
+                      className={`px-3 py-1 rounded-full border text-xs font-medium ${isSelected ? 'bg-green-700 text-white border-success' : 'bg-white text-gray-700 border-border'}`}
                     >
                       {displayInterest}
                     </button>
@@ -663,7 +664,7 @@ function ModifierLeProfil() {
             <div>
               <label className="block text-gray-700 mb-1">📬 Préférences de notification</label>
               <div className="space-y-2">
-                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
+                <label className="flex items-center gap-3 p-3 border border-border rounded-xl hover:bg-gray-50 cursor-pointer">
                   <input
                     type="radio"
                     name="notificationPreference"
@@ -680,7 +681,7 @@ function ModifierLeProfil() {
                     </div>
                   </div>
                 </label>
-                <label className="flex items-center gap-3 p-3 border border-gray-300 rounded-xl hover:bg-gray-50 cursor-pointer">
+                <label className="flex items-center gap-3 p-3 border border-border rounded-xl hover:bg-gray-50 cursor-pointer">
                   <input
                     type="radio"
                     name="notificationPreference"
@@ -711,9 +712,9 @@ function ModifierLeProfil() {
               <button
                 onClick={handleSave}
                 disabled={loading || avatarUploading}
-                className="w-full bg-[#115CF6] hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg shadow flex items-center justify-center gap-2 disabled:bg-blue-400"
+                className="w-full bg-primary hover:bg-blue-800 text-white font-bold py-3 rounded-xl text-lg flex items-center justify-center gap-2 disabled:bg-blue-400"
               >
-                {loading ? <FiLoader className="animate-spin" /> : <FiSave />}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={FloppyDiskIcon} />}
                 {loading ? 'Sauvegarde...' : 'Sauvegarder'}
               </button>
             </footer>
@@ -727,7 +728,7 @@ function ModifierLeProfil() {
               exit={{ opacity: 0 }}
             >
               <motion.div
-                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
@@ -741,7 +742,7 @@ function ModifierLeProfil() {
                 </p>
                 <button
                   type="button"
-                  className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                  className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                   onClick={() => setShowModal(false)}
                 >
                   Fermer

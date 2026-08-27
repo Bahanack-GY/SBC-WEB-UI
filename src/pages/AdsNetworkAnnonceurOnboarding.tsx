@@ -1,7 +1,8 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FaSpinner, FaArrowRight } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton } from '../components/ads/AdsScreen';
 import { AdsHero, AdsStep } from '../components/ads/AdsSteps';
@@ -9,7 +10,7 @@ import heroAnnonceur from '../assets/icon/ads-annonceur.jpg';
 import illustrationReview from '../assets/icon/ads-review.jpg';
 import { useAdsRoles } from '../hooks/useAdsRoles';
 import { sbcApiService } from '../services/SBCApiService';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
 const MIN_AMOUNT = 6000;
@@ -104,7 +105,7 @@ Vues et clics, diffuseur par diffuseur.
           </motion.div>
         </motion.div>
 
-        <div className="flex items-center gap-3 bg-blue-50 border border-blue-200 rounded-2xl p-3 mt-4">
+        <div className="flex items-center gap-3 bg-blue-50 border border-border rounded-2xl p-3 mt-4">
           <img src={illustrationReview} alt="" aria-hidden="true" className="w-20 shrink-0" />
           <p className="text-sm text-blue-900">
 <span className="font-medium">Chaque annonce est relue avant diffusion.</span>{' '}
@@ -112,7 +113,7 @@ Vues et clics, diffuseur par diffuseur.
           </p>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-2xl p-4 mt-5 shadow-sm">
+        <div className="bg-white border border-border rounded-2xl p-4 mt-5">
           <label className="block text-sm font-medium text-gray-800 mb-1">
             Quel budget souhaitez-vous investir ?
           </label>
@@ -123,7 +124,7 @@ Vues et clics, diffuseur par diffuseur.
             step={1000}
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+            className="w-full border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
           />
           <p className="text-xs text-gray-500 mt-1">
             Minimum {MIN_AMOUNT.toLocaleString('fr-FR')} F.
@@ -133,7 +134,7 @@ Vues et clics, diffuseur par diffuseur.
             <div className="bg-gray-50 rounded-xl p-3 mt-3 text-sm text-gray-800">
               {isFetching ? (
                 <span className="flex items-center gap-2 text-gray-500">
-                  <FaSpinner className="animate-spin" /> Calcul…
+                  <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> Calcul…
                 </span>
               ) : quote ? (
                 <>
@@ -155,9 +156,9 @@ Vues et clics, diffuseur par diffuseur.
           <button
             onClick={() => navigate(`/ads-network/annonceur/nouvelle-campagne?amount=${parsed}`)}
             disabled={!validAmount}
-            className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400 flex items-center justify-center gap-2"
+            className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400 flex items-center justify-center gap-2"
           >
-            Créer mon annonce <FaArrowRight size={12} />
+            Créer mon annonce <HugeiconsIcon icon={ArrowRight01Icon} size={12} />
           </button>
         </div>
       </div>

@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Mail01Icon, SmsCodeIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaEnvelope, FaSms, FaTimes } from 'react-icons/fa';
+import { motion, AnimatePresence } from 'motion/react';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
 import type { RelancePack, RelancePacksResponse, PurchasePackResponse } from '../../types/relance';
@@ -76,8 +77,8 @@ export default function RelancePacksModal({
         disabled={purchasingId !== null}
         className={`w-full text-left rounded-xl border-2 p-4 transition-colors ${
           isEmail
-            ? 'border-blue-200 hover:border-blue-400 hover:bg-blue-50'
-            : 'border-green-200 hover:border-green-400 hover:bg-green-50'
+            ? 'border-border hover:border-primary hover:bg-blue-50'
+            : 'border-border hover:border-success hover:bg-green-50'
         } ${isPurchasing ? 'opacity-60 cursor-wait' : ''} disabled:opacity-50`}
       >
         <div className="flex items-center justify-between gap-3">
@@ -109,7 +110,7 @@ export default function RelancePacksModal({
           onClick={onClose}
         >
           <motion.div
-            className="bg-white rounded-2xl p-6 w-full max-w-lg text-gray-900 relative shadow-lg max-h-[90vh] overflow-y-auto"
+            className="bg-white rounded-2xl p-6 w-full max-w-lg text-gray-900 relative max-h-[90vh] overflow-y-auto border border-border"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -121,7 +122,7 @@ export default function RelancePacksModal({
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
               aria-label="Fermer"
             >
-              <FaTimes size={20} />
+              <HugeiconsIcon icon={Cancel01Icon} size={20} />
             </button>
 
             <h3 className="text-xl font-bold mb-2">Acheter des crédits Relance</h3>
@@ -134,7 +135,7 @@ export default function RelancePacksModal({
             )}
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
+              <div className="bg-red-50 border border-border text-red-700 rounded-lg px-3 py-2 text-sm mb-4">
                 {error}
               </div>
             )}
@@ -144,7 +145,7 @@ export default function RelancePacksModal({
                 {showEmail && packs.emailPacks?.length > 0 && (
                   <section>
                     <div className="flex items-center gap-2 mb-2 text-blue-700">
-                      <FaEnvelope />
+                      <HugeiconsIcon icon={Mail01Icon} />
                       <h4 className="font-bold">Packs Email</h4>
                     </div>
                     <div className="space-y-2">
@@ -156,7 +157,7 @@ export default function RelancePacksModal({
                 {showSms && packs.smsPacks?.length > 0 && (
                   <section>
                     <div className="flex items-center gap-2 mb-2 text-green-700">
-                      <FaSms />
+                      <HugeiconsIcon icon={SmsCodeIcon} />
                       <h4 className="font-bold">Packs SMS</h4>
                     </div>
                     <div className="space-y-2">

@@ -1,10 +1,11 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MinusSignCircleIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BackButton from "../components/common/BackButton";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import iconContact from "../assets/icon/contact.png";
 import Skeleton from '../components/common/Skeleton';
-import { HiMiniMinusCircle } from "react-icons/hi2";
 import { useRelance } from '../contexts/RelanceContext';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
 
@@ -50,7 +51,7 @@ function AdsPack() {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.1 }}
-                            className="bg-gradient-to-r from-[#25D366] to-green-500 rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden"
+                            className="bg-success rounded-2xl p-5 flex items-center justify-between relative overflow-hidden"
                         >
                             <div className="w-full">
                                 <div className="uppercase text-white text-xs">Relance email & SMS</div>
@@ -64,52 +65,52 @@ function AdsPack() {
                                 {/* Features List */}
                                 <ul className="mt-3 mb-4 space-y-1">
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Messages automatiques pendant 7 jours</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Relance intelligente des filleuls non-payants</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Augmente vos chances de conversion</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Emails personnalisés avec campagnes ciblées</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Contrôle total: activer/suspendre à tout moment</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Suivi en temps réel des messages envoyés</span>
                                     </li>
                                     <li className="flex items-center text-white text-xs gap-2">
-                                        <HiMiniMinusCircle className="text-green-200 w-3 h-3 flex-shrink-0" />
+                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-green-200 w-3 h-3 flex-shrink-0" />
                                         <span>Économisez du temps et maximisez vos revenus</span>
                                     </li>
                                 </ul>
 
                                 <div className="mt-3 flex gap-2 flex-wrap">
                                     {checkingSubscription ? (
-                                        <button className="bg-white/30 text-white rounded-xl px-4 py-2 font-bold shadow cursor-wait" disabled>
+                                        <button className="bg-white/30 text-white rounded-xl px-4 py-2 font-bold cursor-wait border border-border" disabled>
                                             Vérification...
                                         </button>
                                     ) : hasCredits ? (
                                         <>
                                             <button
                                                 onClick={handleAccessRelance}
-                                                className="bg-green-600 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-green-700 transition-colors flex items-center gap-2"
+                                                className="bg-green-600 text-white rounded-xl px-4 py-2 font-bold hover:bg-green-700 transition-colors flex items-center gap-2"
                                             >
                                                 <span>✓</span>
                                                 Accéder à Relance
                                             </button>
                                             <button
                                                 onClick={handlePurchaseClick}
-                                                className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold shadow hover:bg-green-50 transition-colors"
+                                                className="bg-white text-whatsapp rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
                                             >
                                                 Acheter des crédits
                                             </button>
@@ -117,7 +118,7 @@ function AdsPack() {
                                     ) : (
                                         <button
                                             onClick={handlePurchaseClick}
-                                            className="bg-white text-[#25D366] rounded-xl px-4 py-2 font-bold shadow hover:bg-green-50 transition-colors"
+                                            className="bg-white text-whatsapp rounded-xl px-4 py-2 font-bold hover:bg-green-50 transition-colors border border-border"
                                         >
                                             Acheter des crédits
                                         </button>

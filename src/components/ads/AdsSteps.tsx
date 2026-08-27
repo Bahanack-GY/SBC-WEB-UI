@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { adsItemMotion } from './AdsScreen';
 
 /**
@@ -35,10 +35,10 @@ export const AdsStep: React.FC<{
 }> = ({ index, title, children, accent = 'blue' }) => (
     <motion.div
         {...adsItemMotion(index - 1, 0.2)}
-        className="flex gap-3 bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"
+        className="flex gap-3 bg-white border border-border rounded-2xl p-4"
     >
         <span
-            className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-sm font-bold text-white ${accent === 'green' ? 'bg-green-600' : 'bg-[#115CF6]'
+            className={`shrink-0 w-8 h-8 rounded-full grid place-items-center text-sm font-bold text-white ${accent === 'green' ? 'bg-green-600' : 'bg-primary'
                 }`}
         >
             {index}
@@ -52,7 +52,7 @@ export const AdsStep: React.FC<{
 
 /** For the one rule per screen that costs real money when ignored. */
 export const AdsWarning: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-    <div className="bg-amber-50 border border-amber-300 rounded-2xl p-4 text-sm text-amber-900">
+    <div className="bg-amber-50 border border-accent rounded-2xl p-4 text-sm text-amber-900">
         {children}
     </div>
 );

@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Mail01Icon, SmsCodeIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
-import { FaTimes, FaEnvelope, FaSms } from 'react-icons/fa';
 
 const EMAIL_LOW_THRESHOLD = 50;
 const SMS_LOW_THRESHOLD = 20;
@@ -73,8 +74,8 @@ export default function RelanceLowBalanceBanner({
         const isEmpty = spec.severity === 'empty';
         const isEmail = spec.channel === 'email';
         const tone = isEmpty
-          ? 'bg-red-50 border-red-300 text-red-800'
-          : 'bg-amber-50 border-amber-300 text-amber-900';
+          ? 'bg-red-50 border-danger text-red-800'
+          : 'bg-amber-50 border-accent text-amber-900';
         const accentBtn = isEmpty
           ? 'bg-red-600 hover:bg-red-700 text-white'
           : 'bg-amber-500 hover:bg-amber-600 text-white';
@@ -89,7 +90,7 @@ export default function RelanceLowBalanceBanner({
             className={`flex items-center gap-2 p-3 border rounded-none sm:rounded-lg ${tone}`}
           >
             <div className="flex-shrink-0">
-              {isEmail ? <FaEnvelope className="w-5 h-5" /> : <FaSms className="w-5 h-5" />}
+              {isEmail ? <HugeiconsIcon icon={Mail01Icon} className="w-5 h-5" /> : <HugeiconsIcon icon={SmsCodeIcon} className="w-5 h-5" />}
             </div>
             <p className="flex-1 text-sm font-medium leading-tight">{message}</p>
             <button
@@ -105,7 +106,7 @@ export default function RelanceLowBalanceBanner({
               aria-label="Masquer"
               className="min-h-[44px] min-w-[44px] flex items-center justify-center text-current/70 hover:text-current"
             >
-              <FaTimes className="w-4 h-4" />
+              <HugeiconsIcon icon={Cancel01Icon} className="w-4 h-4" />
             </button>
           </div>
         );

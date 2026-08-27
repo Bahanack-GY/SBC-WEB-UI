@@ -1,12 +1,11 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowReloadHorizontalIcon, ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, CreditCardIcon, Exchange01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneyReceive01Icon, MoneySend01Icon, Share08Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import BackButton from "../components/common/BackButton";
+import WalletCardStack from "../components/wallet/WalletCardStack";
 import { useState, useEffect, useRef } from "react";
-import { BarChart, Bar, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
-import { FaArrowUp, FaGift, FaSpinner, FaCheck } from 'react-icons/fa';
-import { FaMoneyBillWave } from 'react-icons/fa';
-import { FiShare2, FiX, FiChevronRight } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AreaChart, Area, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from 'recharts';
+import { motion, AnimatePresence } from 'motion/react';
 import Skeleton from '../components/common/Skeleton';
-import { FaMoneyBill1 } from "react-icons/fa6";
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import type { Transaction } from '../types/api';
@@ -702,12 +701,12 @@ function Wallet() {
 
   const formatTransactionIcon = (transaction: Transaction) => {
     switch (transaction.type) {
-      case 'deposit': return '💰';
-      case 'withdrawal': return '💸';
-      case 'payment': return '💳';
-      case 'refund': return '🔄';
-      case 'conversion': return '🔀'; // Currency conversion icon (shuffle/exchange arrows)
-      default: return '💼';
+      case 'deposit': return MoneyReceive01Icon;
+      case 'withdrawal': return MoneySend01Icon;
+      case 'payment': return CreditCardIcon;
+      case 'refund': return ArrowReloadHorizontalIcon;
+      case 'conversion': return Exchange01Icon;
+      default: return Wallet01Icon;
     }
   };
 
@@ -862,63 +861,43 @@ function Wallet() {
           </div>
         ) : (
           <>
-            {/* Balance Card */}
-            <div className="wallet-balance rounded-2xl bg-gradient-to-r from-blue-500 to-green-600 p-5 mb-6 shadow-lg">
-              <div className="text-sm opacity-80">Vos soldes</div>
-              <div className="flex flex-col gap-2 mb-3">
-                <div className="flex justify-between items-center">
-                  <div className={`text-2xl font-bold ${balance < 0 ? 'text-red-300' : ''}`}>
-                    {balance.toLocaleString('fr-FR')} F
-                  </div>
-                  <div className="text-xs opacity-80">FCFA</div>
+            {/* Balance Card — the two wallets as a card stack */}
+            <div className="wallet-balance mb-6">
+              <WalletCardStack balanceXaf={balance} balanceUsd={usdBalance} />
+            </div>
+
+            {/* Bénéfices / Retraits summary, kept from the old card */}
+            <div className="bg-surface border border-border rounded-2xl p-4 mb-6 flex justify-between text-sm">
+              <div>
+                <div className="text-ink-3 text-xs mb-1">Bénéfices</div>
+                <div className="font-bold text-ink">
+                  {(Number(stats?.overall?.deposit?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
                 </div>
-                <div className="flex justify-between items-center">
-                  <div className={`text-xl font-bold ${usdBalance < 0 ? 'text-red-300' : ''}`}>
-                    ${usdBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount > 0 && (
+                  <div className="font-semibold text-xs text-success">
+                    ${(Number(stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
                   </div>
-                  <div className="text-xs opacity-80">USD</div>
-                </div>
+                )}
               </div>
-              <div className="flex justify-between text-sm mt-2">
-                <div>
-                  <div className="opacity-80">Bénéfices</div>
-                  <div className="space-y-1">
-                    {/* FCFA Deposits */}
-                    <div className="font-bold text-xs">
-                      {(Number(stats?.overall?.deposit?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
-                    </div>
-                    {/* USD Deposits */}
-                    {stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount > 0 && (
-                      <div className="font-bold text-xs text-green-400">
-                        ${(Number(stats?.overall?.deposit?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
-                      </div>
-                    )}
-                  </div>
+              <div className="text-right">
+                <div className="text-ink-3 text-xs mb-1">Retraits</div>
+                <div className="font-bold text-ink">
+                  {(Number(stats?.overall?.withdrawal?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
                 </div>
-                <div>
-                  <div className="opacity-80">Retraits</div>
-                  <div className="space-y-1">
-                    {/* FCFA Withdrawals */}
-                    <div className="font-bold text-xs">
-                      {(Number(stats?.overall?.withdrawal?.completed?.currencies?.XAF?.totalAmount) || 0).toLocaleString('fr-FR')} F
-                    </div>
-                    {/* USD Withdrawals */}
-                    {stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount > 0 && (
-                      <div className="font-bold text-xs text-red-400">
-                        ${(Number(stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
-                      </div>
-                    )}
+                {stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount > 0 && (
+                  <div className="font-semibold text-xs text-danger">
+                    ${(Number(stats?.overall?.withdrawal?.completed?.currencies?.USD?.totalAmount) || 0).toFixed(2)}
                   </div>
-                </div>
+                )}
               </div>
             </div>
             {/* Action Buttons */}
             <div className="flex gap-2 mb-6">
               <button
                 onClick={() => setShowFundActivationModal(true)}
-                className="flex-1 flex flex-col items-center justify-center bg-[#115CF6] rounded-2xl py-4 shadow hover:bg-blue-800 transition-colors"
+                className="flex-1 flex flex-col items-center justify-center bg-primary rounded-2xl py-4 hover:bg-blue-800 transition-colors"
               >
-                <FaArrowUp size={20} className="mb-1" />
+                <HugeiconsIcon icon={ArrowUp01Icon} size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Activation</span>
               </button>
               <button
@@ -934,13 +913,13 @@ function Wallet() {
                   }
                 }}
                 disabled={balance < 0 && usdBalance < 0}
-                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4 shadow transition-colors ${
+                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4  transition-colors ${
                   balance < 0 && usdBalance < 0
                     ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
                     : 'bg-[#94B027] hover:bg-green-700'
                 }`}
               >
-                <FaMoneyBillWave size={20} className="mb-1" />
+                <HugeiconsIcon icon={MoneySend01Icon} size={20} className="mb-1" />
                 <span className="text-xs font-semibold">Retrait</span>
               </button>
               <button
@@ -956,7 +935,7 @@ function Wallet() {
                   }
                 }}
                 disabled={balance < 0 && usdBalance < 0}
-                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4 shadow transition-colors text-white ${
+                className={`flex-1 flex flex-col items-center justify-center rounded-2xl py-4  transition-colors text-white ${
                   balance < 0 && usdBalance < 0
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-orange-500 hover:bg-orange-600'
@@ -969,7 +948,7 @@ function Wallet() {
               </button>
             </div>
             {showWithdrawForm && (
-              <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col gap-3 bg-gray-50 rounded-2xl p-4 shadow">
+              <form onSubmit={handleWithdrawSubmit} className="mb-6 flex flex-col gap-3 bg-gray-50 rounded-2xl p-4">
                 {/* Balance Selection */}
                 <div className="mb-4">
                   <label className="text-gray-800 font-semibold mb-2 block">Solde à utiliser:</label>
@@ -982,8 +961,8 @@ function Wallet() {
                       }}
                       className={`p-3 rounded-lg border transition-all text-left ${
                         selectedBalanceType === 'FCFA'
-                          ? 'bg-blue-50 border-blue-200 ring-2 ring-blue-500'
-                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                          ? 'bg-blue-50 border-border ring-2 ring-blue-500'
+                          : 'bg-white border-border hover:bg-gray-50'
                       }`}
                     >
                       <div className="text-xs font-medium text-blue-600">Solde Principal</div>
@@ -1003,8 +982,8 @@ function Wallet() {
                       }}
                       className={`p-3 rounded-lg border transition-all text-left ${
                         selectedBalanceType === 'USD'
-                          ? 'bg-green-50 border-green-200 ring-2 ring-green-500'
-                          : 'bg-white border-gray-300 hover:bg-gray-50'
+                          ? 'bg-green-50 border-border ring-2 ring-green-500'
+                          : 'bg-white border-border hover:bg-gray-50'
                       }`}
                     >
                       <div className="text-xs font-medium text-green-600">Solde USD</div>
@@ -1022,7 +1001,7 @@ function Wallet() {
                 
                 {/* Show warning if balance is negative */}
                 {((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0)) && (
-                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-sm text-red-700 mb-3">
+                  <div className="bg-red-50 border border-border rounded-lg p-3 text-sm text-red-700 mb-3">
                     ⚠️ Impossible d'effectuer un retrait avec un solde négatif. 
                     Solde actuel: {selectedBalanceType === 'FCFA' 
                       ? `${balance.toLocaleString('fr-FR')} F` 
@@ -1040,8 +1019,8 @@ function Wallet() {
                     }}
                     className={`w-full rounded-lg border px-3 py-2 text-gray-900 text-center font-bold ${
                       ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
-                        ? 'border-red-300 bg-red-50 cursor-not-allowed' 
-                        : 'border-gray-300'
+                        ? 'border-danger bg-red-50 cursor-not-allowed' 
+                        : 'border-border'
                     }`}
                     placeholder={`Montant en ${selectedBalanceType}`}
                     step={selectedBalanceType === 'USD' ? '0.01' : '1'}
@@ -1052,19 +1031,19 @@ function Wallet() {
                   <button
                     type="submit"
                     disabled={isSubmittingWithdrawal || ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))}
-                    className={`rounded-full p-3 font-bold shadow transition-colors ${
+                    className={`rounded-full p-3 font-bold  transition-colors ${
                       isSubmittingWithdrawal || ((selectedBalanceType === 'FCFA' && balance < 0) || (selectedBalanceType === 'USD' && usdBalance < 0))
                         ? 'bg-gray-400 text-gray-600 cursor-not-allowed'
-                        : 'bg-[#115CF6] text-white hover:bg-blue-800'
+                        : 'bg-primary text-white hover:bg-blue-800'
                     }`}
                   >
-                    {isSubmittingWithdrawal ? <FaSpinner className="animate-spin" size={24} /> : <FaMoneyBill1 size={24} />}
+                    {isSubmittingWithdrawal ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" size={24} /> : <HugeiconsIcon icon={Money01Icon} size={24} />}
                   </button>
                 </div>
 
                 {/* Fee calculation display */}
                 {withdrawAmount && Number(withdrawAmount) > 0 && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm">
+                  <div className="bg-blue-50 border border-border rounded-lg p-3 text-sm">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-gray-700">Montant à retirer:</span>
                       <span className="font-semibold text-gray-900">
@@ -1094,7 +1073,7 @@ function Wallet() {
                         </div>
                       </>
                     )}
-                    <div className="border-t border-blue-200 pt-2 mt-2">
+                    <div className="border-t border-border pt-2 mt-2">
                       <div className="flex justify-between items-center">
                         <span className="font-semibold text-gray-800">Total déduit du solde {selectedBalanceType}:</span>
                         <span className="font-bold text-red-600">
@@ -1122,11 +1101,11 @@ function Wallet() {
             {/* Navigation to Activation Balance */}
             <button
               onClick={handleActivationBalanceClick}
-              className="w-full mb-6 bg-gradient-to-r from-[#115CF6] to-blue-600 text-white p-4 rounded-2xl shadow-lg hover:from-blue-700 hover:to-blue-800 transition-all flex items-center justify-between"
+              className="bg-primary w-full mb-6 text-white p-4 rounded-2xl transition-all flex items-center justify-between"
             >
               <div className="flex items-center gap-3">
                 <div className="bg-white/20 p-3 rounded-full">
-                  <FaGift size={20} />
+                  <HugeiconsIcon icon={GiftIcon} size={20} />
                 </div>
                 <div className="text-left">
                   <span className="font-bold block">Solde d'Activation</span>
@@ -1134,23 +1113,23 @@ function Wallet() {
                 </div>
               </div>
               <div className="bg-white/20 p-2 rounded-full">
-                <FiChevronRight size={20} />
+                <HugeiconsIcon icon={ArrowRight01Icon} size={20} />
               </div>
             </button>
 
             {/* Bar Chart */}
-            <div className="transaction-chart bg-white rounded-2xl p-4 mb-6 shadow text-gray-800 relative">
+            <div className="transaction-chart bg-white rounded-2xl p-4 mb-6 text-gray-800 relative border border-border">
               <div className="filter-options flex items-center justify-between mb-2">
-                <div className="font-semibold text-[#115CF6]">Résumé des transactions</div>
+                <div className="font-semibold text-primary">Résumé des transactions</div>
                 <div className="flex bg-gray-100 rounded-full p-1 gap-1">
                   <button
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Reçu' ? 'bg-[#115CF6] text-white' : 'text-[#115CF6]'}`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Reçu' ? 'bg-primary text-white' : 'text-primary'}`}
                     onClick={() => setChartType('Reçu')}
                   >
                     Reçu
                   </button>
                   <button
-                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Retrait' ? 'bg-[#115CF6] text-white' : 'text-[#115CF6]'}`}
+                    className={`px-3 py-1 rounded-full text-xs font-semibold transition-colors duration-150 ${chartType === 'Retrait' ? 'bg-primary text-white' : 'text-primary'}`}
                     onClick={() => setChartType('Retrait')}
                   >
                     Retrait
@@ -1180,7 +1159,11 @@ function Wallet() {
               </div>
               <div className="relative w-full h-[160px]">
                 <ResponsiveContainer width="100%" height={160}>
-                  <BarChart data={chartData} barCategoryGap={chartTimeframe === 'daily' ? 30 : 10} barGap={8}>
+                  <AreaChart data={chartData} margin={{ top: 8, right: 16, left: 16, bottom: 0 }}>
+                    {/* Flat fills with opacity rather than gradient defs — the
+                        rest of the app dropped gradients, and a solid tint reads
+                        the same at this size. */}
+                    <CartesianGrid vertical={false} stroke="#E6E9EF" strokeDasharray="3 3" />
                     <XAxis
                       dataKey="name"
                       stroke="#bbb"
@@ -1193,18 +1176,38 @@ function Wallet() {
                       dy={10}
                     />
                     {chartType === 'Reçu' && (
-                      <Bar dataKey="Dépôt" fill="#115CF6" radius={[20, 20, 20, 20]} barSize={32} isAnimationActive={true} />
+                      <Area
+                        type="monotone"
+                        dataKey="Dépôt"
+                        stroke="#115CF6"
+                        strokeWidth={2}
+                        fill="#115CF6"
+                        fillOpacity={0.12}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 0 }}
+                        isAnimationActive={true}
+                      />
                     )}
                     {chartType === 'Retrait' && (
-                      <Bar dataKey="Retrait" fill="#FFB200" radius={[20, 20, 20, 20]} barSize={32} isAnimationActive={true} />
+                      <Area
+                        type="monotone"
+                        dataKey="Retrait"
+                        stroke="#F68F0F"
+                        strokeWidth={2}
+                        fill="#F68F0F"
+                        fillOpacity={0.12}
+                        dot={false}
+                        activeDot={{ r: 4, strokeWidth: 0 }}
+                        isAnimationActive={true}
+                      />
                     )}
                     <Tooltip
-                      cursor={{ fill: 'rgba(0,0,0,0.1)' }}
+                      cursor={{ stroke: '#94A3B8', strokeWidth: 1, strokeDasharray: '3 3' }}
                       content={({ active, payload, label }) => {
                         if (active && payload && payload.length) {
                           const dataPoint = chartData.find(d => d.name === label); // Find the full data point
                           return (
-                            <div className="rounded-lg bg-gray-800 p-3 text-white shadow-lg text-sm">
+                            <div className="rounded-lg bg-gray-800 p-3 text-white text-sm">
                               <p className="font-bold mb-1">{label}</p>
                               <div className="space-y-2">
                                 <div>
@@ -1241,7 +1244,7 @@ function Wallet() {
                                   </p>
                                 </div>
                               </div>
-                              <p className="text-xs text-gray-400 mt-2 border-t border-gray-600 pt-2">
+                              <p className="text-xs text-gray-400 mt-2 border-t border-border pt-2">
                                 💡 USD converti à 1:500 FCFA pour le graphique
                               </p>
                             </div>
@@ -1250,7 +1253,7 @@ function Wallet() {
                         return null;
                       }}
                     />
-                  </BarChart>
+                  </AreaChart>
                 </ResponsiveContainer>
               </div>
               <div className="mt-2 text-xs text-gray-500 text-center">
@@ -1258,31 +1261,31 @@ function Wallet() {
               </div>
             </div>
             {/* Recent Transactions */}
-            <div className="transaction-list bg-[#192040] rounded-2xl p-4 shadow">
-              <div className="font-semibold mb-2 text-white">Transactions récentes</div>
+            <div className="transaction-list bg-surface border border-border rounded-2xl p-4">
+              <div className="font-semibold mb-2 text-ink">Transactions récentes</div>
               {!transactions || transactions.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
+                <div className="text-center py-8 text-ink-3">
                   Aucune transaction récente
                 </div>
               ) : (
                 transactions.map((tx: Transaction) => (
                   <div
                     key={tx.id}
-                    className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 hover:bg-white/10 rounded-lg transition-colors"
+                    className="flex items-center justify-between py-2 border-b border-border last:border-b-0 hover:bg-surface-2 rounded-lg transition-colors"
                   >
                     <div
                       className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
                       onClick={() => openModal(tx)}
                     >
                       <div className={getStatusIconWrapperClasses(String(tx.status))}>
-                        <span className="text-2xl">{formatTransactionIcon(tx)}</span>
+                        <HugeiconsIcon icon={formatTransactionIcon(tx)} size={20} />
                       </div>
                       <div className="min-w-0">
-                        <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-white' :
-                          (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-yellow-400' :
-                            String(tx.status) === 'failed' ? 'text-red-400' : 'text-white'
+                        <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-ink' :
+                          (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-accent' :
+                            String(tx.status) === 'failed' ? 'text-danger' : 'text-ink'
                           } text-sm truncate max-w-[160px]`}>{formatTransactionName(tx)}</div>
-                        <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
+                        <div className="text-xs text-ink-3">{formatDate(tx.createdAt)}</div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
@@ -1323,7 +1326,7 @@ function Wallet() {
             <div className="flex justify-center mt-6">
               <button
                 onClick={openAllTransactionsModal}
-                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition-colors"
               >
                 Voir toutes les transactions
               </button>
@@ -1339,7 +1342,7 @@ function Wallet() {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative shadow-lg"
+                    className="bg-white rounded-2xl p-6 w-[90vw] max-w-md text-gray-900 relative border border-border"
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
@@ -1349,7 +1352,7 @@ function Wallet() {
                       className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
                       onClick={closeModal}
                     >
-                      <FiX size={22} />
+                      <HugeiconsIcon icon={Cancel01Icon} size={22} />
                     </button>
                     <div className="mb-4">
                       <div className="text-xs text-gray-400 mb-1">ID de la transaction</div>
@@ -1394,7 +1397,7 @@ function Wallet() {
                       {/* Continue OTP verification button - only for pending_otp_verification withdrawals */}
                       {selectedTx.status === 'pending_otp_verification' && selectedTx.type === 'withdrawal' && (
                         <button
-                          className="w-full bg-green-500 text-white rounded-xl py-3 font-bold shadow hover:bg-green-600 transition-colors"
+                          className="w-full bg-green-500 text-white rounded-xl py-3 font-bold hover:bg-green-600 transition-colors"
                           onClick={() => {
                             navigate('/otp', {
                               state: {
@@ -1413,15 +1416,15 @@ function Wallet() {
 
                       <div className="flex gap-3">
                         <button
-                          className="flex-1 bg-[#115CF6] text-white rounded-xl py-2 font-bold shadow hover:bg-blue-800 transition-colors"
+                          className="flex-1 bg-primary text-white rounded-xl py-2 font-bold hover:bg-blue-800 transition-colors"
                           onClick={handleShare}
                         >
-                          <FiShare2 className="inline mr-2" />Partager
+                          <HugeiconsIcon icon={Share08Icon} className="inline mr-2" />Partager
                         </button>
                         {/* Cancel button - only if cancellation is allowed (pending or pending_otp_verification) */}
                         {selectedTx.type === 'withdrawal' && canCancelWithdrawal(selectedTx.status) && (
                           <button
-                            className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                            className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold hover:bg-red-600 transition-colors"
                             onClick={() => {
                               setModalContent({
                                 type: 'confirm',
@@ -1438,7 +1441,7 @@ function Wallet() {
                           </button>
                         )}
                         <button
-                          className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                          className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                           onClick={closeModal}
                         >
                           Fermer
@@ -1447,7 +1450,7 @@ function Wallet() {
 
                       {/* Info message for non-cancellable transactions */}
                       {selectedTx.type === 'withdrawal' && (selectedTx.status === 'pending_admin_approval' || selectedTx.status === 'processing') && (
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <div className="bg-blue-50 border border-border rounded-lg p-3">
                           <p className="text-blue-700 text-sm text-center">
                             Cette transaction est en cours de traitement et ne peut plus être annulée.
                           </p>
@@ -1469,7 +1472,7 @@ function Wallet() {
                   exit={{ opacity: 0 }}
                 >
                   <motion.div
-                    className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative shadow-lg flex flex-col"
+                    className="bg-surface border border-border rounded-t-2xl p-4 w-full h-[80vh] text-ink relative flex flex-col"
                     initial={{ y: '100%' }}
                     animate={{ y: 0 }}
                     exit={{ y: '100%' }}
@@ -1478,22 +1481,22 @@ function Wallet() {
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="text-xl font-bold">Historique des transactions</h2>
                       <button
-                        className="text-gray-400 hover:text-white"
+                        className="text-ink-3 hover:text-ink"
                         onClick={closeAllTransactionsModal}
                       >
-                        <FiX size={24} />
+                        <HugeiconsIcon icon={Cancel01Icon} size={24} />
                       </button>
                     </div>
                     <div ref={allTransactionsScrollRef} className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
                       {!allTransactions || allTransactions.length === 0 && !allTransactionsLoadingMore ? (
-                        <div className="text-center py-8 text-gray-400">
+                        <div className="text-center py-8 text-ink-3">
                           Aucune transaction trouvée.
                         </div>
                       ) : (
                         allTransactions.map((tx: Transaction) => (
                           <div
                             key={tx.id}
-                            className="flex items-center justify-between py-2 border-b border-white/10 last:border-b-0 hover:bg-white/10 rounded-lg transition-colors"
+                            className="flex items-center justify-between py-2 border-b border-border last:border-b-0 hover:bg-surface-2 rounded-lg transition-colors"
                           >
                             <div
                               className="flex items-center gap-3 min-w-0 flex-1 cursor-pointer"
@@ -1502,14 +1505,14 @@ function Wallet() {
                               }}
                             >
                               <div className={getStatusIconWrapperClasses(String(tx.status))}>
-                                <span className="text-2xl">{formatTransactionIcon(tx)}</span>
+                                <HugeiconsIcon icon={formatTransactionIcon(tx)} size={20} />
                               </div>
                               <div className="min-w-0">
-                                <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-white' :
-                                  (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-yellow-400' :
-                                    String(tx.status) === 'failed' ? 'text-red-400' : 'text-white'
+                                <div className={`font-bold ${String(tx.status) === 'completed' ? 'text-ink' :
+                                  (String(tx.status) === 'pending' || String(tx.status) === 'processing' || String(tx.status) === 'pending_otp_verification') ? 'text-accent' :
+                                    String(tx.status) === 'failed' ? 'text-danger' : 'text-ink'
                                   } text-sm truncate max-w-[160px]`}>{formatTransactionName(tx)}</div>
-                                <div className="text-xs text-gray-300">{formatDate(tx.createdAt)}</div>
+                                <div className="text-xs text-ink-3">{formatDate(tx.createdAt)}</div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
@@ -1547,7 +1550,7 @@ function Wallet() {
                       )}
                       {allTransactionsLoadingMore && allTransactionsHasMore && (
                         <div className="flex justify-center py-4">
-                          <svg className="animate-spin h-8 w-8 text-white" viewBox="0 0 24 24">
+                          <svg className="animate-spin h-8 w-8 text-primary" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
                           </svg>
@@ -1573,7 +1576,7 @@ function Wallet() {
                 exit={{ opacity: 0 }}
               >
                 <motion.div
-                  className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                  className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                   initial={{ scale: 0.9, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0.9, opacity: 0 }}
@@ -1592,7 +1595,7 @@ function Wallet() {
                     <div className="flex gap-3 mt-2">
                       <button
                         type="button"
-                        className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                        className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold hover:bg-red-600 transition-colors"
                         onClick={() => {
                           modalContent.onConfirm?.();
                           setShowModal(false);
@@ -1602,7 +1605,7 @@ function Wallet() {
                       </button>
                       <button
                         type="button"
-                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                        className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                         onClick={() => setShowModal(false)}
                       >
                         Annuler
@@ -1611,7 +1614,7 @@ function Wallet() {
                   ) : (
                     <button
                       type="button"
-                      className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                      className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                       onClick={() => {
                         modalContent.onConfirm?.();
                         setShowModal(false);
@@ -1717,7 +1720,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
       onClick={handleClose}
     >
       <motion.div
-        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl"
+        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md border border-border"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -1726,7 +1729,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
             <p className="text-gray-600">Votre solde d'activation a été alimenté.</p>
@@ -1752,17 +1755,17 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
                   setError('');
                 }}
                 placeholder="Ex: 5000"
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                className="w-full border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               />
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="mb-4 p-3 bg-red-50 border border-border rounded-xl">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+            <div className="bg-yellow-50 border border-border rounded-xl p-3 mb-4">
               <p className="text-xs text-yellow-700">
                 ⚠️ Ce transfert est irréversible. Le solde d'activation ne peut être utilisé que pour sponsoriser vos filleuls.
               </p>
@@ -1778,9 +1781,9 @@ function FundActivationModal({ isOpen, onClose, mainBalance, onSuccess }: FundMo
               <button
                 onClick={handleSubmit}
                 disabled={loading || !amount}
-                className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 bg-primary text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>
             </div>
           </>

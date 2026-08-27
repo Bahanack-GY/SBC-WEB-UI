@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon } from '@hugeicons/core-free-icons';
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiX } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface RecoveryCompletedNotificationProps {
   isOpen: boolean;
@@ -47,19 +48,19 @@ const RecoveryCompletedNotification: React.FC<RecoveryCompletedNotificationProps
           onClick={onClose}
         >
           <motion.div
-            className="recovery-completed-modal bg-white rounded-xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto"
+            className="recovery-completed-modal bg-white rounded-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto border border-border"
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="modal-header bg-gradient-to-r from-green-500 to-green-600 text-white text-center p-8 relative">
+            <div className="bg-success modal-header text-white text-center p-8 relative">
               <button 
                 className="absolute top-4 right-4 text-white hover:text-green-200 text-xl"
                 onClick={onClose}
               >
-                <FiX />
+                <HugeiconsIcon icon={Cancel01Icon} />
               </button>
               <div className="success-icon text-5xl mb-4">
                 ✅
@@ -77,7 +78,7 @@ const RecoveryCompletedNotification: React.FC<RecoveryCompletedNotificationProps
               
               <div className="recovery-summary">
                 <div className="summary-stats grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  <div className="stat-card bg-gray-50 border-2 border-gray-100 rounded-lg p-4 text-center">
+                  <div className="stat-card bg-gray-50 border-2 border-border rounded-lg p-4 text-center">
                     <span className="stat-number block text-2xl font-bold text-green-600">
                       {recoveryData.recoveryDetails.totalTransactions}
                     </span>
@@ -85,7 +86,7 @@ const RecoveryCompletedNotification: React.FC<RecoveryCompletedNotificationProps
                       Total Transactions
                     </span>
                   </div>
-                  <div className="stat-card bg-gray-50 border-2 border-gray-100 rounded-lg p-4 text-center">
+                  <div className="stat-card bg-gray-50 border-2 border-border rounded-lg p-4 text-center">
                     <span className="stat-number block text-2xl font-bold text-green-600">
                       {recoveryData.recoveryDetails.totalAmount.toLocaleString()}
                     </span>
@@ -93,7 +94,7 @@ const RecoveryCompletedNotification: React.FC<RecoveryCompletedNotificationProps
                       XAF Récupérés
                     </span>
                   </div>
-                  <div className="stat-card bg-gray-50 border-2 border-gray-100 rounded-lg p-4 text-center">
+                  <div className="stat-card bg-gray-50 border-2 border-border rounded-lg p-4 text-center">
                     <span className="stat-number block text-2xl font-bold text-green-600">
                       {recoveryData.recoveryDetails.paymentTransactions}
                     </span>
@@ -101,7 +102,7 @@ const RecoveryCompletedNotification: React.FC<RecoveryCompletedNotificationProps
                       Abonnements
                     </span>
                   </div>
-                  <div className="stat-card bg-gray-50 border-2 border-gray-100 rounded-lg p-4 text-center">
+                  <div className="stat-card bg-gray-50 border-2 border-border rounded-lg p-4 text-center">
                     <span className="stat-number block text-2xl font-bold text-green-600">
                       {recoveryData.recoveryDetails.payoutTransactions}
                     </span>
@@ -139,7 +140,7 @@ const RecoveryCompletedNotification: React.FC<RecoveryCompletedNotificationProps
                 {recoveryData.notification.actions.map((action, index) => (
                   <button 
                     key={index}
-                    className="btn-primary px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium rounded-lg transition-colors"
+                    className="bg-success btn-primary px-6 py-3 text-white font-medium rounded-lg transition-colors"
                     onClick={() => handleNavigation(action.target)}
                   >
                     {action.label}

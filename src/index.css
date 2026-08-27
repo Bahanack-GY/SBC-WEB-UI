@@ -1,5 +1,80 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   Design tokens — the single source of truth for the SBC palette.
+
+   Tailwind v4 is CSS-first: a `--color-x` here becomes `bg-x` / `text-x` /
+   `border-x` / `fill-x`, and `--radius-x` becomes `rounded-x`. There is
+   deliberately no tailwind.config.js and no theme.ts mirror — a second copy
+   would silently drift from this one.
+
+   Flat design rules these encode:
+     - separation comes from `--color-border` hairlines and surface colour,
+       never from shadows or gradients
+     - a coloured border is allowed ONLY to signal state (active/invalid)
+   --------------------------------------------------------------------------- */
+@theme {
+  /* Brand — blue stays primary (148 existing usages of #115CF6) */
+  --color-primary: #115CF6;
+  --color-primary-hover: #0D49C4;
+  --color-primary-soft: #EAF2FF;
+
+  /* Accent — promo banners, badges, tier highlights */
+  --color-accent: #F68F0F;
+  --color-accent-soft: #FEF3E2;
+
+  /* Money / success — balance card fill (5.3:1 on white) */
+  --color-success: #0C7C3C;
+  --color-success-strong: #095E2D;
+  --color-success-soft: #E8F7EE;
+  --color-success-dot: #22C55E; /* online indicator only, never a text bg */
+
+  /* Balance card fill. White text on this is 2.46:1, below WCAG AA (4.5:1) —
+     used that way by explicit request. --color-balance-strong is the darker
+     step that does carry white text (4.64:1). */
+  --color-balance: #92b127;
+  --color-balance-strong: #677D1C;
+
+  --color-danger: #DC2626;
+  --color-danger-soft: #FEE2E2;
+
+  /* Surfaces */
+  --color-bg: #F8FAFC;
+  --color-surface: #FFFFFF;
+  --color-surface-2: #F1F5F9;
+  --color-border: #E6E9EF; /* the ONLY separation border */
+
+  /* Text */
+  --color-ink: #0F172A;
+  --color-ink-2: #475569;
+  --color-ink-3: #94A3B8;
+
+  /* Fixed third-party brand colours — not palette, do not reuse */
+  --color-whatsapp: #25D366;
+  --color-telegram: #0088CC;
+  --color-youtube: #FF0000;
+
+  --radius-card: 1rem;
+  --radius-tile: 0.75rem;
+  --radius-pill: 9999px;
+}
+
+html,
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+}
+
+/* Horizontal chip/carousel strips scroll but must not show a bar. */
+.no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+}
+
 /* Custom scrollbar styles for modal scrolling */
 .custom-scrollbar::-webkit-scrollbar {
     width: 6px;

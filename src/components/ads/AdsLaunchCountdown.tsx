@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Megaphone01Icon } from '@hugeicons/core-free-icons';
 import { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { FaBullhorn } from 'react-icons/fa';
+import { motion } from 'motion/react';
 import BackButton from '../common/BackButton';
 import illustration from '../../assets/icon/ads-share.jpg';
 
@@ -44,7 +45,7 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                 initial={{ opacity: 0, y: -30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, type: 'spring' }}
-                className="px-4 pt-4 pb-8 text-white bg-gradient-to-br from-[#115CF6] to-blue-500"
+                className="bg-primary px-4 pt-4 pb-8 text-white"
             >
                 <div className="max-w-2xl mx-auto">
                     <div className="[&_button]:text-white [&_svg]:text-white">
@@ -57,7 +58,7 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                         <img
                             src={illustration}
                             alt=""
-                            className="w-24 h-24 object-cover rounded-2xl shadow-lg ring-2 ring-white/30 shrink-0"
+                            className="w-24 h-24 object-cover rounded-2xl ring-2 ring-white/30 shrink-0"
                         />
                     </div>
                 </div>
@@ -68,10 +69,10 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    className="bg-white border border-gray-200 rounded-2xl p-6 shadow-sm text-center"
+                    className="bg-white border border-border rounded-2xl p-6 text-center"
                 >
-                    <div className="w-14 h-14 rounded-full bg-blue-50 text-[#115CF6] flex items-center justify-center mx-auto">
-                        <FaBullhorn size={22} />
+                    <div className="w-14 h-14 rounded-full bg-blue-50 text-primary flex items-center justify-center mx-auto">
+                        <HugeiconsIcon icon={Megaphone01Icon} size={22} />
                     </div>
 
                     {left !== null && left > 0 ? (
@@ -84,7 +85,7 @@ export default function AdsLaunchCountdown({ launchAt }: { launchAt: string | nu
                                     { v: minutes, l: 'min' },
                                     { v: seconds, l: 'sec' },
                                 ].map(u => (
-                                    <div key={u.l} className="bg-gray-50 border border-gray-100 rounded-xl px-3 py-2 min-w-[62px]">
+                                    <div key={u.l} className="bg-gray-50 border border-border rounded-xl px-3 py-2 min-w-[62px]">
                                         <p className="text-2xl font-bold text-gray-900 tabular-nums">{two(u.v)}</p>
                                         <p className="text-[11px] text-gray-500">{u.l}</p>
                                     </div>

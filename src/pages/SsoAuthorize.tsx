@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import logo from '../assets/img/logo-sbc.png';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -99,7 +99,7 @@ export default function SsoAuthorize() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-white p-6">
         <img src={logo} alt="SBC" className="w-24 mb-6 object-contain" />
-        <div className="w-full max-w-md bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+        <div className="w-full max-w-md bg-red-50 border border-border rounded-2xl p-6 text-center">
           <h1 className="text-lg font-bold text-red-700 mb-2">Lien invalide</h1>
           <p className="text-sm text-red-600">
             Ce lien est mal formé. Veuillez retourner à l'application qui vous a envoyé ici.
@@ -115,7 +115,7 @@ export default function SsoAuthorize() {
   if (authLoading || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#115CF6]" />
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary" />
       </div>
     );
   }
@@ -224,7 +224,7 @@ export default function SsoAuthorize() {
           <img src={logo} alt="SBC" className="w-20 sm:w-24 object-contain" />
         </div>
 
-        <motion.div variants={sectionRise} className="bg-white border border-gray-200 rounded-2xl shadow-sm p-5 sm:p-6">
+        <motion.div variants={sectionRise} className="bg-white border border-border rounded-2xl p-5 sm:p-6">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 text-center mb-2">
             {clientName}
           </h1>
@@ -244,7 +244,7 @@ export default function SsoAuthorize() {
                     key={scope}
                     className="flex items-start gap-2 text-sm text-gray-700"
                   >
-                    <span className="text-[#115CF6] mt-1">•</span>
+                    <span className="text-primary mt-1">•</span>
                     <span>
                       {known ?? (
                         <>
@@ -259,7 +259,7 @@ export default function SsoAuthorize() {
             </ul>
           </div>
 
-          <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 mb-5">
+          <div className="bg-gray-50 border border-border rounded-xl p-3 mb-5">
             <p className="text-xs text-gray-500 mb-1">Connecté en tant que</p>
             <p className="text-sm font-medium text-gray-800 break-all">
               {user?.email}
@@ -268,14 +268,14 @@ export default function SsoAuthorize() {
               type="button"
               onClick={handleSwitchAccount}
               disabled={submitting}
-              className="mt-2 min-h-[44px] w-full sm:w-auto text-sm font-medium text-[#115CF6] hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left"
+              className="mt-2 min-h-[44px] w-full sm:w-auto text-sm font-medium text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed text-left"
             >
               Pas vous&nbsp;? Déconnexion
             </button>
           </div>
 
           {status === 'serverError' && errorMessage && (
-            <div className="mb-4 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+            <div className="mb-4 bg-red-50 border border-border text-red-700 rounded-lg px-3 py-2 text-sm">
               {errorMessage}
             </div>
           )}

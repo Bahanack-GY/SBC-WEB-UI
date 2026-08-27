@@ -1,9 +1,10 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Alert02Icon, Bitcoin01Icon, Cancel01Icon, Loading03Icon, SmartPhone01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
-import { FaBitcoin, FaMobileAlt, FaTimes, FaCheck, FaSpinner, FaExclamationTriangle } from 'react-icons/fa';
 import { countrySupportsMomo, getCountryByCode } from '../utils/countriesData';
 import { isOngoingWithdrawal, canCancelWithdrawal, getStatusDescription } from '../utils/transactionHelpers';
 
@@ -40,7 +41,7 @@ const getWithdrawalTypes = (userCountrySupportsMomo: boolean): WithdrawalType[] 
   types.push({
     id: 'crypto',
     name: 'Cryptocurrency',
-    icon: <FaBitcoin size={24} />,
+    icon: <HugeiconsIcon icon={Bitcoin01Icon} size={24} />,
     description: 'Withdraw to your crypto wallet',
     minAmount: 10,
     currency: 'USD',
@@ -57,7 +58,7 @@ const getWithdrawalTypes = (userCountrySupportsMomo: boolean): WithdrawalType[] 
     types.push({
       id: 'mobile_money',
       name: 'Mobile Money',
-      icon: <FaMobileAlt size={24} />,
+      icon: <HugeiconsIcon icon={SmartPhone01Icon} size={24} />,
       description: 'Withdraw to your mobile money account',
       minAmount: 1500,
       currency: 'XAF',
@@ -379,7 +380,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-border">
           <h3 className="text-xl font-bold text-gray-900">
             {step === 'select' && 'Select Withdrawal Type'}
             {step === 'configure' && `Configure ${selectedTypeInfo?.name}`}
@@ -392,7 +393,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
             disabled={loading}
             className="text-gray-400 hover:text-gray-600 p-1 disabled:opacity-50"
           >
-            <FaTimes size={20} />
+            <HugeiconsIcon icon={Cancel01Icon} size={20} />
           </button>
         </div>
 
@@ -408,7 +409,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 <button
                   key={type.id}
                   onClick={() => handleTypeSelect(type.id)}
-                  className="w-full p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-all text-left"
+                  className="w-full p-4 border border-border rounded-xl hover:border-primary hover:bg-blue-50 transition-all text-left"
                 >
                   <div className="flex items-start space-x-4">
                     <div className="text-blue-600 mt-1">{type.icon}</div>
@@ -427,7 +428,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
               
               {/* Show message if mobile money is not available */}
               {!userCountrySupportsMomo && (
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+                <div className="bg-yellow-50 border border-border rounded-xl p-4">
                   <div className="flex items-start gap-3">
                     <div className="text-yellow-600 text-xl">📱</div>
                     <div>
@@ -480,7 +481,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                       value={momoNumber}
                       onChange={(e) => setMomoNumber(e.target.value)}
                       placeholder="e.g., 237675080477"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                       Include country code (e.g., 237 for Cameroon)
@@ -494,7 +495,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                     <select
                       value={momoOperator}
                       onChange={(e) => setMomoOperator(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Operator</option>
                       <option value="MTN">MTN</option>
@@ -522,7 +523,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                       value={cryptoAddress}
                       onChange={(e) => setCryptoAddress(e.target.value)}
                       placeholder="Enter your wallet address"
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                   </div>
 
@@ -533,7 +534,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                     <select
                       value={cryptoCurrency}
                       onChange={(e) => setCryptoCurrency(e.target.value)}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="BTC">Bitcoin</option>
                       <option value="LTC">Litecoin</option>
@@ -552,7 +553,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 disabled={loading}
                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {loading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-2" /> : null}
                 Save Configuration
               </button>
             </div>
@@ -577,7 +578,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                   placeholder={`Minimum: ${selectedTypeInfo.minAmount} ${selectedTypeInfo.currency}`}
                   min={selectedTypeInfo.minAmount}
                   step={selectedType === 'mobile_money' ? '5' : '0.01'}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
                 <div className="text-xs text-gray-500 mt-1">
                   <div>Available: {selectedType === 'crypto' 
@@ -603,7 +604,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 disabled={loading || !amount || isInitiating}
                 className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
-                {(loading || isInitiating) ? <FaSpinner className="animate-spin mr-2" /> : null}
+                {(loading || isInitiating) ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-2" /> : null}
                 {isInitiating ? 'Traitement en cours...' : 'Initiate Withdrawal'}
               </button>
             </div>
@@ -615,7 +616,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
               {/* Warning Icon */}
               <div className="flex justify-center">
                 <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center">
-                  <FaExclamationTriangle className="text-orange-500" size={28} />
+                  <HugeiconsIcon icon={Alert02Icon} className="text-orange-500" size={28} />
                 </div>
               </div>
 
@@ -669,7 +670,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                     disabled={loading}
                     className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-semibold"
                   >
-                    {loading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                    {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-2" /> : null}
                     Continuer la vérification OTP
                   </button>
                 )}
@@ -681,11 +682,11 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                     disabled={loading}
                     className="w-full bg-red-500 text-white py-3 px-4 rounded-lg hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-semibold"
                   >
-                    {loading ? <FaSpinner className="animate-spin mr-2" /> : null}
+                    {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-2" /> : null}
                     Annuler le retrait
                   </button>
                 ) : (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                  <div className="bg-blue-50 border border-border rounded-lg p-3">
                     <p className="text-blue-700 text-sm text-center">
                       <strong>Information:</strong> Cette transaction est en cours de traitement par l'administrateur et ne peut plus être annulée.
                     </p>
@@ -707,7 +708,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           {/* Checking for pending withdrawals */}
           {checkingPending && (
             <div className="flex flex-col items-center justify-center py-8">
-              <FaSpinner className="animate-spin text-blue-600 mb-3" size={32} />
+              <HugeiconsIcon icon={Loading03Icon} className="animate-spin text-blue-600 mb-3" size={32} />
               <p className="text-gray-600 text-sm">Vérification des transactions en cours...</p>
             </div>
           )}
@@ -716,7 +717,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           {step === 'success' && (
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaCheck className="text-green-600" size={24} />
+                <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={24} />
               </div>
               <h4 className="font-semibold text-gray-900 mb-2">Withdrawal Successful!</h4>
               <p className="text-sm text-gray-600">
@@ -730,21 +731,21 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
 
           {/* Error Message */}
           {error && (
-            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mt-4 p-3 bg-red-50 border border-border rounded-lg">
               <p className="text-red-600 text-sm">{error}</p>
             </div>
           )}
 
           {/* Success Message */}
           {success && !error && (
-            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="mt-4 p-3 bg-green-50 border border-border rounded-lg">
               <p className="text-green-600 text-sm">{success}</p>
             </div>
           )}
 
           {/* Important Notes */}
           {step === 'select' && (
-            <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="mt-6 p-4 bg-yellow-50 border border-border rounded-lg">
               <h5 className="font-semibold text-yellow-800 mb-2">Important Notes:</h5>
               <ul className="text-xs text-yellow-700 space-y-1">
                 <li>• Maximum 3 successful withdrawals per 24 hours (all types combined)</li>

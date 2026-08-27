@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, PaintBoardIcon, TextAlignCenterIcon, TextAlignLeftIcon, TextAlignRightIcon, TextFontIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import { useState, useRef } from 'react';
-import { motion } from 'framer-motion';
-import { Type, Palette, AlignLeft, AlignCenter, AlignRight, Check, X } from 'lucide-react';
+import { motion } from 'motion/react';
 
 interface TextOverlay {
   text: string;
@@ -152,11 +153,11 @@ export const TextOverlayEditor = ({
           onClick={onCancel}
           className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
         >
-          <X className="w-6 h-6" />
+          <HugeiconsIcon icon={Cancel01Icon} className="w-6 h-6" />
         </button>
 
         <div className="flex items-center gap-3 text-white">
-          <Type className="w-5 h-5" />
+          <HugeiconsIcon icon={TextFontIcon} className="w-5 h-5" />
           <span className="text-sm font-medium">Ajouter du texte</span>
         </div>
 
@@ -164,7 +165,7 @@ export const TextOverlayEditor = ({
           onClick={handleSave}
           className="w-10 h-10 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center text-white transition-colors"
         >
-          <Check className="w-6 h-6" />
+          <HugeiconsIcon icon={Tick02Icon} className="w-6 h-6" />
         </button>
       </div>
 
@@ -285,7 +286,7 @@ export const TextOverlayEditor = ({
                 onClick={deleteSelectedOverlay}
                 className="w-10 h-10 bg-red-500/80 hover:bg-red-600/90 rounded-lg flex items-center justify-center text-white transition-colors"
               >
-                <X className="w-5 h-5" />
+                <HugeiconsIcon icon={Cancel01Icon} className="w-5 h-5" />
               </button>
             </div>
 
@@ -301,7 +302,7 @@ export const TextOverlayEditor = ({
                       : 'bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
-                  <AlignLeft className="w-5 h-5" />
+                  <HugeiconsIcon icon={TextAlignLeftIcon} className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => updateSelectedOverlay({ align: 'center' })}
@@ -311,7 +312,7 @@ export const TextOverlayEditor = ({
                       : 'bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
-                  <AlignCenter className="w-5 h-5" />
+                  <HugeiconsIcon icon={TextAlignCenterIcon} className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => updateSelectedOverlay({ align: 'right' })}
@@ -321,7 +322,7 @@ export const TextOverlayEditor = ({
                       : 'bg-white/10 text-white hover:bg-white/20'
                   }`}
                 >
-                  <AlignRight className="w-5 h-5" />
+                  <HugeiconsIcon icon={TextAlignRightIcon} className="w-5 h-5" />
                 </button>
               </div>
 
@@ -344,7 +345,7 @@ export const TextOverlayEditor = ({
 
             {/* Color palette */}
             <div className="flex items-center gap-2">
-              <Palette className="w-5 h-5 text-white/60" />
+              <HugeiconsIcon icon={PaintBoardIcon} className="w-5 h-5 text-white/60" />
               <div className="flex gap-2 flex-wrap">
                 {TEXT_COLORS.map((color) => (
                   <button
@@ -373,7 +374,7 @@ export const TextOverlayEditor = ({
             onClick={() => setShowTextInput(true)}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg flex items-center justify-center gap-2 transition-colors"
           >
-            <Type className="w-5 h-5" />
+            <HugeiconsIcon icon={TextFontIcon} className="w-5 h-5" />
             <span>Ajouter du texte</span>
           </button>
         )}

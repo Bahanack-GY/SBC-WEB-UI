@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom'
-import { MotionConfig } from 'framer-motion'
+import { MotionConfig } from 'motion/react'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
@@ -24,6 +24,9 @@ import MesProduits from './pages/MesProduits'
 import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
+import Classement from './pages/Classement'
+import InstallPrompt from './components/pwa/InstallPrompt'
+import Header from './components/common/Header'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
 import { useEffect, useRef } from 'react'
 import VerifyOtp from './pages/VerifyOtp'
@@ -54,6 +57,7 @@ import AdsNetworkAnnonceurOnboarding from './pages/AdsNetworkAnnonceurOnboarding
 import AdsNetworkAnnonceur from './pages/AdsNetworkAnnonceur'
 import AdsNetworkCampaignForm from './pages/AdsNetworkCampaignForm'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
+import SbcLove from './pages/SbcLove'
 
 function AppContent() {
   const location = useLocation();
@@ -154,17 +158,34 @@ function AppContent() {
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
 
-  const hideNav = location.pathname === '/wallet' || location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || isInChatConversation;
+  // The header is app-wide and fixed. It is hidden only where a member app bar
+  // has no meaning: the auth/onboarding flows, the public marketing pages, and
+  // inside a chat conversation, which owns the whole viewport.
+  const HEADERLESS = [
+    '/splash-screen', '/connexion', '/signup', '/forgot-password', '/reset-password',
+    '/reset-password-otp', '/verify-otp', '/verify-email-otp', '/otp', '/complete-profile',
+    '/a-propos', '/conditions', '/confidentialite', '/sso/authorize',
+    '/withdrawal-otp-verification',
+  ];
+  const hideHeader = HEADERLESS.includes(location.pathname) || isInChatConversation;
+
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || isInChatConversation;
+  // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
+  // be reserved by whatever scrolls underneath. Done here rather than per page:
+  // the nav is rendered globally, so every page showing it needs the padding,
+  // and four shipped without it (Wallet, Money, PartnerSpace, AdsPack) — the
+  // Wallet "Voir toutes les transactions" button sat underneath the pill.
   return (
-    <div className="bg-white relative">
+    <div className={`bg-white relative ${hideNav ? '' : 'pb-24'}`}>
       {showLogout && (
         <button
           onClick={async () => { await logout(); window.location.replace('/connexion'); }}
-          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl shadow z-50"
+          className="absolute top-4 right-4 bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-xl z-50"
         >
           Se déconnecter
         </button>
       )}
+      {!hideHeader && <Header />}
       <Routes>
         {/* Public — accessible to anyone (logged in or not). Includes /otp
             because it serves signup-OTP and login-OTP flows where no token
@@ -214,11 +235,15 @@ function AppContent() {
           <Route path="/mes-produits" element={<MesProduits />} />
           <Route path="/modifier-produit/:id" element={<ModifierProduit />} />
           <Route path="/filleuls" element={<MesFilleuls />} />
+          <Route path="/classement" element={<Classement />} />
           <Route path="/partenaire" element={<PartnerSpace />} />
           <Route path="/relance" element={<RelancePage />} />
           <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
           <Route path="/activation-balance" element={<ActivationBalance />} />
           <Route path="/chat" element={<Chat />} />
+          {/* SBC Love. The weekly window and the kill-switch are enforced by
+              sbclove-service; the page reflects them, it does not gate on them. */}
+          <Route path="/sbclove" element={<SbcLove />} />
           {/* SBC Ads Network. Paywalled like the rest of the member area: both
               roles pay out or spend money against an SBC account. */}
           {/* Every Ads Network screen sits behind the launch gate — a
@@ -234,6 +259,7 @@ function AppContent() {
         </Route>
       </Routes>
       {!hideNav && <NavigationBar />}
+      {!hideNav && <InstallPrompt />}
     </div>
   );
 }

@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Delete02Icon, Image01Icon, PencilEdit01Icon, SendIcon, Video01Icon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, Image as ImageIcon, Video as VideoIcon, Trash2, Send, Edit3 } from 'lucide-react';
+import { motion, AnimatePresence } from 'motion/react';
 import type { StatusCategory } from '../../types/chat';
 import { CATEGORY_CONFIG, USER_CATEGORIES } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';
@@ -297,7 +298,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
             />
           ) : (
             // Gradient background for text-only stories
-            <div className="w-full h-full bg-gradient-to-br from-blue-600 via-green-600 to-orange-500" />
+            <div className="bg-primary w-full h-full" />
           )}
         </div>
 
@@ -321,7 +322,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
           disabled={isUploading}
           className="absolute top-6 right-6 z-30 w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center text-white hover:bg-black/70 transition-colors disabled:opacity-50"
         >
-          <X className="w-6 h-6" />
+          <HugeiconsIcon icon={Cancel01Icon} className="w-6 h-6" />
         </button>
 
         {/* Category Selector (Top) */}
@@ -384,7 +385,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
                 <>
                   {/* Photo Upload Button */}
                   <label className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50">
-                    <ImageIcon className="w-5 h-5" />
+                    <HugeiconsIcon icon={Image01Icon} className="w-5 h-5" />
                     <span>Photo</span>
                     <input
                       ref={imageInputRef}
@@ -398,7 +399,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
 
                   {/* Video Upload Button */}
                   <label className="flex-1 bg-white/10 hover:bg-white/20 text-white font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-colors cursor-pointer disabled:opacity-50">
-                    <VideoIcon className="w-5 h-5" />
+                    <HugeiconsIcon icon={Video01Icon} className="w-5 h-5" />
                     <span>Vidéo</span>
                     <input
                       ref={videoInputRef}
@@ -418,7 +419,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
                     disabled={isUploading}
                     className="flex-1 bg-blue-500/80 hover:bg-blue-600/90 text-white font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                   >
-                    <Edit3 className="w-5 h-5" />
+                    <HugeiconsIcon icon={PencilEdit01Icon} className="w-5 h-5" />
                     <span>Éditer</span>
                   </button>
 
@@ -428,7 +429,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
                     disabled={isUploading}
                     className="flex-1 bg-red-500/80 hover:bg-red-600/90 text-white font-semibold py-3 px-4 rounded-full flex items-center justify-center gap-2 transition-colors disabled:opacity-50"
                   >
-                    <Trash2 className="w-5 h-5" />
+                    <HugeiconsIcon icon={Delete02Icon} className="w-5 h-5" />
                     <span>Supprimer</span>
                   </button>
                 </>
@@ -438,7 +439,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
               <button
                 onClick={handleShareStory}
                 disabled={!canShare}
-                className="flex-1 bg-gradient-to-r from-blue-500 to-green-500 hover:from-blue-600 hover:to-green-600 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-primary flex-1 text-white font-bold py-3 px-6 rounded-full flex items-center justify-center gap-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? (
                   <>
@@ -447,7 +448,7 @@ const StoryComposer = ({ isOpen, onClose, onSuccess }: StoryComposerProps) => {
                   </>
                 ) : (
                   <>
-                    <Send className="w-5 h-5" />
+                    <HugeiconsIcon icon={SendIcon} className="w-5 h-5" />
                     <span>Partager</span>
                   </>
                 )}

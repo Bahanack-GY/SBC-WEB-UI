@@ -1,5 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, Cancel01Icon, Exchange01Icon, GiftIcon, HistoryIcon, Loading03Icon, Search01Icon, Tick02Icon, UserAdd01Icon, UserGroupIcon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -7,7 +9,6 @@ import Skeleton from '../components/common/Skeleton';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import { FaWallet, FaUsers, FaGift, FaHistory, FaArrowRight, FaSearch, FaTimes, FaUserPlus, FaExchangeAlt, FaCheck, FaSpinner } from 'react-icons/fa';
 
 // Types
 interface ActivationReferral {
@@ -206,7 +207,7 @@ function ActivationBalance() {
     <ProtectedRoute>
       <div className="min-h-screen bg-gray-50 relative">
         {/* Header */}
-        <div className="bg-white shadow-sm sticky top-0 z-10">
+        <div className="bg-white sticky top-0 z-10 border border-border">
           <div className="p-4 flex items-center">
             <BackButton />
             <h3 className="text-xl font-semibold text-center w-full text-gray-900">Solde d'Activation</h3>
@@ -215,7 +216,7 @@ function ActivationBalance() {
 
         <div className="p-4">
           {/* Balance Card - Blue Primary */}
-          <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-2xl p-6 text-white shadow-lg mb-6">
+          <div className="bg-primary rounded-2xl p-6 text-white mb-6">
             <div className="flex items-center justify-between mb-4">
               <div>
                 <h4 className="text-sm opacity-80">Solde d'Activation</h4>
@@ -226,7 +227,7 @@ function ActivationBalance() {
                 )}
               </div>
               <div className="bg-white/20 p-3 rounded-full">
-                <FaGift size={28} />
+                <HugeiconsIcon icon={GiftIcon} size={28} />
               </div>
             </div>
 
@@ -246,29 +247,29 @@ function ActivationBalance() {
           <div className="grid grid-cols-2 gap-3 mb-6">
             <button
               onClick={() => setShowFundModal(true)}
-              className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl shadow transition-colors"
+              className="flex items-center justify-center gap-2 bg-green-500 hover:bg-green-600 text-white p-4 rounded-xl transition-colors"
             >
-              <FaWallet size={18} />
+              <HugeiconsIcon icon={Wallet01Icon} size={18} />
               <span className="font-medium">Alimenter</span>
             </button>
             <button
               onClick={() => setShowP2PModal(true)}
-              className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-xl shadow transition-colors"
+              className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white p-4 rounded-xl transition-colors"
             >
-              <FaExchangeAlt size={18} />
+              <HugeiconsIcon icon={Exchange01Icon} size={18} />
               <span className="font-medium">Transférer</span>
             </button>
           </div>
 
           {/* Pricing Info */}
-          <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
+          <div className="bg-white rounded-xl p-4 mb-6 border border-border">
             <h4 className="font-semibold text-gray-800 mb-3">Tarifs d'activation</h4>
             <div className="space-y-2">
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <div className="flex justify-between items-center py-2 border-b border-border">
                 <span className="text-gray-600">CLASSIQUE</span>
                 <span className="font-semibold text-gray-900">{pricing.CLASSIQUE.toLocaleString('fr-FR')} F</span>
               </div>
-              <div className="flex justify-between items-center py-2 border-b border-gray-100">
+              <div className="flex justify-between items-center py-2 border-b border-border">
                 <span className="text-gray-600">CIBLE</span>
                 <span className="font-semibold text-gray-900">{pricing.CIBLE.toLocaleString('fr-FR')} F</span>
               </div>
@@ -282,19 +283,19 @@ function ActivationBalance() {
           {/* Tabs */}
           <div className="flex bg-gray-200 rounded-xl p-1 mb-4">
             {[
-              { key: 'overview', label: 'Aperçu', icon: FaWallet },
-              { key: 'referrals', label: 'Filleuls', icon: FaUsers },
-              { key: 'history', label: 'Historique', icon: FaHistory },
+              { key: 'overview', label: 'Aperçu', icon: Wallet01Icon },
+              { key: 'referrals', label: 'Filleuls', icon: UserGroupIcon },
+              { key: 'history', label: 'Historique', icon: HistoryIcon },
             ].map(tab => (
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key as typeof activeTab)}
                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg text-sm font-medium transition-colors ${activeTab === tab.key
-                  ? 'bg-white text-[#115CF6] shadow'
+                  ? 'bg-white text-primary'
                   : 'text-gray-600 hover:text-gray-800'
-                  }`}
+                  } border border-border`}
               >
-                <tab.icon size={14} />
+                <HugeiconsIcon icon={tab.icon} size={14} />
                 {tab.label}
               </button>
             ))}
@@ -310,7 +311,7 @@ function ActivationBalance() {
                 exit={{ opacity: 0, y: -10 }}
               >
                 {/* Info Cards */}
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+                <div className="bg-blue-50 border border-border rounded-xl p-4 mb-4">
                   <h5 className="font-semibold text-blue-800 mb-2">💡 À quoi sert le solde d'activation ?</h5>
                   <p className="text-sm text-blue-700">
                     Le solde d'activation vous permet de payer l'abonnement de vos filleuls (niveaux 1, 2 et 3).
@@ -318,7 +319,7 @@ function ActivationBalance() {
                   </p>
                 </div>
 
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 mb-4">
+                <div className="bg-yellow-50 border border-border rounded-xl p-4 mb-4">
                   <h5 className="font-semibold text-yellow-800 mb-2">⚠️ Important</h5>
                   <ul className="text-sm text-yellow-700 space-y-1">
                     <li>• Le solde d'activation ne peut pas être retiré</li>
@@ -328,7 +329,7 @@ function ActivationBalance() {
                   </ul>
                 </div>
 
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="bg-green-50 border border-border rounded-xl p-4">
                   <h5 className="font-semibold text-green-800 mb-2">✅ Avantages</h5>
                   <ul className="text-sm text-green-700 space-y-1">
                     <li>• Aidez vos filleuls à rejoindre la communauté</li>
@@ -352,9 +353,9 @@ function ActivationBalance() {
                     onClick={() => setReferralTab('direct')}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                       referralTab === 'direct'
-                        ? 'bg-white text-[#115CF6] shadow'
+                        ? 'bg-white text-primary'
                         : 'text-gray-600 hover:text-gray-800'
-                    }`}
+                    } border border-border`}
                   >
                     Directs (Niveau 1)
                   </button>
@@ -362,9 +363,9 @@ function ActivationBalance() {
                     onClick={() => setReferralTab('indirect')}
                     className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
                       referralTab === 'indirect'
-                        ? 'bg-white text-[#115CF6] shadow'
+                        ? 'bg-white text-primary'
                         : 'text-gray-600 hover:text-gray-800'
-                    }`}
+                    } border border-border`}
                   >
                     Indirects (Niveaux 2 & 3)
                   </button>
@@ -373,20 +374,20 @@ function ActivationBalance() {
                 {/* Search & Filter */}
                 <div className="mb-4 space-y-3">
                   <div className="relative">
-                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                    <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                     <input
                       type="text"
                       placeholder="Rechercher un filleul..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full pl-10 pr-4 py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
                     {searchQuery && (
                       <button
                         onClick={() => setSearchQuery('')}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        <FaTimes />
+                        <HugeiconsIcon icon={Cancel01Icon} />
                       </button>
                     )}
                   </div>
@@ -401,7 +402,7 @@ function ActivationBalance() {
                         key={f.key}
                         onClick={() => setFilter(f.key as FilterType)}
                         className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${filter === f.key
-                          ? 'bg-[#115CF6] text-white'
+                          ? 'bg-primary text-white'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
                       >
@@ -420,7 +421,7 @@ function ActivationBalance() {
                   </div>
                 ) : filteredReferrals.length === 0 ? (
                   <div className="text-center py-12">
-                    <FaUsers className="mx-auto text-gray-300 mb-4" size={48} />
+                    <HugeiconsIcon icon={UserGroupIcon} className="mx-auto text-gray-300 mb-4" size={48} />
                     <p className="text-gray-500">
                       {filter === 'all'
                         ? 'Aucun filleul trouvé'
@@ -435,10 +436,10 @@ function ActivationBalance() {
                       <div
                         key={referral._id}
                         ref={index === filteredReferrals.length - 1 ? lastReferralRef : null}
-                        className="bg-white rounded-xl p-4 shadow-sm"
+                        className="bg-white rounded-xl p-4 border border-border"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                          <div className="bg-primary w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg">
                             {referral.avatar ? (
                               <img src={referral.avatar} alt={referral.name} className="w-full h-full rounded-full object-cover" />
                             ) : (
@@ -469,7 +470,7 @@ function ActivationBalance() {
                               onClick={() => handleSponsorClick(referral)}
                               className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
                             >
-                              <FaUserPlus size={14} />
+                              <HugeiconsIcon icon={UserAdd01Icon} size={14} />
                               Activer
                             </button>
                           ) : referral.canUpgrade ? (
@@ -477,12 +478,12 @@ function ActivationBalance() {
                               onClick={() => handleSponsorClick(referral)}
                               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
                             >
-                              <FaArrowRight size={14} />
+                              <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
                               Upgrade
                             </button>
                           ) : (
-                            <span className="text-[#115CF6] text-sm font-medium flex items-center gap-1">
-                              <FaCheck size={14} />
+                            <span className="text-primary text-sm font-medium flex items-center gap-1">
+                              <HugeiconsIcon icon={Tick02Icon} size={14} />
                               Actif
                             </span>
                           )}
@@ -491,7 +492,7 @@ function ActivationBalance() {
                     ))}
                     {isFetchingNextPage && (
                       <div className="flex justify-center py-4">
-                        <FaSpinner className="animate-spin text-amber-500" size={24} />
+                        <HugeiconsIcon icon={Loading03Icon} className="animate-spin text-amber-500" size={24} />
                       </div>
                     )}
                   </div>
@@ -507,7 +508,7 @@ function ActivationBalance() {
                 exit={{ opacity: 0, y: -10 }}
               >
                 {historyLoading ? (
-                  <div className="bg-[#192040] rounded-2xl p-4">
+                  <div className="bg-ink rounded-2xl p-4">
                     <div className="space-y-3">
                       {[1, 2, 3].map(i => (
                         <Skeleton key={i} height="h-[60px]" className="rounded-lg bg-white/10" />
@@ -515,12 +516,12 @@ function ActivationBalance() {
                     </div>
                   </div>
                 ) : allHistory.length === 0 ? (
-                  <div className="bg-[#192040] rounded-2xl p-8 text-center">
-                    <FaHistory className="mx-auto text-gray-500 mb-4" size={48} />
+                  <div className="bg-ink rounded-2xl p-8 text-center">
+                    <HugeiconsIcon icon={HistoryIcon} className="mx-auto text-gray-500 mb-4" size={48} />
                     <p className="text-gray-400">Aucun historique d'activation</p>
                   </div>
                 ) : (
-                  <div className="bg-[#192040] rounded-2xl p-4 shadow">
+                  <div className="bg-ink rounded-2xl p-4">
                     <div className="font-semibold mb-3 text-white">Historique des transactions</div>
                     {allHistory.map((item, index) => {
                       // Determine display based on transaction type
@@ -617,7 +618,7 @@ function ActivationBalance() {
                     })}
                     {isFetchingNextHistoryPage && (
                       <div className="flex justify-center py-4">
-                        <FaSpinner className="animate-spin text-blue-400" size={24} />
+                        <HugeiconsIcon icon={Loading03Icon} className="animate-spin text-blue-400" size={24} />
                       </div>
                     )}
                   </div>
@@ -726,7 +727,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, minimumAmount, onSu
       onClick={handleClose}
     >
       <motion.div
-        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl"
+        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md border border-border"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -735,7 +736,7 @@ function FundActivationModal({ isOpen, onClose, mainBalance, minimumAmount, onSu
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
             <p className="text-gray-600">Votre solde d'activation a été alimenté.</p>
@@ -761,17 +762,17 @@ function FundActivationModal({ isOpen, onClose, mainBalance, minimumAmount, onSu
                   setError('');
                 }}
                 placeholder="Ex: 5000"
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
+                className="w-full border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 bg-white"
               />
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="mb-4 p-3 bg-red-50 border border-border rounded-xl">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
+            <div className="bg-yellow-50 border border-border rounded-xl p-3 mb-4">
               <p className="text-xs text-yellow-700">
                 ⚠️ Ce transfert est irréversible. Le solde d'activation ne peut pas être retiré.
               </p>
@@ -787,9 +788,9 @@ function FundActivationModal({ isOpen, onClose, mainBalance, minimumAmount, onSu
               <button
                 onClick={handleSubmit}
                 disabled={loading || !amount}
-                className="flex-1 bg-[#115CF6] text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="flex-1 bg-primary text-white py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>
             </div>
           </>
@@ -935,7 +936,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
       onClick={handleClose}
     >
       <motion.div
-        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl max-h-[90vh] overflow-y-auto"
+        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md max-h-[90vh] overflow-y-auto border border-border"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -944,7 +945,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Transfert réussi !</h4>
             <p className="text-gray-600">Le solde d'activation a été transféré.</p>
@@ -955,7 +956,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
 
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <p className="text-sm text-gray-600">Solde d'activation disponible</p>
-              <p className="text-2xl font-bold text-[#115CF6]">{activationBalance.toLocaleString('fr-FR')} F</p>
+              <p className="text-2xl font-bold text-primary">{activationBalance.toLocaleString('fr-FR')} F</p>
             </div>
 
             {/* Selected User Display */}
@@ -964,8 +965,8 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Destinataire sélectionné
                 </label>
-                <div className="flex items-center gap-3 p-3 bg-orange-50 border border-orange-200 rounded-xl">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white font-bold">
+                <div className="flex items-center gap-3 p-3 bg-orange-50 border border-border rounded-xl">
+                  <div className="bg-accent w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
                     {selectedUser.avatar ? (
                       <img src={selectedUser.avatar} alt={selectedUser.name} className="w-full h-full rounded-full object-cover" />
                     ) : (
@@ -980,7 +981,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                     onClick={handleClearSelection}
                     className="p-2 text-gray-400 hover:text-red-500 transition-colors"
                   >
-                    <FaTimes size={14} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={14} />
                   </button>
                 </div>
               </div>
@@ -990,7 +991,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                   Rechercher un destinataire
                 </label>
                 <div className="relative">
-                  <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                  <HugeiconsIcon icon={Search01Icon} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     value={searchQuery}
@@ -999,23 +1000,23 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                       setError('');
                     }}
                     placeholder="Nom, email ou téléphone..."
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    className="w-full pl-10 pr-4 py-3 border border-border rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
                   {searching && (
-                    <FaSpinner className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" />
+                    <HugeiconsIcon icon={Loading03Icon} className="absolute right-3 top-1/2 -translate-y-1/2 text-orange-500 animate-spin" />
                   )}
                 </div>
 
                 {/* Search Results */}
                 {searchResults.length > 0 && (
-                  <div className="mt-2 border border-gray-200 rounded-xl overflow-hidden">
+                  <div className="mt-2 border border-border rounded-xl overflow-hidden">
                     {searchResults.map((user) => (
                       <button
                         key={user._id}
                         onClick={() => handleSelectUser(user)}
-                        className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-gray-100 last:border-b-0"
+                        className="w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-b border-border last:border-b-0"
                       >
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm">
+                        <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm">
                           {user.avatar ? (
                             <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
                           ) : (
@@ -1049,12 +1050,12 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                   setError('');
                 }}
                 placeholder="Ex: 2000"
-                className="w-full border border-gray-300 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                className="w-full border border-border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-500"
               />
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="mb-4 p-3 bg-red-50 border border-border rounded-xl">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
@@ -1071,7 +1072,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                 disabled={loading || !selectedUser || !amount}
                 className="flex-1 bg-orange-500 text-white py-3 rounded-xl font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Transférer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Transférer'}
               </button>
             </div>
           </>
@@ -1175,7 +1176,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
       onClick={handleClose}
     >
       <motion.div
-        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md shadow-xl"
+        className="bg-white rounded-2xl p-6 w-[90vw] max-w-md border border-border"
         initial={{ scale: 0.9, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         exit={{ scale: 0.9, opacity: 0 }}
@@ -1184,7 +1185,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
         {success ? (
           <div className="text-center py-6">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <FaCheck className="text-green-600" size={32} />
+              <HugeiconsIcon icon={Tick02Icon} className="text-green-600" size={32} />
             </div>
             <h4 className="text-xl font-bold text-green-600 mb-2">Sponsoring réussi !</h4>
             <p className="text-gray-600">{referral.name} a été activé avec succès.</p>
@@ -1196,7 +1197,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
             {/* Beneficiary Info */}
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-lg">
+                <div className="bg-primary w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg">
                   {referral.avatar ? (
                     <img src={referral.avatar} alt={referral.name} className="w-full h-full rounded-full object-cover" />
                   ) : (
@@ -1229,13 +1230,13 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
                     key={type}
                     onClick={() => setSelectedType(type)}
                     className={`w-full p-4 rounded-xl border-2 text-left transition-colors ${selectedType === type
-                      ? 'border-[#115CF6] bg-blue-50'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-primary bg-blue-50'
+                      : 'border-border hover:border-border'
                       }`}
                   >
                     <div className="flex justify-between items-center">
                       <span className="font-medium text-gray-900">{label}</span>
-                      <span className="font-bold text-[#115CF6]">{price.toLocaleString('fr-FR')} F</span>
+                      <span className="font-bold text-primary">{price.toLocaleString('fr-FR')} F</span>
                     </div>
                   </button>
                 ))}
@@ -1246,12 +1247,12 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
             <div className="bg-gray-50 rounded-xl p-4 mb-4">
               <div className="flex justify-between items-center">
                 <span className="text-sm text-gray-600">Solde d'activation</span>
-                <span className={`font-bold ${canAfford || !selectedType ? 'text-[#115CF6]' : 'text-red-600'}`}>
+                <span className={`font-bold ${canAfford || !selectedType ? 'text-primary' : 'text-red-600'}`}>
                   {activationBalance.toLocaleString('fr-FR')} F
                 </span>
               </div>
               {selectedType && (
-                <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-200">
+                <div className="flex justify-between items-center mt-2 pt-2 border-t border-border">
                   <span className="text-sm text-gray-600">Après sponsoring</span>
                   <span className={`font-bold ${canAfford ? 'text-green-600' : 'text-red-600'}`}>
                     {(activationBalance - selectedPrice).toLocaleString('fr-FR')} F
@@ -1261,13 +1262,13 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
             </div>
 
             {error && (
-              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl">
+              <div className="mb-4 p-3 bg-red-50 border border-border rounded-xl">
                 <p className="text-red-600 text-sm">{error}</p>
               </div>
             )}
 
             {!canAfford && selectedType && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-xl">
+              <div className="mb-4 p-3 bg-yellow-50 border border-border rounded-xl">
                 <p className="text-yellow-700 text-sm">
                   ⚠️ Solde insuffisant. Alimentez d'abord votre solde d'activation.
                 </p>
@@ -1286,7 +1287,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
                 disabled={loading || !selectedType || !canAfford}
                 className="flex-1 bg-green-500 text-white py-3 rounded-xl font-semibold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
-                {loading ? <FaSpinner className="animate-spin" /> : 'Confirmer'}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : 'Confirmer'}
               </button>
             </div>
           </>

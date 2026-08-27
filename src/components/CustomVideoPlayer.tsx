@@ -1,5 +1,6 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { PlayIcon, PauseIcon, SpeakerWaveIcon, SpeakerXMarkIcon, BackwardIcon, ForwardIcon, ArrowsPointingOutIcon } from '@heroicons/react/24/solid';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlayIcon, PauseIcon, VolumeHighIcon, VolumeMute01Icon, Backward01Icon, Forward01Icon, FullScreenIcon } from '@hugeicons/core-free-icons';
 
 interface CustomVideoPlayerProps {
     src: string;
@@ -133,7 +134,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
     }, [handleTimeUpdate, handleLoadedMetadata]);
 
     return (
-        <div className="relative w-full rounded-xl overflow-hidden shadow-lg bg-black">
+        <div className="relative w-full rounded-card overflow-hidden bg-black">
             <video
                 ref={videoRef}
                 src={src}
@@ -149,13 +150,13 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
             >
                 <button
                     onClick={togglePlay}
-                    className="p-4 rounded-full bg-white bg-opacity-90 text-gray-900 shadow-lg hover:bg-opacity-100 transition-colors pointer-events-auto"
+                    className="p-4 rounded-full bg-white/90 text-ink hover:bg-white transition-colors pointer-events-auto"
                     aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
                     {isPlaying ? (
-                        <PauseIcon className="w-8 h-8" />
+                        <HugeiconsIcon icon={PauseIcon} size={32} />
                     ) : (
-                        <PlayIcon className="w-8 h-8" />
+                        <HugeiconsIcon icon={PlayIcon} size={32} />
                     )}
                 </button>
             </div>
@@ -182,19 +183,19 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
                     {/* Play/Pause Button */}
                     <button onClick={togglePlay} className="p-1 rounded-full hover:bg-gray-700 transition-colors text-white">
                         {isPlaying ? (
-                            <PauseIcon className="w-5 h-5" />
+                            <HugeiconsIcon icon={PauseIcon} size={20} />
                         ) : (
-                            <PlayIcon className="w-5 h-5" />
+                            <HugeiconsIcon icon={PlayIcon} size={20} />
                         )}
                     </button>
 
                     {/* Skip buttons */}
                     <div className="flex gap-2">
                         <button onClick={() => skip(-10)} className="p-1 rounded-full hover:bg-gray-700 transition-colors text-white">
-                            <BackwardIcon className="w-5 h-5" />
+                            <HugeiconsIcon icon={Backward01Icon} size={20} />
                         </button>
                         <button onClick={() => skip(10)} className="p-1 rounded-full hover:bg-gray-700 transition-colors text-white">
-                            <ForwardIcon className="w-5 h-5" />
+                            <HugeiconsIcon icon={Forward01Icon} size={20} />
                         </button>
                     </div>
 
@@ -202,9 +203,9 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
                     <div className="flex items-center gap-2 flex-grow">
                         <button onClick={toggleMute} className="p-1 rounded-full hover:bg-gray-700 transition-colors text-white">
                             {isMuted || volume === 0 ? (
-                                <SpeakerXMarkIcon className="w-5 h-5" />
+                                <HugeiconsIcon icon={VolumeMute01Icon} size={20} />
                             ) : (
-                                <SpeakerWaveIcon className="w-5 h-5" />
+                                <HugeiconsIcon icon={VolumeHighIcon} size={20} />
                             )}
                         </button>
                         <input
@@ -223,7 +224,7 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
 
                     {/* Fullscreen Button */}
                     <button onClick={toggleFullscreen} className="p-1 rounded-full hover:bg-gray-700 transition-colors text-white">
-                        <ArrowsPointingOutIcon className="w-5 h-5" />
+                        <HugeiconsIcon icon={FullScreenIcon} size={20} />
                     </button>
                 </div>
             </div>

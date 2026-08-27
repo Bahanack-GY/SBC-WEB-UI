@@ -1,11 +1,9 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, ChampionIcon, Cursor01Icon, EyeIcon, GiftIcon, LinkSquare01Icon, Loading03Icon, Megaphone01Icon, PlusSignIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FaPlus, FaSpinner, FaTimes, FaExternalLinkAlt, FaEye, FaMousePointer,
-  FaBullhorn, FaGift, FaUsers, FaTrophy,
-} from 'react-icons/fa';
+import { motion, AnimatePresence } from 'motion/react';
 import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton, AdsStatCard, adsItemMotion, adsHeaderMotion } from '../components/ads/AdsScreen';
 import illustrationEmpty from '../assets/icon/ads-empty.jpg';
@@ -177,14 +175,14 @@ function AdsNetworkAnnonceur() {
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={() => navigate('/ads-network/annonceur/nouvelle-campagne')}
-            className="flex items-center gap-2 bg-[#115CF6] text-white rounded-xl px-4 py-2 text-sm font-medium shadow-md shadow-blue-200"
+            className="flex items-center gap-2 bg-primary text-white rounded-xl px-4 py-2 text-sm font-medium"
           >
-            <FaPlus size={12} /> Nouvelle
+            <HugeiconsIcon icon={PlusSignIcon} size={12} /> Nouvelle
           </motion.button>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mt-3">{error}</div>
+          <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800 mt-3">{error}</div>
         )}
 
         {/* Totals across every campaign. An annonceur's first question is what
@@ -193,11 +191,11 @@ function AdsNetworkAnnonceur() {
           <>
             <motion.div
               {...adsHeaderMotion}
-              className="relative overflow-hidden bg-gradient-to-br from-[#115CF6] to-blue-500 text-white rounded-2xl p-5 mt-4 shadow-lg"
+              className="bg-primary relative overflow-hidden text-white rounded-2xl p-5 mt-4"
             >
-              <FaBullhorn className="absolute -right-4 -bottom-4 text-white/10" size={110} />
+              <HugeiconsIcon icon={Megaphone01Icon} className="absolute -right-4 -bottom-4 text-white/10" size={110} />
               <div className="flex items-center gap-2 text-blue-100 text-sm">
-                <FaBullhorn /> Budget restant
+                <HugeiconsIcon icon={Megaphone01Icon} /> Budget restant
               </div>
               {/* What is still working for them: unconsumed budget of live
                   campaigns plus banked credit. Total spend is the subtitle —
@@ -246,7 +244,7 @@ function AdsNetworkAnnonceur() {
             <img
               src={illustrationEmpty}
               alt=""
-              className="w-40 h-40 object-cover rounded-3xl mx-auto shadow-md"
+              className="w-40 h-40 object-cover rounded-3xl mx-auto"
             />
             <p className="text-gray-700 font-medium mt-4">Vous n'avez pas encore d'annonce.</p>
             <p className="text-sm text-gray-500 mt-1">
@@ -255,7 +253,7 @@ function AdsNetworkAnnonceur() {
             <motion.button
               whileTap={{ scale: 0.95 }}
               onClick={() => navigate('/ads-network/annonceur/onboarding')}
-              className="bg-[#115CF6] text-white rounded-xl px-6 py-3 text-sm font-medium mt-4 shadow-md shadow-blue-200"
+              className="bg-primary text-white rounded-xl px-6 py-3 text-sm font-medium mt-4"
             >
               Créer ma première annonce
             </motion.button>
@@ -263,7 +261,7 @@ function AdsNetworkAnnonceur() {
         ) : (
           <div className="space-y-3 mt-5">
             {campaigns.map((c, i) => (
-              <motion.div key={c._id} {...adsItemMotion(i)} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+              <motion.div key={c._id} {...adsItemMotion(i)} className="bg-white border border-border rounded-2xl p-4">
                 <div className="flex items-start gap-3">
                   <img
                     src={sbcApiService.generateSettingsFileUrl(c.mediaFileId)}
@@ -283,14 +281,14 @@ function AdsNetworkAnnonceur() {
                         {STATUS_LABELS[c.status]}
                       </span>
                     </div>
-                    <p className="text-sm font-bold text-[#115CF6] mt-0.5">{formatFCFA(c.amountPaid)}</p>
+                    <p className="text-sm font-bold text-primary mt-0.5">{formatFCFA(c.amountPaid)}</p>
 
                     {(c.status === 'active' || c.status === 'completed' || c.status === 'banked') && (
                       <>
                         <div className="flex items-center gap-2 mt-2.5">
                           <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex-1">
                             <motion.div
-                              className="h-full rounded-full bg-gradient-to-r from-green-400 to-emerald-500"
+                              className="bg-success h-full rounded-full"
                               initial={{ width: 0 }}
                               animate={{ width: `${Math.max(c.progress.percentComplete, c.progress.percentComplete > 0 ? 4 : 0)}%` }}
                               transition={{ delay: 0.3 + i * 0.07, duration: 0.8, ease: 'easeOut' }}
@@ -301,16 +299,16 @@ function AdsNetworkAnnonceur() {
                           </span>
                         </div>
                         <div className="flex flex-wrap gap-1.5 mt-2">
-                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
-                            <FaEye size={10} className="text-[#115CF6]" />
+                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-border text-gray-700 rounded-lg px-2 py-1 text-[11px]">
+                            <HugeiconsIcon icon={EyeIcon} size={10} className="text-primary" />
                             {c.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}/{c.progress.targetUniqueViews.toLocaleString('fr-FR')} uniques
                           </span>
-                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
-                            <FaGift size={10} className="text-purple-500" />
+                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-border text-gray-700 rounded-lg px-2 py-1 text-[11px]">
+                            <HugeiconsIcon icon={GiftIcon} size={10} className="text-purple-500" />
                             {c.progress.repeatViewsDelivered.toLocaleString('fr-FR')} offertes
                           </span>
-                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-gray-100 text-gray-700 rounded-lg px-2 py-1 text-[11px]">
-                            <FaMousePointer size={10} className="text-green-600" />
+                          <span className="inline-flex items-center gap-1 bg-gray-50 border border-border text-gray-700 rounded-lg px-2 py-1 text-[11px]">
+                            <HugeiconsIcon icon={Cursor01Icon} size={10} className="text-green-600" />
                             {c.clicksTotal} clic{c.clicksTotal > 1 ? 's' : ''}
                           </span>
                         </div>
@@ -320,20 +318,20 @@ function AdsNetworkAnnonceur() {
                 </div>
 
                 {c.status === 'rejected' && c.rejectionReason && (
-                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mt-3">
+                  <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800 mt-3">
                     <p className="font-medium">Motif du refus</p>
                     <p className="mt-1">{c.rejectionReason}</p>
                   </div>
                 )}
 
                 {c.status === 'pending_review' && (
-                  <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-2 mt-3">
+                  <p className="text-xs text-amber-700 bg-amber-50 border border-border rounded-xl p-2 mt-3">
                     Notre équipe relit votre annonce. Vous pourrez payer dès qu'elle sera validée.
                   </p>
                 )}
 
                 {c.status === 'banked' && (
-                  <p className="text-xs text-yellow-800 bg-yellow-50 border border-yellow-200 rounded-xl p-2 mt-3">
+                  <p className="text-xs text-yellow-800 bg-yellow-50 border border-border rounded-xl p-2 mt-3">
                     {formatFCFA(c.bankedAmount ?? 0)} conservés en crédit pour une prochaine campagne.
                   </p>
                 )}
@@ -344,14 +342,14 @@ function AdsNetworkAnnonceur() {
                       <button
                         onClick={() => handlePay(c)}
                         disabled={acting === c._id}
-                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
+                        className="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
                       >
                         {acting === c._id ? 'Ouverture…' : 'Payer et lancer'}
                       </button>
                       <button
                         onClick={() => setCancelling(c)}
                         disabled={acting === c._id}
-                        className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
+                        className="px-4 border border-border text-gray-600 rounded-xl py-2.5 text-sm"
                       >
                         Annuler
                       </button>
@@ -361,7 +359,7 @@ function AdsNetworkAnnonceur() {
                     <button
                       onClick={() => setCancelling(c)}
                       disabled={acting === c._id}
-                      className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
+                      className="px-4 border border-border text-gray-600 rounded-xl py-2.5 text-sm"
                     >
                       Annuler la campagne
                     </button>
@@ -370,7 +368,7 @@ function AdsNetworkAnnonceur() {
                     <button
                       onClick={() => handleSubmit(c)}
                       disabled={acting === c._id}
-                      className="flex-1 bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
+                      className="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
                     >
                       {acting === c._id ? 'Envoi…' : 'Envoyer à la validation'}
                     </button>
@@ -380,15 +378,15 @@ function AdsNetworkAnnonceur() {
                       <motion.button
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setDetail(c)}
-                        className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
+                        className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-primary rounded-xl py-2.5 text-sm font-medium"
                       >
-                        <FaUsers size={13} /> Voir les diffuseurs
+                        <HugeiconsIcon icon={UserGroupIcon} size={13} /> Voir les diffuseurs
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setClosing(c)}
                         disabled={acting === c._id}
-                        className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
+                        className="px-4 border border-border text-gray-600 rounded-xl py-2.5 text-sm"
                       >
                         Clôturer
                       </motion.button>
@@ -398,9 +396,9 @@ function AdsNetworkAnnonceur() {
                     <motion.button
                       whileTap={{ scale: 0.97 }}
                       onClick={() => setDetail(c)}
-                      className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-[#115CF6] rounded-xl py-2.5 text-sm font-medium"
+                      className="flex-1 inline-flex items-center justify-center gap-2 bg-blue-50 text-primary rounded-xl py-2.5 text-sm font-medium"
                     >
-                      <FaTrophy size={13} /> Voir les résultats
+                      <HugeiconsIcon icon={ChampionIcon} size={13} /> Voir les résultats
                     </motion.button>
                   )}
                   {c.landingPageUrl && (
@@ -408,9 +406,9 @@ function AdsNetworkAnnonceur() {
                       href={c.landingPageUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="px-4 border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm flex items-center gap-2"
+                      className="px-4 border border-border text-gray-700 rounded-xl py-2.5 text-sm flex items-center gap-2"
                     >
-                      <FaExternalLinkAlt size={11} /> Ma page
+                      <HugeiconsIcon icon={LinkSquare01Icon} size={11} /> Ma page
                     </a>
                   )}
                 </div>
@@ -448,7 +446,7 @@ function AdsNetworkAnnonceur() {
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setCancelling(null)}
                   disabled={acting === cancelling._id}
-                  className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                  className="flex-1 border border-border text-gray-700 rounded-xl py-3 text-sm font-medium"
                 >
                   Garder la campagne
                 </motion.button>
@@ -510,7 +508,7 @@ function AdsNetworkAnnonceur() {
                   whileTap={{ scale: 0.97 }}
                   onClick={() => setClosing(null)}
                   disabled={acting === closing._id}
-                  className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                  className="flex-1 border border-border text-gray-700 rounded-xl py-3 text-sm font-medium"
                 >
                   Annuler
                 </motion.button>
@@ -540,7 +538,7 @@ function AdsNetworkAnnonceur() {
               transition={{ type: 'spring', damping: 26, stiffness: 300 }}
             >
               {/* Sheet header: the creative anchors which campaign this is. */}
-              <div className="sticky top-0 bg-white/95 backdrop-blur rounded-t-3xl px-5 pt-3 pb-3 border-b border-gray-100">
+              <div className="sticky top-0 bg-white/95 backdrop-blur rounded-t-3xl px-5 pt-3 pb-3 border-b border-border">
                 <div className="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-3 sm:hidden" />
                 <div className="flex items-center gap-3">
                   <img
@@ -553,16 +551,16 @@ function AdsNetworkAnnonceur() {
                     onClick={() => setDetail(null)}
                     className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-100 text-gray-500"
                   >
-                    <FaTimes size={13} />
+                    <HugeiconsIcon icon={Cancel01Icon} size={13} />
                   </button>
                 </div>
               </div>
 
               <div className="p-5">
                 <div className="grid grid-cols-3 gap-2 mb-5">
-                  <motion.div {...adsItemMotion(0, 0.05)} className="bg-blue-50 border border-blue-100 rounded-2xl p-3">
-                    <div className="w-7 h-7 rounded-full bg-[#115CF6] text-white flex items-center justify-center mb-2">
-                      <FaEye size={11} />
+                  <motion.div {...adsItemMotion(0, 0.05)} className="bg-blue-50 border border-border rounded-2xl p-3">
+                    <div className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center mb-2">
+                      <HugeiconsIcon icon={EyeIcon} size={11} />
                     </div>
                     <p className="text-xl font-bold text-gray-900 leading-none">
                       {detail.progress.uniqueViewsDelivered.toLocaleString('fr-FR')}
@@ -571,9 +569,9 @@ function AdsNetworkAnnonceur() {
                       Vues uniques<br />sur {detail.progress.targetUniqueViews.toLocaleString('fr-FR')} visées
                     </p>
                   </motion.div>
-                  <motion.div {...adsItemMotion(1, 0.05)} className="bg-purple-50 border border-purple-100 rounded-2xl p-3">
+                  <motion.div {...adsItemMotion(1, 0.05)} className="bg-purple-50 border border-border rounded-2xl p-3">
                     <div className="w-7 h-7 rounded-full bg-purple-600 text-white flex items-center justify-center mb-2">
-                      <FaGift size={11} />
+                      <HugeiconsIcon icon={GiftIcon} size={11} />
                     </div>
                     <p className="text-xl font-bold text-gray-900 leading-none">
                       {detail.progress.totalViewsDelivered.toLocaleString('fr-FR')}
@@ -582,9 +580,9 @@ function AdsNetworkAnnonceur() {
                       Vues totales<br />dont {detail.progress.repeatViewsDelivered.toLocaleString('fr-FR')} offertes
                     </p>
                   </motion.div>
-                  <motion.div {...adsItemMotion(2, 0.05)} className="bg-green-50 border border-green-100 rounded-2xl p-3">
+                  <motion.div {...adsItemMotion(2, 0.05)} className="bg-green-50 border border-border rounded-2xl p-3">
                     <div className="w-7 h-7 rounded-full bg-green-600 text-white flex items-center justify-center mb-2">
-                      <FaMousePointer size={11} />
+                      <HugeiconsIcon icon={Cursor01Icon} size={11} />
                     </div>
                     <p className="text-xl font-bold text-gray-900 leading-none">{detail.clicksTotal}</p>
                     <p className="text-[11px] text-gray-500 mt-1 leading-tight">Clics<br />reçus</p>
@@ -592,7 +590,7 @@ function AdsNetworkAnnonceur() {
                 </div>
 
                 <h3 className="font-semibold text-gray-900 mb-1 flex items-center gap-2">
-                  <FaUsers size={13} className="text-[#115CF6]" /> Par diffuseur
+                  <HugeiconsIcon icon={UserGroupIcon} size={13} className="text-primary" /> Par diffuseur
                 </h3>
                 <p className="text-xs text-gray-500 mb-3">
                   Le taux de clic distingue ceux qui apportent des contacts de ceux qui
@@ -600,11 +598,11 @@ function AdsNetworkAnnonceur() {
                 </p>
 
                 {perfLoading ? (
-                  <div className="flex justify-center py-8"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
+                  <div className="flex justify-center py-8"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-primary" /></div>
                 ) : !performance?.diffuseurs?.length ? (
                   <div className="text-center py-6">
-                    <div className="w-14 h-14 rounded-full bg-blue-50 text-[#115CF6] flex items-center justify-center mx-auto mb-3">
-                      <FaBullhorn size={20} />
+                    <div className="w-14 h-14 rounded-full bg-blue-50 text-primary flex items-center justify-center mx-auto mb-3">
+                      <HugeiconsIcon icon={Megaphone01Icon} size={20} />
                     </div>
                     <p className="text-sm font-medium text-gray-700">Diffusion en préparation</p>
                     <p className="text-xs text-gray-500 mt-1 max-w-[240px] mx-auto">
@@ -618,7 +616,7 @@ function AdsNetworkAnnonceur() {
                       <motion.div
                         key={d.diffuseurUserId}
                         {...adsItemMotion(i, 0.1)}
-                        className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
+                        className="flex items-center gap-3 border border-border rounded-xl p-3 text-sm"
                       >
                         <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${i === 0 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-500'}`}>
                           {i + 1}

@@ -1,6 +1,7 @@
-import { FiLock } from 'react-icons/fi';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { LockIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -90,7 +91,7 @@ function ResetPassword() {
             >
                 <div className="flex flex-col items-center mt-8 mb-6">
                     <div className="bg-green-100 rounded-full w-24 h-24 flex items-center justify-center mb-4">
-                        <FiLock className="text-green-500" size={40} />
+                        <HugeiconsIcon icon={LockIcon} className="text-green-500" size={40} />
                     </div>
                     <h2 className="text-xl font-bold text-gray-800 mb-2">Définir un nouveau mot de passe</h2>
                     <p className="text-center text-gray-600 text-sm">
@@ -109,7 +110,7 @@ function ResetPassword() {
                                 setError('');
                             }}
                             placeholder="Au moins 8 caractères"
-                            className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
                             required
                         />
                     </div>
@@ -124,7 +125,7 @@ function ResetPassword() {
                                 setError('');
                             }}
                             placeholder="Répétez le mot de passe"
-                            className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
+                            className={`w-full border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-green-400 text-gray-700 placeholder-gray-400`}
                             required
                         />
                     </div>
@@ -142,7 +143,7 @@ function ResetPassword() {
                     
                     <button
                         type="submit"
-                        className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                        className="bg-success w-full text-white font-bold py-3 rounded-xl text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                         disabled={loading}
                     >
                         {loading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
@@ -158,7 +159,7 @@ function ResetPassword() {
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+                        className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
                         initial={{ scale: 0.9, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
                         exit={{ scale: 0.9, opacity: 0 }}
@@ -168,7 +169,7 @@ function ResetPassword() {
                             <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${
                                 modalContent.type === 'success' ? 'bg-green-100' : 'bg-red-100'
                             }`}>
-                                <FiLock className={`${
+                                <HugeiconsIcon icon={LockIcon} className={`${
                                     modalContent.type === 'success' ? 'text-green-500' : 'text-red-500'
                                 }`} size={32} />
                             </div>
@@ -191,7 +192,7 @@ function ResetPassword() {
                         {modalContent.type === 'error' && (
                             <button
                                 type="button"
-                                className="w-full bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold shadow transition-colors"
+                                className="w-full bg-red-500 hover:bg-red-600 text-white rounded-xl py-2 font-bold transition-colors"
                                 onClick={() => setShowModal(false)}
                             >
                                 Réessayer

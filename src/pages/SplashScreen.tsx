@@ -1,7 +1,8 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence, type PanInfo } from 'framer-motion';
+import { motion, AnimatePresence, type PanInfo } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { FiArrowLeft } from 'react-icons/fi';
 import splash1 from '../assets/img/splash-1.png';
 import splash2 from '../assets/img/splash-2.png';
 import splash3 from '../assets/img/splash-3.png';
@@ -102,10 +103,10 @@ function SplashScreen() {
   };
 
   return (
-    <div className="relative min-h-screen w-full overflow-hidden bg-gradient-to-br from-[#eaf2ff] via-white to-[#eaffea]">
+    <div className="bg-bg relative min-h-screen w-full overflow-hidden">
       {/* Decorative blobs (purely visual) */}
-      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-[#115CF6]/10 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-[#25D366]/10 blur-3xl" />
+      <div className="pointer-events-none absolute -top-24 -left-24 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+      <div className="pointer-events-none absolute -bottom-32 -right-24 h-80 w-80 rounded-full bg-whatsapp/10 blur-3xl" />
 
       <div className="relative z-10 flex min-h-screen flex-col px-5 py-6 max-w-md mx-auto">
         {/* Top bar: back button (when not on first slide) + logo + login */}
@@ -115,9 +116,9 @@ function SplashScreen() {
               <button
                 onClick={goPrev}
                 aria-label="Précédent"
-                className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm hover:bg-white transition-colors"
+                className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 hover:bg-white transition-colors border border-border"
               >
-                <FiArrowLeft size={20} />
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
               </button>
             ) : (
               <div className="h-9 w-9" /> /* placeholder to keep logo centered */
@@ -126,14 +127,14 @@ function SplashScreen() {
           </div>
           <button
             onClick={handleLogin}
-            className="text-sm font-semibold text-[#115CF6] hover:underline"
+            className="text-sm font-semibold text-primary hover:underline"
           >
             Se connecter
           </button>
         </div>
 
         {sessionExpired && (
-          <div className="mb-4 rounded-xl bg-red-50 border border-red-200 px-4 py-2 text-sm text-red-700 font-medium">
+          <div className="mb-4 rounded-xl bg-red-50 border border-border px-4 py-2 text-sm text-red-700 font-medium">
             Votre session a expiré. Veuillez vous reconnecter.
           </div>
         )}
@@ -146,7 +147,7 @@ function SplashScreen() {
               className="flex-1 h-1 rounded-full bg-gray-200 overflow-hidden"
             >
               <motion.div
-                className="h-full bg-[#115CF6]"
+                className="h-full bg-primary"
                 initial={{ width: '0%' }}
                 animate={{ width: i < step ? '100%' : i === step ? '100%' : '0%' }}
                 transition={{ duration: 0.4, ease: 'easeOut' }}
@@ -205,7 +206,7 @@ function SplashScreen() {
               </button>
               <button
                 onClick={goNext}
-                className="bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-3 shadow-md transition-colors"
+                className="bg-primary hover:bg-blue-700 text-white font-bold rounded-xl px-6 py-3 transition-colors"
               >
                 Suivant
               </button>
@@ -214,13 +215,13 @@ function SplashScreen() {
             <>
               <button
                 onClick={handleGetStarted}
-                className="w-full bg-[#115CF6] hover:bg-blue-700 text-white font-bold rounded-xl py-3 shadow-md transition-colors"
+                className="w-full bg-primary hover:bg-blue-700 text-white font-bold rounded-xl py-3 transition-colors"
               >
                 Se connecter
               </button>
               <button
                 onClick={handleSignup}
-                className="w-full bg-white border-2 border-[#115CF6] text-[#115CF6] font-bold rounded-xl py-3 hover:bg-blue-50 transition-colors"
+                className="w-full bg-white border-2 border-primary text-primary font-bold rounded-xl py-3 hover:bg-blue-50 transition-colors"
               >
                 Créer un compte
               </button>

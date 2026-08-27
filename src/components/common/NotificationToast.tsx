@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { AlertCircleIcon, Cancel01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiCheck, FiX, FiAlertCircle } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'motion/react';
 
 interface NotificationToastProps {
   isOpen: boolean;
@@ -34,13 +35,13 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
   const getIcon = () => {
     switch (type) {
       case 'success':
-        return <FiCheck size={20} />;
+        return <HugeiconsIcon icon={Tick02Icon} size={20} />;
       case 'error':
-        return <FiX size={20} />;
+        return <HugeiconsIcon icon={Cancel01Icon} size={20} />;
       case 'info':
-        return <FiAlertCircle size={20} />;
+        return <HugeiconsIcon icon={AlertCircleIcon} size={20} />;
       default:
-        return <FiCheck size={20} />;
+        return <HugeiconsIcon icon={Tick02Icon} size={20} />;
     }
   };
 
@@ -49,28 +50,28 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
       case 'success':
         return {
           bg: 'bg-green-500',
-          border: 'border-green-400',
+          border: 'border-success',
           text: 'text-white',
           icon: 'text-white'
         };
       case 'error':
         return {
           bg: 'bg-red-500',
-          border: 'border-red-400',
+          border: 'border-danger',
           text: 'text-white',
           icon: 'text-white'
         };
       case 'info':
         return {
           bg: 'bg-blue-500',
-          border: 'border-blue-400',
+          border: 'border-primary',
           text: 'text-white',
           icon: 'text-white'
         };
       default:
         return {
           bg: 'bg-green-500',
-          border: 'border-green-400',
+          border: 'border-success',
           text: 'text-white',
           icon: 'text-white'
         };
@@ -89,7 +90,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
           exit={{ opacity: 0, x: 100, scale: 0.9 }}
           transition={{ type: 'spring', bounce: 0.2, duration: 0.4 }}
         >
-          <div className={`${colors.bg} ${colors.border} border rounded-lg shadow-lg p-4`}>
+          <div className={`${colors.bg} ${colors.border} border rounded-lg p-4`}>
             <div className="flex items-start">
               <div className={`${colors.icon} mr-3 mt-0.5`}>
                 {getIcon()}
@@ -106,7 +107,7 @@ const NotificationToast: React.FC<NotificationToastProps> = ({
                 onClick={onClose}
                 className={`${colors.text} opacity-70 hover:opacity-100 ml-2`}
               >
-                <FiX size={16} />
+                <HugeiconsIcon icon={Cancel01Icon} size={16} />
               </button>
             </div>
           </div>
