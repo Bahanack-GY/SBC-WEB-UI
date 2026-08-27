@@ -346,12 +346,22 @@ export interface LeaderboardEntry {
     avatarId?: string;
     country?: string;
     city?: string;
-    /** Referrals across ALL levels (1 + 2 + 3) for the current month. */
+    /** DIRECT (level-1) referrals for the month. Indirect levels do not count. */
     referralCount: number;
-    level1: number;
-    level2: number;
-    level3: number;
     /** Estimated FCFA earned this month. Server-side estimate, labelled as such. */
     earnings: number;
     rank: number;
+}
+
+/** The caller's own standing, returned alongside the top N. */
+export interface MyLeaderboardRank {
+    rank: number;
+    referralCount: number;
+    totalRanked: number;
+    inTop: boolean;
+}
+
+export interface LeaderboardResponse {
+    top: LeaderboardEntry[];
+    me: MyLeaderboardRank | null;
 }

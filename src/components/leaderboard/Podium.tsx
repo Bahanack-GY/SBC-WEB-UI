@@ -45,11 +45,19 @@ function Block({ entry, place }: { entry: LeaderboardEntry; place: number }) {
 
       {/* Height difference alone carries the podium — no shadows, no elevation
           illusion. The winner's tint is a state colour, which the flat rules allow. */}
+      {/* Stepped heights: 1st tallest, 2nd middle, 3rd shortest, so the podium
+          reads as a ranking on its own. No coloured border — the winner is
+          carried by height, the crown, the rank badge and the tint. */}
       <div
         className={cn(
-          'mt-3 w-full rounded-card border px-2 py-3 text-center',
-          isWinner ? 'bg-primary-soft border-primary/30' : 'bg-surface border-border',
-          isWinner ? 'min-h-24' : 'min-h-20',
+          'mt-3 w-full rounded-card border border-border px-2 py-3 text-center',
+          'flex flex-col justify-center',
+          isWinner ? 'bg-primary-soft' : 'bg-surface',
+          // Explicit heights, not min-h: the content is ~110px tall, so a
+          // min-height below that collapses all three to the same size and the
+          // step disappears. Each value clears the content; the row is
+          // items-end, so they align at the bottom and step upward.
+          place === 0 ? 'h-[9.5rem]' : place === 1 ? 'h-[8rem]' : 'h-[7rem]',
         )}
       >
         <p className={cn('text-lg font-bold leading-tight', isWinner ? 'text-primary' : 'text-ink')}>

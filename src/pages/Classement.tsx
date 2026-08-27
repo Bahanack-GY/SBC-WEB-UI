@@ -6,13 +6,15 @@ import Podium from '../components/leaderboard/Podium';
 import LeaderboardRow from '../components/leaderboard/LeaderboardRow';
 import { LeaderboardSkeleton, LeaderboardEmpty, LeaderboardError } from '../components/leaderboard/LeaderboardStates';
 import RewardSystem from '../components/leaderboard/RewardSystem';
+import MyRankRow from '../components/leaderboard/MyRankRow';
 import { useLeaderboard } from '../hooks/useLeaderboard';
 import { useAuth } from '../contexts/AuthContext';
 
 function Classement() {
   const { user } = useAuth();
   const { data, isLoading, error, refetch } = useLeaderboard();
-  const entries = data ?? [];
+  const entries = data?.top ?? [];
+  const me = data?.me ?? null;
   const rest = entries.slice(3);
 
   return (
@@ -25,7 +27,7 @@ function Classement() {
               Classement Général
               <HugeiconsIcon icon={ChampionIcon} size={20} className="text-accent" />
             </h1>
-            <p className="text-xs text-ink-3">Top affiliés du mois, tous niveaux confondus</p>
+            <p className="text-xs text-ink-3">Filleuls directs du mois</p>
           </div>
         </div>
 
@@ -50,10 +52,11 @@ function Classement() {
                 ))}
               </ul>
             )}
+            {me && <MyRankRow me={me} name={user?.name} />}
           </>
         )}
 
-        <RewardSystem />
+        <RewardSystem mySales={me?.referralCount} />
 
         <p className="text-[11px] text-ink-3 text-center">
           Classement mis à jour chaque heure, remis à zéro le 1<sup>er</sup> de chaque mois.

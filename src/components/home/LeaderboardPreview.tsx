@@ -13,7 +13,8 @@ import { useAuth } from '../../contexts/AuthContext';
 function LeaderboardPreview() {
   const { user } = useAuth();
   const { data, isLoading, error, refetch } = useLeaderboard();
-  const entries = data ?? [];
+  const entries = data?.top ?? [];
+  const me = data?.me ?? null;
 
   return (
     <section className="flex flex-col gap-1">
@@ -27,7 +28,7 @@ function LeaderboardPreview() {
           <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
         </Link>
       </div>
-      <p className="text-xs text-ink-3">Top affiliés du mois, tous niveaux confondus</p>
+      <p className="text-xs text-ink-3">Filleuls directs du mois</p>
 
       {isLoading ? (
         <LeaderboardSkeleton rows={0} />
@@ -36,7 +37,15 @@ function LeaderboardPreview() {
       ) : entries.length === 0 ? (
         <div className="mt-3"><LeaderboardEmpty referralCode={user?.referralCode} /></div>
       ) : (
-        <Podium entries={entries} />
+        <>
+          <Podium entries={entries} />
+          {me && !me.inTop && (
+            <p className="mt-3 text-xs text-ink-2 bg-primary-soft rounded-card px-3 py-2 text-center">
+              Votre position : <span className="font-bold text-primary">#{me.rank}</span>
+              {me.referralCount > 0 && ` · ${me.referralCount} filleul${me.referralCount > 1 ? 's' : ''} direct${me.referralCount > 1 ? 's' : ''}`}
+            </p>
+          )}
+        </>
       )}
     </section>
   );
