@@ -25,6 +25,7 @@ import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import Classement from './pages/Classement'
+import InstallPrompt from './components/pwa/InstallPrompt'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
 import { useEffect, useRef } from 'react'
 import VerifyOtp from './pages/VerifyOtp'
@@ -236,6 +237,7 @@ function AppContent() {
         </Route>
       </Routes>
       {!hideNav && <NavigationBar />}
+      {!hideNav && <InstallPrompt />}
     </div>
   );
 }

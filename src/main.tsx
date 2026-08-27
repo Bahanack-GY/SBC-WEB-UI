@@ -5,11 +5,12 @@ import { BrowserRouter } from 'react-router-dom'
 import App from './App.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './i18n/config' // Initialize i18n
-import { purgeStaleCaches } from './utils/cacheBuster'
+import { purgeStaleCaches, registerAppServiceWorker } from './utils/cacheBuster'
 
-// Best-effort: unregister any leftover service workers and clear cache storage
-// from past deploys, so users always run the freshly-shipped bundles.
-purgeStaleCaches();
+// Best-effort: unregister leftover service workers from past deploys and clear
+// cache storage, so users always run the freshly-shipped bundles. Then register
+// our own no-cache worker, which is what makes the app installable.
+purgeStaleCaches().then(registerAppServiceWorker);
 
 // No refetch on window focus: every return to the tab refetched every query,
 // and the resulting spinner flashes read as "the page refreshes by itself"

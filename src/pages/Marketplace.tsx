@@ -54,7 +54,7 @@ function Marketplace() {
         </div>
 
         {/* Search */}
-        <div className="relative">
+        <div className="relative search-bar">
           <HugeiconsIcon
             icon={Search01Icon}
             size={18}
@@ -80,7 +80,7 @@ function Marketplace() {
 
         {/* Type filter */}
         {availableTypes.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 no-scrollbar">
+          <div className="category-filters flex gap-2 overflow-x-auto -mx-4 px-4 pb-1 no-scrollbar">
             <button
               onClick={() => setType('all')}
               className={cn(
@@ -148,7 +148,7 @@ function Marketplace() {
         ) : (
           <>
             {/* Two per row everywhere, three on tablets. */}
-            <ul className="grid grid-cols-2 lg:grid-cols-3 gap-2">
+            <ul className="product-grid grid grid-cols-2 lg:grid-cols-3 gap-2">
               {shown.map((shop, i) => (
                 <li key={shop.slug} className="min-w-0">
                   <ShopCard shop={shop} index={i} />
@@ -179,7 +179,7 @@ function Marketplace() {
         rel="noopener noreferrer"
         whileTap={{ scale: 0.92 }}
         aria-label="Créer ma boutique"
-        className="fixed bottom-24 right-4 z-40 size-14 grid place-items-center rounded-pill bg-primary text-white border border-primary"
+        className="add-product fixed bottom-24 right-4 z-40 size-14 grid place-items-center rounded-pill bg-primary text-white border border-primary"
       >
         <HugeiconsIcon icon={PlusSignIcon} size={26} />
       </motion.a>

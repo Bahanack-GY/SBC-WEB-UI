@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import type { Step } from 'react-joyride';
 import Joyride, { STATUS } from 'react-joyride';
 import type { CallBackProps } from 'react-joyride';
 import { useLocation } from 'react-router-dom';
@@ -12,7 +13,8 @@ import {
   adsPackTour,
   subscriptionTour,
   productManagementTour,
-  buildRelanceTour
+  buildRelanceTour,
+  genericTour
 } from '../../config/tours';
 import { useRelance } from '../../contexts/RelanceContext';
 
@@ -55,6 +57,7 @@ export const useTour = () => useContext(TourContext);
 
 export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [run, setRun] = useState(false);
+  const [steps, setSteps] = useState<Step[]>([]);
   const location = useLocation();
   const { smsBalance } = useRelance();
   // Approximation: TourProvider only knows balances, not the admin smsEnabled flag
@@ -93,18 +96,47 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [location.pathname, hasSmsAccess]);
 
+  /**
+   * Keep only steps whose target is actually on screen.
+   *
+   * react-joyride renders a step with a missing target as a centred modal with
+   * no spotlight — the tour stops pointing at anything and just recites text.
+   * Most of the configured selectors never existed on their pages, which is why
+   * the guide read as a list of statements. Resolving against the live DOM means
+   * a stale selector drops out instead of degrading the whole tour, and a page
+   * left with nothing falls back to the app-wide navigation tour.
+   */
+  const resolveSteps = useCallback((): Step[] => {
+    const present = (list: Step[]) =>
+      list.filter((step) => {
+        const t = step.target;
+        if (typeof t !== 'string') return true; // an element ref is already resolved
+        try {
+          return !!document.querySelector(t);
+        } catch {
+          return false; // malformed selector
+        }
+      });
+
+    const own = present(getTourSteps() as Step[]);
+    return own.length > 0 ? own : present(genericTour);
+  }, [getTourSteps]);
+
   useEffect(() => {
     // Stop any running tour when navigating
     setRun(false);
+    setSteps([]);
 
-    // Auto-start tour if this page's tour hasn't been seen yet
-    const steps = getTourSteps();
-    if (steps.length > 0 && !hasPageTourBeenSeen(location.pathname)) {
-      // Small delay to let the page render its elements first
-      const timer = setTimeout(() => setRun(true), 500);
-      return () => clearTimeout(timer);
-    }
-  }, [location.pathname, getTourSteps]);
+    // Let the page paint before looking for targets.
+    const timer = setTimeout(() => {
+      const resolved = resolveSteps();
+      setSteps(resolved);
+      if (resolved.length > 0 && !hasPageTourBeenSeen(location.pathname)) {
+        setRun(true);
+      }
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [location.pathname, resolveSteps]);
 
   const handleJoyrideCallback = (data: CallBackProps) => {
     const { status } = data;
@@ -116,8 +148,11 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const startTour = useCallback(() => {
-    setRun(true);
-  }, []);
+    // Re-resolve on demand: filters may have opened, lists may have loaded.
+    const resolved = resolveSteps();
+    setSteps(resolved);
+    setRun(resolved.length > 0);
+  }, [resolveSteps]);
 
   const endTour = useCallback(() => {
     setRun(false);
@@ -127,11 +162,15 @@ export const TourProvider: React.FC<{ children: React.ReactNode }> = ({ children
     <TourContext.Provider value={{ startTour, endTour, hasSeenTour }}>
       {children}
       <Joyride
-        steps={getTourSteps()}
+        steps={steps}
         run={run}
         continuous
         showProgress
         showSkipButton
+        scrollToFirstStep
+        scrollOffset={120}
+        disableOverlayClose
+        spotlightPadding={6}
         styles={{
           options: {
             primaryColor: '#115CF6',

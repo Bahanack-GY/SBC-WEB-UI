@@ -224,7 +224,8 @@ function Home() {
     <ProtectedRoute>
       <Header />
       <div className="p-4 pb-24 flex flex-col gap-6">
-        <ProfileHeaderCard
+        <div className="home-header">
+          <ProfileHeaderCard
           name={user?.name ?? 'Utilisateur'}
           image={
             user?.avatar
@@ -235,26 +236,33 @@ function Home() {
           }
           affiliates={referralLoading ? null : referralStats?.totalReferrals ?? 0}
           status={subscriptionStatus}
-          promoCode={user?.referralCode ?? ''}
-        />
+            promoCode={user?.referralCode ?? ''}
+          />
+        </div>
 
-        <BalanceCard balance={balance} usdBalance={usdBalance} />
+        <div className="balance-card">
+          <BalanceCard balance={balance} usdBalance={usdBalance} />
+        </div>
 
-        <ServicesGrid
+        <div className="quick-actions">
+          <ServicesGrid
           formationsCount={formationsLoading ? null : formations?.length ?? 0}
           hasRelanceAccess={hasRelanceAccess}
           relanceBadge={null}
           onFormations={() => setIsFormationsModalOpen(true)}
-          onRelance={() => {
-            if (hasRelanceAccess) {
-              navigate('/relance');
-            } else {
-              setShowRelanceModal(true);
-            }
-          }}
-        />
+            onRelance={() => {
+              if (hasRelanceAccess) {
+                navigate('/relance');
+              } else {
+                setShowRelanceModal(true);
+              }
+            }}
+          />
+        </div>
 
-        <LeaderboardPreview />
+        <div className="leaderboard-preview">
+          <LeaderboardPreview />
+        </div>
 
         {/* Presentation PDF. Keeps the existing settings-file URL logic and its
             local fallback verbatim — only the styling changed. */}

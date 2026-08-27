@@ -3,24 +3,24 @@ import type { Step } from 'react-joyride';
 export const homeTour: Step[] = [
   {
     target: '.home-header',
-    content: 'Bienvenue sur votre tableau de bord ! Ici vous pouvez voir un aperçu de vos activités.',
+    content: "Votre profil : statut d'abonnement, nombre de filleuls et lien d'affiliation à partager.",
     placement: 'bottom',
     disableBeacon: true,
   },
   {
     target: '.balance-card',
-    content: 'Votre solde actuel et les statistiques de vos transactions.',
+    content: 'Vos soldes disponibles. Touchez pour retirer vos gains ou consulter votre historique.',
     placement: 'bottom',
-  },
-  {
-    target: '.recent-transactions',
-    content: 'Vos transactions récentes et leur statut.',
-    placement: 'top',
   },
   {
     target: '.quick-actions',
-    content: 'Accès rapide aux fonctionnalités principales.',
-    placement: 'bottom',
+    content: 'Vos services : formations, boutiques, publicité, contacts et SBC Love.',
+    placement: 'top',
+  },
+  {
+    target: '.leaderboard-preview',
+    content: 'Le classement du mois : les meilleurs affiliés, tous niveaux confondus. Remis à zéro chaque mois.',
+    placement: 'top',
   }
 ];
 
@@ -51,24 +51,24 @@ export const walletTour: Step[] = [
 export const marketplaceTour: Step[] = [
   {
     target: '.search-bar',
-    content: 'Recherchez des produits ou services spécifiques.',
+    content: 'Recherchez une boutique par son nom ou son adresse.',
     placement: 'bottom',
     disableBeacon: true,
   },
   {
     target: '.category-filters',
-    content: 'Filtrez par catégorie pour trouver ce que vous cherchez.',
+    content: 'Filtrez par catégorie : digital, mode, cosmétiques, alimentation…',
     placement: 'bottom',
   },
   {
     target: '.product-grid',
-    content: 'Parcourez les produits et services disponibles.',
+    content: 'Les boutiques membres. Touchez une carte pour ouvrir la boutique.',
     placement: 'top',
   },
   {
-    target: '.sort-options',
-    content: 'Triez les résultats par prix, popularité ou date.',
-    placement: 'bottom',
+    target: '.add-product',
+    content: 'Ouvrez votre propre boutique SBC depuis ce bouton.',
+    placement: 'left',
   }
 ];
 
@@ -286,3 +286,22 @@ export function buildRelanceTour({ hasSmsAccess }: RelanceTourOptions): Step[] {
 
 /** @deprecated Use buildRelanceTour({ hasSmsAccess }) — kept temporarily for callers that import the static export. */
 export const relanceTour: Step[] = buildRelanceTour({ hasSmsAccess: false });
+
+
+/**
+ * Fallback for pages with no tour of their own, and for pages whose own targets
+ * are not on screen. Anchors to the bottom navigation, which is present app-wide.
+ */
+export const genericTour: Step[] = [
+  {
+    target: '.app-nav',
+    content: "Voici votre barre de navigation : accueil, boutiques, portefeuille, publicité et messages.",
+    placement: 'top',
+    disableBeacon: true,
+  },
+  {
+    target: '.tour-button',
+    content: 'Ce bouton relance ce guide à tout moment, sur n\'importe quelle page.',
+    placement: 'left',
+  },
+];

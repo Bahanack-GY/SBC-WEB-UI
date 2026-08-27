@@ -51,7 +51,7 @@ function NavigationBar() {
       initial={{ y: 100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ type: 'spring', stiffness: 200, damping: 20 }}
-      className="fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-surface border border-border rounded-pill flex items-center px-2 py-2 gap-1"
+      className="app-nav fixed bottom-3 left-1/2 -translate-x-1/2 z-50 bg-surface border border-border rounded-pill flex items-center px-2 py-2 gap-1"
     >
       {navItems.map((item) => {
         // Handle chat page with query params
