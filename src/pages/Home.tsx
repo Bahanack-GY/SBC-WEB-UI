@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Header from '../components/common/Header'
 import ProfileHeaderCard from '../components/home/ProfileHeaderCard';
 import BalanceCard from '../components/home/BalanceCard';
-import PartnersCarousel from '../components/home/PartnersCarousel';
 import ServicesGrid from '../components/home/ServicesGrid';
 import LeaderboardPreview from '../components/home/LeaderboardPreview';
 import CommunityLinks from '../components/home/CommunityLinks';
@@ -240,8 +239,6 @@ function Home() {
         />
 
         <BalanceCard balance={balance} usdBalance={usdBalance} />
-
-        <PartnersCarousel />
 
         <ServicesGrid
           formationsCount={formationsLoading ? null : formations?.length ?? 0}
