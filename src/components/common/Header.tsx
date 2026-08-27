@@ -1,59 +1,49 @@
-import { HugeiconsIcon } from '@hugeicons/react';
-import { Download01Icon, User02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
-import { useState } from "react";
-import logo from "../../assets/img/logo-sbc.png";
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Menu01Icon, User02Icon } from '@hugeicons/core-free-icons';
+import logo from '../../assets/img/logo-sbc.png';
+import ServicesSidebar from './ServicesSidebar';
 
 function Header() {
   const navigate = useNavigate();
-  const [showAppModal, setShowAppModal] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   return (
     <>
-      <header>
-        <div className="flex justify-between items-center px-3 py-1  bg-white">
-          <img src={logo} alt="logo" className="w-32 " />
-          <div className="flex gap-3 items-center">
-            <button onClick={() => setShowAppModal(true)}><HugeiconsIcon icon={Download01Icon} size={22} /></button>
-            <button onClick={() => navigate("/wallet")}><HugeiconsIcon icon={Wallet01Icon} size={22} /></button>
-            <button onClick={() => navigate("/profile")}><HugeiconsIcon icon={User02Icon} size={22} /></button>
+      <header className="sticky top-0 z-40 bg-surface border-b border-border">
+        {/* Three equal columns so the logo is centred on the VIEWPORT, not
+            merely between two buttons of unequal width. */}
+        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2">
+          <motion.button
+            onClick={() => setMenuOpen(true)}
+            whileTap={{ scale: 0.9 }}
+            aria-label="Ouvrir le menu des services"
+            aria-expanded={menuOpen}
+            className="size-9 grid place-items-center rounded-tile text-ink-2 hover:bg-surface-2 transition-colors"
+          >
+            <HugeiconsIcon icon={Menu01Icon} size={22} />
+          </motion.button>
+
+          <div className="flex justify-center min-w-0">
+            <button onClick={() => navigate('/')} aria-label="Accueil">
+              <img src={logo} alt="Sniper Business Center" className="w-24 max-w-full" />
+            </button>
           </div>
+
+          <motion.button
+            onClick={() => navigate('/profile')}
+            whileTap={{ scale: 0.9 }}
+            aria-label="Mon profil"
+            className="size-9 grid place-items-center rounded-tile text-ink-2 hover:bg-surface-2 transition-colors"
+          >
+            <HugeiconsIcon icon={User02Icon} size={22} />
+          </motion.button>
         </div>
       </header>
 
-      {/* Mobile App Coming Soon Modal */}
-      <AnimatePresence>
-        {showAppModal && (
-          <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowAppModal(false)}
-          >
-            <motion.div
-              className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="text-center">
-                <div className="text-5xl mb-4">📱</div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Application Mobile</h3>
-                <p className="text-gray-600 mb-6">L'application mobile sera disponible prochainement</p>
-                <button
-                  onClick={() => setShowAppModal(false)}
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors"
-                >
-                  OK
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <ServicesSidebar open={menuOpen} onClose={() => setMenuOpen(false)} />
     </>
   );
 }

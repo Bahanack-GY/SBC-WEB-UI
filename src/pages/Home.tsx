@@ -1,7 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Download01Icon, Loading03Icon, LockIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
-import Header from '../components/common/Header'
 import ProfileHeaderCard from '../components/home/ProfileHeaderCard';
 import BalanceCard from '../components/home/BalanceCard';
 import ServicesGrid from '../components/home/ServicesGrid';
@@ -222,7 +221,6 @@ function Home() {
 
   return (
     <ProtectedRoute>
-      <Header />
       <div className="p-4 pb-24 flex flex-col gap-6">
         <div className="home-header">
           <ProfileHeaderCard

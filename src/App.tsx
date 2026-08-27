@@ -26,6 +26,7 @@ import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import Classement from './pages/Classement'
 import InstallPrompt from './components/pwa/InstallPrompt'
+import Header from './components/common/Header'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
 import { useEffect, useRef } from 'react'
 import VerifyOtp from './pages/VerifyOtp'
@@ -156,6 +157,17 @@ function AppContent() {
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
 
+  // The header is app-wide and fixed. It is hidden only where a member app bar
+  // has no meaning: the auth/onboarding flows, the public marketing pages, and
+  // inside a chat conversation, which owns the whole viewport.
+  const HEADERLESS = [
+    '/splash-screen', '/connexion', '/signup', '/forgot-password', '/reset-password',
+    '/reset-password-otp', '/verify-otp', '/verify-email-otp', '/otp', '/complete-profile',
+    '/a-propos', '/conditions', '/confidentialite', '/sso/authorize',
+    '/withdrawal-otp-verification',
+  ];
+  const hideHeader = HEADERLESS.includes(location.pathname) || isInChatConversation;
+
   const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || isInChatConversation;
   return (
     <div className="bg-white relative">
@@ -167,6 +179,7 @@ function AppContent() {
           Se déconnecter
         </button>
       )}
+      {!hideHeader && <Header />}
       <Routes>
         {/* Public — accessible to anyone (logged in or not). Includes /otp
             because it serves signup-OTP and login-OTP flows where no token

@@ -5,7 +5,6 @@ import {
   Search01Icon, PlusSignIcon, Store01Icon, AlertCircleIcon, Cancel01Icon,
 } from '@hugeicons/core-free-icons';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import Header from '../components/common/Header';
 import Skeleton from '../components/common/Skeleton';
 import ShopCard from '../components/marketplace/ShopCard';
 import { BUSINESS_TYPES } from '../components/marketplace/businessTypes';
@@ -44,7 +43,6 @@ function Marketplace() {
 
   return (
     <ProtectedRoute>
-      <Header />
       <div className="p-4 pb-28 flex flex-col gap-4">
         <div>
           <h1 className="text-xl font-bold text-ink">SBC Shop</h1>
