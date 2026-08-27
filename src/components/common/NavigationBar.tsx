@@ -1,7 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Home01Icon,
-  Mail01Icon,
   Message01Icon,
   ShoppingBasket01Icon,
   StatusIcon,
@@ -10,7 +9,6 @@ import {
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useMemo } from 'react';
-import { useRelance } from '../../contexts/RelanceContext';
 
 interface NavItem {
   label: string;
@@ -23,28 +21,20 @@ interface NavItem {
 function NavigationBar() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { hasCredits } = useRelance();
 
   const navItems = useMemo(() => {
     // Always include chat buttons for all users
-    let items: NavItem[] = [
+    // Relance is deliberately absent: it stays reachable from the services
+    // sidebar, the Home services grid, Profile and AdsPack.
+    const items: NavItem[] = [
       { label: 'Accueil', icon: Home01Icon, path: '/' },
       { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
       { label: 'Wallet', icon: Wallet01Icon, path: '/wallet' },
       { label: 'SBC Statut', icon: StatusIcon, path: '/chat?view=status' },
       { label: 'Messages', icon: Message01Icon, path: '/chat' },
     ];
-
-    // Show Relance entry to users who have credits (or admin/tester via context)
-    if (hasCredits) {
-      items = [
-        ...items,
-        { label: 'Relance', icon: Mail01Icon, path: '/relance' },
-      ];
-    }
-
     return items;
-  }, [hasCredits]);
+  }, []);
 
   return (
     <motion.nav
