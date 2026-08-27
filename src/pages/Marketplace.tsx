@@ -116,9 +116,9 @@ function Marketplace() {
 
         {/* Results */}
         {isLoading ? (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} height="h-20" rounded="rounded-card" />
+              <Skeleton key={i} height="h-56" rounded="rounded-card" />
             ))}
           </div>
         ) : error ? (
@@ -147,9 +147,8 @@ function Marketplace() {
           </div>
         ) : (
           <>
-            {/* One per line on phones — slugs run long and need the width —
-                two from sm up, three on tablets. */}
-            <ul className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {/* Two per row everywhere, three on tablets. */}
+            <ul className="grid grid-cols-2 lg:grid-cols-3 gap-2">
               {shown.map((shop, i) => (
                 <li key={shop.slug} className="min-w-0">
                   <ShopCard shop={shop} index={i} />
@@ -158,9 +157,9 @@ function Marketplace() {
             </ul>
 
             {hasMore && (
-              <div ref={sentinel} className="flex flex-col gap-2 pt-1" aria-hidden>
-                <Skeleton height="h-20" rounded="rounded-card" />
-                <Skeleton height="h-20" rounded="rounded-card" />
+              <div ref={sentinel} className="grid grid-cols-2 lg:grid-cols-3 gap-2 pt-1" aria-hidden>
+                <Skeleton height="h-56" rounded="rounded-card" />
+                <Skeleton height="h-56" rounded="rounded-card" />
               </div>
             )}
 

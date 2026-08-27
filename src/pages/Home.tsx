@@ -245,10 +245,6 @@ function Home() {
 
         <ServicesGrid
           formationsCount={formationsLoading ? null : formations?.length ?? 0}
-          // SBC Love has no route on this branch (it lives on sbc-love), so the
-          // tile stays hidden rather than becoming a dead link. Wire this to
-          // useSbcloveStatus().isOpen when that branch merges.
-          sbcloveOpen={false}
           hasRelanceAccess={hasRelanceAccess}
           relanceBadge={null}
           onFormations={() => setIsFormationsModalOpen(true)}
