@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Mail01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import { Mail01Icon, ArrowRight01Icon, StatusIcon } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
 import { useLoveStatus, loveWindowLabel } from '../../hooks/useSbcLove';
 
@@ -23,7 +23,10 @@ type Tile = {
   key: string;
   label: string;
   subtitle: string;
-  img: string;
+  /** Illustration, when one exists for the service. */
+  img?: string;
+  /** Fallback when no illustration was supplied. */
+  icon?: typeof StatusIcon;
   tint: string;
   onClick: () => void;
   dot?: boolean;
@@ -51,6 +54,13 @@ function ServicesGrid({
       key: 'ads', label: 'Ads Network', subtitle: 'Gagnez en diffusant',
       img: adsImg, tint: 'bg-primary-soft',
       onClick: () => navigate('/ads-network'),
+    },
+    {
+      key: 'statut', label: 'SBC Statut', subtitle: 'Publiez vos statuts',
+      // ponytail: icon rather than an illustration — no asset was supplied for
+      // this service. Swap in an image here the moment one exists.
+      icon: StatusIcon, tint: 'bg-primary-soft text-primary',
+      onClick: () => navigate('/chat?view=status'),
     },
     {
       key: 'contacts', label: 'Contacts', subtitle: 'Répertoire SBC',
@@ -95,6 +105,15 @@ function ServicesGrid({
                 so object-contain in a fixed box — object-cover would crop heads.
                 They are also ~140KB each, hence lazy + async decode. */}
             <span className={cn('block w-full h-20 rounded-tile overflow-hidden', t.tint)}>
+              {/* A tile carries either an illustration or, when none exists for
+                  that service, a centred icon — same box either way so the grid
+                  stays uniform. */}
+              {!t.img && t.icon && (
+                <span className="h-full w-full grid place-items-center">
+                  <HugeiconsIcon icon={t.icon} size={30} />
+                </span>
+              )}
+              {t.img && (<>
               {/* h-full w-full + object-contain, NOT max-h/max-w: inside a
                   sized box max-height:100% does not constrain, so the image
                   rendered at full width and got clipped (Contacts came out
@@ -112,6 +131,7 @@ function ServicesGrid({
                 decoding="async"
                 className="h-full w-full object-contain p-1.5 mix-blend-multiply"
               />
+              </>)}
             </span>
             <span className="font-semibold text-ink text-sm">{t.label}</span>
             <span className="text-xs text-ink-3">{t.subtitle}</span>

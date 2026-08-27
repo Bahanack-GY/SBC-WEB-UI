@@ -295,7 +295,7 @@ export const relanceTour: Step[] = buildRelanceTour({ hasSmsAccess: false });
 export const genericTour: Step[] = [
   {
     target: '.app-nav',
-    content: "Voici votre barre de navigation : accueil, boutiques, portefeuille, publicité et messages.",
+    content: "Voici votre barre de navigation : accueil, boutiques, portefeuille, statuts et messages.",
     placement: 'top',
     disableBeacon: true,
   },

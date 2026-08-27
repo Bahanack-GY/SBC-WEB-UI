@@ -1,10 +1,10 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  ConnectIcon,
   Home01Icon,
   Mail01Icon,
   Message01Icon,
   ShoppingBasket01Icon,
+  StatusIcon,
   Wallet01Icon,
 } from '@hugeicons/core-free-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -31,7 +31,7 @@ function NavigationBar() {
       { label: 'Accueil', icon: Home01Icon, path: '/' },
       { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
       { label: 'Wallet', icon: Wallet01Icon, path: '/wallet' },
-      { label: 'Publicité', icon: ConnectIcon, path: '/ads-pack' },
+      { label: 'SBC Statut', icon: StatusIcon, path: '/chat?view=status' },
       { label: 'Messages', icon: Message01Icon, path: '/chat' },
     ];
 
@@ -59,7 +59,8 @@ function NavigationBar() {
         const isActive = currentPath === item.path ||
                         (item.path === '/' && location.pathname === '/') ||
                         (item.path === '/wallet' && location.pathname === '/wallet') ||
-                        (item.path === '/chat' && location.pathname === '/chat' && !location.search);
+                        (item.path === '/chat' && location.pathname === '/chat' && !location.search) ||
+                        (item.path === '/chat?view=status' && location.pathname === '/chat' && location.search.includes('view=status'));
 
         return (
           <motion.button

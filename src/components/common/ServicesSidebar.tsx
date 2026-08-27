@@ -3,10 +3,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  Cancel01Icon, Home01Icon, Store01Icon, Megaphone01Icon, Call02Icon,
+  Cancel01Icon, ConnectIcon, Home01Icon, Store01Icon, Megaphone01Icon, Call02Icon,
   FavouriteIcon, Task01Icon, Mail01Icon, Wallet01Icon, UserGroupIcon,
   ChampionIcon, CreditCardIcon, Coins01Icon, Message01Icon, User02Icon,
-  HandshakeIcon, ArrowRight01Icon,
+  HandshakeIcon, ArrowRight01Icon, StatusIcon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
 
@@ -24,6 +24,9 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { label: 'Mes filleuls', to: '/filleuls', icon: UserGroupIcon, tint: 'bg-primary-soft text-primary' },
       { label: 'Espace partenaire', to: '/partenaire', icon: HandshakeIcon, tint: 'bg-accent-soft text-accent' },
       { label: 'Ads Network', to: '/ads-network', icon: Megaphone01Icon, tint: 'bg-primary-soft text-primary' },
+      // /ads-pack was only ever reachable from the bottom nav; it lost that
+      // entry point when Publicité became SBC Statut, so it lives here now.
+      { label: 'Packs publicité', to: '/ads-pack', icon: ConnectIcon, tint: 'bg-accent-soft text-accent' },
     ],
   },
   {
@@ -36,6 +39,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
   {
     title: 'Communauté',
     items: [
+      { label: 'SBC Statut', to: '/chat?view=status', icon: StatusIcon, tint: 'bg-primary-soft text-primary' },
       { label: 'SBC Love', to: '/sbclove', icon: FavouriteIcon, tint: 'bg-danger-soft text-danger' },
       { label: 'Messages', to: '/chat', icon: Message01Icon, tint: 'bg-primary-soft text-primary' },
       { label: 'Contacts', to: '/contacts', icon: Call02Icon, tint: 'bg-success-soft text-success' },
