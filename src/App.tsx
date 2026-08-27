@@ -57,6 +57,7 @@ import AdsNetworkAnnonceurOnboarding from './pages/AdsNetworkAnnonceurOnboarding
 import AdsNetworkAnnonceur from './pages/AdsNetworkAnnonceur'
 import AdsNetworkCampaignForm from './pages/AdsNetworkCampaignForm'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
+import SbcLove from './pages/SbcLove'
 
 function AppContent() {
   const location = useLocation();
@@ -240,6 +241,9 @@ function AppContent() {
           <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
           <Route path="/activation-balance" element={<ActivationBalance />} />
           <Route path="/chat" element={<Chat />} />
+          {/* SBC Love. The weekly window and the kill-switch are enforced by
+              sbclove-service; the page reflects them, it does not gate on them. */}
+          <Route path="/sbclove" element={<SbcLove />} />
           {/* SBC Ads Network. Paywalled like the rest of the member area: both
               roles pay out or spend money against an SBC account. */}
           {/* Every Ads Network screen sits behind the launch gate — a

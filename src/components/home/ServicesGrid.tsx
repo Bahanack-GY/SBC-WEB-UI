@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Mail01Icon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
+import { useLoveStatus, loveWindowLabel } from '../../hooks/useSbcLove';
 
 import formationImg from '../../assets/icon/Formation.png';
 import shopImg from '../../assets/icon/SBCShop.png';
@@ -32,6 +33,7 @@ function ServicesGrid({
   formationsCount, hasRelanceAccess, relanceBadge, onFormations, onRelance,
 }: Props) {
   const navigate = useNavigate();
+  const { data: loveStatus } = useLoveStatus();
 
   const tiles: Tile[] = [
     {
@@ -55,12 +57,24 @@ function ServicesGrid({
       img: contactsImg, tint: 'bg-success-soft',
       onClick: () => navigate('/contacts'),
     },
-    {
-      key: 'love', label: 'SBC Love', subtitle: 'Rencontres SBC',
+  ];
+
+  // SBC Love display rules (spec §2, §14):
+  //  - global kill-switch off  → the tile is not shown at all;
+  //  - inside the weekly window → "Ouvert jusqu'à 21h" + the activity dot;
+  //  - outside it               → "Ouvre mercredi à 18h", still tappable because
+  //    managing your own profile is allowed anytime.
+  // While the status is still loading (or the service is unreachable) the tile
+  // stays: hiding it on a transient error would look like the module vanished.
+  if (loveStatus?.enabled !== false) {
+    tiles.push({
+      key: 'love', label: 'SBC Love',
+      subtitle: loveWindowLabel(loveStatus),
       img: sbcloveImg, tint: 'bg-danger-soft',
       onClick: () => navigate('/sbclove'),
-    },
-  ];
+      dot: loveStatus?.isOpen === true,
+    });
+  }
 
   return (
     <section className="flex flex-col gap-3">
