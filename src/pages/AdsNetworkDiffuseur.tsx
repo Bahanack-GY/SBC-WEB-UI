@@ -970,7 +970,40 @@ function VideoVerification({ participation, onClose }: { participation: Particip
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // The code lives on the server with its own deadline, so a refresh or a closed
+  // modal must not lose it. Without this the diffuseur who filmed code X and
+  // reloaded would generate code Y, and their recording — showing X — would be
+  // rejected. Pick the live code back up instead of starting over.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await sbcApiService.getManualVerifyStatus(participation._id);
+        const d = res.body?.data;
+        if (cancelled || !d) return;
+        if (d.status === 'pending_review') {
+          setPhase('submitted');
+          return;
+        }
+        if (d.status === 'awaiting_upload' && d.code && d.expiresAt) {
+          const remaining = Math.floor((new Date(d.expiresAt).getTime() - Date.now()) / 1000);
+          if (remaining > 0) {
+            setCode(d.code);
+            setSecondsLeft(remaining);
+            setPhase('code');
+          }
+        }
+      } catch {
+        // No live code, or the check failed: fall back to the normal start.
+      } finally {
+        if (!cancelled) setRestoring(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [participation._id]);
 
   useEffect(() => {
     if (phase !== 'code' || secondsLeft <= 0) return;
@@ -1041,7 +1074,13 @@ function VideoVerification({ participation, onClose }: { participation: Particip
 
       {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mb-3">{error}</div>}
 
-      {phase === 'intro' && (
+      {restoring && phase === 'intro' && (
+        <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-500">
+          <FaSpinner className="animate-spin" /> Vérification d'un code en cours…
+        </div>
+      )}
+
+      {!restoring && phase === 'intro' && (
         <button onClick={generate} disabled={busy}
           className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium disabled:bg-gray-300">
           {busy ? 'Génération…' : 'Générer le code'}
@@ -1112,6 +1151,8 @@ function VerifySheet({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
+  // Per participation, so two open verifications can never adopt each other's session.
+  const sessionStorageKey = `ads-verify-session:${participation._id}`;
   const [started, setStarted] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
   // WhatsApp drops the pairing socket often (reason=408 and friends). Rather than
@@ -1172,6 +1213,7 @@ function VerifySheet({
       if (!res.isSuccessByStatusCode || data?.state === 'failed') {
         // A failed session is a technical/link failure (a verdict rejection comes
         // back as state 'done'). Retry it rather than dumping "reason=408".
+        sessionStorage.removeItem(sessionStorageKey);
         retryOrFail('link');
         return;
       }
@@ -1182,6 +1224,8 @@ function VerifySheet({
       if (data?.pairingCode) setPairingCode(data.pairingCode);
 
       if (data?.state === 'done') {
+        // Finished: nothing left to rejoin.
+        sessionStorage.removeItem(sessionStorageKey);
         setResult({
           verdicts: data.verdicts ?? [],
           totalViews: data.totalViews ?? 0,
@@ -1206,6 +1250,12 @@ function VerifySheet({
       if (res.statusCode === 503) { retryOrFail('capacity'); return; }
       if (!res.isSuccessByStatusCode) { retryOrFail('link'); return; }
       sessionIdRef.current = res.body?.data?.sessionId ?? null;
+      // Remembered so a refresh — or closing and reopening the sheet — rejoins the
+      // session that is already linking instead of throwing it away and making the
+      // diffuseur start the pairing over.
+      if (sessionIdRef.current) {
+        sessionStorage.setItem(sessionStorageKey, sessionIdRef.current);
+      }
       poll();
     })();
 
@@ -1213,12 +1263,36 @@ function VerifySheet({
       stopped = true;
       clearTimeout(timer);
       clearTimeout(retryTimer);
-      // Release the slot: sessions are capped and an abandoned one blocks someone
-      // else until it times out.
-      if (sessionIdRef.current) sbcApiService.cancelVerification(sessionIdRef.current);
-      sessionIdRef.current = null;
+      // Deliberately NOT cancelled here. Unmounting happens when the diffuseur
+      // closes the sheet or the page reloads, and killing the session then lost
+      // a pairing that was halfway done. It is picked back up on the next mount
+      // and expires on its own server-side if genuinely abandoned.
     };
-  }, [started, method, phone, dialCode, participation._id, attempt]);
+  }, [started, method, phone, dialCode, participation._id, attempt, sessionStorageKey]);
+
+  // Rejoin a session left running by a refresh or a closed sheet.
+  useEffect(() => {
+    if (started) return;
+    const existing = sessionStorage.getItem(sessionStorageKey);
+    if (!existing) return;
+
+    let cancelled = false;
+    (async () => {
+      const res = await sbcApiService.getVerificationSession(existing);
+      if (cancelled) return;
+      const state = res.body?.data?.state;
+      // Only rejoin something still in flight; a finished or dead session would
+      // otherwise strand the diffuseur on a stale screen.
+      if (res.isSuccessByStatusCode && state && state !== 'failed' && state !== 'done') {
+        sessionIdRef.current = existing;
+        setMethod((res.body?.data?.method as 'qr' | 'code') ?? 'code');
+        setStarted(true);
+      } else {
+        sessionStorage.removeItem(sessionStorageKey);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [started, sessionStorageKey]);
 
   const copyCode = async () => {
     if (!pairingCode) return;
@@ -1245,7 +1319,14 @@ function VerifySheet({
         <div>
           <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800">{error}</div>
           <button
-            onClick={() => { setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); setAttempt(0); setRetrying(false); }}
+            onClick={() => {
+              // Deliberately abandoning this attempt: drop the session for real,
+              // so the next mount starts fresh instead of rejoining a dead one.
+              if (sessionIdRef.current) sbcApiService.cancelVerification(sessionIdRef.current);
+              sessionIdRef.current = null;
+              sessionStorage.removeItem(sessionStorageKey);
+              setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); setAttempt(0); setRetrying(false);
+            }}
             className="w-full border border-border text-gray-700 rounded-xl py-3 font-medium mt-3"
           >
             Choisir une autre méthode
