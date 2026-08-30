@@ -23,6 +23,7 @@ import {
   hasReachedMessageLimit,
 } from '../../utils/conversationHelpers';
 import { pageFade, sectionRise } from '../../utils/motion';
+import { haptic, soundMessageSent, soundMessageReceived } from '../../utils/feedback';
 
 interface ChatViewProps {
   conversationId: string;
@@ -191,7 +192,14 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
     fetchMessages(1, false);
     joinConversation(conversationId);
 
+    // Clear the badge over HTTP as well as through the socket. Opening a
+    // conversation is what the user means by "I read this", and the socket can be
+    // down or reconnecting — in which case nothing would ever mark it read.
+    void sbcApiService.markConversationAsRead(conversationId);
+
     return () => {
+      // Whatever arrived while the conversation was open has been seen too.
+      void sbcApiService.markConversationAsRead(conversationId);
       leaveConversation(conversationId);
     };
   }, [conversationId, fetchConversation, fetchMessages, joinConversation, leaveConversation]);
@@ -216,6 +224,8 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
         // Mark as read if from other user
         if (message.senderId !== user?._id) {
+          soundMessageReceived();
+          haptic('light');
           markAsRead(conversationId, [message._id]);
         }
       }
@@ -455,6 +465,10 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
 
     // Optimistic update - add to existing optimistic messages instead of replacing
     setOptimisticMessages(prev => [...prev, tempMessage]);
+    // Fired with the optimistic message, not the response: the feedback belongs to
+    // the tap, and waiting for the round trip makes it feel laggy.
+    haptic('light');
+    soundMessageSent();
     setInputValue('');
     setReplyToMessage(null);
     shouldAutoScrollRef.current = true;
