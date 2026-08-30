@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaExclamationTriangle, FaSpinner, FaShareAlt, FaQrcode, FaCheckCircle,
-  FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard,
+  FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard, FaVideo, FaClock,
 } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import {
@@ -957,6 +957,119 @@ function ShareSheet({
  * 503 means every verification slot is busy — a queue, not a failure — so it is
  * worded as "try again shortly" rather than as an error.
  */
+/**
+ * Manual (video-proof) verification — the fallback for when the WhatsApp
+ * auto-connect fails. We issue an on-screen code; the diffuseur screen-records
+ * the code then their WhatsApp status views and uploads it before a countdown
+ * runs out (so the recording is provably fresh). An admin then reviews it.
+ */
+function VideoVerification({ participation, onClose }: { participation: Participation; onClose: () => void }) {
+  const [phase, setPhase] = useState<'intro' | 'code' | 'submitting' | 'submitted'>('intro');
+  const [code, setCode] = useState<string | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (phase !== 'code' || secondsLeft <= 0) return;
+    const t = setTimeout(() => setSecondsLeft((s) => s - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, secondsLeft]);
+
+  const expired = phase === 'code' && secondsLeft <= 0;
+
+  const generate = async () => {
+    setBusy(true); setError(null);
+    try {
+      const res = await sbcApiService.generateManualVerifyCode(participation._id);
+      if (!res.isSuccessByStatusCode) { setError(res.body?.message || 'Impossible de générer le code.'); return; }
+      const d = res.body?.data;
+      setCode(d?.code ?? null);
+      setSecondsLeft(d?.windowSeconds ?? 900);
+      setPhase('code');
+    } catch { setError('Impossible de générer le code.'); }
+    finally { setBusy(false); }
+  };
+
+  const onPick = async (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setBusy(true); setError(null); setPhase('submitting');
+    try {
+      const up = await sbcApiService.uploadFile(file);
+      const fileId = up.body?.data?.fileId || up.body?.fileId;
+      if (!up.isSuccessByStatusCode || !fileId) { setError(up.body?.message || "Échec de l'envoi de la vidéo."); setPhase('code'); return; }
+      const res = await sbcApiService.submitManualVerifyVideo(participation._id, fileId);
+      if (!res.isSuccessByStatusCode) { setError(res.body?.message || "Échec de l'envoi."); setPhase('code'); return; }
+      setPhase('submitted');
+    } catch { setError("Échec de l'envoi de la vidéo."); setPhase('code'); }
+    finally { setBusy(false); }
+  };
+
+  const mmss = `${String(Math.floor(secondsLeft / 60)).padStart(2, '0')}:${String(secondsLeft % 60).padStart(2, '0')}`;
+
+  if (phase === 'submitted') {
+    return (
+      <div className="text-center py-4">
+        <FaCheckCircle className="mx-auto text-green-600" size={32} />
+        <p className="font-bold text-gray-900 mt-3">Vidéo envoyée</p>
+        <p className="text-sm text-gray-600 mt-1">
+          Votre publication sera vérifiée par l'équipe. Vous serez crédité une fois validée.
+        </p>
+        <button onClick={onClose} className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4">Fermer</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-3">
+      <ol className="text-sm text-gray-700 space-y-1 list-decimal pl-5 mb-3">
+        <li>Générez le code ci-dessous.</li>
+        <li>Lancez l'enregistrement d'écran de votre téléphone.</li>
+        <li>Filmez le code affiché, puis ouvrez WhatsApp et montrez les vues de votre statut.</li>
+        <li>Arrêtez l'enregistrement et importez la vidéo <strong>avant la fin du compte à rebours</strong>.</li>
+      </ol>
+
+      {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mb-3">{error}</div>}
+
+      {phase === 'intro' && (
+        <button onClick={generate} disabled={busy}
+          className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium disabled:bg-gray-300">
+          {busy ? 'Génération…' : 'Générer le code'}
+        </button>
+      )}
+
+      {(phase === 'code' || phase === 'submitting') && (
+        <div>
+          <div className="rounded-2xl border-2 border-[#115CF6] bg-blue-50 p-5 text-center">
+            <p className="text-xs text-gray-600">Votre code</p>
+            <p className="text-4xl font-extrabold tracking-widest text-[#115CF6] mt-1">{code}</p>
+            <p className={`text-sm mt-2 flex items-center justify-center gap-1 ${expired ? 'text-red-600' : 'text-gray-600'}`}>
+              <FaClock /> {expired ? 'Délai dépassé' : `Temps restant : ${mmss}`}
+            </p>
+          </div>
+
+          {expired ? (
+            <button onClick={generate} disabled={busy}
+              className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-3">
+              Générer un nouveau code
+            </button>
+          ) : (
+            <>
+              <input ref={fileRef} type="file" accept="video/*" capture className="hidden" onChange={onPick} />
+              <button onClick={() => fileRef.current?.click()} disabled={busy}
+                className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-3 disabled:bg-gray-300 flex items-center justify-center gap-2">
+                {phase === 'submitting' ? <><FaSpinner className="animate-spin" /> Envoi…</> : <><FaVideo /> Importer la vidéo</>}
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function VerifySheet({
   participation,
   defaultPhone,
@@ -970,7 +1083,7 @@ function VerifySheet({
   // that would display the QR, so pointing a camera at their own screen is not an
   // option for most of them — the pairing code is what makes this work on one
   // device, and it is offered first for that reason.
-  const [method, setMethod] = useState<'qr' | 'code' | null>(null);
+  const [method, setMethod] = useState<'qr' | 'code' | 'video' | null>(null);
   // Dial codes are BARE digits here ("237", not "+237") so they compose cleanly
   // and compare correctly. `defaultPhone` (the user's own number, country code and
   // all) seeds both the country picker and the national part, so the field opens on
@@ -1073,7 +1186,9 @@ function VerifySheet({
 
     (async () => {
       const res = await sbcApiService.startVerification(participation._id, {
-        method,
+        // The WhatsApp session path only ever runs for qr/code; the video method
+        // is fully self-contained in <VideoVerification> and never sets `started`.
+        method: method as 'qr' | 'code',
         // Composed here so the country can never be left off.
         phoneNumber: method === 'code'
           ? `${dialCode}${nationalDigits(phone)}`
@@ -1242,12 +1357,28 @@ function VerifySheet({
           </button>
 
           <button
-            onClick={() => { setAttempt(0); setRetrying(false); setError(null); setStarted(true); }}
-            disabled={!method || (method === 'code' && phone.replace(/\D/g, '').length < 8)}
-            className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-300"
+            onClick={() => setMethod('video')}
+            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'video' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
           >
-            Continuer
+            <div className="flex items-center gap-2 font-medium text-gray-900">
+              <FaVideo className="text-[#115CF6]" /> Vérification par vidéo
+            </div>
+            <p className="text-xs text-gray-600 mt-1">
+              Si la connexion WhatsApp ne marche pas : filmez votre écran (code + vues) et envoyez la vidéo.
+            </p>
           </button>
+
+          {method === 'video' ? (
+            <VideoVerification participation={participation} onClose={onClose} />
+          ) : (
+            <button
+              onClick={() => { setAttempt(0); setRetrying(false); setError(null); setStarted(true); }}
+              disabled={!method || (method === 'code' && phone.replace(/\D/g, '').length < 8)}
+              className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-300"
+            >
+              Continuer
+            </button>
+          )}
         </div>
       );
     }
