@@ -2283,6 +2283,27 @@ export class SBCApiService extends ApiService {
     return await this.delete(`/advertising/verification/sessions/${sessionId}`);
   }
 
+  // --- Manual (video-proof) verification ---
+
+  /** Issue an on-screen code and open the upload window for the current day. */
+  async generateManualVerifyCode(participationId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/verification/participations/${participationId}/manual/code`);
+  }
+
+  /** Attach the uploaded screen recording (settings fileId) to the live code. */
+  async submitManualVerifyVideo(participationId: string, videoFileId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/verification/participations/${participationId}/manual/video`, {
+      body: { videoFileId },
+    });
+  }
+
+  /** Latest manual-verification state for a participation. */
+  async getManualVerifyStatus(participationId: string): Promise<ApiResponse> {
+    return await this.get(`/advertising/verification/participations/${participationId}/manual/status`, {
+      skipDeduplication: true,
+    });
+  }
+
   // --- Advertising balance (user-service) ---
 
   async getAdvertisingBalance(): Promise<ApiResponse> {
