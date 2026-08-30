@@ -29,6 +29,7 @@ import InstallPrompt from './components/pwa/InstallPrompt'
 import Header from './components/common/Header'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
 import { useEffect, useRef } from 'react'
+import { installGlobalTapFeedback } from './utils/feedback'
 import VerifyOtp from './pages/VerifyOtp'
 import ResetPassword from './pages/ResetPassword'
 import VerifyEmailOtp from './pages/VerifyEmailOtp'
@@ -83,6 +84,10 @@ function AppContent() {
       lastUserIdRef.current = authUserId;
     }
   }, [authUserId, queryClient]);
+
+  // Light vibration on every button and link. One delegated listener, because
+  // there is no shared Button component to hang it off.
+  useEffect(() => installGlobalTapFeedback(), []);
 
   // One-time cleanup: a previous build wrote a permanent
   // localStorage.splashViewed flag that incorrectly suppressed the splash on
