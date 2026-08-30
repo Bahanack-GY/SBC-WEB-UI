@@ -12,6 +12,7 @@ import { fr } from 'date-fns/locale';
 import Skeleton from '../common/Skeleton';
 import { needsAcceptance, getRemainingMessages, isInitiator, hasReachedMessageLimit } from '../../utils/conversationHelpers';
 import { pageFade, listContainer, listItem } from '../../utils/motion';
+import { tapFeedback } from '../../utils/feedback';
 
 interface ConversationListProps {
   onConversationClick?: (conversation: Conversation) => void;
@@ -488,6 +489,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
 
   // Handle conversation click
   const handleConversationClick = (conv: Conversation) => {
+    tapFeedback();
     if (selectionMode) {
       toggleConversationSelection(conv._id);
     } else {
