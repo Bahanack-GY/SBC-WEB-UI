@@ -10,7 +10,7 @@ import illustrationEmpty from '../assets/icon/ads-empty.jpg';
 import { sbcApiService } from '../services/SBCApiService';
 
 type CampaignStatus =
-  | 'draft' | 'pending_review' | 'approved' | 'rejected'
+  | 'draft' | 'pending_review' | 'approved' | 'paid' | 'rejected'
   | 'active' | 'paused' | 'completed' | 'banked' | 'cancelled';
 
 interface Campaign {
@@ -43,6 +43,7 @@ interface DiffuseurRow {
 const STATUS_LABELS: Record<CampaignStatus, string> = {
   draft: 'Brouillon',
   pending_review: 'En validation',
+  paid: 'Payée — en validation',
   approved: 'Validée — à payer',
   rejected: 'Refusée',
   active: 'En diffusion',
@@ -55,6 +56,7 @@ const STATUS_LABELS: Record<CampaignStatus, string> = {
 const STATUS_STYLES: Record<CampaignStatus, string> = {
   draft: 'bg-gray-100 text-gray-700',
   pending_review: 'bg-amber-100 text-amber-800',
+  paid: 'bg-indigo-100 text-indigo-800',
   approved: 'bg-blue-100 text-blue-800',
   rejected: 'bg-red-100 text-red-800',
   active: 'bg-green-100 text-green-800',
@@ -120,20 +122,8 @@ function AdsNetworkAnnonceur() {
     }
   };
 
-  const handleSubmit = async (c: Campaign) => {
-    setActing(c._id);
-    setError(null);
-    try {
-      const res = await sbcApiService.submitAdsCampaign(c._id);
-      if (!res.isSuccessByStatusCode) {
-        setError(res.body?.message || "L'envoi à la validation a échoué.");
-        return;
-      }
-      refetch();
-    } finally {
-      setActing(null);
-    }
-  };
+  // There is no separate "submit for review" step any more: paying is what puts a
+  // campaign in front of an admin, so handlePay covers draft and rejected too.
 
   const handleBank = async (c: Campaign) => {
     setActing(c._id);
@@ -343,6 +333,12 @@ function AdsNetworkAnnonceur() {
                   </div>
                 )}
 
+                {c.status === 'paid' && (
+                  <p className="text-xs text-indigo-800 bg-indigo-50 border border-indigo-200 rounded-xl p-2 mt-3">
+                    Paiement reçu. Notre équipe valide votre annonce — elle démarre dès validation.
+                  </p>
+                )}
+
                 {c.status === 'pending_review' && (
                   <p className="text-xs text-amber-700 bg-amber-50 border border-border rounded-xl p-2 mt-3">
                     Notre équipe relit votre annonce. Vous pourrez payer dès qu'elle sera validée.
@@ -385,11 +381,11 @@ function AdsNetworkAnnonceur() {
                   )}
                   {(c.status === 'draft' || c.status === 'rejected') && (
                     <button
-                      onClick={() => handleSubmit(c)}
+                      onClick={() => handlePay(c)}
                       disabled={acting === c._id}
                       className="flex-1 bg-primary text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
                     >
-                      {acting === c._id ? 'Envoi…' : 'Envoyer à la validation'}
+                      {acting === c._id ? 'Ouverture…' : 'Payer et envoyer à la validation'}
                     </button>
                   )}
                   {c.status === 'active' && (
