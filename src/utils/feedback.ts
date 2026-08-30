@@ -85,3 +85,28 @@ export const soundMessageReceived = (): void => {
 
 /** Tap feedback for buttons and list rows. */
 export const tapFeedback = (): void => haptic('light');
+
+/**
+ * Gives every button and link in the app a light tap vibration.
+ *
+ * Done with one delegated listener rather than by touching call sites: there is
+ * no shared Button component here — buttons are inline elements all over the app
+ * — so this is the only way to cover them without a sweeping refactor.
+ * `pointerdown` (not click) so the feedback lands at the moment of touch.
+ *
+ * Returns a cleanup function.
+ */
+export const installGlobalTapFeedback = (): (() => void) => {
+    const onPointerDown = (event: Event) => {
+        const target = event.target as HTMLElement | null;
+        // Only real controls: a tap on plain text should stay silent. Elements
+        // that opt out carry data-no-haptic.
+        const control = target?.closest?.('button, a, [role="button"], input[type="checkbox"], input[type="radio"]');
+        if (!control || control.closest('[data-no-haptic]')) return;
+        if (control.hasAttribute('disabled') || control.getAttribute('aria-disabled') === 'true') return;
+        haptic('light');
+    };
+
+    document.addEventListener('pointerdown', onPointerDown, { passive: true });
+    return () => document.removeEventListener('pointerdown', onPointerDown);
+};
