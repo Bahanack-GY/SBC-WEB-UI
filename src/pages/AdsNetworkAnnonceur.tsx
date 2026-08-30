@@ -13,7 +13,7 @@ import { sbcApiService } from '../services/SBCApiService';
 
 type CampaignStatus =
   | 'draft' | 'pending_review' | 'approved' | 'rejected'
-  | 'active' | 'completed' | 'banked' | 'cancelled';
+  | 'active' | 'paused' | 'completed' | 'banked' | 'cancelled';
 
 interface Campaign {
   _id: string;
@@ -48,6 +48,7 @@ const STATUS_LABELS: Record<CampaignStatus, string> = {
   approved: 'Validée — à payer',
   rejected: 'Refusée',
   active: 'En diffusion',
+  paused: 'En pause',
   completed: 'Terminée',
   banked: 'Créditée',
   cancelled: 'Annulée',
@@ -59,6 +60,7 @@ const STATUS_STYLES: Record<CampaignStatus, string> = {
   approved: 'bg-blue-100 text-blue-800',
   rejected: 'bg-red-100 text-red-800',
   active: 'bg-green-100 text-green-800',
+  paused: 'bg-orange-100 text-orange-800',
   completed: 'bg-purple-100 text-purple-800',
   banked: 'bg-yellow-100 text-yellow-800',
   cancelled: 'bg-gray-100 text-gray-500',
@@ -161,6 +163,23 @@ function AdsNetworkAnnonceur() {
         return;
       }
       setCancelling(null);
+      refetch();
+    } finally {
+      setActing(null);
+    }
+  };
+
+  const handlePauseResume = async (c: Campaign) => {
+    setActing(c._id);
+    setError(null);
+    try {
+      const res = c.status === 'paused'
+        ? await sbcApiService.resumeAdsCampaign(c._id)
+        : await sbcApiService.pauseAdsCampaign(c._id);
+      if (!res.isSuccessByStatusCode) {
+        setError(res.body?.message || "L'opération a échoué.");
+        return;
+      }
       refetch();
     } finally {
       setActing(null);
@@ -285,7 +304,7 @@ function AdsNetworkAnnonceur() {
                     </div>
                     <p className="text-sm font-bold text-[#115CF6] mt-0.5">{formatFCFA(c.amountPaid)}</p>
 
-                    {(c.status === 'active' || c.status === 'completed' || c.status === 'banked') && (
+                    {(c.status === 'active' || c.status === 'paused' || c.status === 'completed' || c.status === 'banked') && (
                       <>
                         <div className="flex items-center gap-2 mt-2.5">
                           <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex-1">
@@ -386,11 +405,38 @@ function AdsNetworkAnnonceur() {
                       </motion.button>
                       <motion.button
                         whileTap={{ scale: 0.97 }}
+                        onClick={() => handlePauseResume(c)}
+                        disabled={acting === c._id}
+                        className="px-4 border border-orange-200 text-orange-700 rounded-xl py-2.5 text-sm"
+                      >
+                        {acting === c._id ? '…' : 'Pause'}
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
                         onClick={() => setClosing(c)}
                         disabled={acting === c._id}
                         className="px-4 border border-gray-200 text-gray-600 rounded-xl py-2.5 text-sm"
                       >
                         Clôturer
+                      </motion.button>
+                    </>
+                  )}
+                  {c.status === 'paused' && (
+                    <>
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => handlePauseResume(c)}
+                        disabled={acting === c._id}
+                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium disabled:bg-gray-400"
+                      >
+                        {acting === c._id ? 'Relance…' : 'Relancer la campagne'}
+                      </motion.button>
+                      <motion.button
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setDetail(c)}
+                        className="px-4 border border-gray-200 text-[#115CF6] rounded-xl py-2.5 text-sm"
+                      >
+                        <FaUsers size={13} />
                       </motion.button>
                     </>
                   )}

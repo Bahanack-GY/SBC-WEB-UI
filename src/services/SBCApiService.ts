@@ -2195,6 +2195,16 @@ export class SBCApiService extends ApiService {
     return await this.post(`/advertising/campaigns/${campaignId}/pay`);
   }
 
+  /** Pause a live campaign (stops new offers/top-ups). Resumable, no money moves. */
+  async pauseAdsCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/pause`);
+  }
+
+  /** Relaunch a paused campaign back to active. */
+  async resumeAdsCampaign(campaignId: string): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/resume`);
+  }
+
   /** An unfilled campaign: bank the unspent budget as credit, or keep waiting. */
   async decideAdsCampaign(campaignId: string, decision: 'bank' | 'wait'): Promise<ApiResponse> {
     return await this.post(`/advertising/campaigns/${campaignId}/decide`, {
