@@ -1186,7 +1186,9 @@ function VerifySheet({
 
     (async () => {
       const res = await sbcApiService.startVerification(participation._id, {
-        method,
+        // The WhatsApp session path only ever runs for qr/code; the video method
+        // is fully self-contained in <VideoVerification> and never sets `started`.
+        method: method as 'qr' | 'code',
         // Composed here so the country can never be left off.
         phoneNumber: method === 'code'
           ? `${dialCode}${nationalDigits(phone)}`
