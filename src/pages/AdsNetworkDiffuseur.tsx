@@ -995,6 +995,13 @@ function VideoVerification({ participation, onClose }: { participation: Particip
   const onPick = async (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // settings-service buffers uploads in memory; keep videos small so a launch-night
+    // rush of uploads can't exhaust its RAM.
+    if (file.size > 50 * 1024 * 1024) {
+      setError("Vidéo trop lourde (max 50 Mo). Filmez plus court : le code puis les vues suffisent.");
+      e.target.value = '';
+      return;
+    }
     setBusy(true); setError(null); setPhase('submitting');
     try {
       const up = await sbcApiService.uploadFile(file);
