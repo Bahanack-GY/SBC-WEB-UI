@@ -1104,7 +1104,10 @@ function VideoVerification({ participation, onClose }: { participation: Particip
             </button>
           ) : (
             <>
-              <input ref={fileRef} type="file" accept="video/*" capture className="hidden" onChange={onPick} />
+              {/* No `capture`: it forces the camera open with no way to pick an
+                  existing file, but the video was made earlier with the phone's
+                  screen recorder and is sitting in the gallery. */}
+              <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={onPick} />
               <button onClick={() => fileRef.current?.click()} disabled={busy}
                 className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-3 disabled:bg-gray-300 flex items-center justify-center gap-2">
                 {phase === 'submitting' ? <><FaSpinner className="animate-spin" /> Envoi…</> : <><FaVideo /> Importer la vidéo</>}
