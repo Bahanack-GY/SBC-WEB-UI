@@ -131,17 +131,27 @@ function AdsNetworkCampaignForm() {
         return;
       }
 
-      const submitted = await sbcApiService.submitAdsCampaign(campaignId);
-      if (!submitted.isSuccessByStatusCode) {
-        // The draft exists; the dashboard can resubmit it.
+      // Pay-first: paying is what puts the annonce in front of a moderator, so a
+      // new campaign goes straight to payment. Submitting it for review unpaid is
+      // exactly what filled the queue with campaigns nobody had paid for.
+      const paid = await sbcApiService.payAdsCampaign(campaignId);
+      if (!paid.isSuccessByStatusCode) {
+        // The draft is saved either way; it can be paid from the dashboard.
         setError(
-          (submitted.body?.message || "L'envoi à la validation a échoué.") +
-          " Votre brouillon est enregistré, vous pouvez le renvoyer depuis votre espace annonceur.",
+          (paid.body?.message || "Le paiement n'a pas pu être ouvert.") +
+          " Votre brouillon est enregistré, vous pouvez le payer depuis votre espace annonceur.",
         );
         return;
       }
 
-      navigate('/ads-network/annonceur');
+      // No session id means banked credit covered the whole budget, so there is
+      // nothing to pay and the annonce is already queued for validation.
+      const sessionId = paid.body?.data?.sessionId;
+      if (!sessionId) {
+        navigate('/ads-network/annonceur');
+        return;
+      }
+      window.location.href = sbcApiService.generatePaymentUrl(sessionId);
     } finally {
       setSubmitting(false);
     }
