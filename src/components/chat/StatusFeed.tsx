@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignCircleIcon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect } from 'react';
@@ -153,7 +154,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <div className="flex items-center gap-2 mb-1">
                     <img
-                      src={(status as any).author?.avatar || status.user?.avatar || '/default-avatar.png'}
+                      src={sbcApiService.generateThumbnailUrl((status as any).author?.avatar || status.user?.avatar, 80) || DEFAULT_AVATAR}
                       alt={(status as any).author?.name || status.user?.name}
                       className="w-6 h-6 rounded-full border-2 border-white"
                     />

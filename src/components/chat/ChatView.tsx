@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowTurnBackwardIcon, ArrowTurnForwardIcon, AttachmentIcon, Cancel01Icon, CancelCircleIcon, Copy01Icon, Delete02Icon, Download01Icon, Flag02Icon, MoreVerticalIcon, SendIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
@@ -1230,7 +1231,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
         {!isSent && !selectionMode && (
           <div className="flex-shrink-0">
             <img
-              src={message.sender?.avatar || '/default-avatar.png'}
+              src={sbcApiService.generateThumbnailUrl(message.sender?.avatar, 64) || DEFAULT_AVATAR}
               alt={message.sender?.name || 'User'}
               className="w-8 h-8 rounded-full object-cover"
             />
@@ -1458,7 +1459,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   >
                     {getConversationAvatar() ? (
                       <img
-                        src={getConversationAvatar()}
+                        src={sbcApiService.generateThumbnailUrl(getConversationAvatar(), 96) || DEFAULT_AVATAR}
                         alt={getConversationName()}
                         className="w-10 h-10 rounded-full object-cover"
                       />
@@ -1626,7 +1627,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
               <div className="flex-shrink-0">
                 {getConversationAvatar() ? (
                   <img
-                    src={getConversationAvatar()}
+                    src={sbcApiService.generateThumbnailUrl(getConversationAvatar(), 96) || DEFAULT_AVATAR}
                     alt="User"
                     className="w-8 h-8 rounded-full object-cover"
                   />
@@ -1829,7 +1830,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                       <>
                         {otherParticipant?.avatar ? (
                           <img
-                            src={otherParticipant.avatar}
+                            src={sbcApiService.generateThumbnailUrl(otherParticipant.avatar, 160) || DEFAULT_AVATAR}
                             alt={name}
                             className="w-10 h-10 rounded-full object-cover"
                           />
@@ -1928,7 +1929,7 @@ export const ChatView: React.FC<ChatViewProps> = ({ conversationId, onBack }) =>
                   <div className="flex flex-col items-center">
                     {otherUserProfile.avatar ? (
                       <img
-                        src={otherUserProfile.avatar}
+                        src={sbcApiService.generateThumbnailUrl(otherUserProfile.avatar, 256) || DEFAULT_AVATAR}
                         alt={otherUserProfile.name || `${otherUserProfile.firstName} ${otherUserProfile.lastName}`}
                         className="w-24 h-24 rounded-full object-cover mb-3"
                       />

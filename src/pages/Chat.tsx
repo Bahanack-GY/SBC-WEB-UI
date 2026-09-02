@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { StoriesBar } from '../components/chat/StoriesBar';
@@ -79,7 +80,7 @@ export default function Chat() {
     const group: StoryGroup = {
       userId: (status as any).authorId || status.userId,
       authorName: userName,
-      authorAvatar: authorData?.avatar || '/default-avatar.png',
+      authorAvatar: authorData?.avatar || DEFAULT_AVATAR,
       statuses: [status],
       hasUnviewed: !status.isViewed,
     };

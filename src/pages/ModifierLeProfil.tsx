@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Call02Icon, FloppyDiskIcon, Loading03Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -409,7 +410,7 @@ function ModifierLeProfil() {
         >
           <div className="flex flex-col items-center mb-6">
             <div className="relative mb-2">
-              <img src={formData.avatar} alt="avatar" className="w-24 h-24 rounded-full border-4 border-white object-cover" />
+              <img src={sbcApiService.generateThumbnailUrl(formData.avatar, 192) || DEFAULT_AVATAR} alt="avatar" className="w-24 h-24 rounded-full border-4 border-white object-cover" />
               <button
                 type="button"
                 onClick={handleAvatarButtonClick}

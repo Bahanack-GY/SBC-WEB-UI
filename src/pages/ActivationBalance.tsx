@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Cancel01Icon, Exchange01Icon, GiftIcon, HistoryIcon, Loading03Icon, Search01Icon, Tick02Icon, UserAdd01Icon, UserGroupIcon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useRef } from 'react';
@@ -441,7 +442,7 @@ function ActivationBalance() {
                         <div className="flex items-center gap-3">
                           <div className="bg-primary w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg">
                             {referral.avatar ? (
-                              <img src={referral.avatar} alt={referral.name} className="w-full h-full rounded-full object-cover" />
+                              <img src={sbcApiService.generateThumbnailUrl(referral.avatar, 96) || DEFAULT_AVATAR} alt={referral.name} className="w-full h-full rounded-full object-cover" />
                             ) : (
                               referral.name.charAt(0).toUpperCase()
                             )}
@@ -968,7 +969,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                 <div className="flex items-center gap-3 p-3 bg-orange-50 border border-border rounded-xl">
                   <div className="bg-accent w-10 h-10 rounded-full flex items-center justify-center text-white font-bold">
                     {selectedUser.avatar ? (
-                      <img src={selectedUser.avatar} alt={selectedUser.name} className="w-full h-full rounded-full object-cover" />
+                      <img src={sbcApiService.generateThumbnailUrl(selectedUser.avatar, 160) || DEFAULT_AVATAR} alt={selectedUser.name} className="w-full h-full rounded-full object-cover" />
                     ) : (
                       selectedUser.name.charAt(0).toUpperCase()
                     )}
@@ -1018,7 +1019,7 @@ function P2PTransferModal({ isOpen, onClose, activationBalance, minimumAmount, o
                       >
                         <div className="bg-primary w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm">
                           {user.avatar ? (
-                            <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                            <img src={sbcApiService.generateThumbnailUrl(user.avatar, 96) || DEFAULT_AVATAR} alt={user.name} className="w-full h-full rounded-full object-cover" />
                           ) : (
                             user.name.charAt(0).toUpperCase()
                           )}
@@ -1199,7 +1200,7 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
               <div className="flex items-center gap-3">
                 <div className="bg-primary w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg">
                   {referral.avatar ? (
-                    <img src={referral.avatar} alt={referral.name} className="w-full h-full rounded-full object-cover" />
+                    <img src={sbcApiService.generateThumbnailUrl(referral.avatar, 96) || DEFAULT_AVATAR} alt={referral.name} className="w-full h-full rounded-full object-cover" />
                   ) : (
                     referral.name.charAt(0).toUpperCase()
                   )}

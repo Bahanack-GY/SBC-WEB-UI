@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from './Avatar';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
@@ -57,7 +58,7 @@ function Header() {
               // object-cover so a non-square photo fills the circle instead of
               // letterboxing inside it.
               <img
-                src={avatarUrl}
+                src={sbcApiService.generateThumbnailUrl(avatarUrl, 80) || DEFAULT_AVATAR}
                 alt=""
                 aria-hidden
                 onError={() => setAvatarFailed(true)}

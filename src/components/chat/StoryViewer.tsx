@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, ArrowRight01Icon, Cancel01Icon, FavouriteIcon, Message01Icon } from '@hugeicons/core-free-icons';
 import { useEffect, useState, useCallback, useRef } from 'react';
@@ -284,7 +285,7 @@ const StoryViewer = ({
               <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white">
                 {currentGroup.authorAvatar ? (
                   <img
-                    src={currentGroup.authorAvatar}
+                    src={sbcApiService.generateThumbnailUrl(currentGroup.authorAvatar, 80) || DEFAULT_AVATAR}
                     alt={currentGroup.authorName}
                     className="w-full h-full object-cover"
                   />

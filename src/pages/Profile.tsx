@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, PencilEdit01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence } from 'motion/react';
@@ -284,7 +285,7 @@ function Profile() {
             <div className="absolute left-1/2 -bottom-12 transform -translate-x-1/2">
               <div className="relative">
                 <img
-                  src={ user?.avatar ? user.avatar : user?.avatarId ? sbcApiService.generateSettingsFileUrl(user.avatarId) : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
+                  src={sbcApiService.generateThumbnailUrl(user?.avatar || user?.avatarId, 256) || DEFAULT_AVATAR}
                   alt="avatar"
                   className="w-24 h-24 rounded-full border-4 border-white object-cover"
                 />

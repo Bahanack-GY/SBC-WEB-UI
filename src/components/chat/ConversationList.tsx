@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Archive02Icon, Cancel01Icon, PlusSignIcon, Search01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -748,7 +749,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   >
                     {getConversationAvatar(conv) ? (
                       <img
-                        src={getConversationAvatar(conv)}
+                        src={sbcApiService.generateThumbnailUrl(getConversationAvatar(conv), 96) || DEFAULT_AVATAR}
                         alt={getConversationName(conv)}
                         className="w-12 h-12 rounded-full object-cover"
                       />

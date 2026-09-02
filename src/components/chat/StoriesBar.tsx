@@ -1,3 +1,4 @@
+import { DEFAULT_AVATAR } from '../common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
@@ -32,7 +33,7 @@ const previewFor = (group: StoryGroup): string => {
     // helper returns it untouched in that case.
     return sbcApiService.generateThumbnailUrl(media, 128);
   }
-  return sbcApiService.generateThumbnailUrl(group.authorAvatar, 128) || '/default-avatar.png';
+  return sbcApiService.generateThumbnailUrl(group.authorAvatar, 128) || DEFAULT_AVATAR;
 };
 
 export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateClick, refreshTrigger }) => {
@@ -67,7 +68,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
             grouped[userId] = {
               userId,
               authorName: userName,
-              authorAvatar: authorData?.avatar || '/default-avatar.png',
+              authorAvatar: authorData?.avatar || DEFAULT_AVATAR,
               statuses: [],
               hasUnviewed: false,
             };
@@ -133,7 +134,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
           <div className="relative">
             <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border">
               <img
-                src={user?.avatar || '/default-avatar.png'}
+                src={sbcApiService.generateThumbnailUrl(user?.avatar, 128) || DEFAULT_AVATAR}
                 alt="Your story"
                 className="w-full h-full object-cover"
               />
@@ -168,7 +169,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
                     className="w-full h-full object-cover"
                     // A status whose signed URL has lapsed, or a video, should not
                     // leave a broken-image icon in the ring.
-                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = group.authorAvatar || '/default-avatar.png'; }}
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = group.authorAvatar || DEFAULT_AVATAR; }}
                   />
                 </div>
               </div>
