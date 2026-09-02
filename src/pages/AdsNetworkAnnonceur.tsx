@@ -49,7 +49,7 @@ const STATUS_LABELS: Record<CampaignStatus, string> = {
   active: 'En diffusion',
   paused: 'En pause',
   completed: 'Terminée',
-  banked: 'Créditée',
+  banked: 'Clôturée — crédit rendu',
   cancelled: 'Annulée',
 };
 
