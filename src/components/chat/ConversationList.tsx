@@ -905,7 +905,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                       <div className="relative">
                         {searchUser.avatar ? (
                           <img
-                            src={searchUser.avatar}
+                            src={sbcApiService.generateThumbnailUrl(searchUser.avatar, 96)}
                             alt={searchUser.name || ''}
                             className="w-10 h-10 rounded-full object-cover"
                           />
@@ -1006,7 +1006,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                   <div className="flex flex-col items-center">
                     {selectedUserProfile.avatar ? (
                       <img
-                        src={selectedUserProfile.avatar}
+                        src={sbcApiService.generateThumbnailUrl(selectedUserProfile.avatar, 256)}
                         alt={selectedUserProfile.name || `${selectedUserProfile.firstName} ${selectedUserProfile.lastName}`}
                         className="w-24 h-24 rounded-full object-cover mb-3"
                       />
@@ -1162,7 +1162,7 @@ export const ConversationList: React.FC<ConversationListProps> = ({ onConversati
                           <div className="relative flex-shrink-0">
                             {otherParticipant.avatar ? (
                               <img
-                                src={otherParticipant.avatar}
+                                src={sbcApiService.generateThumbnailUrl(otherParticipant.avatar, 96)}
                                 alt={otherParticipant.name}
                                 className="w-12 h-12 rounded-full object-cover"
                               />

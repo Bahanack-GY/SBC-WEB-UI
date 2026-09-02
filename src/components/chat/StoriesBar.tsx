@@ -14,6 +14,27 @@ interface StoriesBarProps {
   refreshTrigger?: number;
 }
 
+
+/**
+ * What the ring shows: the person's most recent status, not their avatar —
+ * that is what the ring is announcing. Falls back to the avatar for a text-only
+ * status (nothing to show) or a video, and both are requested at thumbnail size
+ * rather than full resolution.
+ */
+const previewFor = (group: StoryGroup): string => {
+  const latest = group.statuses?.[group.statuses.length - 1] as
+    | { mediaUrl?: string; mediaThumbnailUrl?: string; mediaType?: string }
+    | undefined;
+
+  const media = latest?.mediaThumbnailUrl || latest?.mediaUrl;
+  if (media && latest?.mediaType !== 'video' && latest?.mediaType !== 'text') {
+    // Private status media arrives pre-signed and cannot be resized by us; the
+    // helper returns it untouched in that case.
+    return sbcApiService.generateThumbnailUrl(media, 128);
+  }
+  return sbcApiService.generateThumbnailUrl(group.authorAvatar, 128) || '/default-avatar.png';
+};
+
 export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateClick, refreshTrigger }) => {
   const { user } = useAuth();
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
@@ -140,9 +161,14 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
  }`}>
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white bg-white">
                   <img
-                    src={group.authorAvatar || '/default-avatar.png'}
+                    src={previewFor(group)}
                     alt={group.authorName}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
+                    // A status whose signed URL has lapsed, or a video, should not
+                    // leave a broken-image icon in the ring.
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = group.authorAvatar || '/default-avatar.png'; }}
                   />
                 </div>
               </div>
