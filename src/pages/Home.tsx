@@ -267,8 +267,11 @@ function Home() {
         <section className="flex flex-col gap-3">
           <h2 className="text-xl font-bold text-ink">Présentation</h2>
           <CustomVideoPlayer
-            src="/sbc presentation.mp4"
-            poster="/sbc_presentation_thumbnail.jpg"
+            // Versioned filename, not a fixed one: Cloudflare caches these for an
+            // hour, so replacing the file in place left everyone watching the old
+            // video until the edge expired. A new name is fetched immediately.
+            src="/sbc-presentation-2026-09.mp4"
+            poster="/sbc-presentation-2026-09.jpg"
             title="Présentation SBC"
           />
         </section>
