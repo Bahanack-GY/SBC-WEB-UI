@@ -995,6 +995,26 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * A resized copy of an image, for anywhere it is drawn small.
+   *
+   * Avatars are stored at full size — 1.8 MB is typical — and a conversation
+   * list or status bar pulls a dozen of them at 56 px. Routed through our own
+   * origin (not the bucket) so the resized copy is cached by Cloudflare and
+   * repeat views cost nothing. Falls back to whatever it was given when the URL
+   * is not one of ours.
+   */
+  generateThumbnailUrl(fileIdOrUrl: string | undefined | null, width = 96): string {
+    if (!fileIdOrUrl) return '';
+    const bucketPrefix = 'https://storage.googleapis.com/sbc-file-storage/';
+    const fileId = fileIdOrUrl.startsWith(bucketPrefix)
+      ? fileIdOrUrl.slice(bucketPrefix.length)
+      : fileIdOrUrl;
+    // Signed/private URLs and anything external cannot be resized by that route.
+    if (/^https?:\/\//.test(fileId)) return fileIdOrUrl;
+    return `${this.baseUrl}/settings/files/${encodeURIComponent(fileId)}?w=${width}`;
+  }
+
+  /**
    * Same-origin URL for a stored file, for when the bytes are needed rather than
    * just displayed.
    *
