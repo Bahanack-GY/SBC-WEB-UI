@@ -140,6 +140,12 @@ const CustomVideoPlayer: React.FC<CustomVideoPlayerProps> = ({ src, poster, titl
                 src={src}
                 poster={poster}
                 title={title}
+                // Nothing is fetched until the viewer actually presses play. Without
+                // this the browser pulls the video on every page load, and this
+                // player sits on the home screen — 636 GB of GCS egress in August,
+                // $64 of a $79 bill, most of it for videos nobody watched.
+                preload="none"
+                playsInline
                 className="w-full aspect-video object-contain"
                 onClick={handleVideoTap}
             />
