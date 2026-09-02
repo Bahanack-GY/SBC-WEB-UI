@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { StoriesBar } from '../components/chat/StoriesBar';
 import { StatusFeed } from '../components/chat/StatusFeed';
 import StoryViewer from '../components/chat/StoryViewer';
+import { sbcApiService } from '../services/SBCApiService';
 import StoryComposer from '../components/chat/StoryComposer';
 import { ConversationList } from '../components/chat/ConversationList';
 import { ChatView } from '../components/chat/ChatView';
@@ -31,7 +32,6 @@ const useHideNav = (shouldHide: boolean) => {
 };
 
 export default function Chat() {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { subscribeToStatuses } = useSocket();
 
@@ -58,11 +58,13 @@ export default function Chat() {
     };
   }, [subscribeToStatuses]);
 
-  const handleStoryClick = (group: StoryGroup) => {
-    // In a real implementation, we'd get all story groups here
-    // For now, just show the single group
-    setCurrentStoryGroups([group]);
-    setCurrentGroupIndex(0);
+  const handleStoryClick = (group: StoryGroup, allGroups: StoryGroup[]) => {
+    // Every group, positioned on the one that was tapped. Passing the single
+    // tapped group made "next" reach the end immediately and close the viewer.
+    const groups = allGroups.length ? allGroups : [group];
+    const startAt = Math.max(0, groups.findIndex(g => g.userId === group.userId));
+    setCurrentStoryGroups(groups);
+    setCurrentGroupIndex(startAt);
     setShowStoryViewer(true);
   };
 
@@ -96,13 +98,21 @@ export default function Chat() {
     setStoriesRefresh(prev => prev + 1);
   };
 
-  const handleReplyToStatus = (status: Status) => {
-    // Close story viewer
+  const handleReplyToStatus = async (status: Status) => {
     setShowStoryViewer(false);
 
-    // Navigate to conversation with status author
-    // This would typically create a conversation first, but we'll let ConversationList handle it
-    navigate(`/chat?conversation=new&userId=${status.userId}`);
+    // The author id lives on `authorId`; `userId` is only present on some shapes,
+    // and the previous code navigated to `?conversation=new`, an id no endpoint
+    // can load — which is why replying opened an empty chat. Create (or fetch) the
+    // real conversation first, then open it.
+    const authorId = (status as any).authorId || status.userId;
+    if (!authorId) return;
+
+    const res = await sbcApiService.getOrCreateConversation(String(authorId));
+    const conversationId = res.body?.data?._id;
+    if (!res.isSuccessByStatusCode || !conversationId) return;
+
+    setSearchParams({ conversation: conversationId });
   };
 
   const handleConversationClick = (conv: Conversation) => {

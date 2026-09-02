@@ -8,7 +8,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { pageFade, listContainer, rowItem } from '../../utils/motion';
 
 interface StoriesBarProps {
-  onStoryClick: (group: StoryGroup, startIndex: number) => void;
+  /** The tapped group plus every group, so the viewer can advance past it. */
+  onStoryClick: (group: StoryGroup, allGroups: StoryGroup[]) => void;
   onCreateClick: () => void;
   refreshTrigger?: number;
 }
@@ -129,7 +130,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
             <motion.button
               key={group.userId}
               variants={rowItem}
-              onClick={() => onStoryClick(group, 0)}
+              onClick={() => onStoryClick(group, storyGroups)}
               className="flex flex-col items-center gap-2 flex-shrink-0"
             >
               <div className={`bg-primary rounded-full p-0.5 ${
