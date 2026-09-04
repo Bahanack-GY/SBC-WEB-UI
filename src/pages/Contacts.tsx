@@ -3,6 +3,7 @@ import { Download01Icon, FilterIcon, Loading03Icon, WhatsappIcon } from '@hugeic
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import BackButton from "../components/common/BackButton";
+import Avatar from '../components/common/Avatar';
 import { motion, AnimatePresence } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelpers';
@@ -701,13 +702,11 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     <div className="flex flex-col divide-y divide-gray-100 bg-white rounded-xl border border-border">
                         {contacts.map((c: User) => (
                             <div key={c._id} className="flex items-center px-3 py-3 gap-3">
-                                <img
-                                    src={
-                                        c.avatar ? c.avatar : c.avatarId
-                                            ? sbcApiService.generateSettingsFileUrl(c.avatarId)
-                                            : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'}
+                                <Avatar
+                                    src={c.avatar || c.avatarId}
                                     alt={c.name}
-                                    className="w-10 h-10 rounded-full object-cover border border-border"
+                                    size={40}
+                                    className="rounded-full border border-border"
                                 />
                                 <div className="flex-1 min-w-0">
                                     <div className={`font-semibold text-sm truncate text-gray-900`}>{c.name}</div>
