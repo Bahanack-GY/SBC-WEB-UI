@@ -7,7 +7,9 @@ import type { LeaderboardEntry } from '../../types/api';
  * app: a direct URL, then a settings file id, then initials.
  */
 function Avatar({ entry, size, className }: { entry: LeaderboardEntry; size: number; className?: string }) {
-  const src = entry.avatar || (entry.avatarId ? sbcApiService.generateSettingsFileUrl(entry.avatarId) : '');
+  // Fetched at the size it is drawn, not the size it was uploaded: profile
+  // photos average ~950 KiB in the bucket and a leaderboard is a column of them.
+  const src = sbcApiService.generateThumbnailUrl(entry.avatar || entry.avatarId, size * 2);
   const style = { width: size, height: size };
 
   if (src) {
@@ -16,6 +18,8 @@ function Avatar({ entry, size, className }: { entry: LeaderboardEntry; size: num
         src={src}
         alt={entry.name}
         style={style}
+        loading="lazy"
+        decoding="async"
         className={cn('rounded-pill object-cover bg-surface-2', className)}
       />
     );

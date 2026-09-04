@@ -6,6 +6,7 @@ import { useQuery, useInfiniteQuery, type InfiniteData } from '@tanstack/react-q
 import BackButton from '../components/common/BackButton';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 import Skeleton from '../components/common/Skeleton';
+import Avatar from '../components/common/Avatar';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -711,16 +712,11 @@ function MesFilleuls() {
                   >
                     <div className="flex items-center gap-4">
                       <div className="relative">
-                        <img
-                          src={
-                            filleul.avatar
-                              ? filleul.avatar
-                              : filleul.avatarId
-                                ? sbcApiService.generateSettingsFileUrl(filleul.avatarId)
-                                : 'https://img.freepik.com/premium-vector/default-avatar-profile-icon-social-media-user-image-gray-avatar-icon-blank-profile-silhouette-vector-illustration_561158-3407.jpg?w=360'
-                          }
+                        <Avatar
+                          src={filleul.avatar || filleul.avatarId}
                           alt={filleul.name}
-                          className="w-12 h-12 rounded-full object-cover"
+                          size={48}
+                          className="rounded-full"
                         />
                         {filleul.activeSubscriptions && filleul.activeSubscriptions.length > 0 && (
                           <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white"></div>

@@ -273,8 +273,10 @@ function AdsNetworkAnnonceur() {
               <motion.div key={c._id} {...adsItemMotion(i)} className="bg-white border border-border rounded-2xl p-4">
                 <div className="flex items-start gap-3">
                   <img
-                    src={sbcApiService.generateSettingsFileUrl(c.mediaFileId)}
+                    src={sbcApiService.generateThumbnailUrl(c.mediaFileId, 160)}
                     alt={c.title}
+                    loading="lazy"
+                    decoding="async"
                     className="w-20 h-20 object-cover rounded-xl bg-gray-100 shrink-0 ring-1 ring-gray-100"
                   />
                   <div className="min-w-0 flex-1">

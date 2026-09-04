@@ -1023,8 +1023,11 @@ export class SBCApiService extends ApiService {
    * could never attach the creative. This routes through settings-service, which
    * pipes the file back from our own origin.
    *
-   * Use generateSettingsFileUrl for <img src>: it hits the CDN directly and costs
-   * us no bandwidth.
+   * generateSettingsFileUrl is NOT the cheap alternative, despite pointing at
+   * storage.googleapis.com. Nothing caches in front of that bucket, so every new
+   * viewer pays full egress on the original — 636 GiB of it in August 2026, on a
+   * 36 GiB bucket. Prefer generateThumbnailUrl anywhere an image is drawn smaller
+   * than it was uploaded.
    */
   generateStreamedFileUrl(fileId: string, opts: { download?: boolean } = {}): string {
     const param = opts.download ? 'download=1' : 'stream=1';

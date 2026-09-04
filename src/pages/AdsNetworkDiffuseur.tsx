@@ -361,8 +361,10 @@ function AdsNetworkDiffuseur() {
                       >
                         {p.campaign && (
                           <img
-                            src={sbcApiService.generateSettingsFileUrl(p.campaign.mediaFileId)}
+                            src={sbcApiService.generateThumbnailUrl(p.campaign.mediaFileId, 160)}
                             alt={p.campaign.title}
+                            loading="lazy"
+                            decoding="async"
                             className="w-20 h-20 object-cover rounded-xl bg-gray-100 shrink-0"
                           />
                         )}
@@ -424,8 +426,10 @@ function AdsNetworkDiffuseur() {
                             what is on their status without opening anything. */}
                         {p.campaign && (
                           <img
-                            src={sbcApiService.generateSettingsFileUrl(p.campaign.mediaFileId)}
+                            src={sbcApiService.generateThumbnailUrl(p.campaign.mediaFileId, 640)}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-32 rounded-xl object-cover bg-gray-100 mb-3"
                           />
                         )}
