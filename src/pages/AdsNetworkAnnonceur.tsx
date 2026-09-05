@@ -18,6 +18,9 @@ interface Campaign {
   title: string;
   status: CampaignStatus;
   amountPaid: number;
+  /** Set once the money has actually been taken. A refused campaign that carries
+   *  this must never be offered the pay button again. */
+  paidAt?: string;
   rejectionReason?: string;
   landingPageUrl?: string;
   mediaFileId: string;
@@ -381,7 +384,20 @@ function AdsNetworkAnnonceur() {
                       Annuler la campagne
                     </button>
                   )}
-                  {(c.status === 'draft' || c.status === 'rejected') && (
+                  {/* Editing stays open right through diffusion: a live campaign
+                      can still have its ciblage widened when it turns out the
+                      audience cannot deliver the views bought. */}
+                  {['draft', 'rejected', 'paid', 'active', 'paused'].includes(c.status) && (
+                    <button
+                      onClick={() => navigate(`/ads-network/annonceur/campagne/${c._id}/modifier`)}
+                      className="px-4 border border-border text-gray-700 rounded-xl py-2.5 text-sm"
+                    >
+                      {c.status === 'active' || c.status === 'paused' ? 'Modifier le ciblage' : 'Modifier'}
+                    </button>
+                  )}
+                  {/* Paid once is paid: a refusal that was already paid for goes
+                      back to validation from the edit screen, not through here. */}
+                  {(c.status === 'draft' || (c.status === 'rejected' && !c.paidAt)) && (
                     <button
                       onClick={() => handlePay(c)}
                       disabled={acting === c._id}

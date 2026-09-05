@@ -1,7 +1,7 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Image01Icon, Loading03Icon, Shield01Icon } from '@hugeicons/core-free-icons';
-import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -40,6 +40,9 @@ const COUNTRIES = [
 function AdsNetworkCampaignForm() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  // Present when editing an existing campaign rather than creating one.
+  const { id: editingId } = useParams<{ id: string }>();
+  const isEditing = Boolean(editingId);
 
   const [amount, setAmount] = useState(params.get('amount') || String(MIN_AMOUNT));
   const [title, setTitle] = useState('');
@@ -60,6 +63,40 @@ function AdsNetworkCampaignForm() {
   const [preview, setPreview] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Set when editing: what the campaign already is, which limits what may change. */
+  const [existing, setExisting] = useState<{ status: string; mediaFileId?: string } | null>(null);
+
+  // A live campaign has already been posted by diffuseurs, so its creative and
+  // budget are frozen; only the audience can still be widened.
+  const targetingOnly = existing?.status === 'active' || existing?.status === 'paused';
+  // The money has already moved, so the budget cannot be re-quoted.
+  const budgetLocked = isEditing && existing?.status !== 'draft' && existing?.status !== 'rejected';
+
+  useEffect(() => {
+    if (!editingId) return;
+    let cancelled = false;
+    (async () => {
+      const res = await sbcApiService.getAdsCampaign(editingId);
+      const c = res.body?.data;
+      if (cancelled || !c) return;
+      setExisting({ status: c.status, mediaFileId: c.mediaFileId });
+      setTitle(c.title ?? '');
+      setDescription(c.description ?? '');
+      setCaption(c.suggestedCaption ?? '');
+      setContactWhatsapp(c.contactWhatsapp ?? '');
+      setContactPhone(c.contactPhone ?? '');
+      setWebsiteUrl(c.websiteUrl ?? '');
+      setAmount(String(c.amountPaid ?? MIN_AMOUNT));
+      const t = c.targeting ?? {};
+      setCountries(t.countries ?? []);
+      setSex(t.sex ?? []);
+      setCities(t.cities ?? []);
+      setInterests(t.interests ?? []);
+      setMinAge(t.minAge != null ? String(t.minAge) : '');
+      setMaxAge(t.maxAge != null ? String(t.maxAge) : '');
+    })();
+    return () => { cancelled = true; };
+  }, [editingId]);
 
   const parsedAmount = Number(amount);
   const { data: quote } = useQuery({
@@ -79,11 +116,88 @@ function AdsNetworkCampaignForm() {
   const toggle = (list: string[], value: string, set: (v: string[]) => void) =>
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
+  // What this targeting can actually deliver, refreshed as the filters change.
+  // Rufus: warn while they are still choosing, not after they have paid.
+  const targetingPayload = {
+    countries: countries.length ? countries : undefined,
+    cities: cities.length ? cities.map(c => removeAccents(c)) : undefined,
+    interests: interests.length ? interests : undefined,
+    sex: sex.length ? sex : undefined,
+    minAge: minAge ? Number(minAge) : undefined,
+    maxAge: maxAge ? Number(maxAge) : undefined,
+  };
+  const { data: reach } = useQuery({
+    queryKey: ['ads-reach', targetingPayload, parsedAmount],
+    queryFn: async () => {
+      const res = await sbcApiService.getAdsReach({ targeting: targetingPayload, amount: parsedAmount });
+      return res.body?.data as
+        | { matching: number; projectedUniqueViews: number; targetUniqueViews?: number; sufficient?: boolean; message: string }
+        | undefined;
+    },
+    enabled: Number.isFinite(parsedAmount) && parsedAmount >= MIN_AMOUNT,
+    // The pool moves slowly; no need to re-ask on every keystroke.
+    staleTime: 30_000,
+  });
+
+  /**
+   * Saves changes to an existing campaign.
+   *
+   * A campaign in diffusion may only change its audience, so nothing else is sent
+   * for one — the server refuses the rest anyway, and sending it would turn a
+   * legitimate retarget into an error.
+   */
+  const saveEdit = async () => {
+    let mediaFileId: string | undefined;
+    if (file && !targetingOnly) {
+      const upload = await sbcApiService.uploadFile(file);
+      mediaFileId = upload.body?.data?.fileId;
+      if (!upload.isSuccessByStatusCode || !mediaFileId) {
+        setError("Le visuel n'a pas pu être envoyé. Réessayez.");
+        return;
+      }
+    }
+
+    const body: Record<string, unknown> = { targeting: targetingPayload };
+    if (!targetingOnly) {
+      body.title = title.trim();
+      body.description = description.trim() || undefined;
+      body.suggestedCaption = caption.trim() || undefined;
+      body.contactWhatsapp = contactWhatsapp.trim() || undefined;
+      body.contactPhone = contactPhone.trim() || undefined;
+      body.websiteUrl = websiteUrl.trim() || undefined;
+      if (mediaFileId && file) {
+        body.mediaFileId = mediaFileId;
+        body.mediaType = file.type.startsWith('video') ? 'video' : 'image';
+        body.mediaMimeType = file.type;
+      }
+      if (!budgetLocked) body.amount = parsedAmount;
+    }
+
+    const saved = await sbcApiService.updateAdsCampaign(editingId!, body);
+    if (!saved.isSuccessByStatusCode) {
+      setError(saved.body?.message || "Les modifications n'ont pas pu être enregistrées.");
+      return;
+    }
+
+    // A refusal that has already been paid for goes straight back into the queue,
+    // free — the money was taken once and is still on the campaign.
+    if (existing?.status === 'rejected') {
+      const resubmit = await sbcApiService.submitAdsCampaign(editingId!);
+      if (!resubmit.isSuccessByStatusCode) {
+        setError(resubmit.body?.message || 'Modifications enregistrées, mais le renvoi en validation a échoué.');
+        return;
+      }
+    }
+
+    navigate('/ads-network/annonceur');
+  };
+
   const handleSubmit = async () => {
     setError(null);
 
     if (!title.trim()) return setError('Donnez un titre à votre annonce.');
-    if (!file) return setError('Ajoutez le visuel à publier.');
+    // When editing, keeping the existing visual is the normal case.
+    if (!file && !isEditing) return setError('Ajoutez le visuel à publier.');
     if (!contactWhatsapp && !contactPhone && !websiteUrl) {
       return setError('Indiquez au moins un moyen de contact : WhatsApp, téléphone ou site web.');
     }
@@ -93,7 +207,15 @@ function AdsNetworkCampaignForm() {
 
     setSubmitting(true);
     try {
-      const upload = await sbcApiService.uploadFile(file);
+      if (isEditing) {
+        await saveEdit();
+        return;
+      }
+
+      // Guaranteed by the validation above; narrowed so the create payload can
+      // read its mime type without a non-null assertion at each use.
+      const creative = file as File;
+      const upload = await sbcApiService.uploadFile(creative);
       // fileId only — data.fileName is the original upload name and would create
       // a campaign pointing at nothing.
       const fileId = upload.body?.data?.fileId;
@@ -106,8 +228,8 @@ function AdsNetworkCampaignForm() {
         title: title.trim(),
         description: description.trim() || undefined,
         mediaFileId: fileId,
-        mediaType: file.type.startsWith('video') ? 'video' : 'image',
-        mediaMimeType: file.type,
+        mediaType: creative.type.startsWith('video') ? 'video' : 'image',
+        mediaMimeType: creative.type,
         suggestedCaption: caption.trim() || undefined,
         contactWhatsapp: contactWhatsapp.trim() || undefined,
         contactPhone: contactPhone.trim() || undefined,
@@ -163,14 +285,19 @@ function AdsNetworkCampaignForm() {
 
       <div className="max-w-2xl mx-auto">
         <motion.div variants={headerDrop}>
-          <h1 className="text-2xl font-bold text-gray-900 mt-2">Nouvelle annonce</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mt-2">
+            {isEditing ? (targetingOnly ? 'Modifier le ciblage' : 'Modifier l\'annonce') : 'Nouvelle annonce'}
+          </h1>
         </motion.div>
 
         <div className="bg-blue-50 border border-border rounded-xl p-3 mt-3 text-sm text-blue-900 flex items-start gap-2">
           <HugeiconsIcon icon={Shield01Icon} className="mt-0.5 shrink-0" />
           <span>
-            Votre annonce sera relue par notre équipe avant d'être diffusée. Vous
-            paierez une fois qu'elle sera validée.
+            {targetingOnly
+              ? "Cette campagne est en diffusion : des diffuseurs l'ont déjà publiée, donc le visuel et le budget ne changent plus. Vous pouvez encore élargir le ciblage pour atteindre vos vues."
+              : budgetLocked
+                ? 'Cette campagne est déjà payée. Vous pouvez tout modifier sauf le budget — aucun nouveau paiement ne sera demandé.'
+                : "Votre annonce sera relue par notre équipe avant d'être diffusée."}
           </span>
         </div>
 
@@ -369,6 +496,19 @@ function AdsNetworkCampaignForm() {
           </motion.div>
         </motion.div>
 
+        {/* The audience check. Shown while the filters are still being chosen,
+            because after payment it is far too late to be useful. */}
+        {reach && (
+          <div
+            className={`rounded-xl p-3 text-sm mt-4 border ${reach.sufficient === false
+              ? 'bg-amber-50 border-amber-300 text-amber-900'
+              : 'bg-green-50 border-green-200 text-green-900'
+              }`}
+          >
+            {reach.message}
+          </div>
+        )}
+
         {error && (
           <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800 mt-4">{error}</div>
         )}
@@ -379,7 +519,9 @@ function AdsNetworkCampaignForm() {
           className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-5 disabled:bg-gray-400 flex items-center justify-center gap-2"
         >
           {submitting && <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />}
-          Envoyer à la validation
+          {isEditing
+            ? (existing?.status === 'rejected' ? 'Enregistrer et renvoyer en validation' : 'Enregistrer les modifications')
+            : 'Envoyer à la validation'}
         </button>
       </div>
     </motion.div>

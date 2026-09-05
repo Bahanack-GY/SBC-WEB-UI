@@ -259,6 +259,8 @@ function AppContent() {
           <Route path="/ads-network/diffuseur" element={<AdsNetworkDiffuseur />} />
           <Route path="/ads-network/annonceur/onboarding" element={<AdsNetworkAnnonceurOnboarding />} />
           <Route path="/ads-network/annonceur/nouvelle-campagne" element={<AdsNetworkCampaignForm />} />
+          {/* Same form, prefilled. What it lets you change depends on the status. */}
+          <Route path="/ads-network/annonceur/campagne/:id/modifier" element={<AdsNetworkCampaignForm />} />
           <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
           </Route>
         </Route>

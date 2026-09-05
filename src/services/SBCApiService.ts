@@ -2203,9 +2203,23 @@ export class SBCApiService extends ApiService {
     return await this.get(`/advertising/campaigns/${campaignId}/performance`);
   }
 
-  /** Only a draft or a rejected campaign can be edited. */
+  /**
+   * Editable until the campaign is over: a draft, a refusal, and a paid campaign
+   * awaiting validation take any field except the budget (that money already
+   * moved). A campaign already being diffused takes ONLY `targeting` — its
+   * creative is frozen because verification matches diffuseurs' posts against it.
+   */
   async updateAdsCampaign(campaignId: string, body: Record<string, unknown>): Promise<ApiResponse> {
     return await this.patch(`/advertising/campaigns/${campaignId}`, { body });
+  }
+
+  /**
+   * How many diffuseurs a targeting actually reaches, and roughly how many views
+   * they could deliver. Called as the annonceur edits their filters so an
+   * unservable audience is caught before they pay for it.
+   */
+  async getAdsReach(body: { targeting: Record<string, unknown>; amount?: number; targetUniqueViews?: number }): Promise<ApiResponse> {
+    return await this.post('/advertising/campaigns/reach', { body });
   }
 
   /** Sends the creative to moderation. Nothing is diffused before an admin approves. */
