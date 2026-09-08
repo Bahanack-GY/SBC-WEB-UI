@@ -17,6 +17,8 @@ interface StatusFeedProps {
 export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateClick, refreshTrigger }) => {
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [loading, setLoading] = useState(true);
+  /** Server-side feature switch — see the note in StoriesBar. */
+  const [unavailable, setUnavailable] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<StatusCategory | 'all'>('all');
 
   const fetchStatuses = async () => {
@@ -24,7 +26,12 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
       setLoading(true);
       const category = selectedCategory === 'all' ? undefined : selectedCategory;
       const response = await sbcApiService.getStatuses(1, 50, category);
-      console.log('StatusFeed - API response:', response);
+
+      if (response.body?.code === 'STATUS_FEATURE_DISABLED') {
+        setUnavailable(true);
+        setStatuses([]);
+        return;
+      }
 
       if (response.body.success && response.body.data) {
         console.log('StatusFeed - Setting statuses:', response.body.data);
@@ -51,6 +58,19 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
       color: config.color,
     })),
   ];
+
+  // Unlike the stories rail, this is a whole tab — so it says why it is empty
+  // rather than rendering nothing and looking broken.
+  if (unavailable) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-white p-8 text-center">
+        <p className="font-medium text-gray-900">Les statuts sont temporairement indisponibles</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Cette fonctionnalité est en maintenance. Elle reviendra bientôt.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">

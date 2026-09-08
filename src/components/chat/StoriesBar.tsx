@@ -40,12 +40,26 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
   const { user } = useAuth();
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  /**
+   * The server has switched the feature off for this account.
+   *
+   * Driven by the API's answer rather than by checking the role here: the gate
+   * lives in chat-service and is controlled by an env flag, so reading it from
+   * the response means the bar reappears the moment the flag is flipped, with no
+   * redeploy and no second copy of the rule to keep in sync.
+   */
+  const [unavailable, setUnavailable] = useState(false);
 
   const fetchStories = async () => {
     try {
       setLoading(true);
       const response = await sbcApiService.getStatuses(1, 100);
-      console.log('StoriesBar - Statuses API response:', response);
+
+      if (response.body?.code === 'STATUS_FEATURE_DISABLED') {
+        setUnavailable(true);
+        setStoryGroups([]);
+        return;
+      }
 
       if (response.body.success && response.body.data) {
         // Group statuses by userId
@@ -103,6 +117,10 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
   useEffect(() => {
     fetchStories();
   }, [refreshTrigger]);
+
+  // Render nothing at all rather than an empty rail: an account that cannot use
+  // the feature should not see a permanently blank strip it can never fill.
+  if (unavailable) return null;
 
   if (loading && storyGroups.length === 0) {
     return (
