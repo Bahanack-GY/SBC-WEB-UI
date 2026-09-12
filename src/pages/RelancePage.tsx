@@ -2,7 +2,10 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Cancel01Icon, ChartBarLineIcon, CheckmarkCircle02Icon, Cursor01Icon, Delete02Icon, EyeIcon, Mail01Icon, MailOpen01Icon, PauseIcon, PlayIcon, PlusSignIcon, RefreshIcon, SendIcon, Settings02Icon, SmsCodeIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
+import {
+    pageFade, headerDrop, sequence,
+    slideLeft, slideRight, popIn, unfold, riseFar,
+} from '../utils/motion';
 import { Link } from 'react-router-dom';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
@@ -694,20 +697,22 @@ function RelancePage() {
           </button>
         </motion.div>
 
-        {/* The cards below arrive one after another rather than all at once, which
-            is what every other screen in the app does — see utils/motion. */}
-        <motion.div variants={listContainer} initial="hidden" animate="show">
+        {/* Section by section, each arriving its own way. The stagger is slow
+            enough to read as one-two-three rather than a single blurred move. */}
+        <motion.div variants={sequence} initial="hidden" animate="show">
 
         {/* Low-balance banners (above the fold) */}
-        <RelanceLowBalanceBanner
-          emailBalance={emailBalance}
-          smsBalance={smsBalance}
-          hasSmsAccess={hasSmsAccess}
-          onRecharge={(channel) => setShowPacksModal(channel)}
-        />
+        <motion.div variants={unfold}>
+          <RelanceLowBalanceBanner
+            emailBalance={emailBalance}
+            smsBalance={smsBalance}
+            hasSmsAccess={hasSmsAccess}
+            onRecharge={(channel) => setShowPacksModal(channel)}
+          />
+        </motion.div>
 
         {/* Credit balance card */}
-        <motion.div variants={listItem} className="bg-primary relance-balance-card rounded-2xl p-4 text-white mb-4" data-tour="balance-card">
+        <motion.div variants={popIn} className="bg-primary relance-balance-card rounded-2xl p-4 text-white mb-4" data-tour="balance-card">
           <div className="flex items-center justify-between gap-3">
             <div className="flex-1">
               <div className="text-xs uppercase tracking-wide opacity-80 mb-1">Crédits Relance</div>
@@ -744,7 +749,7 @@ function RelancePage() {
         </motion.div>
 
         {/* Status Card */}
-        <motion.div variants={listItem} className={`bg-primary relance-status-card rounded-2xl p-4 text-white mb-4 ${
+        <motion.div variants={slideLeft} className={`bg-primary relance-status-card rounded-2xl p-4 text-white mb-4 ${
  status?.enabled
  ? ' '
  : ' '
@@ -785,13 +790,15 @@ function RelancePage() {
         </motion.div>
 
         {/* Daily pacing setting */}
-        <RelancePacingCard
-          initialValue={status?.maxMessagesPerDay}
-          onSaved={() => fetchStatus()}
-        />
+        <motion.div variants={slideRight}>
+          <RelancePacingCard
+            initialValue={status?.maxMessagesPerDay}
+            onSaved={() => fetchStatus()}
+          />
+        </motion.div>
 
         {/* Controls Card */}
-        <motion.div variants={listItem} className="relance-controls bg-white rounded-2xl border border-border p-4 mb-6">
+        <motion.div variants={riseFar} className="relance-controls bg-white rounded-2xl border border-border p-4 mb-6">
           <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
             <HugeiconsIcon icon={Settings02Icon} className="text-gray-600" />
             Contrôles
@@ -886,7 +893,7 @@ function RelancePage() {
 
         {/* Statistics Cards - Default Relance only */}
         {defaultStats && (
-          <motion.div variants={listItem} className="relance-stats mb-6">
+          <motion.div variants={slideLeft} className="relance-stats mb-6">
             <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
               <HugeiconsIcon icon={SendIcon} className="text-blue-500" />
               Statistiques (Relance par défaut)
@@ -1102,7 +1109,7 @@ function RelancePage() {
         )}
 
         {/* Campaigns Section */}
-        <motion.div variants={listItem} className="relance-campaigns mb-4">
+        <motion.div variants={unfold} className="relance-campaigns mb-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-bold">Campagnes</h3>
             <button
