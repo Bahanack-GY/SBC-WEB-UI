@@ -27,7 +27,9 @@ export default function MyTicketScreen() {
     if (loading) return <div className="p-8 text-center text-gray-500">Chargement...</div>;
     if (error || !data) return <div className="p-8 text-center text-red-600">{error || 'Introuvable'}</div>;
 
-    const { ticket, event, ticketType, qrImageDataUrl } = data;
+    const { ticket, event, ticketType, qrImageDataUrl, activeResaleListing } = data;
+    const canResell = ticket.status === 'ISSUED' && event?.resaleEnabled && !activeResaleListing;
+    const isListed = Boolean(activeResaleListing);
 
     return (
         <div className="min-h-screen bg-white">
@@ -57,6 +59,34 @@ export default function MyTicketScreen() {
                     <div className="text-xs text-gray-500">{event?.address}</div>
                     <div className="text-xs text-gray-500 mt-2">Type : {ticketType?.name}</div>
                 </div>
+
+                {isListed && (
+                    <div className="border border-amber-200 bg-amber-50 rounded-2xl p-4 text-sm">
+                        <div className="font-semibold text-amber-900">Ce billet est en revente</div>
+                        <div className="text-xs text-amber-800 mt-1">
+                            Prix demandé : {activeResaleListing.askingPrice?.toLocaleString('fr-FR')} XAF
+                        </div>
+                        <button
+                            onClick={async () => {
+                                if (!activeResaleListing?._id) return;
+                                await sbcApiService.cancelMyResaleListing(activeResaleListing._id);
+                                window.location.reload();
+                            }}
+                            className="mt-3 text-xs bg-white border border-amber-300 text-amber-800 font-medium px-3 py-1.5 rounded-lg"
+                        >
+                            Retirer l'annonce
+                        </button>
+                    </div>
+                )}
+
+                {canResell && (
+                    <button
+                        onClick={() => navigate(`/events/mes-billets/${ticket._id}/revendre`)}
+                        className="w-full border border-[#115CF6] text-[#115CF6] font-semibold py-3 rounded-xl"
+                    >
+                        Revendre mon billet
+                    </button>
+                )}
             </div>
         </div>
     );

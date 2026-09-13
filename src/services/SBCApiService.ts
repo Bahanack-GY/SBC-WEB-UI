@@ -2551,6 +2551,27 @@ export class SBCApiService extends ApiService {
     return await this.post('/tickets/scan', { body });
   }
 
+  // ---- Resale marketplace ----
+  async listPublicResale(params: { eventId?: string; limit?: number; skip?: number } = {}): Promise<ApiResponse> {
+    return await this.get('/tickets/public/resale', { requiresAuth: false, queryParameters: params });
+  }
+
+  async createResaleListing(ticketId: string, askingPrice: number): Promise<ApiResponse> {
+    return await this.post(`/tickets/me/tickets/${ticketId}/resale`, { body: { askingPrice } });
+  }
+
+  async listMyResaleListings(): Promise<ApiResponse> {
+    return await this.get('/tickets/me/resale');
+  }
+
+  async cancelMyResaleListing(listingId: string): Promise<ApiResponse> {
+    return await this.delete(`/tickets/me/resale/${listingId}`);
+  }
+
+  async buyResaleListing(listingId: string, holder: { firstName: string; lastName: string; phone: string; email?: string }): Promise<ApiResponse> {
+    return await this.post(`/tickets/resale/${listingId}/buy`, { body: { holder } });
+  }
+
   /** Organizer's dedicated event earnings and the min transfer threshold. */
   async getEventOrganizerBalance(): Promise<ApiResponse> {
     return await this.get('/event-organizer-balance');

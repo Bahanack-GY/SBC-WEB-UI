@@ -99,10 +99,16 @@ export default function Events() {
                     </button>
                 </div>
 
-                <div>
+                <div className="grid grid-cols-2 gap-2">
+                    <button
+                        onClick={() => navigate('/events/revente')}
+                        className="bg-gray-100 text-gray-800 font-medium py-3 rounded-xl"
+                    >
+                        Marketplace revente
+                    </button>
                     <button
                         onClick={() => navigate('/events/organizer')}
-                        className="w-full bg-gray-100 text-gray-800 font-medium py-3 rounded-xl"
+                        className="bg-gray-100 text-gray-800 font-medium py-3 rounded-xl"
                     >
                         Espace organisateur
                     </button>

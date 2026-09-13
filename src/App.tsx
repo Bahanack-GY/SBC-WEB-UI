@@ -67,6 +67,8 @@ import MyTicketScreen from './pages/MyTicketScreen'
 import OrganizerHub from './pages/OrganizerHub'
 import OrganizerEventForm from './pages/OrganizerEventForm'
 import OrganizerScanner from './pages/OrganizerScanner'
+import TicketResaleForm from './pages/TicketResaleForm'
+import ResaleMarket from './pages/ResaleMarket'
 
 function AppContent() {
   const location = useLocation();
@@ -263,8 +265,10 @@ function AppContent() {
               bookmarked sub-page must not slip past it. */}
           {/* SBC Event — ticketing + resale */}
           <Route path="/events" element={<Events />} />
+          <Route path="/events/revente" element={<ResaleMarket />} />
           <Route path="/events/mes-billets" element={<MyTickets />} />
           <Route path="/events/mes-billets/:id" element={<MyTicketScreen />} />
+          <Route path="/events/mes-billets/:id/revendre" element={<TicketResaleForm />} />
           <Route path="/events/organizer" element={<OrganizerHub />} />
           <Route path="/events/organizer/nouveau" element={<OrganizerEventForm />} />
           <Route path="/events/organizer/:id" element={<OrganizerEventForm />} />
