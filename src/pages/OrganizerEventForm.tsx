@@ -20,6 +20,10 @@ export default function OrganizerEventForm() {
     const [endsAt, setEndsAt] = useState('');
     const [resaleEnabled, setResaleEnabled] = useState(true);
     const [maxResalePricePct, setMaxResalePricePct] = useState<string>('120');
+    const [posterFileId, setPosterFileId] = useState<string>('');
+    const [posterFile, setPosterFile] = useState<File | null>(null);
+    const [posterPreview, setPosterPreview] = useState<string>('');
+    const [uploadingPoster, setUploadingPoster] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [event, setEvent] = useState<any>(null);
@@ -48,16 +52,40 @@ export default function OrganizerEventForm() {
                     setEndsAt(toInputDate(found.endsAt));
                     setResaleEnabled(found.resaleEnabled);
                     setMaxResalePricePct(String(found.maxResalePricePct ?? 120));
+                    if (found.posterFileId) {
+                        setPosterFileId(found.posterFileId);
+                        setPosterPreview(sbcApiService.generateThumbnailUrl(found.posterFileId, 512));
+                    }
                 }
             });
             sbcApiService.listEventTicketTypes(id).then((r) => r.apiReportedSuccess && setTicketTypes(r.body?.data || []));
         }
     }, [id, isEdit]);
 
+    const pickPoster = (f: File | null) => {
+        setPosterFile(f);
+        setPosterPreview(f ? URL.createObjectURL(f) : (posterFileId ? sbcApiService.generateThumbnailUrl(posterFileId, 512) : ''));
+    };
+
     const save = async () => {
         setError(null); setSubmitting(true);
         try {
-            const payload = {
+            let uploadedPosterId = posterFileId;
+            if (posterFile) {
+                setUploadingPoster(true);
+                const up = await sbcApiService.uploadFile(posterFile);
+                setUploadingPoster(false);
+                const fid = up.body?.data?.fileId;
+                if (!up.isSuccessByStatusCode || !fid) {
+                    setError(up.message || "L'affiche n'a pas pu être envoyée. Réessayez.");
+                    return;
+                }
+                uploadedPosterId = fid;
+                setPosterFileId(fid);
+                setPosterFile(null);
+            }
+
+            const payload: Record<string, any> = {
                 title: title.trim(),
                 description: description.trim(),
                 category,
@@ -69,13 +97,15 @@ export default function OrganizerEventForm() {
                 resaleEnabled,
                 maxResalePricePct: maxResalePricePct ? parseFloat(maxResalePricePct) : null,
             };
+            if (uploadedPosterId) payload.posterFileId = uploadedPosterId;
+
             const res = isEdit && id
                 ? await sbcApiService.updateOrganizerEvent(id, payload)
                 : await sbcApiService.createOrganizerEvent(payload);
             if (!res.apiReportedSuccess) { setError(res.message || 'Erreur.'); return; }
             setEvent(res.body?.data);
             if (!isEdit) navigate(`/events/organizer/${res.body?.data._id}`, { replace: true });
-        } catch (e: any) { setError(e?.message || 'Erreur réseau.'); }
+        } catch (e: any) { setError(e?.message || 'Erreur réseau.'); setUploadingPoster(false); }
         finally { setSubmitting(false); }
     };
 
@@ -109,6 +139,30 @@ export default function OrganizerEventForm() {
             </div>
 
             <div className="p-4 space-y-3">
+                <label className="block cursor-pointer border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 hover:border-[#115CF6] transition">
+                    {posterPreview ? (
+                        <div className="relative">
+                            <img src={posterPreview} alt="Affiche" className="w-full h-48 object-cover" />
+                            <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                {posterFile ? 'Nouvelle affiche · cliquez pour changer' : 'Cliquez pour changer'}
+                            </div>
+                        </div>
+                    ) : (
+                        <div className="p-8 text-center text-sm text-gray-500">
+                            <div className="text-2xl">🖼️</div>
+                            <div className="mt-2">Ajouter une affiche</div>
+                            <div className="text-xs text-gray-400 mt-1">Format image, ratio conseillé 16/9 ou 4/5</div>
+                        </div>
+                    )}
+                    <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => pickPoster(e.target.files?.[0] ?? null)}
+                    />
+                </label>
+                {uploadingPoster && <div className="text-xs text-gray-500 text-center">Envoi de l'affiche...</div>}
+
                 <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titre" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" rows={4} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <div className="grid grid-cols-2 gap-2">
