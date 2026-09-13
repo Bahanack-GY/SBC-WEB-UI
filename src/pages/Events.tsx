@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { sbcApiService } from '../services/SBCApiService';
 import BackButton from '../components/common/BackButton';
+import { markEventsSeen } from '../components/events/NewEventPopup';
 
 interface EventListItem {
     _id: string;
@@ -43,8 +44,16 @@ export default function Events() {
                 city: opts.city?.trim() || undefined,
                 limit: 30,
             });
-            if (res.apiReportedSuccess && res.body?.data?.items) setItems(res.body?.data.items);
-            else setError(res.message || 'Impossible de charger les événements.');
+            if (res.apiReportedSuccess && res.body?.data?.items) {
+                const list: EventListItem[] = res.body.data.items;
+                setItems(list);
+                // Bump the "seen" marker to the newest event id so the Home
+                // popup stops nagging about it.
+                if (list.length > 0) {
+                    const newest = [...list].sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())[0];
+                    markEventsSeen(newest._id);
+                }
+            } else setError(res.message || 'Impossible de charger les événements.');
         } catch (e: any) {
             setError(e?.message || 'Erreur réseau.');
         } finally {

@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Mail01Icon, ArrowRight01Icon, StatusIcon } from '@hugeicons/core-free-icons';
+import { Mail01Icon, ArrowRight01Icon, StatusIcon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
 import { useLoveStatus, loveWindowLabel } from '../../hooks/useSbcLove';
 
@@ -54,6 +54,11 @@ function ServicesGrid({
       key: 'ads', label: 'Ads Network', subtitle: 'Gagnez en diffusant',
       img: adsImg, tint: 'bg-primary-soft',
       onClick: () => navigate('/ads-network'),
+    },
+    {
+      key: 'events', label: 'Événements', subtitle: 'Billetterie SBC',
+      icon: Ticket01Icon, tint: 'bg-primary-soft text-primary',
+      onClick: () => navigate('/events'),
     },
     {
       key: 'statut', label: 'SBC Statut', subtitle: 'Publiez vos statuts',

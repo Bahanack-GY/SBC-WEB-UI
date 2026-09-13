@@ -18,6 +18,7 @@ import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import RelancePacksModal from '../components/relance/RelancePacksModal';
 import { useRelance } from '../contexts/RelanceContext';
+import NewEventPopup from '../components/events/NewEventPopup';
 
 // Define interfaces
 type FormationDecoration = 'orange' | 'gold' | 'new';
@@ -222,6 +223,7 @@ function Home() {
 
   return (
     <ProtectedRoute>
+      <NewEventPopup />
       <div className="p-4 flex flex-col gap-6">
         <div className="home-header">
           <ProfileHeaderCard
