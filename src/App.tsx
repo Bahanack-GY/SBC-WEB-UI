@@ -25,6 +25,7 @@ import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import Classement from './pages/Classement'
+import Formations from './pages/Formations'
 import InstallPrompt from './components/pwa/InstallPrompt'
 import Header from './components/common/Header'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
@@ -145,13 +146,18 @@ function AppContent() {
     }
   }, [location.pathname, isAuthenticated, authLoading]);
 
-  // Subscribed users land on / when they hit /connexion (and similarly leave
-  // /abonnement when they activate).
+  // Subscribed users land on / when they hit /connexion, and leave /abonnement
+  // at the moment they activate — NOT whenever they are subscribed. Bouncing
+  // every subscriber off /abonnement made the page unreachable from the sidebar
+  // and locked Classique members out of the upgrade to Ciblé.
+  const wasSubscribed = useRef<boolean | null>(null);
   useEffect(() => {
     if (!isAuthenticated || subscriptionLoading) return;
+    const justActivated = wasSubscribed.current === false && isSubscribed;
+    wasSubscribed.current = isSubscribed;
     if (location.pathname === '/connexion') {
       window.location.replace(isSubscribed ? '/' : '/abonnement');
-    } else if (location.pathname === '/abonnement' && isSubscribed) {
+    } else if (location.pathname === '/abonnement' && justActivated) {
       window.location.replace('/');
     }
   }, [isAuthenticated, subscriptionLoading, isSubscribed, location.pathname]);
@@ -241,6 +247,7 @@ function AppContent() {
           <Route path="/modifier-produit/:id" element={<ModifierProduit />} />
           <Route path="/filleuls" element={<MesFilleuls />} />
           <Route path="/classement" element={<Classement />} />
+          <Route path="/formations" element={<Formations />} />
           <Route path="/partenaire" element={<PartnerSpace />} />
           <Route path="/relance" element={<RelancePage />} />
           <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
