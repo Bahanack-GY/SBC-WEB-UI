@@ -1,10 +1,16 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { MinusSignCircleIcon } from '@hugeicons/core-free-icons';
+import {
+    WhatsappIcon,
+    Tick02Icon,
+    CheckmarkCircle02Icon,
+    ArrowRight01Icon,
+    Crown02Icon,
+    ChartIncreaseIcon,
+    LockIcon,
+} from '@hugeicons/core-free-icons';
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "motion/react";
-import iconOne from "../assets/icon/Growth.png";
-import iconTwo from "../assets/icon/analyse.png";
-import iconContact from "../assets/icon/contact.png";
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import BackButton from "../components/common/BackButton";
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -15,18 +21,48 @@ import { useApiCache } from '../hooks/useApiCache';
 import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import { useAuth } from '../contexts/AuthContext';
+import { cn, fcfa } from '../lib/utils';
+
+// ponytail: marketing rates shown on the cards, by plan. advertising-service does
+// NOT read the plan today — it pays every diffuseur DIFFUSEUR_RATES per campaign
+// day (1 + 0.5 + 0.25 = 1.75 FCFA max per view). Make the backend plan-aware
+// before promising CIBLE its 2 FCFA, and keep these two in sync.
+const VIEW_RATE: Record<string, number> = { CLASSIQUE: 1.75, CIBLE: 2 };
+const EXAMPLE_VIEWS = 1000;
+
+const TRAININGS = ['Trading', 'Achat en Chine', 'Art oratoire', 'Marketing digital', 'Bots WhatsApp'];
+
+const PLAN_COPY: Record<string, { title: string; pitch: string; features: string[]; extraTraining?: string }> = {
+    CLASSIQUE: {
+        title: 'Pack Classique',
+        pitch: 'Tout pour démarrer et gagner dès vos premiers statuts.',
+        features: [
+            'Contacts WhatsApp ciblés par pays',
+            'Accès à la marketplace SBC',
+        ],
+    },
+    CIBLE: {
+        title: 'Pack Ciblé',
+        pitch: 'Le meilleur tarif par vue et un ciblage précis de vos contacts.',
+        features: [
+            'Ciblage avancé : pays, sexe, âge, profession, ville et centres d\'intérêt',
+        ],
+        extraTraining: 'SBC IA Creator',
+    },
+};
+
+const rate = (n: number) => n.toLocaleString('fr-FR');
 
 function Abonnement() {
-
+    const navigate = useNavigate();
+    const reduceMotion = useReducedMotion();
     const [purchasing, setPurchasing] = useState<string | null>(null);
     const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
     const { user } = useAuth();
 
-    // Get user balance for negative balance modal (already available from AuthContext)
     const balance = user?.balance || 0;
 
-    // Use cached API calls to prevent duplicate requests
     const {
         data: plans,
         loading: plansLoading,
@@ -37,19 +73,17 @@ function Abonnement() {
         async () => {
             const response = await sbcApiService.getSubscriptionPlans();
             const allPlans = handleApiResponse(response) || [];
-            // Filter to show only REGISTRATION category plans (CLASSIQUE, CIBLE)
-            // Exclude FEATURE category plans (RELANCE) - those are shown in Marketing page
+            // Registration plans only. RELANCE is a feature plan, sold on the Marketing page.
             return allPlans.filter((plan: SubscriptionPlan) =>
                 plan.type === 'CLASSIQUE' || plan.type === 'CIBLE'
             );
         },
-        { staleTime: 300000 } // 5 minutes
+        { staleTime: 300000 }
     );
 
     const {
         data: currentSubscriptionData,
         loading: subscriptionLoading,
-        // error: subscriptionError,
         refetch: refetchSubscription
     } = useApiCache(
         'current-subscription',
@@ -57,57 +91,71 @@ function Abonnement() {
             try {
                 const response = await sbcApiService.getCurrentSubscription();
                 const result = handleApiResponse(response);
-                // The API returns { subscriptions: [...] }, so we extract the array
                 return result?.subscriptions || [];
-            } catch (err) {
+            } catch {
                 return [];
             }
         },
-        { staleTime: 120000 } // 2 minutes
+        { staleTime: 120000 }
     );
 
     const loading = plansLoading || subscriptionLoading;
-    const error = plansError; // Don't include subscription error as it's optional
+    const error = plansError;
     const activeSubscriptions: Subscription[] = currentSubscriptionData || [];
 
     const hasClassicSub = activeSubscriptions.some(sub => sub.subscriptionType === 'CLASSIQUE' && sub.status === 'active');
     const hasCibleSub = activeSubscriptions.some(sub => sub.subscriptionType === 'CIBLE' && sub.status === 'active');
+
+    const planList: SubscriptionPlan[] = plans || [];
+    const classicPrice = planList.find(p => p.type === 'CLASSIQUE')?.price;
+    const ciblePrice = planList.find(p => p.type === 'CIBLE')?.price;
+    const upgradePrice = classicPrice !== undefined && ciblePrice !== undefined ? ciblePrice - classicPrice : undefined;
+
+    // The pack the member holds. CIBLE includes CLASSIQUE, so it wins when both are active.
+    const activeType = hasCibleSub ? 'CIBLE' : hasClassicSub ? 'CLASSIQUE' : null;
+    const activeSub = activeSubscriptions.find(sub => sub.subscriptionType === activeType && sub.status === 'active');
+    const activeUntil = (sub: Subscription) => {
+        const end = new Date(sub.endDate);
+        // Lifetime packs are stored with a year-9999 end date.
+        return Number.isNaN(end.getTime()) || end.getFullYear() >= 9000
+            ? 'à vie'
+            : `jusqu'au ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    };
+    // The member's own pack comes first, so the page opens on what they have.
+    const orderedPlans = activeType
+        ? [...planList].sort((a, b) => Number(b.type === activeType) - Number(a.type === activeType))
+        : planList;
 
     const fetchSubscriptionData = () => {
         refetchPlans();
         refetchSubscription();
     };
 
-    // Check for negative balance and show notification
     useEffect(() => {
         if (balance < 0) {
-            // Show modal every time user logs in or signs up (no restrictions)
             setShowNegativeBalanceModal(true);
         }
     }, [balance, user?._id, user?.balance]);
 
+    const openPayment = (sessionId: string) => {
+        const link = document.createElement('a');
+        link.href = sbcApiService.generatePaymentUrl(sessionId);
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
     const handlePurchase = async (planType: string) => {
         try {
             setPurchasing(planType);
-            const response = await sbcApiService.purchaseSubscription(planType);
-            const data = handleApiResponse(response);
-
+            const data = handleApiResponse(await sbcApiService.purchaseSubscription(planType));
             const sessionId = data?.paymentDetails?.sessionId;
-            if (sessionId) {
-                const paymentUrl = sbcApiService.generatePaymentUrl(sessionId);
-                // Create a temporary link element and trigger click
-                const link = document.createElement('a');
-                link.href = paymentUrl;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                await fetchSubscriptionData();
-            }
+            if (sessionId) openPayment(sessionId);
+            else await fetchSubscriptionData();
         } catch (err) {
-            setErrorModal({ show: true, message: err instanceof Error ? err.message : 'Paiement échoué' });
+            setErrorModal({ show: true, message: err instanceof Error ? err.message : 'Le paiement n\'a pas abouti.' });
         } finally {
             setPurchasing(null);
         }
@@ -116,303 +164,287 @@ function Abonnement() {
     const handleUpgrade = async () => {
         try {
             setPurchasing('upgrade');
-            const response = await sbcApiService.upgradeSubscription();
-            const data = handleApiResponse(response);
-
+            const data = handleApiResponse(await sbcApiService.upgradeSubscription());
             const sessionId = data?.paymentDetails?.sessionId;
-            if (sessionId) {
-                const paymentUrl = sbcApiService.generatePaymentUrl(sessionId);
-                // Create a temporary link element and trigger click
-                const link = document.createElement('a');
-                link.href = paymentUrl;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-            } else {
-                await fetchSubscriptionData();
-            }
+            if (sessionId) openPayment(sessionId);
+            else await fetchSubscriptionData();
         } catch (err) {
-            setErrorModal({ show: true, message: err instanceof Error ? err.message : 'Mise à niveau échouée' });
+            setErrorModal({ show: true, message: err instanceof Error ? err.message : 'La mise à niveau n\'a pas abouti.' });
         } finally {
             setPurchasing(null);
         }
     };
 
-    const getSubscriptionButton = (plan: SubscriptionPlan) => {
-        const isPurchasing = purchasing === plan.type || (plan.type === 'CIBLE' && purchasing === 'upgrade');
+    /** 'active' | 'included' (covered by CIBLE) | 'upgrade' | 'buy' */
+    const planState = (type: string) => {
+        if (type === 'CIBLE') return hasCibleSub ? 'active' : hasClassicSub ? 'upgrade' : 'buy';
+        return hasCibleSub ? 'included' : hasClassicSub ? 'active' : 'buy';
+    };
 
-        if (hasCibleSub) {
+    const primaryBtn = 'w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 disabled:cursor-not-allowed';
+
+    const renderAction = (plan: SubscriptionPlan) => {
+        const state = planState(plan.type);
+        const shortName = plan.type === 'CIBLE' ? 'Ciblé' : 'Classique';
+
+        if (state === 'active') {
             return (
-                <button className="bg-green-500 text-white rounded-xl px-4 py-2 font-bold cursor-default">
-                    Actif
+                <button onClick={() => navigate('/ads-network')} className={cn(primaryBtn, 'bg-primary text-white hover:bg-primary-hover')}>
+                    Commencer à gagner avec mes statuts
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
                 </button>
             );
         }
-
-        if (hasClassicSub) {
-            if (plan.type === 'CLASSIQUE') {
-                return (
-                    <button className="bg-green-500 text-white rounded-xl px-4 py-2 font-bold cursor-default">
-                        Actif
-                    </button>
-                );
-            }
-            if (plan.type === 'CIBLE') {
-                return (
-                    <button
-                        onClick={handleUpgrade}
-                        disabled={isPurchasing}
-                        className="bg-purple-700 text-white rounded-xl px-4 py-2 font-bold hover:bg-purple-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isPurchasing ? 'Mise à niveau...' : 'Mettre à niveau'}
-                    </button>
-                );
-            }
+        if (state === 'included') {
+            return (
+                <p className="flex items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-3 text-sm font-medium text-ink-2">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-success" />
+                    Inclus dans votre Pack Ciblé
+                </p>
+            );
         }
-
+        if (state === 'upgrade') {
+            const busy = purchasing === 'upgrade';
+            return (
+                <div className="flex flex-col gap-1.5">
+                    <button onClick={handleUpgrade} disabled={busy} className={cn(primaryBtn, 'bg-primary text-white hover:bg-primary-hover')}>
+                        {busy ? 'Redirection vers le paiement…' : `Passer au Ciblé${upgradePrice !== undefined ? ` · ${fcfa(upgradePrice)}` : ''}`}
+                    </button>
+                    <p className="text-center text-xs text-ink-2">Vous ne payez que la différence.</p>
+                </div>
+            );
+        }
+        const busy = purchasing === plan.type;
+        const featured = plan.type === 'CIBLE';
         return (
             <button
                 onClick={() => handlePurchase(plan.type)}
-                disabled={isPurchasing}
-                className="bg-blue-700 text-white rounded-xl px-4 py-2 font-bold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={busy || purchasing !== null}
+                className={cn(
+                    primaryBtn,
+                    featured
+                        ? 'bg-primary text-white hover:bg-primary-hover'
+                        : 'bg-surface text-primary border border-primary hover:bg-primary-soft',
+                )}
             >
-                {isPurchasing ? 'Paiement...' : 'Payer'}
+                {busy ? 'Redirection vers le paiement…' : `Choisir le ${shortName} · ${fcfa(plan.price)}`}
             </button>
         );
     };
 
+    const enter = (i: number) => reduceMotion
+        ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.15 } }
+        : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.25, ease: [0.25, 1, 0.5, 1] as const, delay: i * 0.06 } };
 
     return (
         <ProtectedRoute>
-            <div className="p-3 bg-white justify-center items-center pb-32">
-                <div className="flex items-center mb-3">
+            <div className="min-h-screen bg-bg px-4 pt-3 pb-10">
+                <div className="flex items-center mb-4">
                     <BackButton />
-                    <h3 className="text-xl font-medium text-center w-full">Abonnement</h3>
+                    <h1 className="text-xl font-semibold text-ink text-center w-full">Abonnement</h1>
                 </div>
 
+                <header className="subscription-header mb-5">
+                    {!loading && activeType ? (
+                        <>
+                            <h2 className="text-2xl font-bold text-ink leading-tight text-balance">
+                                Votre {PLAN_COPY[activeType].title} est actif
+                            </h2>
+                            <p className="mt-2 text-sm text-ink-2 text-pretty">
+                                {activeType === 'CLASSIQUE'
+                                    ? `Passez au Pack Ciblé pour gagner jusqu'à ${rate(VIEW_RATE.CIBLE)} FCFA par vue et cibler vos contacts plus finement. Vous ne payez que la différence.`
+                                    : `Vous avez le pack le plus complet. Publiez les pubs des annonceurs en statut : chaque vue vous rapporte jusqu'à ${rate(VIEW_RATE.CIBLE)} FCFA.`}
+                            </p>
+                        </>
+                    ) : (
+                        <>
+                            <h2 className="text-2xl font-bold text-ink leading-tight text-balance">
+                                Payez une fois. Vos statuts WhatsApp remboursent le reste.
+                            </h2>
+                            <p className="mt-2 text-sm text-ink-2 text-pretty">
+                                Chaque pack est à vie et vous ouvre SBC Ads Network : publiez les pubs des
+                                annonceurs en statut, et chaque vue vous rapporte de l'argent.
+                            </p>
+                        </>
+                    )}
+                </header>
+
                 {loading ? (
-                    <div className="flex flex-col gap-4 mt-6">
-                        <Skeleton height="h-28" rounded="rounded-2xl" />
-                        <Skeleton height="h-44" rounded="rounded-2xl" />
+                    <div className="flex flex-col gap-4">
+                        <Skeleton height="h-80" rounded="rounded-card" />
+                        <Skeleton height="h-96" rounded="rounded-card" />
                     </div>
                 ) : error ? (
-                    <div className="flex flex-col items-center justify-center h-[60vh] text-gray-500">
-                        <p className="text-lg mb-2 text-red-500">Erreur lors du chargement</p>
-                        <p className="text-sm mb-4">{error}</p>
-                        <button
-                            onClick={fetchSubscriptionData}
-                            className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                        >
+                    <div className="flex flex-col items-center text-center gap-3 bg-surface border border-border rounded-card px-4 py-10">
+                        <p className="text-base font-semibold text-ink">Impossible d'afficher les packs</p>
+                        <p className="text-sm text-ink-2 max-w-xs">Vérifiez votre connexion, puis réessayez.</p>
+                        <button onClick={fetchSubscriptionData} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors">
                             Réessayer
                         </button>
                     </div>
+                ) : planList.length === 0 ? (
+                    <p className="bg-surface border border-border rounded-card px-4 py-10 text-center text-sm text-ink-2">
+                        Aucun pack n'est disponible pour le moment. Revenez un peu plus tard.
+                    </p>
                 ) : (
-                    <div className="flex flex-col gap-4 mt-6 ">
-                        {!plans || plans.length === 0 ? (
-                            <div className="text-center py-8 text-gray-500">
-                                Aucun plan d'abonnement disponible
-                            </div>
-                        ) : (
-                            plans.map((plan: SubscriptionPlan, index: number) => (
-                                <motion.div
+                    <div className="flex flex-col gap-4">
+                        {orderedPlans.map((plan, index) => {
+                            const copy = PLAN_COPY[plan.type];
+                            const isCible = plan.type === 'CIBLE';
+                            const state = planState(plan.type);
+                            const viewRate = VIEW_RATE[plan.type];
+                            const trainings = copy?.extraTraining ? [...TRAININGS, copy.extraTraining] : TRAININGS;
+
+                            return (
+                                <motion.article
                                     key={plan.id}
-                                    initial={{ opacity: 0, y: 30 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: 0.1 * (index + 1) }}
-                                    className={`bg-primary rounded-2xl p-5 flex items-center justify-between relative overflow-hidden ${plan.type === 'CIBLE'
- ? ' '
- : ' '
- }`}
+                                    {...enter(index)}
+                                    aria-current={state === 'active' ? 'true' : undefined}
+                                    className={cn(
+                                        'relative bg-surface border rounded-card p-4 flex flex-col gap-4 overflow-hidden',
+                                        isCible ? 'premium-plan' : 'classic-plan',
+                                        // A coloured border is state, which the flat rules allow.
+                                        state === 'active'
+                                            ? 'border-success'
+                                            : isCible && state !== 'included' ? 'border-primary' : 'border-border',
+                                    )}
                                 >
-                                    <div className="w-full">
-                                        <div className="uppercase text-white text-xs">{plan.name}</div>
-                                        <div className="flex items-baseline gap-2">
-                                            <div className="text-2xl font-bold text-white">{plan.price.toLocaleString('fr-FR')}F</div>
-                                            {plan.duration > 365 && (
-                                                <span className="text-orange-300 font-bold text-xs align-top">à vie</span>
-                                            )}
-                                        </div>
-                                        <div className="text-white text-sm mt-1">{plan.description}</div>
+                                    {state === 'active' && activeSub && (
+                                        <p className="-mx-4 -mt-4 flex items-center gap-2 bg-success px-4 py-2 text-sm font-semibold text-white">
+                                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />
+                                            Votre pack actuel · actif {activeUntil(activeSub)}
+                                        </p>
+                                    )}
 
-                                        {/* Custom features based on subscription type */}
-                                        <ul className="mt-3 mb-2 space-y-1">
-                                            {plan.type === 'CLASSIQUE' ? (
-                                                <>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Possibilité de gagner 5000fcfa à 10.000fcfa/jour</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation en trading</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation sur l'achat en chine</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation en art oratoire</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation en marketing digital</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation création des bots WhatsApp</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Accès marketplace</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Contacts WhatsApp</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
-                                                    </li>
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Possibilité de gagner 12.500fcfa à 25.000fcfa/jour</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation en trading</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation sur l'achat en chine</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation en art oratoire</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation en marketing digital</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation création des bots WhatsApp</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Accès marketplace</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Contacts WhatsApp</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
-                                                    </li>
-                                                    <li className="flex items-center text-white text-xs gap-2">
-                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
-                                                        <span>Formation SBC IA CREATOR</span>
-                                                    </li>
-                                                </>
-                                            )}
+                                    {/* Name, price, status */}
+                                    <div className="flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <div className="flex items-center gap-2 flex-wrap">
+                                                <h3 className="text-base font-bold text-ink">{copy?.title ?? plan.name}</h3>
+                                                {isCible && state === 'buy' && (
+                                                    <span className="rounded-pill bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
+                                                        Le plus rentable
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="mt-0.5 text-sm text-ink-2 text-pretty">{copy?.pitch ?? plan.description}</p>
+                                        </div>
+                                        <div className="shrink-0 text-right">
+                                            <p className="text-xl font-bold text-ink tabular-nums">{plan.price.toLocaleString('fr-FR')}</p>
+                                            <p className="text-[11px] text-ink-2">{state === 'active' ? 'FCFA · payé' : 'FCFA · à vie'}</p>
+                                        </div>
+                                    </div>
+
+                                    {/* The earning feature leads every pack */}
+                                    {viewRate !== undefined && (
+                                        <section className="rounded-tile bg-success-soft p-3" aria-label="Gains sur vos statuts WhatsApp">
+                                            <div className="flex items-center gap-2">
+                                                <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-whatsapp text-white">
+                                                    <HugeiconsIcon icon={WhatsappIcon} size={15} />
+                                                </span>
+                                                <span className="text-sm font-semibold text-ink">Gagnez avec vos statuts WhatsApp</span>
+                                            </div>
+                                            <p className="mt-2 flex items-baseline gap-1.5">
+                                                <span className="text-sm text-ink-2">jusqu'à</span>
+                                                <span className="text-3xl font-bold text-success tabular-nums leading-none">{rate(viewRate)}</span>
+                                                <span className="text-sm font-semibold text-success">FCFA par vue</span>
+                                            </p>
+                                            <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-2">
+                                                <HugeiconsIcon icon={ChartIncreaseIcon} size={14} className="text-success shrink-0" />
+                                                <span>
+                                                    {EXAMPLE_VIEWS.toLocaleString('fr-FR')} vues sur vos statuts ={' '}
+                                                    <strong className="font-semibold text-ink">{fcfa(Math.round(EXAMPLE_VIEWS * viewRate))}</strong> pour vous
+                                                </span>
+                                            </p>
+                                        </section>
+                                    )}
+
+                                    {/* What else is inside */}
+                                    <div className="subscription-features flex flex-col gap-2.5">
+                                        {isCible && (
+                                            <p className="text-xs font-semibold text-ink-2">Tout le Pack Classique, et en plus :</p>
+                                        )}
+                                        <ul className="flex flex-col gap-2">
+                                            {(copy?.features ?? plan.features ?? []).map((feature) => (
+                                                <li key={feature} className="flex items-start gap-2 text-sm text-ink">
+                                                    <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-primary" />
+                                                    <span>{feature}</span>
+                                                </li>
+                                            ))}
+                                            <li className="flex items-start gap-2 text-sm text-ink">
+                                                <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-primary" />
+                                                <span>
+                                                    {trainings.length} formations incluses
+                                                    <span className="mt-1.5 flex flex-wrap gap-1.5">
+                                                        {trainings.map((t) => (
+                                                            <span
+                                                                key={t}
+                                                                className={cn(
+                                                                    'rounded-pill border px-2 py-0.5 text-[11px]',
+                                                                    t === copy?.extraTraining
+                                                                        ? 'border-primary bg-primary-soft font-semibold text-primary'
+                                                                        : 'border-border bg-surface-2 text-ink-2',
+                                                                )}
+                                                            >
+                                                                {t}
+                                                            </span>
+                                                        ))}
+                                                    </span>
+                                                </span>
+                                            </li>
                                         </ul>
-
-                                        <div className="mt-3">
-                                            {getSubscriptionButton(plan)}
-                                        </div>
                                     </div>
-                                    <div className="absolute right-4 bottom-4 opacity-30">
-                                        <img
-                                            src={plan.type === 'CIBLE' ? iconOne : iconTwo}
-                                            alt="icon"
-                                            className="size-40"
-                                        />
-                                    </div>
-                                </motion.div>
-                            ))
-                        )}
 
-                        {/* Winner Pack - Coming Soon - PREMIUM */}
-                        {!loading && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 30 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 }}
-                                className="bg-accent rounded-2xl p-5 relative overflow-visible border-2 border-accent mt-4"
-                            >
-                                {/* Premium badge at top */}
-                                <div className="bg-accent absolute -top-3 left-1/2 transform -translate-x-1/2 text-gray-900 text-[10px] font-bold px-4 py-1 rounded-full z-20 border-2 border-white">
-                                    👑 OFFRE PREMIUM
+                                    {renderAction(plan)}
+                                </motion.article>
+                            );
+                        })}
+
+                        {/* Winner — announced, not sold yet */}
+                        <motion.article
+                            {...enter(planList.length)}
+                            className="bg-surface-2 border border-border rounded-card p-4 flex flex-col gap-3"
+                            aria-disabled="true"
+                        >
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                        <HugeiconsIcon icon={Crown02Icon} size={18} className="text-accent" />
+                                        <h3 className="text-base font-bold text-ink">Pack Winner</h3>
+                                        <span className="inline-flex items-center gap-1 rounded-pill bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-ink">
+                                            <span className="size-1.5 rounded-pill bg-accent" aria-hidden />
+                                            Bientôt
+                                        </span>
+                                    </div>
+                                    <p className="mt-0.5 text-sm text-ink-2">Pour viser 1 million de FCFA en 3 mois.</p>
                                 </div>
-
-                                {/* Bientôt disponible badge */}
-                                <div className="absolute top-3 right-3 bg-white text-orange-600 text-[10px] font-bold px-3 py-1 rounded-full z-10 animate-pulse border border-border">
-                                    Bientôt disponible
+                                <div className="shrink-0 text-right">
+                                    <p className="text-xl font-bold text-ink-2 tabular-nums">15 000</p>
+                                    <p className="text-[11px] text-ink-2">FCFA · ou 32 $</p>
                                 </div>
-
-                                <div className="w-full mt-2">
-                                    <div className="uppercase text-white text-xs font-bold">ABONNEMENT WINNER</div>
-                                    <div className="flex items-baseline gap-2">
-                                        <div className="text-2xl font-bold text-white">15 000F</div>
-                                        <span className="text-white/90 font-medium text-xs">ou 32$</span>
-                                    </div>
-                                    <div className="text-white text-sm font-bold mt-1 mb-3">
-                                        🎯 1 million de FCFA en 3 mois
-                                    </div>
-
-                                    {/* Features List */}
-                                    <ul className="mt-3 mb-2 space-y-1">
-                                        <li className="flex items-center text-white text-xs gap-2">
-                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
-                                            <span>Accès à toutes les offres du pack ciblé</span>
-                                        </li>
-                                        <li className="flex items-center text-white text-xs gap-2">
-                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
-                                            <span>Accès à la méthode Atem (formation en création de contenu + page de capture + page de vente)</span>
-                                        </li>
-                                        <li className="flex items-center text-white text-xs gap-2">
-                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
-                                            <span>Relance des prospects automatiquement à vie</span>
-                                        </li>
-                                        <li className="flex items-center text-white text-xs gap-2">
-                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
-                                            <span>Accès au système d'affiliation</span>
-                                        </li>
-                                        <li className="flex items-center text-white text-xs gap-2">
-                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
-                                            <span>Plus de 1000 vues en statut WhatsApp</span>
-                                        </li>
-                                    </ul>
-
-                                    <div className="mt-3">
-                                        <button
-                                            disabled
-                                            className="bg-white text-orange-600 rounded-xl px-4 py-2 font-bold cursor-not-allowed opacity-80 border border-border"
-                                        >
-                                            Bientôt disponible
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="absolute right-4 bottom-4 opacity-30">
-                                    <img
-                                        src={iconContact}
-                                        alt="icon"
-                                        className="size-40"
-                                    />
-                                </div>
-                            </motion.div>
-                        )}
+                            </div>
+                            <ul className="flex flex-col gap-1.5">
+                                {[
+                                    'Tout le Pack Ciblé',
+                                    'Méthode Atem : création de contenu, page de capture et page de vente',
+                                    'Relance automatique de vos prospects, à vie',
+                                    'Plus de 1 000 vues garanties sur vos statuts',
+                                ].map((feature) => (
+                                    <li key={feature} className="flex items-start gap-2 text-sm text-ink-2">
+                                        <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-ink-3" />
+                                        <span>{feature}</span>
+                                    </li>
+                                ))}
+                            </ul>
+                            <p className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface py-3 text-sm font-medium text-ink-2">
+                                <HugeiconsIcon icon={LockIcon} size={15} />
+                                Disponible prochainement
+                            </p>
+                        </motion.article>
                     </div>
                 )}
                 <TourButton />
 
-                {/* Negative Balance Notification Modal */}
                 <NegativeBalanceNotification
                     isOpen={showNegativeBalanceModal}
                     onClose={() => setShowNegativeBalanceModal(false)}
@@ -420,38 +452,33 @@ function Abonnement() {
                     negativeBalance={Math.abs(balance)}
                 />
 
-                {/* Error Modal */}
                 <AnimatePresence>
                     {errorModal.show && (
                         <motion.div
-                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+                            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                             onClick={() => setErrorModal({ show: false, message: '' })}
                         >
                             <motion.div
-                                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
-                                initial={{ scale: 0.9, opacity: 0 }}
+                                role="alertdialog"
+                                aria-labelledby="abonnement-error-title"
+                                className="bg-surface rounded-card p-6 max-w-sm w-full border border-border text-center"
+                                initial={{ scale: 0.96, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
-                                exit={{ scale: 0.9, opacity: 0 }}
+                                exit={{ scale: 0.96, opacity: 0 }}
+                                transition={{ duration: 0.18 }}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <div className="text-center">
-                                    <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                        </svg>
-                                    </div>
-                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Erreur</h3>
-                                    <p className="text-gray-600 mb-6">{errorModal.message}</p>
-                                    <button
-                                        onClick={() => setErrorModal({ show: false, message: '' })}
-                                        className="w-full bg-blue-600 text-white py-2 px-4 rounded-xl font-medium hover:bg-blue-700 transition-colors"
-                                    >
-                                        Fermer
-                                    </button>
-                                </div>
+                                <h3 id="abonnement-error-title" className="text-lg font-semibold text-ink mb-2">Paiement interrompu</h3>
+                                <p className="text-sm text-ink-2 mb-6">{errorModal.message}</p>
+                                <button
+                                    onClick={() => setErrorModal({ show: false, message: '' })}
+                                    className="w-full rounded-xl bg-primary py-2.5 px-4 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"
+                                >
+                                    Fermer
+                                </button>
                             </motion.div>
                         </motion.div>
                     )}
