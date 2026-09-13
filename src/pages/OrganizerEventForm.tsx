@@ -165,6 +165,16 @@ export default function OrganizerEventForm() {
                         {event.status === 'PUBLISHED' && (
                             <button onClick={() => navigate(`/events/organizer/${event._id}/scanner`)} className="w-full bg-[#115CF6] text-white font-semibold py-3 rounded-xl">📱 Scanner les billets</button>
                         )}
+                        {(event.status === 'PUBLISHED' || event.status === 'COMPLETED') && (
+                            <a
+                                href={sbcApiService.getEventParticipantsCsvUrl(event._id)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block text-center w-full border border-gray-300 text-gray-700 font-medium py-2 rounded-xl text-sm"
+                            >
+                                Exporter les participants (CSV)
+                            </a>
+                        )}
                     </div>
                 )}
             </div>

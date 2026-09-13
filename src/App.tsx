@@ -69,6 +69,7 @@ import OrganizerEventForm from './pages/OrganizerEventForm'
 import OrganizerScanner from './pages/OrganizerScanner'
 import TicketResaleForm from './pages/TicketResaleForm'
 import ResaleMarket from './pages/ResaleMarket'
+import OrganizerFinances from './pages/OrganizerFinances'
 
 function AppContent() {
   const location = useLocation();
@@ -270,6 +271,7 @@ function AppContent() {
           <Route path="/events/mes-billets/:id" element={<MyTicketScreen />} />
           <Route path="/events/mes-billets/:id/revendre" element={<TicketResaleForm />} />
           <Route path="/events/organizer" element={<OrganizerHub />} />
+          <Route path="/events/organizer/finances" element={<OrganizerFinances />} />
           <Route path="/events/organizer/nouveau" element={<OrganizerEventForm />} />
           <Route path="/events/organizer/:id" element={<OrganizerEventForm />} />
           <Route path="/events/organizer/:id/scanner" element={<OrganizerScanner />} />

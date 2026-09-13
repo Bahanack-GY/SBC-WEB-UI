@@ -39,6 +39,11 @@ export default function MyTicketScreen() {
             </div>
             <div className="p-4 space-y-4">
                 <div className="border-2 border-dashed border-[#115CF6] rounded-2xl p-6 text-center bg-blue-50/40">
+                    {ticket.previousTicketId && (
+                        <div className="mb-3 inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                            🔁 Acheté via la marketplace de revente
+                        </div>
+                    )}
                     <div className="text-xs uppercase text-gray-500">Billet</div>
                     <div className="text-lg font-bold text-gray-900">{ticket.serial}</div>
                     <div className="text-sm text-gray-600 mt-2">{ticket.holderName}</div>

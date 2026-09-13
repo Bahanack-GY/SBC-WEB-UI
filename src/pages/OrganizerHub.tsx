@@ -114,6 +114,7 @@ export default function OrganizerHub() {
                         </div>
 
                         <button onClick={() => navigate('/events/organizer/nouveau')} className="w-full bg-[#115CF6] text-white font-semibold py-3 rounded-xl">+ Créer un événement</button>
+                        <button onClick={() => navigate('/events/organizer/finances')} className="w-full border border-[#115CF6] text-[#115CF6] font-semibold py-3 rounded-xl">Voir mes finances</button>
 
                         <div>
                             <h2 className="text-base font-semibold mb-2">Mes événements</h2>

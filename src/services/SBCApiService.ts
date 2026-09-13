@@ -2543,6 +2543,17 @@ export class SBCApiService extends ApiService {
     return await this.get('/tickets/organizer/dashboard');
   }
 
+  async getOrganizerFinances(): Promise<ApiResponse> {
+    return await this.get('/tickets/organizer/finances');
+  }
+
+  /** Direct URL to the CSV export for organizer participant list. Open in a new tab or window.location. */
+  getEventParticipantsCsvUrl(eventId: string): string {
+    // ApiService.baseUrl is protected but we can rebuild the same URL via
+    // a public method. Cheat: read the same env constant the constructor uses.
+    return `/api/tickets/organizer/events/${encodeURIComponent(eventId)}/participants.csv`;
+  }
+
   /**
    * Validate a scanned QR token. `expectedEventId` lets the server reject
    * tickets that belong to a different event without a round-trip.
