@@ -92,6 +92,13 @@ export default function MyTicketScreen() {
                         Revendre mon billet
                     </button>
                 )}
+
+                <button
+                    onClick={() => navigate('/events/signaler', { state: { ticketId: ticket._id, eventTitle: event?.title, serial: ticket.serial } })}
+                    className="w-full text-sm text-gray-500 py-2"
+                >
+                    Signaler un problème avec ce billet
+                </button>
             </div>
         </div>
     );

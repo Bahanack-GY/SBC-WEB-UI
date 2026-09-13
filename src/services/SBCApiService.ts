@@ -2583,6 +2583,20 @@ export class SBCApiService extends ApiService {
     return await this.post(`/tickets/resale/${listingId}/buy`, { body: { holder } });
   }
 
+  // ---- Disputes ----
+  async openTicketDispute(body: {
+    kind: 'RESALE_INVALID_TICKET' | 'RESALE_NOT_RECEIVED' | 'EVENT_NOT_AS_ADVERTISED' | 'OTHER';
+    description: string;
+    ticketId?: string;
+    resaleOrderId?: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/tickets/me/disputes', { body });
+  }
+
+  async listMyDisputes(): Promise<ApiResponse> {
+    return await this.get('/tickets/me/disputes');
+  }
+
   /** Organizer's dedicated event earnings and the min transfer threshold. */
   async getEventOrganizerBalance(): Promise<ApiResponse> {
     return await this.get('/event-organizer-balance');

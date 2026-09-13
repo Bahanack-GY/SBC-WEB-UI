@@ -70,6 +70,8 @@ import OrganizerScanner from './pages/OrganizerScanner'
 import TicketResaleForm from './pages/TicketResaleForm'
 import ResaleMarket from './pages/ResaleMarket'
 import OrganizerFinances from './pages/OrganizerFinances'
+import OpenDispute from './pages/OpenDispute'
+import MyDisputes from './pages/MyDisputes'
 
 function AppContent() {
   const location = useLocation();
@@ -270,6 +272,8 @@ function AppContent() {
           <Route path="/events/mes-billets" element={<MyTickets />} />
           <Route path="/events/mes-billets/:id" element={<MyTicketScreen />} />
           <Route path="/events/mes-billets/:id/revendre" element={<TicketResaleForm />} />
+          <Route path="/events/signaler" element={<OpenDispute />} />
+          <Route path="/events/mes-disputes" element={<MyDisputes />} />
           <Route path="/events/organizer" element={<OrganizerHub />} />
           <Route path="/events/organizer/finances" element={<OrganizerFinances />} />
           <Route path="/events/organizer/nouveau" element={<OrganizerEventForm />} />

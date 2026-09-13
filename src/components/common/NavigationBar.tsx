@@ -4,6 +4,7 @@ import {
   Message01Icon,
   ShoppingBasket01Icon,
   StatusIcon,
+  Ticket01Icon,
   Wallet01Icon,
 } from '@hugeicons/core-free-icons';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -29,6 +30,7 @@ function NavigationBar() {
     const items: NavItem[] = [
       { label: 'Accueil', icon: Home01Icon, path: '/' },
       { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
+      { label: 'Événements', icon: Ticket01Icon, path: '/events' },
       { label: 'Wallet', icon: Wallet01Icon, path: '/wallet' },
       { label: 'SBC Statut', icon: StatusIcon, path: '/chat?view=status' },
       { label: 'Messages', icon: Message01Icon, path: '/chat' },
