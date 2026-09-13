@@ -833,7 +833,7 @@ function Wallet() {
 
   return (
     <ProtectedRoute>
-      <div className="p-3 h-screen mb-36 bg-white text-white">
+      <div className="p-3 min-h-screen mb-36 bg-white text-white">
         <div className="flex items-center mb-4">
           <BackButton />
           <h3 className="text-xl font-medium text-center w-full text-gray-900">Portefeuille</h3>
