@@ -37,6 +37,8 @@ const PLAN_COPY: Record<string, { title: string; pitch: string; features: string
         title: 'Pack Classique',
         pitch: 'Tout pour démarrer et gagner dès vos premiers statuts.',
         features: [
+            'Possibilité de gagner entre 5 000 et 10 000 FCFA par jour',
+            'Vente de produits digitaux',
             'Contacts WhatsApp ciblés par pays',
             'Accès à la marketplace SBC',
         ],
