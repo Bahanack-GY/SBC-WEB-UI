@@ -1,10 +1,12 @@
+import { DEFAULT_AVATAR } from '../common/Avatar';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignCircleIcon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { sbcApiService } from '../../services/SBCApiService';
 import type { Status, StatusCategory } from '../../types/chat';
 import { CATEGORY_CONFIG } from '../../types/chat';
 import { pageFade, listContainer, listItem } from '../../utils/motion';
-import { PlusCircleIcon } from '@heroicons/react/24/solid';
 
 interface StatusFeedProps {
   onStatusClick: (status: Status) => void;
@@ -15,6 +17,8 @@ interface StatusFeedProps {
 export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateClick, refreshTrigger }) => {
   const [statuses, setStatuses] = useState<Status[]>([]);
   const [loading, setLoading] = useState(true);
+  /** Server-side feature switch — see the note in StoriesBar. */
+  const [unavailable, setUnavailable] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<StatusCategory | 'all'>('all');
 
   const fetchStatuses = async () => {
@@ -22,7 +26,12 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
       setLoading(true);
       const category = selectedCategory === 'all' ? undefined : selectedCategory;
       const response = await sbcApiService.getStatuses(1, 50, category);
-      console.log('StatusFeed - API response:', response);
+
+      if (response.body?.code === 'STATUS_FEATURE_DISABLED') {
+        setUnavailable(true);
+        setStatuses([]);
+        return;
+      }
 
       if (response.body.success && response.body.data) {
         console.log('StatusFeed - Setting statuses:', response.body.data);
@@ -50,10 +59,23 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
     })),
   ];
 
+  // Unlike the stories rail, this is a whole tab — so it says why it is empty
+  // rather than rendering nothing and looking broken.
+  if (unavailable) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full bg-white p-8 text-center">
+        <p className="font-medium text-gray-900">Les statuts sont temporairement indisponibles</p>
+        <p className="mt-1 text-sm text-gray-500">
+          Cette fonctionnalité est en maintenance. Elle reviendra bientôt.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="flex flex-col h-full bg-white">
       {/* Category Filter */}
-      <div className="flex items-center gap-2 p-4 overflow-x-auto scrollbar-hide border-b border-gray-200">
+      <div className="flex items-center gap-2 p-4 overflow-x-auto scrollbar-hide border-b border-border">
         {categories.map((cat) => (
           <button
             key={cat.key}
@@ -75,12 +97,12 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
       </div>
 
       {/* Create Status Button */}
-      <div className="p-4 border-b border-gray-200">
+      <div className="p-4 border-b border-border">
         <button
           onClick={onCreateClick}
-          className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-green-500 text-white py-3 rounded-xl font-semibold hover:from-blue-600 hover:to-green-600 transition-all"
+          className="bg-primary w-full flex items-center justify-center gap-2 text-white py-3 rounded-xl font-semibold transition-all"
         >
-          <PlusCircleIcon className="w-6 h-6" />
+          <HugeiconsIcon icon={PlusSignCircleIcon} className="w-6 h-6" />
           Créer un statut
         </button>
       </div>
@@ -116,7 +138,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
                 key={status._id}
                 variants={listItem}
                 onClick={() => onStatusClick(status)}
-                className="relative aspect-square rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow"
+                className="relative aspect-square rounded-xl overflow-hidden transition-shadow"
               >
                 {/* Background */}
                 {status.mediaUrl ? (
@@ -134,7 +156,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
                     />
                   )
                 ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-blue-500 via-green-500 to-orange-500" />
+                  <div className="bg-primary w-full h-full" />
                 )}
 
                 {/* Overlay Gradient */}
@@ -152,7 +174,7 @@ export const StatusFeed: React.FC<StatusFeedProps> = ({ onStatusClick, onCreateC
                 <div className="absolute bottom-0 left-0 right-0 p-3">
                   <div className="flex items-center gap-2 mb-1">
                     <img
-                      src={(status as any).author?.avatar || status.user?.avatar || '/default-avatar.png'}
+                      src={sbcApiService.generateThumbnailUrl((status as any).author?.avatar || status.user?.avatar, 80) || DEFAULT_AVATAR}
                       alt={(status as any).author?.name || status.user?.name}
                       className="w-6 h-6 rounded-full border-2 border-white"
                     />

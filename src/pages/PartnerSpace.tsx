@@ -1,3 +1,5 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowDown01Icon, Cancel01Icon, CrownIcon, GiftIcon, Medal01Icon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useQuery } from '@tanstack/react-query';
 import { sbcApiService } from '../services/SBCApiService';
 import Skeleton from '../components/common/Skeleton';
@@ -5,9 +7,7 @@ import { useState, useEffect, useRef } from 'react';
 import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
-import { FaCrown, FaMedal, FaArrowDown, FaUsers, FaGift, } from 'react-icons/fa';
-import { FiX } from 'react-icons/fi';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence } from 'motion/react';
 
 function formatFCFA(amount: number) {
   return amount.toLocaleString('fr-FR') + ' F';
@@ -117,11 +117,11 @@ const PartnerSpace = () => {
 
   // Helper functions
   const getPackIcon = (pack: string) => {
-    return pack === 'gold' ? <FaCrown className="text-yellow-500" /> : <FaMedal className="text-gray-400" />;
+    return pack === 'gold' ? <HugeiconsIcon icon={CrownIcon} className="text-yellow-500" /> : <HugeiconsIcon icon={Medal01Icon} className="text-gray-400" />;
   };
 
   const getPackColor = (pack: string) => {
-    return pack === 'gold' ? 'bg-gradient-to-r from-yellow-400 to-yellow-600' : 'bg-gradient-to-r from-gray-400 to-gray-600';
+    return pack === 'gold' ? 'bg-accent' : 'bg-ink';
   };
 
   const formatDate = (dateString: string) => {
@@ -266,9 +266,9 @@ const PartnerSpace = () => {
 
   // Non-partner view
   const BecomePartnerView = () => (
-    <div className="bg-white rounded-2xl shadow-lg p-8 text-center">
+    <div className="bg-white rounded-2xl p-8 text-center border border-border">
       <div className="mb-6">
-        <FaUsers className="text-6xl text-blue-500 mx-auto mb-4" />
+        <HugeiconsIcon icon={UserGroupIcon} size={60} className="text-blue-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800 mb-2">Devenez Partenaire SBC</h2>
         <p className="text-gray-600">
           Rejoignez notre programme de partenariat et commencez à gagner des commissions sur les parrainages !
@@ -277,7 +277,7 @@ const PartnerSpace = () => {
 
       <div className="grid md:grid-cols-2 gap-6 mb-8">
         <div className="bg-gray-50 rounded-xl p-6">
-          <FaMedal className="text-3xl text-gray-500 mx-auto mb-3" />
+          <HugeiconsIcon icon={Medal01Icon} size={30} className="text-gray-500 mx-auto mb-3" />
           <h3 className="font-bold text-lg mb-2">Pack Silver</h3>
           <p className="text-gray-600 text-sm mb-4">Commissions de base sur vos filleuls</p>
           <ul className="text-left text-sm text-gray-600 space-y-1">
@@ -287,8 +287,8 @@ const PartnerSpace = () => {
           </ul>
         </div>
 
-        <div className="bg-yellow-50 rounded-xl p-6 border-2 border-yellow-200">
-          <FaCrown className="text-3xl text-yellow-500 mx-auto mb-3" />
+        <div className="bg-yellow-50 rounded-xl p-6 border-2 border-border">
+          <HugeiconsIcon icon={CrownIcon} size={30} className="text-yellow-500 mx-auto mb-3" />
           <h3 className="font-bold text-lg mb-2">Pack Gold</h3>
           <p className="text-gray-600 text-sm mb-4">Commissions maximales sur 3 niveaux</p>
           <ul className="text-left text-sm text-gray-600 space-y-1">
@@ -300,10 +300,10 @@ const PartnerSpace = () => {
       </div>
 
       <div className="space-y-3">
-        <button className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-white font-bold py-3 px-6 rounded-xl hover:from-yellow-500 hover:to-yellow-700 transition-all">
+        <button className="bg-accent w-full text-white font-bold py-3 px-6 rounded-xl transition-all">
           Upgrade vers Gold
         </button>
-        <button className="w-full bg-gradient-to-r from-gray-400 to-gray-600 text-white font-bold py-3 px-6 rounded-xl hover:from-gray-500 hover:to-gray-700 transition-all">
+        <button className="bg-ink w-full text-white font-bold py-3 px-6 rounded-xl transition-all">
           Upgrade vers Silver
         </button>
       </div>
@@ -311,7 +311,7 @@ const PartnerSpace = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col items-center py-0">
+    <div className="min-h-screen bg-bg flex flex-col items-center py-0">
       <div className="w-full max-w-4xl mx-auto p-4">
         <div className="flex items-center mb-6">
           <BackButton />
@@ -328,7 +328,7 @@ const PartnerSpace = () => {
 
         {/* Error State */}
         {errorDetails && !loadingDetails && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
+          <div className="bg-red-50 border border-border rounded-2xl p-6 text-center">
             <p className="text-red-600 font-medium">Erreur lors du chargement des données partenaire</p>
             <p className="text-red-500 text-sm mt-2">{String(errorDetails)}</p>
             <button
@@ -349,17 +349,17 @@ const PartnerSpace = () => {
             {/* Partner Stats Overview */}
             <div className="grid md:grid-cols-3 gap-6 mb-6">
               {/* Current Balance */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl p-6 border border-border">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-700">Solde Actuel</h3>
-                  <FaGift className="text-2xl text-green-500" />
+                  <HugeiconsIcon icon={GiftIcon} size={24} className="text-green-500" />
                 </div>
                 <p className="text-3xl font-bold text-green-600">{formatFCFA(partnerData.amount || 0)}</p>
                 <p className="text-gray-500 text-sm mt-1">Commissions disponibles</p>
               </div>
 
               {/* Partner Level */}
-              <div className={`rounded-2xl shadow-lg p-6 text-white ${getPackColor(partnerData.pack)}`}>
+              <div className={`rounded-2xl p-6 text-white ${getPackColor(partnerData.pack)}`}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold">Niveau Partenaire</h3>
                   {getPackIcon(partnerData.pack)}
@@ -371,10 +371,10 @@ const PartnerSpace = () => {
               </div>
 
               {/* Total Withdrawn */}
-              <div className="bg-white rounded-2xl shadow-lg p-6">
+              <div className="bg-white rounded-2xl p-6 border border-border">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-lg font-semibold text-gray-700">Total Retiré</h3>
-                  <FaArrowDown className="text-2xl text-blue-500" />
+                  <HugeiconsIcon icon={ArrowDown01Icon} size={24} className="text-blue-500" />
                 </div>
                 <p className="text-3xl font-bold text-blue-600">
                   {formatFCFA(partnerData.totalPartnerWithdrawals || 0)}
@@ -384,7 +384,7 @@ const PartnerSpace = () => {
             </div>
 
             {/* Partner Info Card */}
-            <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+            <div className="bg-white rounded-2xl p-6 mb-6 border border-border">
               <h3 className="text-lg font-semibold text-gray-700 mb-4">Informations Partenaire</h3>
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
@@ -410,7 +410,7 @@ const PartnerSpace = () => {
             </div>
 
             {/* Recent Transactions - Compact View like Wallet.tsx */}
-            <div className="bg-[#192040] rounded-2xl p-4 shadow mb-6">
+            <div className="bg-ink rounded-2xl p-4 mb-6">
               <div className="font-semibold mb-2 text-white">Commissions récentes</div>
               {loadingTx || isFetchingTx ? (
                 <div className="space-y-3">
@@ -464,7 +464,7 @@ const PartnerSpace = () => {
             <div className="flex justify-center mb-20">
               <button
                 onClick={openAllTransactionsModal}
-                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-blue-700 transition-colors"
+                className="bg-blue-600 text-white px-6 py-3 rounded-full font-bold hover:bg-blue-700 transition-colors"
               >
                 Voir toutes les commissions
               </button>
@@ -484,7 +484,7 @@ const PartnerSpace = () => {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-[#192040] rounded-t-2xl p-4 w-full h-[80vh] text-white relative shadow-lg flex flex-col"
+              className="bg-ink rounded-t-2xl p-4 w-full h-[80vh] text-white relative flex flex-col"
               initial={{ y: '100%' }}
               animate={{ y: 0 }}
               exit={{ y: '100%' }}
@@ -496,7 +496,7 @@ const PartnerSpace = () => {
                   className="text-gray-400 hover:text-white"
                   onClick={closeAllTransactionsModal}
                 >
-                  <FiX size={24} />
+                  <HugeiconsIcon icon={Cancel01Icon} size={24} />
                 </button>
               </div>
               <div ref={allTransactionsScrollRef} className="flex-1 overflow-y-auto pr-2 custom-scrollbar">

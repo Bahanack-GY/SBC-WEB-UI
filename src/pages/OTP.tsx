@@ -6,7 +6,7 @@ import BackButton from '../components/common/BackButton';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 function OTP() {
   const { otp, inputs, handleChange, handleKeyDown, handlePaste, code: otpCode } = useOtpInput();
@@ -161,7 +161,7 @@ function OTP() {
               Un code de vérification a été envoyé à votre {currentEmail ? 'email' : 'numéro de téléphone'} pour finaliser la {fromLogin ? 'connexion' : withdrawalId ? 'demande de retrait' : 'réinitialisation du mot de passe'}.
             </div>
           )}
-          <div className="text-center text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-2">
+          <div className="text-center text-xs text-amber-600 bg-amber-50 border border-border rounded-lg px-3 py-2 mb-2">
             Si vous ne trouvez pas l'email, vérifiez votre dossier spam ou courrier indésirable.
           </div>
           {error && (
@@ -180,7 +180,7 @@ function OTP() {
                                 onChange={e => handleChange(i, e.target.value)}
                 onKeyDown={e => handleKeyDown(i, e)}
                 onPaste={e => handlePaste(i, e)}
-                className="w-12 h-12 text-center text-2xl border-2 border-gray-300 rounded-lg focus:outline-none focus:border-[#115CF6] bg-white font-mono"
+                className="w-12 h-12 text-center text-2xl border-2 border-border rounded-lg focus:outline-none focus:border-primary bg-white font-mono"
                 autoFocus={i === 0}
               />
             ))}
@@ -191,7 +191,7 @@ function OTP() {
               type="button"
               onClick={handleResendOtp}
               disabled={loading}
-              className="text-[#115CF6] font-semibold cursor-pointer hover:underline disabled:opacity-50 bg-transparent"
+              className="text-primary font-semibold cursor-pointer hover:underline disabled:opacity-50 bg-transparent"
             >
               Renvoyer
             </button>
@@ -199,7 +199,7 @@ function OTP() {
           <button
             type="submit"
             disabled={loading || otpCode.length !== 6}
-            className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-bold shadow hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors text-lg"
+            className="w-full bg-primary text-white rounded-xl py-3 font-bold hover:bg-blue-800 disabled:bg-blue-400 disabled:cursor-not-allowed transition-colors text-lg"
           >
             {loading ? 'Vérification...' : 'Vérifier'}
           </button>
@@ -213,7 +213,7 @@ function OTP() {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+            className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -232,7 +232,7 @@ function OTP() {
               <div className="flex gap-3 mt-2">
                 <button
                   type="button"
-                  className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold shadow hover:bg-red-600 transition-colors"
+                  className="flex-1 bg-red-500 text-white rounded-xl py-2 font-bold hover:bg-red-600 transition-colors"
                   onClick={() => {
                     modalContent.onConfirm?.();
                     setShowModal(false);
@@ -242,7 +242,7 @@ function OTP() {
                 </button>
                 <button
                   type="button"
-                  className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors"
+                  className="flex-1 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors"
                   onClick={() => setShowModal(false)}
                 >
                   Annuler
@@ -251,7 +251,7 @@ function OTP() {
             ) : (
               <button
                 type="button"
-                className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold shadow hover:bg-blue-600 transition-colors"
+                className="w-full bg-blue-500 text-white rounded-xl py-2 font-bold hover:bg-blue-600 transition-colors"
                 onClick={() => setShowModal(false)}
               >
                 Fermer
@@ -270,7 +270,7 @@ function OTP() {
           exit={{ opacity: 0 }}
         >
           <motion.div
-            className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+            className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.9, opacity: 0 }}
@@ -288,7 +288,7 @@ function OTP() {
                 type="button"
                 onClick={() => handleResendWithMethod('email')}
                 disabled={loading}
-                className="w-full flex items-center gap-3 p-4 border-2 border-blue-200 rounded-xl hover:border-blue-400 hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-3 p-4 border-2 border-border rounded-xl hover:border-primary hover:bg-blue-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="text-2xl">📧</span>
                 <div className="text-left">
@@ -301,7 +301,7 @@ function OTP() {
                 type="button"
                 onClick={() => handleResendWithMethod('whatsapp')}
                 disabled={loading}
-                className="w-full flex items-center gap-3 p-4 border-2 border-green-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full flex items-center gap-3 p-4 border-2 border-border rounded-xl hover:border-success hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <span className="text-2xl">📱</span>
                 <div className="text-left">
@@ -315,7 +315,7 @@ function OTP() {
               type="button"
               onClick={() => setShowMethodModal(false)}
               disabled={loading}
-              className="w-full mt-4 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold shadow hover:bg-gray-300 transition-colors disabled:opacity-50"
+              className="w-full mt-4 bg-gray-200 text-gray-700 rounded-xl py-2 font-bold hover:bg-gray-300 transition-colors disabled:opacity-50"
             >
               Annuler
             </button>

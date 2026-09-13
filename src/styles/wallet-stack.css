@@ -1,0 +1,235 @@
+/* Wallet card stack.
+
+   The reference design was hover-driven. This app is mobile-first and touch
+   devices have no hover, so the open/closed state is React state toggled by a
+   tap; `data-open` drives every transform below. Pointer devices additionally
+   get hover via the (hover: hover) block at the bottom — an enhancement, not
+   the mechanism. */
+
+.wstack {
+  position: relative;
+  width: 280px;
+  /* 290, not the reference's 230: everything is anchored to the bottom, and the
+     cards fan UP on open. At 230 the crypto card's open position (78 rest +
+     140 tall + 60 lift = 278) overflowed the box and got clipped by the page. */
+  height: 290px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  cursor: pointer;
+  transition: transform 0.4s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.wstack-back {
+  position: absolute;
+  bottom: 0;
+  width: 280px;
+  height: 200px;
+  background: var(--color-ink);
+  border-radius: 22px 22px 60px 60px;
+  z-index: 5;
+}
+
+.wstack-card {
+  position: absolute;
+  width: 260px;
+  height: 140px;
+  left: 10px;
+  border-radius: 16px;
+  padding: 16px;
+  color: #fff;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: wstack-slide-in 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  will-change: transform;
+}
+
+@keyframes wstack-slide-in {
+  0%   { transform: translateY(-100px); opacity: 0; }
+  100% { transform: translateY(0);      opacity: 1; }
+}
+
+.wstack-card-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+}
+
+.wstack-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.wstack-chip {
+  width: 30px;
+  height: 22px;
+  background: rgba(255, 255, 255, 0.22);
+  border-radius: 4px;
+}
+
+.wstack-card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.wstack-label {
+  font-size: 9px;
+  opacity: 0.75;
+  text-transform: uppercase;
+  margin-bottom: 2px;
+  display: block;
+}
+
+.wstack-amount {
+  font-size: 18px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.wstack-amount-row {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.wstack-native {
+  font-size: 11px;
+  opacity: 0.85;
+  font-variant-numeric: tabular-nums;
+}
+
+.wstack-sub {
+  font-size: 11px;
+  opacity: 0.8;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Card variants — resting positions in the pocket */
+.wstack-card--crypto {
+  background: var(--color-accent);
+  bottom: 78px;
+  z-index: 10;
+  animation-delay: 0.1s;
+}
+
+.wstack-card--main {
+  background: var(--color-primary);
+  bottom: 48px;
+  z-index: 20;
+  animation-delay: 0.2s;
+}
+
+/* Pocket */
+.wstack-pocket {
+  position: absolute;
+  bottom: 0;
+  width: 280px;
+  height: 160px;
+  z-index: 40;
+  pointer-events: none;
+}
+
+.wstack-pocket-content {
+  position: absolute;
+  top: 46px;
+  width: 100%;
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.wstack-total-slot {
+  position: relative;
+  height: 28px;
+  width: 100%;
+}
+
+.wstack-total-masked,
+.wstack-total-real {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  transition: opacity 0.3s, transform 0.3s;
+  white-space: nowrap;
+}
+
+.wstack-total-masked {
+  color: #64748b;
+  font-size: 24px;
+  letter-spacing: 5px;
+}
+
+.wstack-total-real {
+  color: #fff;
+  font-size: 21px;
+  font-weight: 700;
+  opacity: 0;
+  transform: translate(-50%, 10px);
+  font-variant-numeric: tabular-nums;
+}
+
+.wstack-caption {
+  color: #94a3b8;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.wstack-eye {
+  margin-top: 4px;
+  height: 20px;
+  width: 20px;
+  position: relative;
+  opacity: 0.45;
+  transition: opacity 0.3s;
+}
+
+.wstack-eye svg {
+  position: absolute;
+  inset: 0;
+  stroke: var(--color-success-dot);
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: opacity 0.3s, transform 0.3s;
+}
+
+.wstack-eye .wstack-eye-open { opacity: 0; transform: scale(0.5); }
+
+/* ---- Open state (tap on touch, hover on pointer devices) ---- */
+.wstack[data-open='true'] { transform: translateY(-5px); }
+.wstack[data-open='true'] .wstack-eye { opacity: 1; }
+.wstack[data-open='true'] .wstack-card--crypto { transform: translateY(-60px) rotate(-3deg); }
+.wstack[data-open='true'] .wstack-card--main   { transform: translateY(-18px) rotate(2deg); }
+.wstack[data-open='true'] .wstack-total-masked { opacity: 0; }
+.wstack[data-open='true'] .wstack-total-real   { opacity: 1; transform: translate(-50%, 0); }
+.wstack[data-open='true'] .wstack-eye-slash    { opacity: 0; transform: scale(0.5); }
+.wstack[data-open='true'] .wstack-eye-open     { opacity: 1; transform: scale(1.1); }
+
+@media (hover: hover) {
+  .wstack:hover { transform: translateY(-5px); }
+  .wstack:hover .wstack-eye { opacity: 1; }
+  .wstack:hover .wstack-card--crypto { transform: translateY(-60px) rotate(-3deg); }
+  .wstack:hover .wstack-card--main   { transform: translateY(-18px) rotate(2deg); }
+  .wstack:hover .wstack-total-masked { opacity: 0; }
+  .wstack:hover .wstack-total-real   { opacity: 1; transform: translate(-50%, 0); }
+  .wstack:hover .wstack-eye-slash    { opacity: 0; transform: scale(0.5); }
+  .wstack:hover .wstack-eye-open     { opacity: 1; transform: scale(1.1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wstack,
+  .wstack-card,
+  .wstack-total-masked,
+  .wstack-total-real,
+  .wstack-eye svg { transition: none; animation: none; }
+}

@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowRight01Icon, MinusSignIcon, PlusSignIcon, Settings02Icon } from '@hugeicons/core-free-icons';
 import { useEffect, useRef, useState } from 'react';
-import { FaCog, FaChevronRight, FaMinus, FaPlus } from 'react-icons/fa';
 import { sbcApiService } from '../../services/SBCApiService';
 
 interface RelancePacingCardProps {
@@ -59,21 +60,21 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
   };
 
   return (
-    <div className="relance-pacing-card bg-white rounded-2xl shadow-sm border border-gray-100 mb-4 overflow-hidden">
+    <div className="relance-pacing-card bg-white rounded-2xl border border-border mb-4 overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         className="w-full flex items-center justify-between p-4 min-h-[56px] hover:bg-gray-50 active:bg-gray-100 transition-colors"
       >
         <div className="flex items-center gap-2">
-          <FaCog className="text-gray-600" />
+          <HugeiconsIcon icon={Settings02Icon} className="text-gray-600" />
           <span className="font-bold text-sm text-gray-800">Paramètres d'envoi</span>
         </div>
-        <FaChevronRight className={`text-gray-500 transition-transform ${open ? 'rotate-90' : ''}`} />
+        <HugeiconsIcon icon={ArrowRight01Icon} className={`text-gray-500 transition-transform ${open ? 'rotate-90' : ''}`} />
       </button>
 
       {open && (
-        <div className="p-4 pt-0 border-t border-gray-100">
+        <div className="p-4 pt-0 border-t border-border">
           <label className="block text-sm font-medium text-gray-800 mb-1 mt-3" htmlFor="relance-pacing-input">
             Vitesse d'envoi par jour
           </label>
@@ -87,7 +88,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
               aria-label="Diminuer"
               className="w-11 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg"
             >
-              <FaMinus />
+              <HugeiconsIcon icon={MinusSignIcon} />
             </button>
             <input
               id="relance-pacing-input"
@@ -106,7 +107,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
                 if (Number.isNaN(n)) return;
                 setAndPersist(n);
               }}
-              className="flex-1 h-12 text-center text-lg font-bold border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#115CF6]"
+              className="flex-1 h-12 text-center text-lg font-bold border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary"
             />
             <button
               type="button"
@@ -114,7 +115,7 @@ export default function RelancePacingCard({ initialValue, onSaved }: RelancePaci
               aria-label="Augmenter"
               className="w-11 h-12 flex items-center justify-center bg-gray-100 hover:bg-gray-200 active:bg-gray-300 text-gray-700 rounded-lg"
             >
-              <FaPlus />
+              <HugeiconsIcon icon={PlusSignIcon} />
             </button>
           </div>
 

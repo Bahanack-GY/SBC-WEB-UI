@@ -1,4 +1,5 @@
-import { MdArrowBack } from "react-icons/md";
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 
 interface BackButtonProps {
     onClick?: () => void;
@@ -19,7 +20,7 @@ function BackButton({ onClick }: BackButtonProps) {
                 onClick={handleClick} 
                 className="bg-[#94B027] p-2 rounded-xl text-white"
             >
-                <MdArrowBack size={25}/>
+                <HugeiconsIcon icon={ArrowLeft01Icon} size={25} />
             </button>
         </div>
     )

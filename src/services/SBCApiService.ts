@@ -163,6 +163,14 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * Monthly affiliate leaderboard ("Classement Général"). Same payload for
+   * every caller — the server caches one snapshot for an hour.
+   */
+  async getLeaderboard(): Promise<ApiResponse> {
+    return await this.get('/users/leaderboard');
+  }
+
+  /**
    * Get referred users
    */
   async getReferredUsers(filters?: Record<string, any>): Promise<ApiResponse> {
@@ -987,6 +995,26 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * A resized copy of an image, for anywhere it is drawn small.
+   *
+   * Avatars are stored at full size — 1.8 MB is typical — and a conversation
+   * list or status bar pulls a dozen of them at 56 px. Routed through our own
+   * origin (not the bucket) so the resized copy is cached by Cloudflare and
+   * repeat views cost nothing. Falls back to whatever it was given when the URL
+   * is not one of ours.
+   */
+  generateThumbnailUrl(fileIdOrUrl: string | undefined | null, width = 96): string {
+    if (!fileIdOrUrl) return '';
+    const bucketPrefix = 'https://storage.googleapis.com/sbc-file-storage/';
+    const fileId = fileIdOrUrl.startsWith(bucketPrefix)
+      ? fileIdOrUrl.slice(bucketPrefix.length)
+      : fileIdOrUrl;
+    // Signed/private URLs and anything external cannot be resized by that route.
+    if (/^https?:\/\//.test(fileId)) return fileIdOrUrl;
+    return `${this.baseUrl}/settings/files/${encodeURIComponent(fileId)}?w=${width}`;
+  }
+
+  /**
    * Same-origin URL for a stored file, for when the bytes are needed rather than
    * just displayed.
    *
@@ -995,8 +1023,11 @@ export class SBCApiService extends ApiService {
    * could never attach the creative. This routes through settings-service, which
    * pipes the file back from our own origin.
    *
-   * Use generateSettingsFileUrl for <img src>: it hits the CDN directly and costs
-   * us no bandwidth.
+   * generateSettingsFileUrl is NOT the cheap alternative, despite pointing at
+   * storage.googleapis.com. Nothing caches in front of that bucket, so every new
+   * viewer pays full egress on the original — 636 GiB of it in August 2026, on a
+   * 36 GiB bucket. Prefer generateThumbnailUrl anywhere an image is drawn smaller
+   * than it was uploaded.
    */
   generateStreamedFileUrl(fileId: string, opts: { download?: boolean } = {}): string {
     const param = opts.download ? 'download=1' : 'stream=1';
@@ -2172,9 +2203,23 @@ export class SBCApiService extends ApiService {
     return await this.get(`/advertising/campaigns/${campaignId}/performance`);
   }
 
-  /** Only a draft or a rejected campaign can be edited. */
+  /**
+   * Editable until the campaign is over: a draft, a refusal, and a paid campaign
+   * awaiting validation take any field except the budget (that money already
+   * moved). A campaign already being diffused takes ONLY `targeting` — its
+   * creative is frozen because verification matches diffuseurs' posts against it.
+   */
   async updateAdsCampaign(campaignId: string, body: Record<string, unknown>): Promise<ApiResponse> {
     return await this.patch(`/advertising/campaigns/${campaignId}`, { body });
+  }
+
+  /**
+   * How many diffuseurs a targeting actually reaches, and roughly how many views
+   * they could deliver. Called as the annonceur edits their filters so an
+   * unservable audience is caught before they pay for it.
+   */
+  async getAdsReach(body: { targeting: Record<string, unknown>; amount?: number; targetUniqueViews?: number }): Promise<ApiResponse> {
+    return await this.post('/advertising/campaigns/reach', { body });
   }
 
   /** Sends the creative to moderation. Nothing is diffused before an admin approves. */
@@ -2323,6 +2368,89 @@ export class SBCApiService extends ApiService {
   /** The only way out of the advertising balance: transfer to the main balance. */
   async transferAdvertisingBalance(amount: number): Promise<ApiResponse> {
     return await this.post('/advertising-balance/transfer', { body: { amount } });
+  }
+
+  // ==================== SBC LOVE ====================
+  // sbclove-service behind the gateway. Browsing and interests are gated
+  // server-side by the weekly session window (423 Locked outside it); managing
+  // your own profile is allowed anytime.
+
+  /** Kill-switch + weekly window. Drives the Home tile and the page banner. */
+  async getLoveStatus(): Promise<ApiResponse> {
+    return await this.get('/sbclove/status');
+  }
+
+  async getMyLoveProfile(): Promise<ApiResponse> {
+    return await this.get('/sbclove/profiles/me');
+  }
+
+  async createLoveProfile(body: {
+    displayName?: string;
+    intention: string;
+    otherIntentionText?: string;
+    description: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/sbclove/profiles', { body });
+  }
+
+  async updateLoveProfile(body: {
+    displayName?: string;
+    intention?: string;
+    otherIntentionText?: string;
+    description?: string;
+  }): Promise<ApiResponse> {
+    return await this.put('/sbclove/profiles/me', { body });
+  }
+
+  async uploadLovePhotos(files: File[]): Promise<ApiResponse> {
+    return await this.uploadFiles({
+      endpoint: '/sbclove/profiles/me/photos',
+      files,
+      fieldName: 'photos',
+    });
+  }
+
+  /**
+   * fileId travels in the query: stored ids carry a folder prefix ("sbclove/…"),
+   * so the slash cannot sit in the path, and the gateway drops DELETE bodies.
+   */
+  async deleteLovePhoto(fileId: string): Promise<ApiResponse> {
+    return await this.delete(`/sbclove/profiles/me/photos?fileId=${encodeURIComponent(fileId)}`);
+  }
+
+  /** Window-gated. Answers 423 when the weekly session is closed. */
+  async browseLoveProfiles(page = 1, limit = 20): Promise<ApiResponse> {
+    return await this.get('/sbclove/profiles', { queryParameters: { page, limit } });
+  }
+
+  async expressLoveInterest(profileId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/interest`);
+  }
+
+  /** Sent interests; the remaining weekly quota rides in `body.meta`. */
+  async getMyLoveInterests(): Promise<ApiResponse> {
+    return await this.get('/sbclove/interests/me');
+  }
+
+  async getMyLoveMatches(): Promise<ApiResponse> {
+    return await this.get('/sbclove/matches/me');
+  }
+
+  async setLoveContactChoice(matchId: string, choice: 'wants_contact' | 'declined'): Promise<ApiResponse> {
+    return await this.post(`/sbclove/matches/${matchId}/contact-choice`, { body: { choice } });
+  }
+
+  /** Only once contact is unlocked on both sides. Returns a chat conversationId. */
+  async openLoveMatchChat(matchId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/matches/${matchId}/chat`);
+  }
+
+  async reportLoveProfile(profileId: string, reason: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/report`, { body: { reason } });
+  }
+
+  async blockLoveProfile(profileId: string): Promise<ApiResponse> {
+    return await this.post(`/sbclove/profiles/${profileId}/block`);
   }
 }
 

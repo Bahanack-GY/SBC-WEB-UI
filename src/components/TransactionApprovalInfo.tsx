@@ -16,7 +16,7 @@ const TransactionApprovalInfo: React.FC<TransactionApprovalInfoProps> = ({ trans
   // Show pending approval info
   if (isPendingAdminApproval(transaction.status)) {
     return (
-      <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+      <div className="bg-orange-50 border border-border rounded-lg p-4 mb-4">
         <div className="flex items-start">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-orange-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
@@ -45,7 +45,7 @@ const TransactionApprovalInfo: React.FC<TransactionApprovalInfoProps> = ({ trans
   // Show rejection info
   if (isRejectedByAdmin(transaction.status) && transaction.rejectionReason) {
     return (
-      <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+      <div className="bg-red-50 border border-border rounded-lg p-4 mb-4">
         <div className="flex items-start">
           <div className="flex-shrink-0">
             <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">

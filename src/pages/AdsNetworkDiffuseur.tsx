@@ -1,11 +1,12 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Alert02Icon, Cancel01Icon, CheckmarkCircle02Icon, Download01Icon, HourglassIcon, KeyboardIcon, Loading03Icon, QrCodeIcon, Share08Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { useCallback, useEffect, useRef, useState, type ChangeEvent } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FaExclamationTriangle, FaSpinner, FaShareAlt, FaQrcode, FaCheckCircle,
-  FaTimes, FaWallet, FaDownload, FaHourglassHalf, FaKeyboard, FaVideo, FaClock,
-} from 'react-icons/fa';
+import { motion, AnimatePresence } from 'motion/react';
+// The manual (video) verification UI still uses react-icons; the rest of the file
+// was migrated to hugeicons. Both packages are present, so this is safe.
+import { FaCheckCircle, FaSpinner, FaVideo, FaClock } from 'react-icons/fa';
 import BackButton from '../components/common/BackButton';
 import {
   AdsCardSkeleton, AdsStatCard, AdsDayPips, relativeDate, adsItemMotion, adsHeaderMotion,
@@ -227,15 +228,15 @@ function AdsNetworkDiffuseur() {
         <h1 className="text-2xl font-bold text-gray-900 mt-2">Espace diffuseur</h1>
 
         {message && (
-          <div className={`rounded-xl p-3 mt-3 text-sm ${message.type === 'ok' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
+          <div className={`rounded-xl p-3 mt-3 text-sm ${message.type === 'ok' ? 'bg-green-50 text-green-800 border border-border' : 'bg-red-50 text-red-800 border border-border'}`}>
             {message.text}
           </div>
         )}
 
         {/* Earnings */}
-        <motion.div {...adsHeaderMotion} className="bg-[#115CF6] text-white rounded-2xl p-5 mt-4 shadow-lg">
+        <motion.div {...adsHeaderMotion} className="bg-primary text-white rounded-2xl p-5 mt-4">
           <div className="flex items-center gap-2 text-blue-100 text-sm">
-            <FaWallet /> Solde publicitaire
+            <HugeiconsIcon icon={Wallet01Icon} /> Solde publicitaire
           </div>
           <p className="text-3xl font-bold mt-1">{formatFCFA(balance?.advertisingBalance ?? 0)}</p>
           <p className="text-xs text-blue-100 mt-1">
@@ -247,7 +248,7 @@ function AdsNetworkDiffuseur() {
               setTransferAmount(String(Math.floor(balance?.advertisingBalance ?? 0)));
               setTransferOpen(true);
             }}
-            className="w-full bg-white text-[#115CF6] rounded-xl py-2.5 text-sm font-semibold mt-3"
+            className="w-full bg-white text-primary rounded-xl py-2.5 text-sm font-semibold mt-3"
           >
             Transférer vers mon solde principal
           </motion.button>
@@ -258,7 +259,7 @@ function AdsNetworkDiffuseur() {
                   test campaign is still outstanding, not because SBC forgot them. */}
               <div className="flex items-center gap-2 mb-2">
                 <span className={`inline-flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full ${profile.verification?.verified ? 'bg-white text-green-700' : 'bg-white/20 text-white'}`}>
-                  {profile.verification?.verified ? <FaCheckCircle size={11} /> : <FaHourglassHalf size={11} />}
+                  {profile.verification?.verified ? <HugeiconsIcon icon={CheckmarkCircle02Icon} size={11} /> : <HugeiconsIcon icon={HourglassIcon} size={11} />}
                   {profile.verification?.label ?? 'Statut inconnu'}
                 </span>
               </div>
@@ -290,7 +291,7 @@ function AdsNetworkDiffuseur() {
             campaign launched by a direct filleul; the money lands in this same
             solde publicitaire and shows as 💎 in the movements below. */}
         {profile?.referral && (
-          <motion.div {...adsItemMotion(3)} className={`rounded-2xl p-4 mt-3 border ${profile.referral.tier === 'unlocked' ? 'bg-green-50 border-green-200' : profile.referral.suspended ? 'bg-amber-50 border-amber-200' : 'bg-white border-gray-200 shadow-sm'}`}>
+          <motion.div {...adsItemMotion(3)} className={`rounded-2xl p-4 mt-3 border ${profile.referral.tier === 'unlocked' ? 'bg-green-50 border-border' : profile.referral.suspended ? 'bg-amber-50 border-border' : 'bg-white border-border '}`}>
             {profile.referral.tier === 'unlocked' ? (
               <>
                 <p className="font-semibold text-green-900">💎 Commission parrainage active</p>
@@ -318,7 +319,7 @@ function AdsNetworkDiffuseur() {
                 <div className="flex items-center gap-2 mt-3">
                   <div className="h-2 bg-gray-100 rounded-full overflow-hidden flex-1">
                     <motion.div
-                      className="h-full rounded-full bg-gradient-to-r from-[#115CF6] to-blue-400"
+                      className="bg-primary h-full rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: `${Math.min(100, (profile.referral.campaignsCompleted / Math.max(1, profile.referral.campaignsToUnlock)) * 100)}%` }}
                       transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
@@ -348,7 +349,7 @@ function AdsNetworkDiffuseur() {
                 </p>
                 <div className="space-y-3">
                   {offers.map((p, i) => (
-                    <motion.div key={p._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+                    <motion.div key={p._id} {...adsItemMotion(i)} className="border border-border rounded-2xl p-4">
                       {/* The card is the summary; the sheet is where the decision
                           is made — accepting commits 3 days of posting, nobody
                           should do that off a two-line blurb. */}
@@ -360,8 +361,10 @@ function AdsNetworkDiffuseur() {
                       >
                         {p.campaign && (
                           <img
-                            src={sbcApiService.generateSettingsFileUrl(p.campaign.mediaFileId)}
+                            src={sbcApiService.generateThumbnailUrl(p.campaign.mediaFileId, 160)}
                             alt={p.campaign.title}
+                            loading="lazy"
+                            decoding="async"
                             className="w-20 h-20 object-cover rounded-xl bg-gray-100 shrink-0"
                           />
                         )}
@@ -373,7 +376,7 @@ function AdsNetworkDiffuseur() {
                           <p className="text-xs text-gray-500 mt-1">
                             3 jours de publication · environ {p.expectedViews ?? profile?.effectiveAverageViews ?? 0} vues
                           </p>
-                          <p className="text-xs text-[#115CF6] font-medium mt-1">Voir les détails →</p>
+                          <p className="text-xs text-primary font-medium mt-1">Voir les détails →</p>
                         </div>
                       </div>
                       <div className="flex gap-2 mt-3">
@@ -418,13 +421,15 @@ function AdsNetworkDiffuseur() {
                     const windowOpen = p.schedule?.canPostNow === true;
                     const awaiting = p.schedule?.awaitingVerification;
                     return (
-                      <motion.div key={p._id} {...adsItemMotion(i)} className="border border-gray-200 rounded-2xl p-4 shadow-sm">
+                      <motion.div key={p._id} {...adsItemMotion(i)} className="border border-border rounded-2xl p-4">
                         {/* The creative being published — the diffuseur should see
                             what is on their status without opening anything. */}
                         {p.campaign && (
                           <img
-                            src={sbcApiService.generateSettingsFileUrl(p.campaign.mediaFileId)}
+                            src={sbcApiService.generateThumbnailUrl(p.campaign.mediaFileId, 640)}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-32 rounded-xl object-cover bg-gray-100 mb-3"
                           />
                         )}
@@ -457,13 +462,13 @@ function AdsNetworkDiffuseur() {
                               onClick={() => setSharing(p)}
                               className="w-full bg-green-600 text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
                             >
-                              <FaShareAlt /> Publier le jour {day?.day}
+                              <HugeiconsIcon icon={Share08Icon} /> Publier le jour {day?.day}
                             </button>
                           )}
                           {!windowOpen && !awaiting && (
                             <button
                               onClick={() => setVerifying(p)}
-                              className="w-full border border-gray-200 text-gray-700 rounded-xl py-2.5 text-sm font-medium"
+                              className="w-full border border-border text-gray-700 rounded-xl py-2.5 text-sm font-medium"
                             >
                               Revérifier mes publications
                             </button>
@@ -472,9 +477,9 @@ function AdsNetworkDiffuseur() {
                             <>
                               <button
                                 onClick={() => setVerifying(p)}
-                                className="w-full bg-[#115CF6] text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
+                                className="w-full bg-primary text-white rounded-xl py-2.5 text-sm font-medium flex items-center justify-center gap-2"
                               >
-                                <FaQrcode /> Vérifier le jour {awaiting.day}
+                                <HugeiconsIcon icon={QrCodeIcon} /> Vérifier le jour {awaiting.day}
                               </button>
                               {/* Escape hatch for a premature « J'ai publié » —
                                   without it the day is stuck in verification
@@ -529,13 +534,13 @@ function AdsNetworkDiffuseur() {
               <div className="flex bg-gray-100 rounded-xl p-1 mb-3">
                 <button
                   onClick={() => setHistoryTab('wallet')}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'wallet' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'wallet' ? 'bg-white text-gray-900 ' : 'text-gray-500'} border border-border`}
                 >
                   Mouvements du portefeuille
                 </button>
                 <button
                   onClick={() => setHistoryTab('campaigns')}
-                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'campaigns' ? 'bg-white text-gray-900 shadow-sm' : 'text-gray-500'}`}
+                  className={`flex-1 rounded-lg py-2 text-sm font-medium transition-colors ${historyTab === 'campaigns' ? 'bg-white text-gray-900 ' : 'text-gray-500'} border border-border`}
                 >
                   Historique
                 </button>
@@ -555,9 +560,9 @@ function AdsNetworkDiffuseur() {
                         <motion.div
                           key={t.transactionId ?? t._id ?? i}
                           {...adsItemMotion(Math.min(i, 6), 0.02)}
-                          className="flex items-center gap-3 border border-gray-100 rounded-xl p-3 text-sm"
+                          className="flex items-center gap-3 border border-border rounded-xl p-3 text-sm"
                         >
-                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-[#115CF6]'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${isIn ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-primary'}`}>
                             {isIn ? '↓' : '↑'}
                           </div>
                           <div className="flex-1 min-w-0">
@@ -575,7 +580,7 @@ function AdsNetworkDiffuseur() {
                     {/* Scroll sentinel: crossing it loads the next page. */}
                     <div ref={loadMoreRef} className="h-1" />
                     {isFetchingNextPage && (
-                      <div className="flex justify-center py-3"><FaSpinner className="animate-spin text-[#115CF6]" /></div>
+                      <div className="flex justify-center py-3"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-primary" /></div>
                     )}
                   </div>
                 )
@@ -584,7 +589,7 @@ function AdsNetworkDiffuseur() {
               ) : (
                 <div className="space-y-2">
                   {past.map((p) => (
-                    <div key={p._id} className="flex items-center justify-between border border-gray-100 rounded-xl p-3 text-sm">
+                    <div key={p._id} className="flex items-center justify-between border border-border rounded-xl p-3 text-sm">
                       <div>
                         <p className="text-gray-900">{p.campaign?.title ?? 'Campagne'}</p>
                         <p className="text-xs text-gray-500">
@@ -639,17 +644,17 @@ function AdsNetworkDiffuseur() {
                       min="1"
                       value={transferAmount}
                       onChange={(e) => setTransferAmount(e.target.value)}
-                      className={`w-full rounded-xl border px-3 py-3 text-gray-900 text-center font-bold mt-2 ${aboveBalance ? 'border-red-300 bg-red-50' : belowMinimum ? 'border-amber-300 bg-amber-50' : 'border-gray-300'}`}
+                      className={`w-full rounded-xl border px-3 py-3 text-gray-900 text-center font-bold mt-2 ${aboveBalance ? 'border-danger bg-red-50' : belowMinimum ? 'border-accent bg-amber-50' : 'border-border'}`}
                       placeholder="Montant en F"
                     />
 
                     {aboveBalance && (
-                      <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg p-2 mt-2">
+                      <p className="text-xs text-red-700 bg-red-50 border border-border rounded-lg p-2 mt-2">
                         ⚠️ Montant supérieur à votre solde publicitaire ({formatFCFA(available)} disponibles).
                       </p>
                     )}
                     {!aboveBalance && belowMinimum && (
-                      <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2 mt-2">
+                      <p className="text-xs text-amber-800 bg-amber-50 border border-border rounded-lg p-2 mt-2">
                         Le minimum est de {formatFCFA(minimum)} — il manque {formatFCFA(Math.max(0, minimum - amount))}.
                         {available < minimum && ' Terminez d\'autres campagnes pour compléter vos gains.'}
                       </p>
@@ -660,7 +665,7 @@ function AdsNetworkDiffuseur() {
                         whileTap={{ scale: 0.97 }}
                         onClick={() => setTransferOpen(false)}
                         disabled={transferring}
-                        className="flex-1 border border-gray-200 text-gray-700 rounded-xl py-3 text-sm font-medium"
+                        className="flex-1 border border-border text-gray-700 rounded-xl py-3 text-sm font-medium"
                       >
                         Annuler
                       </motion.button>
@@ -668,7 +673,7 @@ function AdsNetworkDiffuseur() {
                         whileTap={{ scale: 0.97 }}
                         onClick={handleTransfer}
                         disabled={transferring || !valid}
-                        className="flex-1 bg-[#115CF6] text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-300"
+                        className="flex-1 bg-primary text-white rounded-xl py-3 text-sm font-medium disabled:bg-gray-300"
                       >
                         {transferring ? 'Transfert…' : 'Confirmer le transfert'}
                       </motion.button>
@@ -714,17 +719,17 @@ function AdsNetworkDiffuseur() {
                 )}
 
                 <div className="grid grid-cols-3 gap-2 mt-4">
-                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 text-center">
+                  <div className="bg-gray-50 border border-border rounded-xl p-3 text-center">
                     <p className="text-lg font-bold text-gray-900">3</p>
                     <p className="text-[11px] text-gray-500">jours de publication</p>
                   </div>
-                  <div className="bg-blue-50 border border-blue-100 rounded-xl p-3 text-center">
+                  <div className="bg-blue-50 border border-border rounded-xl p-3 text-center">
                     <p className="text-lg font-bold text-gray-900">
                       ~{offerDetail.expectedViews ?? profile?.effectiveAverageViews ?? 0}
                     </p>
                     <p className="text-[11px] text-gray-500">vues estimées</p>
                   </div>
-                  <div className="bg-green-50 border border-green-100 rounded-xl p-3 text-center">
+                  <div className="bg-green-50 border border-border rounded-xl p-3 text-center">
                     <p className="text-lg font-bold text-green-700">
                       {offerDetail.ratePerView
                         ? `~${formatFCFA((offerDetail.expectedViews ?? profile?.effectiveAverageViews ?? 0) * offerDetail.ratePerView)}`
@@ -735,7 +740,7 @@ function AdsNetworkDiffuseur() {
                 </div>
 
                 {offerDetail.campaign?.suggestedCaption && (
-                  <div className="bg-gray-50 border border-gray-100 rounded-xl p-3 mt-3">
+                  <div className="bg-gray-50 border border-border rounded-xl p-3 mt-3">
                     <p className="text-[11px] text-gray-500 mb-1">Légende suggérée</p>
                     <p className="text-sm text-gray-700 whitespace-pre-line">{offerDetail.campaign.suggestedCaption}</p>
                   </div>
@@ -888,14 +893,14 @@ function ShareSheet({
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-lg text-gray-900">Publier sur votre statut</h2>
-          <button onClick={onClose} className="text-gray-400"><FaTimes /></button>
+          <button onClick={onClose} className="text-gray-400"><HugeiconsIcon icon={Cancel01Icon} /></button>
         </div>
 
         <img src={illustrationShare} alt="" aria-hidden="true" className="w-40 mx-auto -mt-2 mb-1" />
 
-        <div className="bg-amber-50 border border-amber-300 rounded-xl p-3 text-sm text-amber-900 mb-4">
+        <div className="bg-amber-50 border border-accent rounded-xl p-3 text-sm text-amber-900 mb-4">
           <p className="flex items-start gap-2 font-medium">
-            <FaExclamationTriangle className="mt-0.5 shrink-0" />
+            <HugeiconsIcon icon={Alert02Icon} className="mt-0.5 shrink-0" />
             Ne modifiez pas le texte, et surtout pas le lien.
           </p>
           <p className="mt-1">
@@ -909,10 +914,10 @@ function ShareSheet({
         )}
 
         <label className="text-xs text-gray-500">Texte à publier</label>
-        <div className="border border-gray-200 rounded-xl p-3 text-sm text-gray-800 whitespace-pre-wrap mt-1">
+        <div className="border border-border rounded-xl p-3 text-sm text-gray-800 whitespace-pre-wrap mt-1">
           {caption}
         </div>
-        <button onClick={copyCaption} className="text-sm text-[#115CF6] mt-2">
+        <button onClick={copyCaption} className="text-sm text-primary mt-2">
           {copied ? 'Texte copié' : 'Copier le texte'}
         </button>
 
@@ -923,22 +928,22 @@ function ShareSheet({
           disabled={busy}
           className="w-full bg-green-600 text-white rounded-xl py-3 font-medium mt-4 flex items-center justify-center gap-2 disabled:bg-gray-400"
         >
-          {busy ? <FaSpinner className="animate-spin" /> : <FaShareAlt />}
+          {busy ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={Share08Icon} />}
           Partager sur WhatsApp
         </button>
 
         <a
           href={mediaDownloadUrl}
           download
-          className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-2 flex items-center justify-center gap-2"
+          className="w-full border border-border text-gray-700 rounded-xl py-3 font-medium mt-2 flex items-center justify-center gap-2"
         >
-          <FaDownload /> Télécharger l'image
+          <HugeiconsIcon icon={Download01Icon} /> Télécharger l'image
         </a>
 
         <button
           onClick={confirmPosted}
           disabled={busy}
-          className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400"
+          className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-4 disabled:bg-gray-400"
         >
           J'ai publié
         </button>
@@ -969,7 +974,40 @@ function VideoVerification({ participation, onClose }: { participation: Particip
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(true);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // The code lives on the server with its own deadline, so a refresh or a closed
+  // modal must not lose it. Without this the diffuseur who filmed code X and
+  // reloaded would generate code Y, and their recording — showing X — would be
+  // rejected. Pick the live code back up instead of starting over.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await sbcApiService.getManualVerifyStatus(participation._id);
+        const d = res.body?.data;
+        if (cancelled || !d) return;
+        if (d.status === 'pending_review') {
+          setPhase('submitted');
+          return;
+        }
+        if (d.status === 'awaiting_upload' && d.code && d.expiresAt) {
+          const remaining = Math.floor((new Date(d.expiresAt).getTime() - Date.now()) / 1000);
+          if (remaining > 0) {
+            setCode(d.code);
+            setSecondsLeft(remaining);
+            setPhase('code');
+          }
+        }
+      } catch {
+        // No live code, or the check failed: fall back to the normal start.
+      } finally {
+        if (!cancelled) setRestoring(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [participation._id]);
 
   useEffect(() => {
     if (phase !== 'code' || secondsLeft <= 0) return;
@@ -1040,7 +1078,13 @@ function VideoVerification({ participation, onClose }: { participation: Particip
 
       {error && <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800 mb-3">{error}</div>}
 
-      {phase === 'intro' && (
+      {restoring && phase === 'intro' && (
+        <div className="flex items-center justify-center gap-2 py-3 text-sm text-gray-500">
+          <FaSpinner className="animate-spin" /> Vérification d'un code en cours…
+        </div>
+      )}
+
+      {!restoring && phase === 'intro' && (
         <button onClick={generate} disabled={busy}
           className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium disabled:bg-gray-300">
           {busy ? 'Génération…' : 'Générer le code'}
@@ -1064,7 +1108,10 @@ function VideoVerification({ participation, onClose }: { participation: Particip
             </button>
           ) : (
             <>
-              <input ref={fileRef} type="file" accept="video/*" capture className="hidden" onChange={onPick} />
+              {/* No `capture`: it forces the camera open with no way to pick an
+                  existing file, but the video was made earlier with the phone's
+                  screen recorder and is sitting in the gallery. */}
+              <input ref={fileRef} type="file" accept="video/*" className="hidden" onChange={onPick} />
               <button onClick={() => fileRef.current?.click()} disabled={busy}
                 className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-3 disabled:bg-gray-300 flex items-center justify-center gap-2">
                 {phase === 'submitting' ? <><FaSpinner className="animate-spin" /> Envoi…</> : <><FaVideo /> Importer la vidéo</>}
@@ -1111,6 +1158,8 @@ function VerifySheet({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const sessionIdRef = useRef<string | null>(null);
+  // Per participation, so two open verifications can never adopt each other's session.
+  const sessionStorageKey = `ads-verify-session:${participation._id}`;
   const [started, setStarted] = useState(false);
   const [queuePosition, setQueuePosition] = useState<number | null>(null);
   // WhatsApp drops the pairing socket often (reason=408 and friends). Rather than
@@ -1171,6 +1220,7 @@ function VerifySheet({
       if (!res.isSuccessByStatusCode || data?.state === 'failed') {
         // A failed session is a technical/link failure (a verdict rejection comes
         // back as state 'done'). Retry it rather than dumping "reason=408".
+        sessionStorage.removeItem(sessionStorageKey);
         retryOrFail('link');
         return;
       }
@@ -1181,6 +1231,8 @@ function VerifySheet({
       if (data?.pairingCode) setPairingCode(data.pairingCode);
 
       if (data?.state === 'done') {
+        // Finished: nothing left to rejoin.
+        sessionStorage.removeItem(sessionStorageKey);
         setResult({
           verdicts: data.verdicts ?? [],
           totalViews: data.totalViews ?? 0,
@@ -1205,6 +1257,12 @@ function VerifySheet({
       if (res.statusCode === 503) { retryOrFail('capacity'); return; }
       if (!res.isSuccessByStatusCode) { retryOrFail('link'); return; }
       sessionIdRef.current = res.body?.data?.sessionId ?? null;
+      // Remembered so a refresh — or closing and reopening the sheet — rejoins the
+      // session that is already linking instead of throwing it away and making the
+      // diffuseur start the pairing over.
+      if (sessionIdRef.current) {
+        sessionStorage.setItem(sessionStorageKey, sessionIdRef.current);
+      }
       poll();
     })();
 
@@ -1212,12 +1270,36 @@ function VerifySheet({
       stopped = true;
       clearTimeout(timer);
       clearTimeout(retryTimer);
-      // Release the slot: sessions are capped and an abandoned one blocks someone
-      // else until it times out.
-      if (sessionIdRef.current) sbcApiService.cancelVerification(sessionIdRef.current);
-      sessionIdRef.current = null;
+      // Deliberately NOT cancelled here. Unmounting happens when the diffuseur
+      // closes the sheet or the page reloads, and killing the session then lost
+      // a pairing that was halfway done. It is picked back up on the next mount
+      // and expires on its own server-side if genuinely abandoned.
     };
-  }, [started, method, phone, dialCode, participation._id, attempt]);
+  }, [started, method, phone, dialCode, participation._id, attempt, sessionStorageKey]);
+
+  // Rejoin a session left running by a refresh or a closed sheet.
+  useEffect(() => {
+    if (started) return;
+    const existing = sessionStorage.getItem(sessionStorageKey);
+    if (!existing) return;
+
+    let cancelled = false;
+    (async () => {
+      const res = await sbcApiService.getVerificationSession(existing);
+      if (cancelled) return;
+      const state = res.body?.data?.state;
+      // Only rejoin something still in flight; a finished or dead session would
+      // otherwise strand the diffuseur on a stale screen.
+      if (res.isSuccessByStatusCode && state && state !== 'failed' && state !== 'done') {
+        sessionIdRef.current = existing;
+        setMethod((res.body?.data?.method as 'qr' | 'code') ?? 'code');
+        setStarted(true);
+      } else {
+        sessionStorage.removeItem(sessionStorageKey);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [started, sessionStorageKey]);
 
   const copyCode = async () => {
     if (!pairingCode) return;
@@ -1230,7 +1312,7 @@ function VerifySheet({
     if (retrying && !error && !result) {
       return (
         <div className="py-8 text-center">
-          <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-primary" size={28} />
           <p className="font-medium text-gray-900 mt-4">Reconnexion à WhatsApp…</p>
           <p className="text-sm text-gray-600 mt-1">
             La connexion a été interrompue. Nouvelle tentative en cours ({attempt + 1}/{MAX_ATTEMPTS}).
@@ -1242,10 +1324,17 @@ function VerifySheet({
     if (error) {
       return (
         <div>
-          <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">{error}</div>
+          <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800">{error}</div>
           <button
-            onClick={() => { setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); setAttempt(0); setRetrying(false); }}
-            className="w-full border border-gray-200 text-gray-700 rounded-xl py-3 font-medium mt-3"
+            onClick={() => {
+              // Deliberately abandoning this attempt: drop the session for real,
+              // so the next mount starts fresh instead of rejoining a dead one.
+              if (sessionIdRef.current) sbcApiService.cancelVerification(sessionIdRef.current);
+              sessionIdRef.current = null;
+              sessionStorage.removeItem(sessionStorageKey);
+              setError(null); setStarted(false); setMethod(null); setQr(null); setPairingCode(null); setAttempt(0); setRetrying(false);
+            }}
+            className="w-full border border-border text-gray-700 rounded-xl py-3 font-medium mt-3"
           >
             Choisir une autre méthode
           </button>
@@ -1257,20 +1346,20 @@ function VerifySheet({
       return (
         <div>
           <div className="flex items-center gap-2 text-green-700 font-medium">
-            <FaCheckCircle /> Vérification terminée
+            <HugeiconsIcon icon={CheckmarkCircle02Icon} /> Vérification terminée
           </div>
           <p className="text-3xl font-bold text-gray-900 mt-3">{result.totalViews} vues</p>
           <p className="text-sm text-gray-600">{formatFCFA(result.totalEarned)} pour cette vérification</p>
           <div className="mt-4 space-y-2">
             {result.verdicts.map((v) => (
-              <div key={v.day} className={`text-sm rounded-xl p-3 border ${v.accepted ? 'border-green-200 bg-green-50 text-green-900' : 'border-red-200 bg-red-50 text-red-900'}`}>
+              <div key={v.day} className={`text-sm rounded-xl p-3 border ${v.accepted ? 'border-border bg-green-50 text-green-900' : 'border-border bg-red-50 text-red-900'}`}>
                 <p className="font-medium">Jour {v.day} — {v.accepted ? 'validé' : 'refusé'}</p>
                 {!v.accepted && v.reason && <p className="text-xs mt-1">{v.reason}</p>}
                 {v.accepted && <p className="text-xs mt-1">{v.viewCount} vues · {formatFCFA(v.earnedAmount)}</p>}
               </div>
             ))}
           </div>
-          <button onClick={onClose} className="w-full bg-[#115CF6] text-white rounded-xl py-3 font-medium mt-4">
+          <button onClick={onClose} className="w-full bg-primary text-white rounded-xl py-3 font-medium mt-4">
             Fermer
           </button>
         </div>
@@ -1289,11 +1378,11 @@ function VerifySheet({
 
           <button
             onClick={() => setMethod('code')}
-            className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
+            className={`w-full text-left border rounded-2xl p-4 ${method === 'code' ? 'border-primary bg-blue-50' : 'border-border'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
-              <FaKeyboard className="text-[#115CF6]" /> Code à 8 caractères
-              <span className="ml-auto text-[10px] uppercase tracking-wide bg-[#115CF6] text-white rounded-full px-2 py-0.5">
+              <HugeiconsIcon icon={KeyboardIcon} className="text-primary" /> Code à 8 caractères
+              <span className="ml-auto text-[10px] uppercase tracking-wide bg-primary text-white rounded-full px-2 py-0.5">
                 Conseillé
               </span>
             </div>
@@ -1315,7 +1404,7 @@ function VerifySheet({
                 <select
                   value={dialCode}
                   onChange={(e) => setDialCode(e.target.value)}
-                  className="border border-gray-300 rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                  className="border border-border rounded-xl px-3 py-3 bg-white focus:ring-2 focus:ring-primary focus:outline-none"
                 >
                   {allAfricanCountries.map((c) => (
                     <option key={c.value} value={dialOf(c)}>{c.flag} {c.phoneCode}</option>
@@ -1327,7 +1416,7 @@ function VerifySheet({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="675080477"
-                  className="flex-1 min-w-0 border border-gray-300 rounded-xl px-4 py-3 focus:ring-2 focus:ring-[#115CF6] focus:outline-none"
+                  className="flex-1 min-w-0 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
               </div>
               {/* WhatsApp binds the code to this exact number; typed wrong, their
@@ -1353,10 +1442,10 @@ function VerifySheet({
 
           <button
             onClick={() => setMethod('qr')}
-            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
+            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'qr' ? 'border-primary bg-blue-50' : 'border-border'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
-              <FaQrcode className="text-[#115CF6]" /> Code QR
+              <HugeiconsIcon icon={QrCodeIcon} className="text-primary" /> Code QR
             </div>
             <p className="text-xs text-gray-600 mt-1">
               Pratique depuis un ordinateur ou un second téléphone.
@@ -1365,7 +1454,7 @@ function VerifySheet({
 
           <button
             onClick={() => setMethod('video')}
-            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'video' ? 'border-[#115CF6] bg-blue-50' : 'border-gray-200'}`}
+            className={`w-full text-left border rounded-2xl p-4 mt-3 ${method === 'video' ? 'border-primary bg-blue-50' : 'border-border'}`}
           >
             <div className="flex items-center gap-2 font-medium text-gray-900">
               <FaVideo className="text-[#115CF6]" /> Vérification par vidéo
@@ -1395,7 +1484,7 @@ function VerifySheet({
     if (state === 'queued') {
       return (
         <div className="py-8 text-center">
-          <FaHourglassHalf className="mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={HourglassIcon} className="mx-auto text-primary" size={28} />
           <p className="font-medium text-gray-900 mt-4">
             {queuePosition && queuePosition > 1
               ? `Vous êtes ${queuePosition}ᵉ dans la file`
@@ -1415,7 +1504,7 @@ function VerifySheet({
     if (state === 'reading') {
       return (
         <div className="py-8 text-center">
-          <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={28} />
+          <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-primary" size={28} />
           <p className="font-medium text-gray-900 mt-4">Appareil connecté</p>
           <p className="text-sm text-gray-600 mt-1">Lecture de vos statuts et de leurs vues…</p>
           <p className="text-xs text-gray-400 mt-3">Cela prend généralement moins d'une minute.</p>
@@ -1433,7 +1522,7 @@ function VerifySheet({
           <div className="font-mono text-3xl tracking-[0.3em] font-bold text-gray-900 bg-gray-100 rounded-xl py-4">
             {pairingCode}
           </div>
-          <button onClick={copyCode} className="text-sm text-[#115CF6] mt-2">
+          <button onClick={copyCode} className="text-sm text-primary mt-2">
             {copied ? 'Code copié' : 'Copier le code'}
           </button>
           <p className="text-xs text-gray-500 mt-3">
@@ -1462,7 +1551,7 @@ function VerifySheet({
 
     return (
       <div className="py-8 text-center text-gray-500">
-        <FaSpinner className="animate-spin mx-auto text-[#115CF6]" size={24} />
+        <HugeiconsIcon icon={Loading03Icon} className="animate-spin mx-auto text-primary" size={24} />
         <p className="text-sm mt-3">
           {state === 'reading'
             ? 'Lecture de vos statuts…'
@@ -1485,7 +1574,7 @@ function VerifySheet({
       >
         <div className="flex items-center justify-between mb-3">
           <h2 className="font-bold text-lg text-gray-900">Vérifier ma publication</h2>
-          <button onClick={onClose} className="text-gray-400"><FaTimes /></button>
+          <button onClick={onClose} className="text-gray-400"><HugeiconsIcon icon={Cancel01Icon} /></button>
         </div>
         {body()}
       </motion.div>

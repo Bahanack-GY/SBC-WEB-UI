@@ -1,27 +1,65 @@
+import { DEFAULT_AVATAR } from '../common/Avatar';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { PlusSignIcon } from '@hugeicons/core-free-icons';
 import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
-import { PlusIcon } from '@heroicons/react/24/solid';
+import { motion } from 'motion/react';
 import type { StoryGroup } from '../../types/chat';
 import { sbcApiService } from '../../services/SBCApiService';
 import { useAuth } from '../../contexts/AuthContext';
 import { pageFade, listContainer, rowItem } from '../../utils/motion';
 
 interface StoriesBarProps {
-  onStoryClick: (group: StoryGroup, startIndex: number) => void;
+  /** The tapped group plus every group, so the viewer can advance past it. */
+  onStoryClick: (group: StoryGroup, allGroups: StoryGroup[]) => void;
   onCreateClick: () => void;
   refreshTrigger?: number;
 }
+
+
+/**
+ * What the ring shows: the person's most recent status, not their avatar —
+ * that is what the ring is announcing. Falls back to the avatar for a text-only
+ * status (nothing to show) or a video, and both are requested at thumbnail size
+ * rather than full resolution.
+ */
+const previewFor = (group: StoryGroup): string => {
+  const latest = group.statuses?.[group.statuses.length - 1] as
+    | { mediaUrl?: string; mediaThumbnailUrl?: string; mediaType?: string }
+    | undefined;
+
+  const media = latest?.mediaThumbnailUrl || latest?.mediaUrl;
+  if (media && latest?.mediaType !== 'video' && latest?.mediaType !== 'text') {
+    // Private status media arrives pre-signed and cannot be resized by us; the
+    // helper returns it untouched in that case.
+    return sbcApiService.generateThumbnailUrl(media, 128);
+  }
+  return sbcApiService.generateThumbnailUrl(group.authorAvatar, 128) || DEFAULT_AVATAR;
+};
 
 export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateClick, refreshTrigger }) => {
   const { user } = useAuth();
   const [storyGroups, setStoryGroups] = useState<StoryGroup[]>([]);
   const [loading, setLoading] = useState(true);
+  /**
+   * The server has switched the feature off for this account.
+   *
+   * Driven by the API's answer rather than by checking the role here: the gate
+   * lives in chat-service and is controlled by an env flag, so reading it from
+   * the response means the bar reappears the moment the flag is flipped, with no
+   * redeploy and no second copy of the rule to keep in sync.
+   */
+  const [unavailable, setUnavailable] = useState(false);
 
   const fetchStories = async () => {
     try {
       setLoading(true);
       const response = await sbcApiService.getStatuses(1, 100);
-      console.log('StoriesBar - Statuses API response:', response);
+
+      if (response.body?.code === 'STATUS_FEATURE_DISABLED') {
+        setUnavailable(true);
+        setStoryGroups([]);
+        return;
+      }
 
       if (response.body.success && response.body.data) {
         // Group statuses by userId
@@ -44,7 +82,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
             grouped[userId] = {
               userId,
               authorName: userName,
-              authorAvatar: authorData?.avatar || '/default-avatar.png',
+              authorAvatar: authorData?.avatar || DEFAULT_AVATAR,
               statuses: [],
               hasUnviewed: false,
             };
@@ -80,9 +118,13 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
     fetchStories();
   }, [refreshTrigger]);
 
+  // Render nothing at all rather than an empty rail: an account that cannot use
+  // the feature should not see a permanently blank strip it can never fill.
+  if (unavailable) return null;
+
   if (loading && storyGroups.length === 0) {
     return (
-      <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-gray-200 p-4">
+      <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-border p-4">
         <div className="flex gap-3 overflow-x-auto">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex flex-col items-center gap-2">
@@ -98,7 +140,7 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
   console.log('StoriesBar - Rendering with storyGroups:', storyGroups.length, 'groups');
 
   return (
-    <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-gray-200 p-4">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-white border-b border-border p-4">
       <motion.div variants={listContainer} initial="hidden" animate="show" className="flex gap-3 overflow-x-auto scrollbar-hide">
         {/* Add Your Story Button */}
         <motion.button
@@ -108,15 +150,15 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
           className="flex flex-col items-center gap-2 flex-shrink-0"
         >
           <div className="relative">
-            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-gray-300">
+            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-border">
               <img
-                src={user?.avatar || '/default-avatar.png'}
+                src={sbcApiService.generateThumbnailUrl(user?.avatar, 128) || DEFAULT_AVATAR}
                 alt="Your story"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="absolute bottom-0 right-0 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white">
-              <PlusIcon className="w-3 h-3 text-white" />
+              <HugeiconsIcon icon={PlusSignIcon} className="w-3 h-3 text-white" />
             </div>
           </div>
           <span className="text-xs font-medium text-gray-900 max-w-[64px] truncate">Votre statut</span>
@@ -128,19 +170,24 @@ export const StoriesBar: React.FC<StoriesBarProps> = ({ onStoryClick, onCreateCl
             <motion.button
               key={group.userId}
               variants={rowItem}
-              onClick={() => onStoryClick(group, 0)}
+              onClick={() => onStoryClick(group, storyGroups)}
               className="flex flex-col items-center gap-2 flex-shrink-0"
             >
-              <div className={`rounded-full p-0.5 ${
-                group.hasUnviewed
-                  ? 'bg-gradient-to-tr from-blue-500 via-green-500 to-orange-500'
-                  : 'bg-gray-300'
-              }`}>
+              <div className={`bg-primary rounded-full p-0.5 ${
+ group.hasUnviewed
+ ? ' '
+ : 'bg-gray-300'
+ }`}>
                 <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white bg-white">
                   <img
-                    src={group.authorAvatar || '/default-avatar.png'}
+                    src={previewFor(group)}
                     alt={group.authorName}
+                    loading="lazy"
+                    decoding="async"
                     className="w-full h-full object-cover"
+                    // A status whose signed URL has lapsed, or a video, should not
+                    // leave a broken-image icon in the ring.
+                    onError={(e) => { (e.currentTarget as HTMLImageElement).src = group.authorAvatar || DEFAULT_AVATAR; }}
                   />
                 </div>
               </div>

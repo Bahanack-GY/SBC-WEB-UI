@@ -337,3 +337,31 @@ export interface TransactionFilters {
   page?: number;
   limit?: number;
 }
+
+/** One row of the monthly affiliate leaderboard ("Classement Général"). */
+export interface LeaderboardEntry {
+    userId: string;
+    name: string;
+    avatar?: string;
+    avatarId?: string;
+    country?: string;
+    city?: string;
+    /** DIRECT (level-1) referrals for the month. Indirect levels do not count. */
+    referralCount: number;
+    /** Estimated FCFA earned this month. Server-side estimate, labelled as such. */
+    earnings: number;
+    rank: number;
+}
+
+/** The caller's own standing, returned alongside the top N. */
+export interface MyLeaderboardRank {
+    rank: number;
+    referralCount: number;
+    totalRanked: number;
+    inTop: boolean;
+}
+
+export interface LeaderboardResponse {
+    top: LeaderboardEntry[];
+    me: MyLeaderboardRank | null;
+}

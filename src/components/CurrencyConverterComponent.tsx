@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Loading03Icon, RefreshIcon } from '@hugeicons/core-free-icons';
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FiX, FiLoader, FiRefreshCw } from 'react-icons/fi';
+import { motion, AnimatePresence } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
@@ -178,7 +179,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl p-4 w-full max-w-sm text-gray-900 relative shadow-lg max-h-[85vh] overflow-y-auto"
+              className="bg-white rounded-2xl p-4 w-full max-w-sm text-gray-900 relative max-h-[85vh] overflow-y-auto border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -188,7 +189,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                 className="absolute top-3 right-3 text-gray-400 hover:text-gray-700"
                 onClick={onClose}
               >
-                <FiX size={20} />
+                <HugeiconsIcon icon={Cancel01Icon} size={20} />
               </button>
 
               <h2 className="text-lg font-bold mb-4 text-center pr-6">Convertir</h2>
@@ -220,7 +221,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
 
               {/* Negative Balance Warning */}
               {maxAmount < 0 && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <div className="mb-4 p-3 bg-red-50 border border-border rounded-lg">
                   <div className="text-xs text-red-700 text-center">
                     ⚠️ Impossible de convertir avec un solde {fromCurrency} négatif
                   </div>
@@ -238,7 +239,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                       className="p-1 text-gray-400 hover:text-gray-600"
                       title="Inverser"
                     >
-                      <FiRefreshCw size={16} />
+                      <HugeiconsIcon icon={RefreshIcon} size={16} />
                     </button>
                   </div>
                   <input
@@ -252,8 +253,8 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                     placeholder={`Montant en ${fromCurrency}`}
                     className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 ${
                       maxAmount < 0 
-                        ? 'border-red-300 bg-red-50 cursor-not-allowed focus:ring-red-500' 
-                        : 'border-gray-300 focus:ring-blue-500'
+                        ? 'border-danger bg-red-50 cursor-not-allowed focus:ring-red-500' 
+                        : 'border-border focus:ring-blue-500'
                     }`}
                     max={Math.max(0, maxAmount)}
                     disabled={maxAmount < 0}
@@ -266,7 +267,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                 {/* To Currency Display */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Vers: {toCurrency}</label>
-                  <div className="px-3 py-2 bg-gray-50 border border-gray-300 rounded-lg min-h-[2.5rem] flex items-center">
+                  <div className="px-3 py-2 bg-gray-50 border border-border rounded-lg min-h-[2.5rem] flex items-center">
                     {convertedAmount !== null ? (
                       <div className="w-full">
                         <div className="font-bold">
@@ -284,7 +285,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
 
                 {/* Error Message */}
                 {error && (
-                  <div className="p-2 bg-red-50 border border-red-200 rounded-lg">
+                  <div className="p-2 bg-red-50 border border-border rounded-lg">
                     <p className="text-red-600 text-xs">{error}</p>
                   </div>
                 )}
@@ -296,7 +297,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                     disabled={loading || !amount || maxAmount < 0}
                     className="flex-1 bg-blue-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    {loading ? <FiLoader className="animate-spin mr-1" size={14} /> : null}
+                    {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-1" size={14} /> : null}
                     Prévisualiser
                   </button>
                   <button
@@ -304,7 +305,7 @@ const CurrencyConverterComponent: React.FC<CurrencyConverterProps> = ({
                     disabled={converting || !convertedAmount || maxAmount < 0}
                     className="flex-1 bg-green-500 text-white py-2 px-3 rounded-lg text-sm font-medium hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                   >
-                    {converting ? <FiLoader className="animate-spin mr-1" size={14} /> : null}
+                    {converting ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-1" size={14} /> : null}
                     Convertir
                   </button>
                 </div>

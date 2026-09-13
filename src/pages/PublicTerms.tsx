@@ -1,25 +1,26 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FiArrowLeft } from 'react-icons/fi';
+import { motion } from 'motion/react';
 import logo from '../assets/img/logo-sbc.png';
 import PublicFooter from '../components/common/PublicFooter';
 import { pageFade, headerDrop, sectionRise } from '../utils/motion';
 
 export default function PublicTerms() {
   return (
-    <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen w-full bg-gradient-to-br from-[#eaf2ff] via-white to-[#eaffea]">
+    <motion.div variants={pageFade} initial="hidden" animate="show" className="bg-bg min-h-screen w-full">
       <div className="max-w-3xl mx-auto px-5 py-6">
         <motion.header variants={headerDrop} className="flex items-center justify-between mb-6">
-          <Link to="/a-propos" aria-label="Retour" className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 shadow-sm hover:bg-white">
-            <FiArrowLeft size={20} />
+          <Link to="/a-propos" aria-label="Retour" className="h-9 w-9 flex items-center justify-center rounded-full bg-white/80 text-gray-700 hover:bg-white border border-border">
+            <HugeiconsIcon icon={ArrowLeft01Icon} size={20} />
           </Link>
           <img src={logo} alt="SBC" className="h-9 w-9 object-contain" />
-          <Link to="/connexion" className="text-sm font-semibold text-[#115CF6] hover:underline">
+          <Link to="/connexion" className="text-sm font-semibold text-primary hover:underline">
             Se connecter
           </Link>
         </motion.header>
 
-        <motion.article variants={sectionRise} className="bg-white/80 backdrop-blur rounded-2xl p-6 md:p-8 shadow-sm prose prose-sm md:prose-base max-w-none">
+        <motion.article variants={sectionRise} className="bg-white/80 backdrop-blur rounded-2xl p-6 md:p-8 prose prose-sm md:prose-base max-w-none border border-border">
           <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Conditions Générales d'Utilisation</h1>
           <p className="text-sm text-gray-500 mb-6">Sniper Business Center — En vigueur</p>
 
@@ -60,7 +61,7 @@ export default function PublicTerms() {
           <h2 className="text-xl font-bold text-gray-900 mt-6 mb-2">6. Contact</h2>
           <p>
             Pour toute question relative aux présentes CGU, vous pouvez nous écrire à&nbsp;
-            <a href="mailto:reseautage.sbc@gmail.com" className="text-[#115CF6] hover:underline">reseautage.sbc@gmail.com</a>.
+            <a href="mailto:reseautage.sbc@gmail.com" className="text-primary hover:underline">reseautage.sbc@gmail.com</a>.
           </p>
         </motion.article>
 

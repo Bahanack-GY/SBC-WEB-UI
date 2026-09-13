@@ -1,6 +1,7 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Call02Icon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { FiPhone, FiLoader } from 'react-icons/fi';
+import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -145,7 +146,7 @@ function ChangePhoneNumber() {
         >
           <div className="flex flex-col items-center mt-8 mb-6">
             <div className="bg-blue-100 rounded-full w-24 h-24 flex items-center justify-center mb-4">
-              <FiPhone className="text-blue-500" size={40} />
+              <HugeiconsIcon icon={Call02Icon} className="text-blue-500" size={40} />
             </div>
             <h2 className="text-xl font-bold text-gray-800 mb-2">
               {step === 'request' ? 'Nouveau numéro' : 'Vérification'}
@@ -182,7 +183,7 @@ function ChangePhoneNumber() {
                       setError('');
                     }}
                     placeholder="Ex: 675090755"
-                    className={`flex-1 border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
+                    className={`flex-1 border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
                     required
                   />
                 </div>
@@ -191,10 +192,10 @@ function ChangePhoneNumber() {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="bg-primary w-full text-white font-bold py-3 rounded-xl text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 disabled={loading}
               >
-                {loading ? <FiLoader className="animate-spin" /> : <FiPhone />}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={Call02Icon} />}
                 {loading ? 'Envoi en cours...' : 'Envoyer le code via WhatsApp'}
               </button>
             </form>
@@ -212,7 +213,7 @@ function ChangePhoneNumber() {
                     setError('');
                   }}
                   placeholder="Entrez le code OTP"
-                  className={`w-full border ${error ? 'border-red-400' : 'border-gray-300'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
+                  className={`w-full border ${error ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
                   required
                 />
                 {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
@@ -232,17 +233,17 @@ function ChangePhoneNumber() {
 
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-green-400 to-green-500 hover:from-green-500 hover:to-green-600 text-white font-bold py-3 rounded-xl text-lg mt-2 shadow disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                className="bg-success w-full text-white font-bold py-3 rounded-xl text-lg mt-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
                 disabled={loading}
               >
-                {loading ? <FiLoader className="animate-spin" /> : null}
+                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : null}
                 {loading ? 'Vérification...' : 'Confirmer le changement'}
               </button>
 
               <button
                 type="button"
                 onClick={() => setStep('request')}
-                className="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl text-lg shadow hover:bg-gray-300 transition-colors"
+                className="w-full bg-gray-200 text-gray-700 font-bold py-3 rounded-xl text-lg hover:bg-gray-300 transition-colors"
                 disabled={loading}
               >
                 Retour
@@ -260,7 +261,7 @@ function ChangePhoneNumber() {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative shadow-lg"
+              className="bg-white rounded-2xl p-6 w-[90vw] max-w-sm text-gray-900 relative border border-border"
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
@@ -280,7 +281,7 @@ function ChangePhoneNumber() {
                   modalContent.type === 'success'
                     ? 'bg-green-500 hover:bg-green-600'
                     : 'bg-red-500 hover:bg-red-600'
-                } text-white rounded-xl py-2 font-bold shadow transition-colors`}
+                } text-white rounded-xl py-2 font-bold  transition-colors`}
                 onClick={() => setShowModal(false)}
               >
                 Fermer

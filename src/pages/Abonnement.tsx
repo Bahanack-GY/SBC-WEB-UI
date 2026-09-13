@@ -1,10 +1,11 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { MinusSignCircleIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence } from "motion/react";
 import iconOne from "../assets/icon/Growth.png";
 import iconTwo from "../assets/icon/analyse.png";
 import iconContact from "../assets/icon/contact.png";
 import BackButton from "../components/common/BackButton";
-import { HiMiniMinusCircle } from "react-icons/hi2";
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -144,7 +145,7 @@ function Abonnement() {
 
         if (hasCibleSub) {
             return (
-                <button className="bg-green-500 text-white rounded-xl px-4 py-2 font-bold shadow cursor-default">
+                <button className="bg-green-500 text-white rounded-xl px-4 py-2 font-bold cursor-default">
                     Actif
                 </button>
             );
@@ -153,7 +154,7 @@ function Abonnement() {
         if (hasClassicSub) {
             if (plan.type === 'CLASSIQUE') {
                 return (
-                    <button className="bg-green-500 text-white rounded-xl px-4 py-2 font-bold shadow cursor-default">
+                    <button className="bg-green-500 text-white rounded-xl px-4 py-2 font-bold cursor-default">
                         Actif
                     </button>
                 );
@@ -163,7 +164,7 @@ function Abonnement() {
                     <button
                         onClick={handleUpgrade}
                         disabled={isPurchasing}
-                        className="bg-purple-700 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-purple-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="bg-purple-700 text-white rounded-xl px-4 py-2 font-bold hover:bg-purple-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {isPurchasing ? 'Mise à niveau...' : 'Mettre à niveau'}
                     </button>
@@ -175,7 +176,7 @@ function Abonnement() {
             <button
                 onClick={() => handlePurchase(plan.type)}
                 disabled={isPurchasing}
-                className="bg-blue-700 text-white rounded-xl px-4 py-2 font-bold shadow hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="bg-blue-700 text-white rounded-xl px-4 py-2 font-bold hover:bg-blue-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
                 {isPurchasing ? 'Paiement...' : 'Payer'}
             </button>
@@ -220,10 +221,10 @@ function Abonnement() {
                                     initial={{ opacity: 0, y: 30 }}
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ delay: 0.1 * (index + 1) }}
-                                    className={`rounded-2xl p-5 flex items-center justify-between shadow-lg relative overflow-hidden ${plan.type === 'CIBLE'
-                                        ? 'bg-gradient-to-r from-[#F68F0F] to-orange-400'
-                                        : 'bg-gradient-to-r from-[#115CF6] to-blue-600'
-                                        }`}
+                                    className={`bg-primary rounded-2xl p-5 flex items-center justify-between relative overflow-hidden ${plan.type === 'CIBLE'
+ ? ' '
+ : ' '
+ }`}
                                 >
                                     <div className="w-full">
                                         <div className="uppercase text-white text-xs">{plan.name}</div>
@@ -240,82 +241,82 @@ function Abonnement() {
                                             {plan.type === 'CLASSIQUE' ? (
                                                 <>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Possibilité de gagner 5000fcfa à 10.000fcfa/jour</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en trading</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation sur l'achat en chine</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en art oratoire</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en marketing digital</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation création des bots WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Accès marketplace</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Contacts WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
                                                     </li>
                                                 </>
                                             ) : (
                                                 <>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Possibilité de gagner 12.500fcfa à 25.000fcfa/jour</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en trading</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation sur l'achat en chine</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en art oratoire</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation en marketing digital</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation création des bots WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Accès marketplace</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Contacts WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Gagner de l'argent avec ses vues en statut WhatsApp</span>
                                                     </li>
                                                     <li className="flex items-center text-white text-xs gap-2">
-                                                        <HiMiniMinusCircle className="text-orange-300 w-3 h-3 flex-shrink-0" />
+                                                        <HugeiconsIcon icon={MinusSignCircleIcon} className="text-orange-300 w-3 h-3 flex-shrink-0" />
                                                         <span>Formation SBC IA CREATOR</span>
                                                     </li>
                                                 </>
@@ -343,15 +344,15 @@ function Abonnement() {
                                 initial={{ opacity: 0, y: 30 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 }}
-                                className="bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500 rounded-2xl p-5 shadow-xl relative overflow-visible border-2 border-yellow-300 mt-4"
+                                className="bg-accent rounded-2xl p-5 relative overflow-visible border-2 border-accent mt-4"
                             >
                                 {/* Premium badge at top */}
-                                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-yellow-300 to-amber-400 text-gray-900 text-[10px] font-bold px-4 py-1 rounded-full shadow-lg z-20 border-2 border-white">
+                                <div className="bg-accent absolute -top-3 left-1/2 transform -translate-x-1/2 text-gray-900 text-[10px] font-bold px-4 py-1 rounded-full z-20 border-2 border-white">
                                     👑 OFFRE PREMIUM
                                 </div>
 
                                 {/* Bientôt disponible badge */}
-                                <div className="absolute top-3 right-3 bg-white text-orange-600 text-[10px] font-bold px-3 py-1 rounded-full shadow-lg z-10 animate-pulse">
+                                <div className="absolute top-3 right-3 bg-white text-orange-600 text-[10px] font-bold px-3 py-1 rounded-full z-10 animate-pulse border border-border">
                                     Bientôt disponible
                                 </div>
 
@@ -368,23 +369,23 @@ function Abonnement() {
                                     {/* Features List */}
                                     <ul className="mt-3 mb-2 space-y-1">
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Accès à toutes les offres du pack ciblé</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Accès à la méthode Atem (formation en création de contenu + page de capture + page de vente)</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Relance des prospects automatiquement à vie</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Accès au système d'affiliation</span>
                                         </li>
                                         <li className="flex items-center text-white text-xs gap-2">
-                                            <HiMiniMinusCircle className="text-yellow-200 w-3 h-3 flex-shrink-0" />
+                                            <HugeiconsIcon icon={MinusSignCircleIcon} className="text-yellow-200 w-3 h-3 flex-shrink-0" />
                                             <span>Plus de 1000 vues en statut WhatsApp</span>
                                         </li>
                                     </ul>
@@ -392,7 +393,7 @@ function Abonnement() {
                                     <div className="mt-3">
                                         <button
                                             disabled
-                                            className="bg-white text-orange-600 rounded-xl px-4 py-2 font-bold shadow cursor-not-allowed opacity-80"
+                                            className="bg-white text-orange-600 rounded-xl px-4 py-2 font-bold cursor-not-allowed opacity-80 border border-border"
                                         >
                                             Bientôt disponible
                                         </button>
@@ -430,7 +431,7 @@ function Abonnement() {
                             onClick={() => setErrorModal({ show: false, message: '' })}
                         >
                             <motion.div
-                                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full shadow-xl"
+                                className="bg-white rounded-2xl p-6 mx-4 max-w-sm w-full border border-border"
                                 initial={{ scale: 0.9, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 exit={{ scale: 0.9, opacity: 0 }}

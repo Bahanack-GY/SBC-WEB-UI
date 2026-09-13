@@ -1,5 +1,5 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import BackButton from '../common/BackButton';
 
 /**
@@ -39,10 +39,10 @@ export const AdsScreen: React.FC<{
     <div className="min-h-screen bg-gray-50">
         <motion.div
             {...adsHeaderMotion}
-            className={`px-4 pt-4 pb-6 text-white bg-gradient-to-br ${accent === 'green'
-                ? 'from-green-600 to-emerald-500'
-                : 'from-[#115CF6] to-blue-500'
-                }`}
+            className={`bg-primary px-4 pt-4 pb-6 text-white ${accent === 'green'
+ ? ' '
+ : ' '
+ }`}
         >
             <div className="max-w-2xl mx-auto">
                 <div className="[&_button]:text-white [&_svg]:text-white">
@@ -60,7 +60,7 @@ export const AdsScreen: React.FC<{
                             initial={{ opacity: 0, scale: 0.8, rotate: -4 }}
                             animate={{ opacity: 1, scale: 1, rotate: 0 }}
                             transition={{ delay: 0.2, type: 'spring' }}
-                            className="w-24 h-24 object-cover rounded-2xl shadow-lg ring-2 ring-white/30 shrink-0"
+                            className="w-24 h-24 object-cover rounded-2xl ring-2 ring-white/30 shrink-0"
                         />
                     )}
                 </div>
@@ -89,7 +89,7 @@ const Bar: React.FC<{ className?: string }> = ({ className = '' }) => (
 export const AdsCardSkeleton: React.FC<{ rows?: number }> = ({ rows = 3 }) => (
     <div className="space-y-3" aria-busy="true" aria-label="Chargement">
         {Array.from({ length: rows }).map((_, i) => (
-            <div key={i} className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm">
+            <div key={i} className="bg-white border border-border rounded-2xl p-4">
                 <div className="flex gap-3">
                     <Bar className="w-16 h-16 rounded-xl shrink-0" />
                     <div className="flex-1 space-y-2 pt-1">
@@ -104,7 +104,7 @@ export const AdsCardSkeleton: React.FC<{ rows?: number }> = ({ rows = 3 }) => (
 );
 
 export const AdsStatSkeleton: React.FC = () => (
-    <div className="bg-white border border-gray-200 rounded-2xl p-5 shadow-sm space-y-3" aria-busy="true">
+    <div className="bg-white border border-border rounded-2xl p-5 space-y-3" aria-busy="true">
         <Bar className="h-3 w-24" />
         <Bar className="h-8 w-40" />
         <Bar className="h-3 w-56" />
@@ -125,15 +125,15 @@ export const AdsStatCard: React.FC<{
     index?: number;
 }> = ({ label, value, hint, tone = 'default', index = 0 }) => {
     const tones = {
-        default: 'bg-white border-gray-200 text-gray-900',
-        green: 'bg-green-50 border-green-200 text-green-900',
-        amber: 'bg-amber-50 border-amber-200 text-amber-900',
+        default: 'bg-white border-border text-gray-900',
+        green: 'bg-green-50 border-border text-green-900',
+        amber: 'bg-amber-50 border-border text-amber-900',
     } as const;
 
     return (
         <motion.div
             {...adsItemMotion(index)}
-            className={`border rounded-2xl p-3 text-center shadow-sm ${tones[tone]}`}
+            className={`border rounded-2xl p-3 text-center ${tones[tone]}`}
         >
             <p className="text-xl font-bold leading-tight">{value}</p>
             <p className="text-[11px] opacity-70 leading-tight mt-0.5">{label}</p>

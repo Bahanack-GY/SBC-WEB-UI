@@ -1,5 +1,6 @@
+import { HugeiconsIcon } from '@hugeicons/react';
+import { HelpCircleIcon } from '@hugeicons/core-free-icons';
 import React from 'react';
-import { FiHelpCircle } from 'react-icons/fi';
 import { useTour } from './TourProvider';
 
 const TourButton: React.FC = () => {
@@ -8,10 +9,10 @@ const TourButton: React.FC = () => {
   return (
     <button
       onClick={startTour}
-      className="fixed bottom-20 right-4 bg-[#115CF6] text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-colors z-50"
+      className="tour-button fixed bottom-20 right-4 bg-primary text-white p-3 rounded-full hover:bg-blue-700 transition-colors z-50"
       title="Démarrer le guide"
     >
-      <FiHelpCircle size={24} />
+      <HugeiconsIcon icon={HelpCircleIcon} size={24} />
     </button>
   );
 };
