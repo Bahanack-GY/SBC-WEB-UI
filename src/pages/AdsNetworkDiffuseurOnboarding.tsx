@@ -92,11 +92,15 @@ function AdsNetworkDiffuseurOnboarding() {
           Publiez sur votre statut WhatsApp. Soyez payé selon les vues réelles.
         </p>
 
+        {/* These figures are for a PAID campaign. The page never mentioned the test
+            campaign that comes first, so a new diffuseur's first impression was a
+            three-day commitment — while what they are actually offered first is a
+            single day. */}
         <div className="grid grid-cols-3 gap-2 mt-5 text-center">
           {[
-            { value: '3 jours', label: 'de publication' },
+            { value: '1 jour', label: 'pour la campagne test' },
+            { value: '3 jours', label: 'par campagne payée' },
             { value: '24 h', label: 'pour le jour 1' },
-            { value: '3 jours', label: 'de report' },
           ].map((stat, i) => (
             <motion.div key={stat.label} {...adsItemMotion(i)} className="bg-green-50 border border-border rounded-xl py-3">
               <p className="font-bold text-green-800">{stat.value}</p>
@@ -107,14 +111,14 @@ function AdsNetworkDiffuseurOnboarding() {
 
         <h2 className="font-semibold text-gray-900 mt-6 mb-3">Comment ça marche</h2>
         <div className="space-y-3">
-          <AdsStep index={1} title="Une campagne vous est proposée" accent="green">
+          <AdsStep index={1} title="D'abord, la campagne test : un seul jour" accent="green">
+Une publication, vérifiée. Elle mesure votre audience et débloque les campagnes payées.
+          </AdsStep>
+          <AdsStep index={2} title="Une campagne payée vous est proposée" accent="green">
 Premier arrivé, premier servi.
           </AdsStep>
-          <AdsStep index={2} title="Vous publiez le jour 1 sous 24 h" accent="green">
-Sinon la place repart à quelqu'un d'autre.
-          </AdsStep>
-          <AdsStep index={3} title="Puis les jours 2 et 3" accent="green">
-Une par jour, avec 3 jours de report si besoin.
+          <AdsStep index={3} title="Vous publiez le jour 1 sous 24 h" accent="green">
+Puis les jours 2 et 3, un par jour, avec 3 jours de report si besoin.
           </AdsStep>
           <AdsStep index={4} title="Vous vérifiez chaque publication" accent="green">
 Connectez WhatsApp pour que vos vues comptent.

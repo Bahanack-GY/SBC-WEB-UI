@@ -46,16 +46,33 @@ interface Participation {
     suggestedCaption?: string;
     isTestCampaign?: boolean;
   } | null;
+  /** One entry per campaign day. Its length is the campaign's real duration. */
+  days?: unknown[];
   schedule?: {
     currentDay?: DaySchedule;
     /** Present when a day is posted and waiting for the diffuseur to verify it. */
     awaitingVerification?: { day: number; postedAt?: string };
     daysCompleted?: number;
+    /** Days this participation has — 1 for the test campaign, 3 for a paid one. */
+    totalDays?: number;
     canPostNow?: boolean;
     completionDeadline?: string;
     day1Deadline?: string;
   };
 }
+
+/**
+ * How many days a participation runs.
+ *
+ * Every day-count on this screen used to be a literal 3, so the test campaign —
+ * 1 day on the server since early September — kept reading as a 3-day commitment
+ * to the people taking it: the offer text, the progress bar, « Jour 1 sur 3 ».
+ * The server's own count wins; 3 is only the fallback for an old response.
+ */
+const daysOf = (p: Participation): number =>
+  p.schedule?.totalDays ?? p.days?.length ?? (p.campaign?.isTestCampaign ? 1 : 3);
+
+const joursLabel = (n: number): string => `${n} jour${n > 1 ? 's' : ''}`;
 
 interface Verdict {
   day: number;
@@ -374,7 +391,7 @@ function AdsNetworkDiffuseur() {
                             <p className="text-sm text-gray-600 line-clamp-2">{p.campaign.description}</p>
                           )}
                           <p className="text-xs text-gray-500 mt-1">
-                            3 jours de publication · environ {p.expectedViews ?? profile?.effectiveAverageViews ?? 0} vues
+                            {joursLabel(daysOf(p))} de publication · environ {p.expectedViews ?? profile?.effectiveAverageViews ?? 0} vues
                           </p>
                           <p className="text-xs text-primary font-medium mt-1">Voir les détails →</p>
                         </div>
@@ -438,7 +455,7 @@ function AdsNetworkDiffuseur() {
                             progress bar and two short labels. */}
                         <div className="mt-2">
                           <AdsDayPips
-                            total={3}
+                            total={daysOf(p)}
                             completed={p.schedule?.daysCompleted ?? 0}
                             awaitingDay={awaiting?.day}
                           />
@@ -448,7 +465,7 @@ function AdsNetworkDiffuseur() {
                                 ? `Jour ${awaiting.day} à vérifier`
                                 : !windowOpen && day?.windowOpensAt
                                   ? `Jour ${day.day} · ${relativeDate(day.windowOpensAt)}`
-                                  : `Jour ${day?.day ?? '—'} sur 3`}
+                                  : `Jour ${day?.day ?? '—'} sur ${daysOf(p)}`}
                             </span>
                             <span className="text-gray-400">
                               Fin {relativeDate(p.schedule?.completionDeadline)}
@@ -748,8 +765,10 @@ function AdsNetworkDiffuseur() {
 
                 <p className="text-xs text-gray-500 mt-3">
                   {offerDetail.campaign?.isTestCampaign
-                    ? "Campagne test obligatoire : elle ne rapporte rien, mais elle mesure votre audience réelle et débloque les campagnes rémunérées. Publiez le statut 3 jours de suite et vérifiez chaque publication."
-                    : "En acceptant, vous vous engagez à publier le statut 3 jours de suite, à raison d'une publication par jour, et à vérifier chaque publication."}
+                    ? (daysOf(offerDetail) === 1
+                      ? "Campagne test obligatoire : elle ne rapporte rien, mais elle mesure votre audience réelle et débloque les campagnes rémunérées. Publiez le statut une fois, puis vérifiez la publication."
+                      : `Campagne test obligatoire : elle ne rapporte rien, mais elle mesure votre audience réelle et débloque les campagnes rémunérées. Publiez le statut ${joursLabel(daysOf(offerDetail))} de suite et vérifiez chaque publication.`)
+                    : `En acceptant, vous vous engagez à publier le statut ${joursLabel(daysOf(offerDetail))} de suite, à raison d'une publication par jour, et à vérifier chaque publication.`}
                 </p>
 
                 <div className="flex gap-2 mt-4">
