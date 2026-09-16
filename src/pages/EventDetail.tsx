@@ -18,6 +18,7 @@ interface EventDoc {
     title: string;
     description: string;
     posterFileId?: string;
+    videoFileId?: string;
     city: string;
     venue: string;
     address: string;
@@ -75,6 +76,16 @@ export default function EventDetail() {
             </div>
             {event.posterFileId && (
                 <img src={posterUrl(event.posterFileId)} alt={event.title} className="w-full h-56 object-cover" />
+            )}
+            {event.videoFileId && (
+                <video
+                    src={sbcApiService.generateSettingsFileUrl(event.videoFileId)}
+                    poster={event.posterFileId ? posterUrl(event.posterFileId) : undefined}
+                    className="w-full max-h-96 bg-black"
+                    controls
+                    playsInline
+                    preload="metadata"
+                />
             )}
             <div className="p-4 space-y-4">
                 <div>

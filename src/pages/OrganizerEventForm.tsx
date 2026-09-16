@@ -25,6 +25,11 @@ export default function OrganizerEventForm() {
     const [posterFile, setPosterFile] = useState<File | null>(null);
     const [posterPreview, setPosterPreview] = useState<string>('');
     const [uploadingPoster, setUploadingPoster] = useState(false);
+    const [videoFileId, setVideoFileId] = useState<string>('');
+    const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [videoPreview, setVideoPreview] = useState<string>('');
+    const [uploadingVideo, setUploadingVideo] = useState(false);
+    const MAX_VIDEO_BYTES = 30 * 1024 * 1024; // 30 MB
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [event, setEvent] = useState<any>(null);
@@ -58,6 +63,10 @@ export default function OrganizerEventForm() {
                         setPosterFileId(found.posterFileId);
                         setPosterPreview(sbcApiService.generateThumbnailUrl(found.posterFileId, 512));
                     }
+                    if (found.videoFileId) {
+                        setVideoFileId(found.videoFileId);
+                        setVideoPreview(sbcApiService.generateSettingsFileUrl(found.videoFileId));
+                    }
                 }
             });
             sbcApiService.listEventTicketTypes(id).then((r) => r.apiReportedSuccess && setTicketTypes(r.body?.data || []));
@@ -67,6 +76,16 @@ export default function OrganizerEventForm() {
     const pickPoster = (f: File | null) => {
         setPosterFile(f);
         setPosterPreview(f ? URL.createObjectURL(f) : (posterFileId ? sbcApiService.generateThumbnailUrl(posterFileId, 512) : ''));
+    };
+
+    const pickVideo = (f: File | null) => {
+        if (f && f.size > MAX_VIDEO_BYTES) {
+            setError(`La vidéo ne doit pas dépasser 30 Mo (celle-ci fait ${(f.size / 1024 / 1024).toFixed(1)} Mo).`);
+            return;
+        }
+        setError(null);
+        setVideoFile(f);
+        setVideoPreview(f ? URL.createObjectURL(f) : (videoFileId ? sbcApiService.generateSettingsFileUrl(videoFileId) : ''));
     };
 
     const save = async () => {
@@ -87,6 +106,25 @@ export default function OrganizerEventForm() {
                 setPosterFile(null);
             }
 
+            let uploadedVideoId = videoFileId;
+            if (videoFile) {
+                if (videoFile.size > MAX_VIDEO_BYTES) {
+                    setError('La vidéo dépasse 30 Mo.');
+                    return;
+                }
+                setUploadingVideo(true);
+                const up = await sbcApiService.uploadFile(videoFile);
+                setUploadingVideo(false);
+                const fid = up.body?.data?.fileId;
+                if (!up.isSuccessByStatusCode || !fid) {
+                    setError(up.message || "La vidéo n'a pas pu être envoyée. Réessayez.");
+                    return;
+                }
+                uploadedVideoId = fid;
+                setVideoFileId(fid);
+                setVideoFile(null);
+            }
+
             const payload: Record<string, any> = {
                 title: title.trim(),
                 description: description.trim(),
@@ -101,6 +139,7 @@ export default function OrganizerEventForm() {
                 maxResalePricePct: maxResalePricePct ? parseFloat(maxResalePricePct) : null,
             };
             if (uploadedPosterId) payload.posterFileId = uploadedPosterId;
+            if (uploadedVideoId) payload.videoFileId = uploadedVideoId;
 
             const res = isEdit && id
                 ? await sbcApiService.updateOrganizerEvent(id, payload)
@@ -165,6 +204,35 @@ export default function OrganizerEventForm() {
                     />
                 </label>
                 {uploadingPoster && <div className="text-xs text-gray-500 text-center">Envoi de l'affiche...</div>}
+
+                <label className="block cursor-pointer border-2 border-dashed border-gray-300 rounded-xl overflow-hidden bg-gray-50 hover:border-[#115CF6] transition">
+                    {videoPreview ? (
+                        <div className="relative">
+                            <video src={videoPreview} className="w-full h-40 object-cover bg-black" muted playsInline controls={false} />
+                            <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                {videoFile ? 'Nouvelle vidéo · cliquez pour changer' : 'Cliquez pour changer'}
+                            </div>
+                            {videoFile && (
+                                <div className="absolute top-2 left-2 bg-black/60 text-white text-[10px] px-2 py-1 rounded">
+                                    {(videoFile.size / 1024 / 1024).toFixed(1)} Mo
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="p-6 text-center text-sm text-gray-500">
+                            <div className="text-2xl">🎬</div>
+                            <div className="mt-2">Ajouter une vidéo promo (optionnel)</div>
+                            <div className="text-xs text-gray-400 mt-1">MP4, MOV ou WebM · 30 Mo max</div>
+                        </div>
+                    )}
+                    <input
+                        type="file"
+                        accept="video/mp4,video/quicktime,video/webm,video/*"
+                        className="hidden"
+                        onChange={(e) => pickVideo(e.target.files?.[0] ?? null)}
+                    />
+                </label>
+                {uploadingVideo && <div className="text-xs text-gray-500 text-center">Envoi de la vidéo...</div>}
 
                 <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titre" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" rows={4} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
