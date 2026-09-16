@@ -13,6 +13,7 @@ export default function OrganizerEventForm() {
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [category, setCategory] = useState('concert');
+    const [country, setCountry] = useState('CM');
     const [city, setCity] = useState('');
     const [venue, setVenue] = useState('');
     const [address, setAddress] = useState('');
@@ -45,6 +46,7 @@ export default function OrganizerEventForm() {
                     setTitle(found.title);
                     setDescription(found.description);
                     setCategory(found.category);
+                    if (found.country) setCountry(found.country);
                     setCity(found.city);
                     setVenue(found.venue);
                     setAddress(found.address);
@@ -89,6 +91,7 @@ export default function OrganizerEventForm() {
                 title: title.trim(),
                 description: description.trim(),
                 category,
+                country,
                 city: city.trim(),
                 venue: venue.trim(),
                 address: address.trim(),
@@ -166,9 +169,41 @@ export default function OrganizerEventForm() {
                 <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Titre" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Description" rows={4} className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <div className="grid grid-cols-2 gap-2">
-                    <input value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Catégorie" className="border border-gray-300 rounded-xl px-3 py-2 text-sm" />
-                    <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ville" className="border border-gray-300 rounded-xl px-3 py-2 text-sm" />
+                    <select
+                        value={category}
+                        onChange={(e) => setCategory(e.target.value)}
+                        className="border border-gray-300 rounded-xl px-3 py-2 text-sm bg-white"
+                    >
+                        <option value="concert">Concert</option>
+                        <option value="conference">Conférence</option>
+                        <option value="formation">Formation</option>
+                        <option value="sport">Sport</option>
+                        <option value="festival">Festival</option>
+                        <option value="salon">Salon / Exposition</option>
+                        <option value="religieux">Religieux</option>
+                        <option value="autre">Autre</option>
+                    </select>
+                    <select
+                        value={country}
+                        onChange={(e) => setCountry(e.target.value)}
+                        className="border border-gray-300 rounded-xl px-3 py-2 text-sm bg-white"
+                    >
+                        <option value="CM">Cameroun</option>
+                        <option value="CI">Côte d'Ivoire</option>
+                        <option value="SN">Sénégal</option>
+                        <option value="BJ">Bénin</option>
+                        <option value="TG">Togo</option>
+                        <option value="BF">Burkina Faso</option>
+                        <option value="ML">Mali</option>
+                        <option value="GN">Guinée</option>
+                        <option value="CD">RD Congo</option>
+                        <option value="CG">Congo-Brazzaville</option>
+                        <option value="GA">Gabon</option>
+                        <option value="TD">Tchad</option>
+                        <option value="NE">Niger</option>
+                    </select>
                 </div>
+                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ville" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Lieu" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Adresse" className="w-full border border-gray-300 rounded-xl px-3 py-2 text-sm" />
                 <div className="grid grid-cols-2 gap-2">
