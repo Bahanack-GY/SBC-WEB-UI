@@ -60,6 +60,19 @@ import AdsNetworkAnnonceur from './pages/AdsNetworkAnnonceur'
 import AdsNetworkCampaignForm from './pages/AdsNetworkCampaignForm'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
 import SbcLove from './pages/SbcLove'
+import Events from './pages/Events'
+import EventDetail from './pages/EventDetail'
+import EventCheckout from './pages/EventCheckout'
+import MyTickets from './pages/MyTickets'
+import MyTicketScreen from './pages/MyTicketScreen'
+import OrganizerHub from './pages/OrganizerHub'
+import OrganizerEventForm from './pages/OrganizerEventForm'
+import OrganizerScanner from './pages/OrganizerScanner'
+import TicketResaleForm from './pages/TicketResaleForm'
+import ResaleMarket from './pages/ResaleMarket'
+import OrganizerFinances from './pages/OrganizerFinances'
+import OpenDispute from './pages/OpenDispute'
+import MyDisputes from './pages/MyDisputes'
 
 function AppContent() {
   const location = useLocation();
@@ -180,7 +193,7 @@ function AppContent() {
   ];
   const hideHeader = HEADERLESS.includes(location.pathname) || isInChatConversation;
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || isInChatConversation;
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isInChatConversation;
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -260,6 +273,22 @@ function AppContent() {
               roles pay out or spend money against an SBC account. */}
           {/* Every Ads Network screen sits behind the launch gate — a
               bookmarked sub-page must not slip past it. */}
+          {/* SBC Event — ticketing + resale */}
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/revente" element={<ResaleMarket />} />
+          <Route path="/events/mes-billets" element={<MyTickets />} />
+          <Route path="/events/mes-billets/:id" element={<MyTicketScreen />} />
+          <Route path="/events/mes-billets/:id/revendre" element={<TicketResaleForm />} />
+          <Route path="/events/signaler" element={<OpenDispute />} />
+          <Route path="/events/mes-disputes" element={<MyDisputes />} />
+          <Route path="/events/organizer" element={<OrganizerHub />} />
+          <Route path="/events/organizer/finances" element={<OrganizerFinances />} />
+          <Route path="/events/organizer/nouveau" element={<OrganizerEventForm />} />
+          <Route path="/events/organizer/:id" element={<OrganizerEventForm />} />
+          <Route path="/events/organizer/:id/scanner" element={<OrganizerScanner />} />
+          <Route path="/events/:slug" element={<EventDetail />} />
+          <Route path="/events/:slug/checkout" element={<EventCheckout />} />
+
           <Route element={<AdsLaunchGate />}>
           <Route path="/ads-network" element={<AdsNetwork />} />
           <Route path="/ads-network/diffuseur/onboarding" element={<AdsNetworkDiffuseurOnboarding />} />

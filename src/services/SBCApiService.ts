@@ -2462,6 +2462,159 @@ export class SBCApiService extends ApiService {
   async blockLoveProfile(profileId: string): Promise<ApiResponse> {
     return await this.post(`/sbclove/profiles/${profileId}/block`);
   }
+
+  // ==================== SBC EVENT (ticketing + resale) ====================
+  // URL prefix is /tickets (not /events) because /api/events is owned by
+  // settings-service's community-events feature. Product brand is "SBC Event".
+
+  /** Public events feed. `params` supports q, city, category, dateFrom, dateTo, priceMin, priceMax, limit, skip. */
+  async listPublicEvents(params: Record<string, any> = {}): Promise<ApiResponse> {
+    return await this.get('/tickets/public/events', { requiresAuth: false, queryParameters: params });
+  }
+
+  async getPublicEventBySlug(slug: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/public/events/${encodeURIComponent(slug)}`, { requiresAuth: false });
+  }
+
+  /** Create a primary ticket order. Returns { orderId, paymentSessionId, total }. */
+  async createTicketOrder(body: {
+    eventId: string;
+    items: Array<{ ticketTypeId: string; quantity: number }>;
+    holder: { firstName: string; lastName: string; phone: string; email?: string };
+  }): Promise<ApiResponse> {
+    return await this.post('/tickets/orders', { body });
+  }
+
+  async getTicketOrder(orderId: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/orders/${orderId}`);
+  }
+
+  /** Mes billets — set past=true to fetch past events. */
+  async listMyTickets(params: { past?: boolean; limit?: number; skip?: number } = {}): Promise<ApiResponse> {
+    return await this.get('/tickets/me/tickets', { queryParameters: params });
+  }
+
+  async getMyTicket(ticketId: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/me/tickets/${ticketId}`);
+  }
+
+  async listMyTicketOrders(params: { limit?: number; skip?: number } = {}): Promise<ApiResponse> {
+    return await this.get('/tickets/me/orders', { queryParameters: params });
+  }
+
+  // Organizer
+  async applyAsOrganizer(payload: {
+    displayName: string;
+    contactEmail?: string;
+    contactPhone?: string;
+    bio?: string;
+    logoFileId?: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/tickets/organizer/apply', { body: payload });
+  }
+
+  async getMyOrganizer(): Promise<ApiResponse> {
+    return await this.get('/tickets/organizer/me');
+  }
+
+  async listMyOrganizerEvents(params: Record<string, any> = {}): Promise<ApiResponse> {
+    return await this.get('/tickets/organizer/events', { queryParameters: params });
+  }
+
+  async createOrganizerEvent(body: Record<string, any>): Promise<ApiResponse> {
+    return await this.post('/tickets/organizer/events', { body });
+  }
+
+  async updateOrganizerEvent(eventId: string, patch: Record<string, any>): Promise<ApiResponse> {
+    return await this.patch(`/tickets/organizer/events/${eventId}`, { body: patch });
+  }
+
+  async publishOrganizerEvent(eventId: string): Promise<ApiResponse> {
+    return await this.post(`/tickets/organizer/events/${eventId}/publish`);
+  }
+
+  async cancelOrganizerEvent(eventId: string, reason?: string): Promise<ApiResponse> {
+    return await this.post(`/tickets/organizer/events/${eventId}/cancel`, { body: { reason } });
+  }
+
+  async listEventTicketTypes(eventId: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/organizer/events/${eventId}/ticket-types`);
+  }
+
+  async createEventTicketType(eventId: string, body: Record<string, any>): Promise<ApiResponse> {
+    return await this.post(`/tickets/organizer/events/${eventId}/ticket-types`, { body });
+  }
+
+  async listEventParticipants(eventId: string, params: Record<string, any> = {}): Promise<ApiResponse> {
+    return await this.get(`/tickets/organizer/events/${eventId}/participants`, { queryParameters: params });
+  }
+
+  async getOrganizerDashboard(): Promise<ApiResponse> {
+    return await this.get('/tickets/organizer/dashboard');
+  }
+
+  async getOrganizerFinances(): Promise<ApiResponse> {
+    return await this.get('/tickets/organizer/finances');
+  }
+
+  /** Direct URL to the CSV export for organizer participant list. Open in a new tab or window.location. */
+  getEventParticipantsCsvUrl(eventId: string): string {
+    // ApiService.baseUrl is protected but we can rebuild the same URL via
+    // a public method. Cheat: read the same env constant the constructor uses.
+    return `/api/tickets/organizer/events/${encodeURIComponent(eventId)}/participants.csv`;
+  }
+
+  /**
+   * Validate a scanned QR token. `expectedEventId` lets the server reject
+   * tickets that belong to a different event without a round-trip.
+   */
+  async scanTicketQr(body: { qrToken: string; expectedEventId?: string; deviceInfo?: string }): Promise<ApiResponse> {
+    return await this.post('/tickets/scan', { body });
+  }
+
+  // ---- Resale marketplace ----
+  async listPublicResale(params: { eventId?: string; limit?: number; skip?: number } = {}): Promise<ApiResponse> {
+    return await this.get('/tickets/public/resale', { requiresAuth: false, queryParameters: params });
+  }
+
+  async createResaleListing(ticketId: string, askingPrice: number): Promise<ApiResponse> {
+    return await this.post(`/tickets/me/tickets/${ticketId}/resale`, { body: { askingPrice } });
+  }
+
+  async listMyResaleListings(): Promise<ApiResponse> {
+    return await this.get('/tickets/me/resale');
+  }
+
+  async cancelMyResaleListing(listingId: string): Promise<ApiResponse> {
+    return await this.delete(`/tickets/me/resale/${listingId}`);
+  }
+
+  async buyResaleListing(listingId: string, holder: { firstName: string; lastName: string; phone: string; email?: string }): Promise<ApiResponse> {
+    return await this.post(`/tickets/resale/${listingId}/buy`, { body: { holder } });
+  }
+
+  // ---- Disputes ----
+  async openTicketDispute(body: {
+    kind: 'RESALE_INVALID_TICKET' | 'RESALE_NOT_RECEIVED' | 'EVENT_NOT_AS_ADVERTISED' | 'OTHER';
+    description: string;
+    ticketId?: string;
+    resaleOrderId?: string;
+  }): Promise<ApiResponse> {
+    return await this.post('/tickets/me/disputes', { body });
+  }
+
+  async listMyDisputes(): Promise<ApiResponse> {
+    return await this.get('/tickets/me/disputes');
+  }
+
+  /** Organizer's dedicated event earnings and the min transfer threshold. */
+  async getEventOrganizerBalance(): Promise<ApiResponse> {
+    return await this.get('/event-organizer-balance');
+  }
+
+  async transferEventOrganizerBalanceToMain(amount: number): Promise<ApiResponse> {
+    return await this.post('/event-organizer-balance/transfer', { body: { amount } });
+  }
 }
 
 // Create and export singleton instance
