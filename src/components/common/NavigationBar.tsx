@@ -3,7 +3,6 @@ import {
   Home01Icon,
   Message01Icon,
   ShoppingBasket01Icon,
-  StatusIcon,
   Ticket01Icon,
   Wallet01Icon,
 } from '@hugeicons/core-free-icons';
@@ -32,7 +31,6 @@ function NavigationBar() {
       { label: 'Marketplace', icon: ShoppingBasket01Icon, path: '/marketplace', dot: true },
       { label: 'Événements', icon: Ticket01Icon, path: '/events' },
       { label: 'Wallet', icon: Wallet01Icon, path: '/wallet' },
-      { label: 'SBC Statut', icon: StatusIcon, path: '/chat?view=status' },
       { label: 'Messages', icon: Message01Icon, path: '/chat' },
     ];
     return items;
@@ -51,8 +49,7 @@ function NavigationBar() {
         const isActive = currentPath === item.path ||
                         (item.path === '/' && location.pathname === '/') ||
                         (item.path === '/wallet' && location.pathname === '/wallet') ||
-                        (item.path === '/chat' && location.pathname === '/chat' && !location.search) ||
-                        (item.path === '/chat?view=status' && location.pathname === '/chat' && location.search.includes('view=status'));
+                        (item.path === '/chat' && location.pathname === '/chat' && !location.search);
 
         return (
           <motion.button

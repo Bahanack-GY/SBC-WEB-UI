@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Mail01Icon, ArrowRight01Icon, StatusIcon, Ticket01Icon } from '@hugeicons/core-free-icons';
+import { Mail01Icon, ArrowRight01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
 import { useLoveStatus, loveWindowLabel } from '../../hooks/useSbcLove';
 
@@ -26,7 +26,7 @@ type Tile = {
   /** Illustration, when one exists for the service. */
   img?: string;
   /** Fallback when no illustration was supplied. */
-  icon?: typeof StatusIcon;
+  icon?: typeof Ticket01Icon;
   tint: string;
   onClick: () => void;
   dot?: boolean;
@@ -56,16 +56,11 @@ function ServicesGrid({
       onClick: () => navigate('/ads-network'),
     },
     {
-      key: 'events', label: 'Événements', subtitle: 'Billetterie SBC',
+      // ponytail: icon rather than an illustration — no asset was supplied for
+      // SBC Event. Swap in an image here the moment one exists.
+      key: 'events', label: 'SBC Event', subtitle: 'Billetterie & revente',
       icon: Ticket01Icon, tint: 'bg-primary-soft text-primary',
       onClick: () => navigate('/events'),
-    },
-    {
-      key: 'statut', label: 'SBC Statut', subtitle: 'Publiez vos statuts',
-      // ponytail: icon rather than an illustration — no asset was supplied for
-      // this service. Swap in an image here the moment one exists.
-      icon: StatusIcon, tint: 'bg-primary-soft text-primary',
-      onClick: () => navigate('/chat?view=status'),
     },
     {
       key: 'contacts', label: 'Contacts', subtitle: 'Répertoire SBC',
