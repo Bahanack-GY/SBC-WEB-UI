@@ -365,3 +365,27 @@ export interface LeaderboardResponse {
     top: LeaderboardEntry[];
     me: MyLeaderboardRank | null;
 }
+
+/** One country's line in the "Classement par pays". */
+export interface CountryStanding {
+    /** ISO-3166 alpha-2, upper-case. */
+    country: string;
+    rank: number;
+    /** Paid direct filleuls of every ranked affiliate in that country, this month. */
+    referralCount: number;
+    /** Ranked affiliates in that country. */
+    affiliates: number;
+}
+
+/** "Top de mes filleuls": the viewer's direct filleuls ranked this month. */
+export interface MyFilleulsLeaderboardResponse {
+    top: LeaderboardEntry[];
+    /** How many of the viewer's direct filleuls rank this month. */
+    totalRanked: number;
+}
+
+export interface CountryLeaderboardResponse {
+    countries: CountryStanding[];
+    /** Each country's own top 10, ranked from 1 inside the country. */
+    byCountry: Record<string, LeaderboardEntry[]>;
+}

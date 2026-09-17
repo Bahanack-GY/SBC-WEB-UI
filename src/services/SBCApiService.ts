@@ -170,6 +170,16 @@ export class SBCApiService extends ApiService {
     return await this.get('/users/leaderboard');
   }
 
+  /** Countries ranked this month, plus each country's top 10. */
+  async getCountryLeaderboard(): Promise<ApiResponse> {
+    return await this.get('/users/leaderboard/countries');
+  }
+
+  /** The viewer's direct filleuls ranked by their own paid filleuls this month. */
+  async getMyFilleulsLeaderboard(): Promise<ApiResponse> {
+    return await this.get('/users/leaderboard/filleuls');
+  }
+
   /**
    * Get referred users
    */
