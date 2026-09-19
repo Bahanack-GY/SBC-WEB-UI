@@ -1,9 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Exchange01Icon, AlertCircleIcon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../services/SBCApiService';
 import BackButton from '../components/common/BackButton';
+import Skeleton from '../components/common/Skeleton';
+import { ticketStatusInfo, TONE_CLASS, xaf } from '../lib/eventStatus';
+import { cn } from '../lib/utils';
 
-const fmt = (iso: string) => new Date(iso).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' });
+const fmtDate = (iso: string) => new Date(iso).toLocaleDateString('fr-FR', { dateStyle: 'full' });
+const fmtTime = (iso: string) => new Date(iso).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
 
 export default function MyTicketScreen() {
     const { id } = useParams<{ id: string }>();
@@ -11,91 +17,147 @@ export default function MyTicketScreen() {
     const [data, setData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [withdrawing, setWithdrawing] = useState(false);
 
-    useEffect(() => {
+    const load = useCallback(async () => {
         if (!id) return;
-        (async () => {
-            try {
-                const res = await sbcApiService.getMyTicket(id);
-                if (res.apiReportedSuccess) setData(res.body?.data);
-                else setError(res.message || 'Introuvable');
-            } catch (e: any) { setError(e?.message || 'Erreur'); }
-            finally { setLoading(false); }
-        })();
+        try {
+            const res = await sbcApiService.getMyTicket(id);
+            if (res.apiReportedSuccess) setData(res.body?.data);
+            else setError(res.message || 'Billet introuvable.');
+        } catch (e: any) { setError(e?.message || 'Erreur réseau.'); }
+        finally { setLoading(false); }
     }, [id]);
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Chargement...</div>;
-    if (error || !data) return <div className="p-8 text-center text-red-600">{error || 'Introuvable'}</div>;
+    useEffect(() => { load(); }, [load]);
 
-    const { ticket, event, ticketType, qrImageDataUrl, activeResaleListing } = data;
-    const canResell = ticket.status === 'ISSUED' && event?.resaleEnabled && !activeResaleListing;
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-bg px-4 pt-3 flex flex-col gap-3">
+                <Skeleton height="h-10" rounded="rounded-card" />
+                <Skeleton height="h-80" rounded="rounded-card" />
+                <Skeleton height="h-28" rounded="rounded-card" />
+            </div>
+        );
+    }
+    if (error || !data) {
+        return (
+            <div className="min-h-screen bg-bg px-4 pt-10">
+                <div className="bg-surface border border-border rounded-card p-6 text-center flex flex-col items-center gap-2">
+                    <HugeiconsIcon icon={AlertCircleIcon} size={26} className="text-danger" />
+                    <p className="text-sm font-semibold text-ink">{error || 'Billet introuvable.'}</p>
+                    <button onClick={() => navigate('/events/mes-billets')} className="mt-2 rounded-pill bg-primary px-4 py-2 text-sm font-semibold text-white">
+                        Mes billets
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
+    const { ticket, event, ticketType, qrImageDataUrl, activeResaleListing, resaleOrder } = data;
     const isListed = Boolean(activeResaleListing);
+    const st = ticketStatusInfo(ticket.status, isListed);
+    // §28 eligibility: paid, unused, not cancelled/refunded, resale allowed by the organizer.
+    const canResell = ticket.status === 'ISSUED' && event?.resaleEnabled && !isListed;
+
+    const withdrawListing = async () => {
+        if (!activeResaleListing?._id) return;
+        setWithdrawing(true);
+        try {
+            await sbcApiService.cancelMyResaleListing(activeResaleListing._id);
+            await load();
+        } catch (e: any) { setError(e?.message || "Impossible de retirer l'annonce."); }
+        finally { setWithdrawing(false); }
+    };
 
     return (
-        <div className="min-h-screen bg-white">
-            <div className="p-4 flex items-center gap-3 border-b border-gray-100">
+        <div className="min-h-screen bg-bg">
+            <div className="px-4 pt-3 pb-2 flex items-center gap-3">
                 <BackButton onClick={() => navigate(-1)} />
-                <h1 className="text-lg font-semibold">Mon billet</h1>
+                <h1 className="text-xl font-bold text-ink">Mon billet</h1>
             </div>
-            <div className="p-4 space-y-4">
-                <div className="border-2 border-dashed border-[#115CF6] rounded-2xl p-6 text-center bg-blue-50/40">
-                    {ticket.previousTicketId && (
-                        <div className="mb-3 inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-purple-100 text-purple-800">
-                            🔁 Acheté via la marketplace de revente
-                        </div>
-                    )}
-                    <div className="text-xs uppercase text-gray-500">Billet</div>
-                    <div className="text-lg font-bold text-gray-900">{ticket.serial}</div>
-                    <div className="text-sm text-gray-600 mt-2">{ticket.holderName}</div>
-                    {qrImageDataUrl ? (
-                        <img src={qrImageDataUrl} alt="QR Code" className="mx-auto mt-4 w-56 h-56 rounded-xl bg-white p-2 border" />
-                    ) : (
-                        <div className="mt-4 text-sm text-red-600">
-                            Ce billet n'est plus valide ({ticket.status}).
-                        </div>
-                    )}
-                    <div className="mt-3 text-xs text-gray-500">Statut : <span className="font-semibold">{ticket.status}</span></div>
-                </div>
 
-                <div className="border border-gray-200 rounded-2xl p-4 space-y-1">
-                    <div className="font-semibold text-gray-900">{event?.title}</div>
-                    <div className="text-sm text-gray-600">{event?.startsAt && fmt(event.startsAt)}</div>
-                    <div className="text-sm text-gray-600">{event?.venue}</div>
-                    <div className="text-xs text-gray-500">{event?.address}</div>
-                    <div className="text-xs text-gray-500 mt-2">Type : {ticketType?.name}</div>
-                </div>
+            <div className="px-4 pb-8 flex flex-col gap-3">
+                {/* The ticket itself — QR first, it is what gets scanned at the door. */}
+                <section className="bg-surface border border-border rounded-card p-5 text-center">
+                    {ticket.previousTicketId && (
+                        <p className="mb-3 inline-flex items-center gap-1.5 rounded-pill bg-primary-soft px-2.5 py-1 text-[11px] font-semibold text-primary">
+                            <HugeiconsIcon icon={Exchange01Icon} size={12} />
+                            Acheté via la marketplace de revente
+                        </p>
+                    )}
+                    <p className="text-xs text-ink-2">Billet</p>
+                    <p className="text-lg font-bold text-ink tabular-nums">{ticket.serial}</p>
+                    <p className="text-sm text-ink-2 mt-1">{ticket.holderName}</p>
+
+                    {qrImageDataUrl ? (
+                        <img src={qrImageDataUrl} alt="QR Code du billet" className="mx-auto mt-4 size-56 rounded-tile border border-border bg-white p-2" />
+                    ) : (
+                        <p className="mt-4 rounded-tile bg-danger-soft p-3 text-sm text-danger">
+                            Ce billet n'est plus valide et ne peut pas être scanné.
+                        </p>
+                    )}
+
+                    <span className={cn('mt-4 inline-block rounded-pill px-3 py-1 text-xs font-bold uppercase tracking-wide', TONE_CLASS[st.tone])}>
+                        {st.label}
+                    </span>
+                </section>
+
+                <section className="bg-surface border border-border rounded-card p-4 flex flex-col gap-1">
+                    <p className="font-semibold text-ink">{event?.title}</p>
+                    {event?.startsAt && (
+                        <p className="text-sm text-ink-2">
+                            {fmtDate(event.startsAt)} · {fmtTime(event.startsAt)}
+                        </p>
+                    )}
+                    <p className="text-sm text-ink-2">{event?.venue}</p>
+                    <p className="text-xs text-ink-3">{event?.address}</p>
+                    <p className="text-xs text-ink-2 mt-2">Type de billet : <span className="font-medium text-ink">{ticketType?.name}</span></p>
+                </section>
 
                 {isListed && (
-                    <div className="border border-amber-200 bg-amber-50 rounded-2xl p-4 text-sm">
-                        <div className="font-semibold text-amber-900">Ce billet est en revente</div>
-                        <div className="text-xs text-amber-800 mt-1">
-                            Prix demandé : {activeResaleListing.askingPrice?.toLocaleString('fr-FR')} XAF
-                        </div>
+                    <section className="bg-accent-soft rounded-card p-4">
+                        <p className="text-sm font-semibold text-ink">Ce billet est en vente sur la marketplace</p>
+                        <p className="text-xs text-ink-2 mt-1">
+                            Prix demandé : <span className="font-semibold text-ink">{xaf(activeResaleListing.askingPrice)}</span>
+                            {typeof activeResaleListing.originalPrice === 'number' && (
+                                <> · prix d'origine {xaf(activeResaleListing.originalPrice)}</>
+                            )}
+                        </p>
+                        <p className="text-xs text-ink-2 mt-1">
+                            Tant qu'il n'est pas vendu, vous pouvez retirer l'annonce et garder votre billet.
+                        </p>
                         <button
-                            onClick={async () => {
-                                if (!activeResaleListing?._id) return;
-                                await sbcApiService.cancelMyResaleListing(activeResaleListing._id);
-                                window.location.reload();
-                            }}
-                            className="mt-3 text-xs bg-white border border-amber-300 text-amber-800 font-medium px-3 py-1.5 rounded-lg"
+                            onClick={withdrawListing}
+                            disabled={withdrawing}
+                            className="mt-3 rounded-pill border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-ink disabled:opacity-60"
                         >
-                            Retirer l'annonce
+                            {withdrawing ? 'Retrait…' : "Retirer l'annonce"}
                         </button>
-                    </div>
+                    </section>
                 )}
 
                 {canResell && (
                     <button
                         onClick={() => navigate(`/events/mes-billets/${ticket._id}/revendre`)}
-                        className="w-full border border-[#115CF6] text-[#115CF6] font-semibold py-3 rounded-xl"
+                        className="w-full rounded-xl border border-primary py-3 text-sm font-semibold text-primary hover:bg-primary-soft transition-colors"
                     >
                         Revendre mon billet
                     </button>
                 )}
 
                 <button
-                    onClick={() => navigate('/events/signaler', { state: { ticketId: ticket._id, eventTitle: event?.title, serial: ticket.serial } })}
-                    className="w-full text-sm text-gray-500 py-2"
+                    onClick={() => navigate('/events/signaler', {
+                        state: {
+                            ticketId: ticket._id,
+                            // A ticket bought on the marketplace carries its resale order, so the
+                            // dispute lands on the right kind (§28 litiges).
+                            resaleOrderId: resaleOrder?._id,
+                            eventTitle: event?.title,
+                            serial: ticket.serial,
+                        },
+                    })}
+                    className="w-full py-2 text-sm text-ink-2"
                 >
                     Signaler un problème avec ce billet
                 </button>

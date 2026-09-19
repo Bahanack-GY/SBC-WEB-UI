@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../services/SBCApiService';
 import BackButton from '../components/common/BackButton';
+import { statusInfo, TONE_CLASS, xaf } from '../lib/eventStatus';
 
 interface PerEvent {
     eventId: string;
@@ -33,20 +34,33 @@ interface Totals {
     resaleOrders: number;
 }
 
-const xaf = (n: number) => (n || 0).toLocaleString('fr-FR') + ' XAF';
+/** A movement row, if the API ever starts returning one (§20). */
+interface Movement {
+    _id?: string;
+    id?: string;
+    type?: string;
+    label?: string;
+    description?: string;
+    amount?: number;
+    createdAt?: string;
+    date?: string;
+}
 
 const Stat = ({ label, value, hint }: { label: string; value: string; hint?: string }) => (
-    <div className="bg-gray-50 rounded-xl p-3">
-        <div className="text-xs text-gray-500">{label}</div>
-        <div className="text-lg font-bold mt-1">{value}</div>
-        {hint && <div className="text-[10px] text-gray-400 mt-0.5">{hint}</div>}
+    <div className="bg-surface border border-border rounded-card p-3">
+        <div className="text-xs text-ink-2">{label}</div>
+        <div className="text-lg font-bold text-ink mt-1">{value}</div>
+        {hint && <div className="text-[10px] text-ink-3 mt-0.5">{hint}</div>}
     </div>
 );
+
+const frDate = (iso?: string) => (iso ? new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' }) : '—');
 
 export default function OrganizerFinances() {
     const navigate = useNavigate();
     const [totals, setTotals] = useState<Totals | null>(null);
     const [perEvent, setPerEvent] = useState<PerEvent[]>([]);
+    const [movements, setMovements] = useState<Movement[] | null>(null);
     const [balance, setBalance] = useState<{ eventOrganizerBalance: number; minTransferAmount: number } | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -61,8 +75,13 @@ export default function OrganizerFinances() {
                 sbcApiService.getEventOrganizerBalance(),
             ]);
             if (fin.apiReportedSuccess) {
-                setTotals(fin.body?.data?.totals || null);
-                setPerEvent(fin.body?.data?.perEvent || []);
+                const data = fin.body?.data || {};
+                setTotals(data.totals || null);
+                setPerEvent(data.perEvent || []);
+                // The endpoint returns per-event aggregates today. If a real
+                // movement feed ever ships, it wins over the aggregate ledger.
+                const feed = data.movements ?? data.history ?? data.transactions;
+                setMovements(Array.isArray(feed) && feed.length > 0 ? feed : null);
             } else {
                 setError(fin.message || 'Erreur');
             }
@@ -73,10 +92,16 @@ export default function OrganizerFinances() {
 
     useEffect(() => { load(); }, []);
 
+    // Ledger order: most recent event first.
+    const ledger = useMemo(
+        () => [...perEvent].sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime()),
+        [perEvent],
+    );
+
     const doTransfer = async () => {
         const amt = parseInt(transferAmount, 10);
         if (!amt || amt < (balance?.minTransferAmount ?? 2000)) {
-            setError(`Montant minimum : ${(balance?.minTransferAmount ?? 2000).toLocaleString('fr-FR')} XAF.`);
+            setError(`Montant minimum : ${xaf(balance?.minTransferAmount ?? 2000)}.`);
             return;
         }
         setTransferring(true); setError(null);
@@ -92,23 +117,23 @@ export default function OrganizerFinances() {
         finally { setTransferring(false); }
     };
 
-    if (loading) return <div className="p-8 text-center text-gray-500">Chargement...</div>;
+    if (loading) return <div className="min-h-screen bg-bg p-8 text-center text-ink-2">Chargement...</div>;
 
     return (
-        <div className="min-h-screen bg-white">
-            <div className="p-4 flex items-center gap-3 border-b border-gray-100">
+        <div className="min-h-screen bg-bg">
+            <div className="bg-surface p-4 flex items-center gap-3 border-b border-border">
                 <BackButton onClick={() => navigate('/events/organizer')} />
-                <h1 className="text-lg font-semibold">Finances organisateur</h1>
+                <h1 className="text-lg font-semibold text-ink">Finances organisateur</h1>
             </div>
 
             <div className="p-4 space-y-4">
-                {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">{error}</div>}
+                {error && <div className="bg-danger-soft border border-border rounded-card p-3 text-sm text-danger">{error}</div>}
 
                 {/* Solde disponible + transfert */}
-                <div className="bg-gradient-to-br from-[#115CF6] to-[#2C7BE5] text-white rounded-2xl p-5">
-                    <div className="text-xs uppercase opacity-80">Solde organisateur disponible</div>
-                    <div className="text-2xl font-bold mt-1">{xaf(balance?.eventOrganizerBalance ?? 0)}</div>
-                    <div className="text-[11px] opacity-70 mt-1">
+                <div className="bg-success-soft border border-border rounded-card p-5">
+                    <div className="text-xs uppercase text-ink-2 tracking-wide">Solde organisateur disponible</div>
+                    <div className="text-2xl font-bold text-success mt-1">{xaf(balance?.eventOrganizerBalance ?? 0)}</div>
+                    <div className="text-[11px] text-ink-2 mt-1">
                         Transfert minimum : {xaf(balance?.minTransferAmount ?? 2000)}. Une fois transféré, le montant est disponible pour retrait via votre solde principal.
                     </div>
                     <div className="mt-3 flex gap-2">
@@ -117,12 +142,12 @@ export default function OrganizerFinances() {
                             placeholder="Montant à transférer"
                             value={transferAmount}
                             onChange={(e) => setTransferAmount(e.target.value)}
-                            className="flex-1 bg-white/95 text-gray-900 rounded-xl px-3 py-2 text-sm"
+                            className="flex-1 min-w-0 bg-surface border border-border rounded-tile px-3 py-2 text-sm text-ink placeholder:text-ink-3 outline-none focus:border-primary"
                         />
                         <button
                             onClick={doTransfer}
                             disabled={transferring || !balance?.eventOrganizerBalance}
-                            className="bg-white text-[#115CF6] font-semibold rounded-xl px-4 py-2 text-sm disabled:opacity-50"
+                            className="shrink-0 bg-primary hover:bg-primary-hover text-white font-semibold rounded-tile px-4 py-2 text-sm transition-colors disabled:opacity-50"
                         >
                             {transferring ? '...' : 'Transférer'}
                         </button>
@@ -141,52 +166,73 @@ export default function OrganizerFinances() {
                     </div>
                 )}
 
-                {/* Per-event */}
+                {/* Mouvements */}
                 <div>
-                    <h2 className="text-base font-semibold mb-2">Détails par événement</h2>
-                    {perEvent.length === 0 ? (
-                        <div className="text-sm text-gray-500">Aucun événement.</div>
-                    ) : (
+                    <h2 className="text-base font-semibold text-ink mb-1">Historique des mouvements</h2>
+                    <p className="text-xs text-ink-2 mb-2">
+                        {movements
+                            ? 'Du plus récent au plus ancien.'
+                            : 'Récapitulatif par événement, du plus récent au plus ancien. Les transferts vers votre solde principal apparaissent, eux, dans l’historique de votre portefeuille.'}
+                    </p>
+
+                    {movements ? (
                         <div className="space-y-2">
-                            {perEvent.map((ev) => (
-                                <div key={ev.eventId} className="border border-gray-200 rounded-xl p-3 text-sm">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="font-medium">{ev.title}</div>
-                                            <div className="text-xs text-gray-500">{new Date(ev.startsAt).toLocaleDateString('fr-FR')}</div>
-                                        </div>
-                                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">{ev.status}</span>
+                            {movements.map((m, i) => (
+                                <div key={m._id || m.id || i} className="bg-surface border border-border rounded-card p-3 flex items-center justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="text-sm font-medium text-ink truncate">{m.label || m.description || m.type || 'Mouvement'}</div>
+                                        <div className="text-xs text-ink-2">{frDate(m.createdAt || m.date)}</div>
                                     </div>
-                                    <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
-                                        <div>
-                                            <div className="text-gray-500">Brut</div>
-                                            <div className="font-semibold">{xaf(ev.gross)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-gray-500">Commission</div>
-                                            <div className="font-semibold">{xaf(ev.commission)}</div>
-                                        </div>
-                                        <div>
-                                            <div className="text-gray-500">Net</div>
-                                            <div className="font-semibold text-[#115CF6]">{xaf(ev.net)}</div>
-                                        </div>
-                                        {ev.refunded > 0 && (
-                                            <>
-                                                <div>
-                                                    <div className="text-gray-500">Remboursé</div>
-                                                    <div className="font-semibold text-red-600">{xaf(ev.refunded)}</div>
-                                                </div>
-                                                <div className="col-span-2 text-[10px] text-gray-400">{ev.refundedOrders} commandes remboursées</div>
-                                            </>
-                                        )}
-                                        {ev.resaleGross > 0 && (
-                                            <div className="col-span-3 mt-1 pt-2 border-t border-gray-100">
-                                                <div className="text-[10px] text-purple-700">Revente : {xaf(ev.resaleGross)} · commission {xaf(ev.resaleCommission)} · {ev.resaleOrders} transactions</div>
-                                            </div>
-                                        )}
-                                    </div>
+                                    <div className={`text-sm font-semibold shrink-0 ${(m.amount ?? 0) < 0 ? 'text-danger' : 'text-success'}`}>{xaf(m.amount)}</div>
                                 </div>
                             ))}
+                        </div>
+                    ) : ledger.length === 0 ? (
+                        <div className="bg-surface border border-border rounded-card p-6 text-center text-sm text-ink-2">Aucun mouvement pour l'instant.</div>
+                    ) : (
+                        <div className="space-y-2">
+                            {ledger.map((ev) => {
+                                const st = statusInfo('event', ev.status);
+                                return (
+                                    <div key={ev.eventId} className="bg-surface border border-border rounded-card p-3 text-sm">
+                                        <div className="flex justify-between items-start gap-2">
+                                            <div className="min-w-0">
+                                                <div className="font-medium text-ink truncate">{ev.title}</div>
+                                                <div className="text-xs text-ink-2">{frDate(ev.startsAt)}</div>
+                                            </div>
+                                            <span className={`shrink-0 rounded-pill px-2 py-0.5 text-[10px] font-bold ${TONE_CLASS[st.tone]}`}>{st.label}</span>
+                                        </div>
+                                        <div className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                                            <div>
+                                                <div className="text-ink-3">Brut</div>
+                                                <div className="font-semibold text-ink">{xaf(ev.gross)}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-ink-3">Commission</div>
+                                                <div className="font-semibold text-ink">{xaf(ev.commission)}</div>
+                                            </div>
+                                            <div>
+                                                <div className="text-ink-3">Net</div>
+                                                <div className="font-semibold text-success">{xaf(ev.net)}</div>
+                                            </div>
+                                            {ev.refunded > 0 && (
+                                                <>
+                                                    <div>
+                                                        <div className="text-ink-3">Remboursé</div>
+                                                        <div className="font-semibold text-danger">{xaf(ev.refunded)}</div>
+                                                    </div>
+                                                    <div className="col-span-2 self-end text-[10px] text-ink-3">{ev.refundedOrders} commandes remboursées</div>
+                                                </>
+                                            )}
+                                            {ev.resaleGross > 0 && (
+                                                <div className="col-span-3 mt-1 pt-2 border-t border-border">
+                                                    <div className="text-[10px] text-accent">Revente : {xaf(ev.resaleGross)} · commission {xaf(ev.resaleCommission)} · {ev.resaleOrders} transactions</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </div>

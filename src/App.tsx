@@ -63,6 +63,8 @@ import SbcLove from './pages/SbcLove'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
 import EventCheckout from './pages/EventCheckout'
+import EventOrderConfirmation from './pages/EventOrderConfirmation'
+import EventParticipants from './pages/EventParticipants'
 import MyTickets from './pages/MyTickets'
 import MyTicketScreen from './pages/MyTicketScreen'
 import OrganizerHub from './pages/OrganizerHub'
@@ -276,6 +278,7 @@ function AppContent() {
           {/* SBC Event — ticketing + resale */}
           <Route path="/events" element={<Events />} />
           <Route path="/events/revente" element={<ResaleMarket />} />
+          <Route path="/events/commande/:orderId" element={<EventOrderConfirmation />} />
           <Route path="/events/mes-billets" element={<MyTickets />} />
           <Route path="/events/mes-billets/:id" element={<MyTicketScreen />} />
           <Route path="/events/mes-billets/:id/revendre" element={<TicketResaleForm />} />
@@ -285,6 +288,7 @@ function AppContent() {
           <Route path="/events/organizer/finances" element={<OrganizerFinances />} />
           <Route path="/events/organizer/nouveau" element={<OrganizerEventForm />} />
           <Route path="/events/organizer/:id" element={<OrganizerEventForm />} />
+          <Route path="/events/organizer/:id/participants" element={<EventParticipants />} />
           <Route path="/events/organizer/:id/scanner" element={<OrganizerScanner />} />
           <Route path="/events/:slug" element={<EventDetail />} />
           <Route path="/events/:slug/checkout" element={<EventCheckout />} />

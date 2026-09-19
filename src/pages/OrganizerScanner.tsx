@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import jsQR from 'jsqr';
 import { sbcApiService } from '../services/SBCApiService';
 import BackButton from '../components/common/BackButton';
+import { TONE_CLASS, type Tone } from '../lib/eventStatus';
 
 type Outcome = 'IDLE' | 'SCANNING' | 'VALID' | 'ALREADY_USED' | 'INVALID' | 'CANCELLED' | 'REFUNDED' | 'WRONG_EVENT' | 'EVENT_NOT_OPEN' | 'ERROR';
 
@@ -12,6 +13,23 @@ interface Feedback {
     serial?: string;
     holderName?: string;
 }
+
+/** Title + tint per outcome. Green passes, orange warns, red refuses. */
+const OUTCOME: Record<Outcome, { title: string; tone: Tone; icon: string }> = {
+    IDLE: { title: 'Caméra', tone: 'muted', icon: '📷' },
+    SCANNING: { title: 'Lecture…', tone: 'primary', icon: '🔍' },
+    VALID: { title: 'Entrée validée', tone: 'success', icon: '✅' },
+    ALREADY_USED: { title: 'Billet déjà utilisé', tone: 'accent', icon: '⚠️' },
+    INVALID: { title: 'Billet invalide', tone: 'danger', icon: '⛔' },
+    CANCELLED: { title: 'Billet annulé', tone: 'danger', icon: '⛔' },
+    REFUNDED: { title: 'Billet remboursé', tone: 'danger', icon: '⛔' },
+    WRONG_EVENT: { title: 'Autre événement', tone: 'danger', icon: '⛔' },
+    EVENT_NOT_OPEN: { title: 'Événement non ouvert', tone: 'accent', icon: '⚠️' },
+    ERROR: { title: 'Erreur', tone: 'danger', icon: '⛔' },
+};
+
+/** Outcomes that stop the scanner until the operator asks for the next ticket. */
+const TERMINAL: Outcome[] = ['VALID', 'ALREADY_USED', 'INVALID', 'CANCELLED', 'REFUNDED', 'WRONG_EVENT', 'EVENT_NOT_OPEN', 'ERROR'];
 
 export default function OrganizerScanner() {
     const { id: eventId } = useParams<{ id: string }>();
@@ -85,44 +103,60 @@ export default function OrganizerScanner() {
         } catch (e: any) {
             setFeedback({ outcome: 'ERROR', message: e?.message || 'Erreur réseau' });
         }
-        // Unlock after a short pause so the same code doesn't retrigger immediately
-        setTimeout(() => { scanningLockRef.current = false; setFeedback((f) => f.outcome === 'VALID' || f.outcome === 'ALREADY_USED' ? f : { outcome: 'SCANNING', message: 'Pointez la caméra vers un QR code.' }); }, 2500);
+        // The scanner stays locked on a result: the operator reads it, then
+        // explicitly asks for the next ticket. No auto-resume that could flash
+        // a green "validé" the person at the door never saw.
     };
 
-    const colors: Record<Outcome, string> = {
-        IDLE: 'bg-gray-100 text-gray-700',
-        SCANNING: 'bg-blue-100 text-blue-700',
-        VALID: 'bg-emerald-100 text-emerald-800',
-        ALREADY_USED: 'bg-amber-100 text-amber-800',
-        INVALID: 'bg-red-100 text-red-800',
-        CANCELLED: 'bg-red-100 text-red-800',
-        REFUNDED: 'bg-red-100 text-red-800',
-        WRONG_EVENT: 'bg-red-100 text-red-800',
-        EVENT_NOT_OPEN: 'bg-amber-100 text-amber-800',
-        ERROR: 'bg-red-100 text-red-800',
+    const scanNext = () => {
+        setFeedback({ outcome: 'SCANNING', message: 'Pointez la caméra vers un QR code.' });
+        scanningLockRef.current = false;
     };
+
+    const o = OUTCOME[feedback.outcome] ?? OUTCOME.ERROR;
+    const showNext = TERMINAL.includes(feedback.outcome) && !streamError;
 
     return (
-        <div className="min-h-screen bg-black text-white">
+        <div className="min-h-screen bg-ink">
             <div className="p-4 flex items-center gap-3">
                 <BackButton onClick={() => navigate(-1)} />
-                <h1 className="text-lg font-semibold">Scanner de billets</h1>
+                <h1 className="text-lg font-semibold text-white">Scanner de billets</h1>
             </div>
 
-            <div className="relative w-full aspect-square bg-black overflow-hidden">
+            <div className="relative w-full aspect-square bg-ink overflow-hidden">
                 <video ref={videoRef} playsInline muted className="w-full h-full object-cover" />
                 <canvas ref={canvasRef} className="hidden" />
                 {/* viewfinder */}
-                <div className="absolute inset-6 border-2 border-white/60 rounded-2xl pointer-events-none" />
+                <div className="absolute inset-6 border-2 border-white/60 rounded-card pointer-events-none" />
             </div>
 
-            <div className={`m-4 rounded-2xl p-4 text-center ${colors[feedback.outcome]}`}>
-                <div className="font-semibold uppercase text-xs tracking-wider">{feedback.outcome}</div>
-                <div className="text-base mt-1">{feedback.message}</div>
-                {feedback.serial && <div className="text-xs mt-2 opacity-80">Billet {feedback.serial} · {feedback.holderName}</div>}
-            </div>
+            <div className="p-4 space-y-3">
+                <div className={`rounded-card p-5 text-center ${TONE_CLASS[o.tone]}`}>
+                    <div className="text-3xl" aria-hidden>{o.icon}</div>
+                    <div className="text-xl font-bold mt-1">{o.title}</div>
+                    <div className="text-sm mt-1 opacity-90">{feedback.message}</div>
+                    {feedback.outcome === 'VALID' && feedback.holderName && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                            <div className="text-lg font-semibold">{feedback.holderName}</div>
+                            {feedback.serial && <div className="text-xs mt-0.5 opacity-80">Billet n° {feedback.serial}</div>}
+                        </div>
+                    )}
+                    {feedback.outcome !== 'VALID' && feedback.serial && (
+                        <div className="text-xs mt-2 opacity-80">Billet n° {feedback.serial}{feedback.holderName ? ` · ${feedback.holderName}` : ''}</div>
+                    )}
+                </div>
 
-            {streamError && <div className="mx-4 text-sm text-red-300">{streamError}</div>}
+                {showNext && (
+                    <button
+                        onClick={scanNext}
+                        className="w-full bg-primary hover:bg-primary-hover text-white text-lg font-bold py-5 rounded-card transition-colors"
+                    >
+                        Scanner le billet suivant
+                    </button>
+                )}
+
+                {streamError && <div className="text-sm text-white/80">{streamError}</div>}
+            </div>
         </div>
     );
 }

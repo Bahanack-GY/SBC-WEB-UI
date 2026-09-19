@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Cancel01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../../services/SBCApiService';
 
 interface EventItem {
@@ -95,43 +97,45 @@ export default function NewEventPopup() {
                     exit={{ y: 40, opacity: 0 }}
                     transition={{ type: 'spring', stiffness: 250, damping: 24 }}
                     onClick={(e) => e.stopPropagation()}
-                    className="bg-white rounded-2xl w-full max-w-md overflow-hidden shadow-xl"
+                    className="bg-surface border border-border rounded-card w-full max-w-md overflow-hidden"
                 >
                     <div className="relative">
                         {poster ? (
                             <img src={poster} alt={event.title} className="w-full h-48 object-cover" />
                         ) : (
-                            <div className="w-full h-32 bg-gradient-to-br from-[#115CF6] to-[#2C7BE5]" />
+                            <div className="w-full h-32 bg-primary-soft grid place-items-center">
+                                <HugeiconsIcon icon={Ticket01Icon} size={34} className="text-primary" />
+                            </div>
                         )}
-                        <div className="absolute top-3 left-3 bg-[#115CF6] text-white text-[10px] uppercase tracking-wider font-bold px-2 py-1 rounded-full">
-                            🎉 Nouvel événement
-                        </div>
+                        <span className="absolute top-3 left-3 rounded-pill bg-primary px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white">
+                            Nouvel événement
+                        </span>
                         <button
                             onClick={close}
-                            className="absolute top-3 right-3 bg-white/90 text-gray-700 w-8 h-8 rounded-full flex items-center justify-center text-lg leading-none"
+                            className="absolute top-3 right-3 size-8 grid place-items-center rounded-pill bg-surface text-ink-2 border border-border"
                             aria-label="Fermer"
                         >
-                            ×
+                            <HugeiconsIcon icon={Cancel01Icon} size={15} />
                         </button>
                     </div>
                     <div className="p-4">
-                        <div className="font-bold text-gray-900 text-lg">{event.title}</div>
-                        <div className="text-sm text-gray-600 mt-1">{when}</div>
+                        <p className="font-bold text-ink text-lg text-balance">{event.title}</p>
+                        <p className="text-sm text-ink-2 mt-1">{when}</p>
                         {(event.venue || event.city) && (
-                            <div className="text-xs text-gray-500 mt-0.5">
+                            <p className="text-xs text-ink-3 mt-0.5">
                                 {event.venue}{event.venue && event.city ? ' · ' : ''}{event.city}
-                            </div>
+                            </p>
                         )}
                         <div className="mt-4 flex gap-2">
                             <button
                                 onClick={close}
-                                className="flex-1 border border-gray-300 text-gray-700 font-medium py-2.5 rounded-xl text-sm"
+                                className="flex-1 rounded-xl border border-border text-ink font-medium py-2.5 text-sm"
                             >
                                 Plus tard
                             </button>
                             <button
                                 onClick={open}
-                                className="flex-1 bg-[#115CF6] text-white font-semibold py-2.5 rounded-xl text-sm"
+                                className="flex-1 rounded-xl bg-primary text-white font-semibold py-2.5 text-sm hover:bg-primary-hover transition-colors"
                             >
                                 Voir l'événement
                             </button>

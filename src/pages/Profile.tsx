@@ -1,6 +1,6 @@
 import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, PencilEdit01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, PencilEdit01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
@@ -30,6 +30,7 @@ const baseActions: ActionItem[] = [
   { label: 'Modifier mon mot de passe', icon: <HugeiconsIcon icon={LockIcon} className="text-primary" />, to: '/change-password' },
   { label: 'Mon Abonnement', icon: <HugeiconsIcon icon={CreditCardIcon} className="text-primary" />, to: '/changer-abonnement' },
   { label: 'Solde d\'Activation', icon: <HugeiconsIcon icon={GiftIcon} className="text-amber-500" />, to: '/activation-balance' },
+  { label: 'Mes billets', icon: <HugeiconsIcon icon={Ticket01Icon} className="text-primary" />, to: '/events/mes-billets' },
   { label: 'Mes Contacts', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/contacts' },
   { label: 'Mes filleuls', icon: <HugeiconsIcon icon={UserGroupIcon} className="text-primary" />, to: '/filleuls' },
   { label: 'Mon Parrain', icon: <HugeiconsIcon icon={UserCheck01Icon} className="text-primary" />, to: '/parrain' },

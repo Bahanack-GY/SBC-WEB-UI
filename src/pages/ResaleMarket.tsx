@@ -1,8 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { Exchange01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../services/SBCApiService';
 import { useAuth } from '../contexts/AuthContext';
 import BackButton from '../components/common/BackButton';
+import Skeleton from '../components/common/Skeleton';
+import { xaf } from '../lib/eventStatus';
 
 interface ListingRow {
     _id: string;
@@ -17,25 +21,30 @@ const fmt = (iso: string) => new Date(iso).toLocaleString('fr-FR', { dateStyle: 
 
 export default function ResaleMarket() {
     const navigate = useNavigate();
+    const location = useLocation();
     const { user } = useAuth();
+    // EventDetail sends people here already filtered to one event (§4).
+    const focus = (location.state ?? {}) as { eventId?: string; eventTitle?: string };
+    const [eventId, setEventId] = useState<string | undefined>(focus.eventId);
     const [items, setItems] = useState<ListingRow[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [buyingId, setBuyingId] = useState<string | null>(null);
 
     useEffect(() => {
+        setLoading(true);
         (async () => {
             try {
-                const res = await sbcApiService.listPublicResale({ limit: 30 });
+                const res = await sbcApiService.listPublicResale({ eventId, limit: 30 });
                 if (res.apiReportedSuccess) setItems(res.body?.data?.items || []);
-                else setError(res.message || 'Erreur');
-            } catch (e: any) { setError(e?.message || 'Erreur réseau'); }
+                else setError(res.message || 'Impossible de charger la marketplace.');
+            } catch (e: any) { setError(e?.message || 'Erreur réseau.'); }
             finally { setLoading(false); }
         })();
-    }, []);
+    }, [eventId]);
 
     const buy = async (listing: ListingRow) => {
-        if (!user) { setError('Connectez-vous pour acheter.'); return; }
+        if (!user) { setError('Connectez-vous pour acheter un billet.'); return; }
         setBuyingId(listing._id); setError(null);
         try {
             const res = await sbcApiService.buyResaleListing(listing._id, {
@@ -44,53 +53,99 @@ export default function ResaleMarket() {
                 phone: user.phoneNumber || '',
                 email: user.email,
             });
-            if (!res.apiReportedSuccess || !res.body?.data?.paymentSessionId) {
+            const sessionId = res.body?.data?.paymentSessionId;
+            const orderId = res.body?.data?.orderId;
+            if (!res.apiReportedSuccess || !sessionId) {
                 setError(res.message || 'Impossible de démarrer le paiement.');
                 setBuyingId(null);
                 return;
             }
-            window.location.href = sbcApiService.generatePaymentUrl(res.body.data.paymentSessionId);
-        } catch (e: any) { setError(e?.message || 'Erreur réseau'); setBuyingId(null); }
+            window.open(sbcApiService.generatePaymentUrl(sessionId), '_blank', 'noopener,noreferrer');
+            if (orderId) navigate(`/events/commande/${orderId}`, { state: { eventTitle: listing.event?.title } });
+            else navigate('/events/mes-billets');
+        } catch (e: any) { setError(e?.message || 'Erreur réseau.'); setBuyingId(null); }
     };
 
     return (
-        <div className="min-h-screen bg-white">
-            <div className="p-4 flex items-center gap-3 border-b border-gray-100">
+        <div className="min-h-screen bg-bg">
+            <div className="px-4 pt-3 pb-2 flex items-center gap-3">
                 <BackButton onClick={() => navigate(-1)} />
-                <h1 className="text-lg font-semibold">Billets en revente</h1>
+                <div className="min-w-0">
+                    <h1 className="text-xl font-bold text-ink">Billets en revente</h1>
+                    <p className="text-xs text-ink-2">Revendus par des membres, sécurisés par SBC</p>
+                </div>
             </div>
-            <div className="p-4 space-y-3">
-                {loading && <div className="text-center text-gray-500 py-8">Chargement...</div>}
-                {error && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl p-3 text-sm">{error}</div>}
-                {!loading && items.length === 0 && (
-                    <div className="text-center text-gray-500 py-8">Aucun billet en revente pour l'instant.</div>
+
+            <div className="px-4 pb-8 flex flex-col gap-3">
+                {eventId && (
+                    <button
+                        onClick={() => setEventId(undefined)}
+                        className="self-start inline-flex items-center gap-1.5 rounded-pill bg-primary-soft px-3 py-1.5 text-xs font-semibold text-primary"
+                    >
+                        {focus.eventTitle || 'Événement filtré'}
+                        <HugeiconsIcon icon={Cancel01Icon} size={13} />
+                    </button>
                 )}
-                {items.map((l) => (
-                    <div key={l._id} className="border border-gray-200 rounded-2xl overflow-hidden">
-                        {l.event?.posterFileId && (
-                            <img src={posterUrl(l.event.posterFileId)} alt={l.event?.title} className="w-full h-40 object-cover" />
-                        )}
-                        <div className="p-4">
-                            <div className="font-semibold">{l.event?.title || '—'}</div>
-                            <div className="text-xs text-gray-500 mt-0.5">{l.event?.startsAt && fmt(l.event.startsAt)}</div>
-                            <div className="text-xs text-gray-500">{l.event?.venue} · {l.event?.city}</div>
-                            <div className="mt-2 text-xs text-gray-500">{l.ticketType?.name || 'Billet'}</div>
-                            <div className="mt-2 flex items-baseline gap-2">
-                                <div className="text-lg font-bold text-[#115CF6]">{l.askingPrice.toLocaleString('fr-FR')} XAF</div>
-                                {l.originalPrice !== l.askingPrice && (
-                                    <div className="text-xs text-gray-400 line-through">{l.originalPrice.toLocaleString('fr-FR')} XAF</div>
-                                )}
-                            </div>
-                            <button
-                                onClick={() => buy(l)}
-                                disabled={buyingId === l._id}
-                                className="mt-3 w-full bg-[#115CF6] text-white font-semibold py-2 rounded-xl disabled:bg-gray-300"
-                            >
-                                {buyingId === l._id ? '...' : 'Acheter ce billet'}
-                            </button>
-                        </div>
+
+                {error && <p className="bg-danger-soft rounded-card p-3 text-sm text-danger">{error}</p>}
+
+                {loading ? (
+                    <div className="flex flex-col gap-3">
+                        {Array.from({ length: 2 }).map((_, i) => <Skeleton key={i} height="h-56" rounded="rounded-card" />)}
                     </div>
-                ))}
+                ) : items.length === 0 ? (
+                    <div className="bg-surface border border-border rounded-card p-6 text-center flex flex-col items-center gap-2">
+                        <HugeiconsIcon icon={Exchange01Icon} size={30} className="text-ink-3" />
+                        <p className="text-sm font-semibold text-ink">Aucun billet en revente</p>
+                        <p className="text-xs text-ink-2">Les billets remis en vente par des membres apparaîtront ici.</p>
+                    </div>
+                ) : (
+                    <ul className="flex flex-col gap-3">
+                        {items.map((l) => {
+                            const cheaper = l.originalPrice > l.askingPrice;
+                            return (
+                                <li key={l._id} className="bg-surface border border-border rounded-card overflow-hidden">
+                                    {l.event?.posterFileId && (
+                                        <img src={posterUrl(l.event.posterFileId)} alt="" aria-hidden loading="lazy" className="w-full h-40 object-cover" />
+                                    )}
+                                    <div className="p-4">
+                                        <span className="inline-flex items-center gap-1 rounded-pill bg-accent-soft px-2 py-0.5 text-[10px] font-semibold text-ink">
+                                            <HugeiconsIcon icon={Exchange01Icon} size={11} className="text-accent" />
+                                            Revente
+                                        </span>
+                                        <p className="font-semibold text-ink mt-1.5">{l.event?.title || '—'}</p>
+                                        <p className="text-xs text-ink-2 mt-0.5">{l.event?.startsAt && fmt(l.event.startsAt)}</p>
+                                        <p className="text-xs text-ink-2">{l.event?.venue} · {l.event?.city}</p>
+                                        <p className="text-xs text-ink-2 mt-2">{l.ticketType?.name || 'Billet'}</p>
+
+                                        <div className="mt-2 flex items-baseline gap-2">
+                                            <span className="text-lg font-bold text-primary tabular-nums">{xaf(l.askingPrice)}</span>
+                                            {l.originalPrice !== l.askingPrice && (
+                                                <span className="text-xs text-ink-3 line-through tabular-nums">{xaf(l.originalPrice)}</span>
+                                            )}
+                                            {cheaper && (
+                                                <span className="rounded-pill bg-success-soft px-1.5 py-0.5 text-[10px] font-semibold text-success">
+                                                    Moins cher
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <button
+                                            onClick={() => buy(l)}
+                                            disabled={buyingId === l._id}
+                                            className="mt-3 w-full rounded-xl bg-primary py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-60"
+                                        >
+                                            {buyingId === l._id ? 'Ouverture du paiement…' : 'Acheter ce billet'}
+                                        </button>
+                                        <p className="mt-2 text-[11px] text-ink-3 text-center">
+                                            Un nouveau billet et un nouveau QR vous sont délivrés après paiement.
+                                        </p>
+                                    </div>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
             </div>
         </div>
     );
