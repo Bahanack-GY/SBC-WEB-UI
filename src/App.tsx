@@ -9,6 +9,7 @@ import AdsPack from './pages/AdsPack'
 import Marketplace from './pages/Marketplace'
 import Wallet from './pages/Wallet'
 import Profile from './pages/Profile'
+import NotFound from './pages/NotFound'
 import Contacts from './pages/Contacts'
 import OTP from './pages/OTP'
 import TransactionConfirmation from './pages/TransactionConfirmation'
@@ -304,6 +305,10 @@ function AppContent() {
           <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
           </Route>
         </Route>
+
+        {/* Anything unmatched. Without this a wrong link renders a blank page
+            the user cannot get out of. */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideNav && <NavigationBar />}
       {!hideNav && <InstallPrompt />}

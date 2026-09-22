@@ -156,7 +156,7 @@ Sur votre solde publicitaire, transférable ensuite.
               ))}
             </ul>
             <button
-              onClick={() => navigate('/modifier-profil')}
+              onClick={() => navigate('/modifier-le-profil')}
               className="w-full bg-red-600 text-white rounded-xl py-3 font-medium"
             >
               Compléter mon profil
