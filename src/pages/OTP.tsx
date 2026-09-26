@@ -8,6 +8,17 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { motion } from 'motion/react';
 
+/**
+ * Matches the server's per-account cooldown. "Renvoyer" used to have none —
+ * it was disabled only while the request was in flight — so a user waiting on a
+ * slow email tapped it every few seconds, each tap mailing a new code and
+ * making the mail server slower still (2026-09-26: one address got 10 codes in
+ * five minutes, some 6 seconds apart).
+ */
+const RESEND_COOLDOWN_SECONDS = 60;
+
+const formatWait = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
 function OTP() {
   const { otp, inputs, handleChange, handleKeyDown, handlePaste, code: otpCode } = useOtpInput();
   const [loading, setLoading] = useState(false);
@@ -20,7 +31,18 @@ function OTP() {
   const [showMethodModal, setShowMethodModal] = useState(false);
 
   // Get data from navigation state, including withdrawalId, amount, and currency
-  const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow } = location.state || {};
+  const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow, resendAfterSeconds } = location.state || {};
+
+  // A code was sent on the way here, so the cooldown starts now. Login passes the
+  // server's own figure, which can be longer when it sent nothing new.
+  const [resendIn, setResendIn] = useState<number>(
+    typeof resendAfterSeconds === 'number' && resendAfterSeconds > 0 ? resendAfterSeconds : RESEND_COOLDOWN_SECONDS,
+  );
+  useEffect(() => {
+    if (resendIn <= 0) return;
+    const t = setTimeout(() => setResendIn(s => Math.max(s - 1, 0)), 1000);
+    return () => clearTimeout(t);
+  }, [resendIn]);
   // Prioritize email from state, then from search params (for legacy/direct links), then from userId for login/registration
   const currentEmail = emailFromState || new URLSearchParams(location.search).get('email') || (fromLogin || fromRegistration ? userIdFromState : '');
   const actualUserId = (fromLogin || fromRegistration) ? userIdFromState : undefined; // Only use userId for login/registration
@@ -91,8 +113,21 @@ function OTP() {
   };
 
   const handleResendOtp = () => {
+    if (resendIn > 0) return;
     // Show method selection modal first
     setShowMethodModal(true);
+  };
+
+  /**
+   * A 429 means the server would not send another code yet. It says for how
+   * long, so count that down instead of showing a failure the user will just
+   * tap past. Returns true when it handled the response.
+   */
+  const handleThrottled = (response: { statusCode: number; body?: { message?: string; retryAfterSeconds?: number } }) => {
+    if (response.statusCode !== 429) return false;
+    setResendIn(response.body?.retryAfterSeconds ?? RESEND_COOLDOWN_SECONDS);
+    setError(response.body?.message || 'Un code vous a déjà été envoyé. Vérifiez votre boîte mail (et les spams).');
+    return true;
   };
 
   const handleResendWithMethod = async (method: 'email' | 'whatsapp') => {
@@ -103,7 +138,9 @@ function OTP() {
     try {
       if (flow === 'passwordReset') { // Handle resending OTP for password reset
         const response = await sbcApiService.requestPasswordResetOtp(currentEmail, method);
+        if (handleThrottled(response)) return;
         handleApiResponse(response);
+        setResendIn(RESEND_COOLDOWN_SECONDS);
         const methodText = method === 'whatsapp' ? 'WhatsApp' : 'email';
         setModalContent({ type: 'success', message: `Code renvoyé via ${methodText} ! Veuillez vérifier.` });
         setShowModal(true);
@@ -119,7 +156,9 @@ function OTP() {
           purpose,
           channel: method
         });
+        if (handleThrottled(response)) return;
         handleApiResponse(response);
+        setResendIn(RESEND_COOLDOWN_SECONDS);
         const methodText = method === 'whatsapp' ? 'WhatsApp' : 'email';
         setModalContent({ type: 'success', message: `Code renvoyé via ${methodText} ! Veuillez vérifier.` });
         setShowModal(true);
@@ -127,6 +166,7 @@ function OTP() {
         // For withdrawal, we typically use WhatsApp, but we can still respect user choice
         const response = await sbcApiService.initiateWithdrawal(withdrawalAmount);
         const result = handleApiResponse(response);
+        setResendIn(RESEND_COOLDOWN_SECONDS);
         setModalContent({ type: 'success', message: result.message || 'Code de retrait renvoyé ! Veuillez vérifier votre téléphone.' });
         setShowModal(true);
       } else {
@@ -193,10 +233,10 @@ function OTP() {
             <button
               type="button"
               onClick={handleResendOtp}
-              disabled={loading}
-              className="text-primary font-semibold cursor-pointer hover:underline disabled:opacity-50 bg-transparent"
+              disabled={loading || resendIn > 0}
+              className="text-primary font-semibold cursor-pointer hover:underline disabled:opacity-50 disabled:no-underline disabled:cursor-default bg-transparent tabular-nums"
             >
-              Renvoyer
+              {resendIn > 0 ? `Renvoyer dans ${formatWait(resendIn)}` : 'Renvoyer'}
             </button>
           </div>
           <button

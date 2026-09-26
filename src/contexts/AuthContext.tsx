@@ -27,7 +27,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  login: (identifier: string, password: string) => Promise<{ requiresOtp: boolean; userId?: string; email?: string; hasNegativeBalance?: boolean; recoveryMessage?: string }>;
+  login: (identifier: string, password: string) => Promise<{ requiresOtp: boolean; userId?: string; email?: string; otpRetryAfterSeconds?: number; hasNegativeBalance?: boolean; recoveryMessage?: string }>;
   register: (userData: any) => Promise<{ userId: string }>;
   logout: () => Promise<void>;
   verifyOtp: (userId: string, otp: string) => Promise<void>;
@@ -73,7 +73,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
-  const login = async (identifier: string, password: string): Promise<{ requiresOtp: boolean; userId?: string; email?: string; hasNegativeBalance?: boolean; recoveryMessage?: string }> => {
+  const login = async (identifier: string, password: string): Promise<{ requiresOtp: boolean; userId?: string; email?: string; otpRetryAfterSeconds?: number; hasNegativeBalance?: boolean; recoveryMessage?: string }> => {
     try {
       const response = await sbcApiService.loginUser(identifier, password);
 
@@ -97,7 +97,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const result = {
           requiresOtp: true,
           userId: userId,
-          email: userEmail
+          email: userEmail,
+          // How long before another code may be sent — the server may not have sent
+          // one at all if the user was sent a code moments ago.
+          otpRetryAfterSeconds: typeof data.otpRetryAfterSeconds === 'number' ? data.otpRetryAfterSeconds : undefined,
         };
         return result;
       }
