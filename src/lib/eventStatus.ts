@@ -48,6 +48,8 @@ const LISTING: Record<string, Entry> = {
 
 const EVENT: Record<string, Entry> = {
   DRAFT: { label: 'Brouillon', tone: 'muted' },
+  PENDING_REVIEW: { label: 'En attente de validation', tone: 'accent' },
+  REJECTED: { label: 'Refusé', tone: 'danger' },
   PUBLISHED: { label: 'Publié', tone: 'success' },
   SUSPENDED: { label: 'Suspendu', tone: 'danger' },
   CANCELLED: { label: 'Annulé', tone: 'danger' },
