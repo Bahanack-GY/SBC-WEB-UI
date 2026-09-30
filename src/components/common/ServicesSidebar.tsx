@@ -44,7 +44,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { label: 'SBC Love', to: '/sbclove', icon: FavouriteIcon, tint: 'bg-danger-soft text-danger' },
       { label: 'Messages', to: '/chat', icon: Message01Icon, tint: 'bg-primary-soft text-primary' },
       { label: 'Contacts', to: '/contacts', icon: Call02Icon, tint: 'bg-success-soft text-success' },
-      { label: 'Relance auto', to: '/relance', icon: Mail01Icon, tint: 'bg-accent-soft text-accent' },
+      { label: 'Relance', to: '/relance', icon: Mail01Icon, tint: 'bg-accent-soft text-accent' },
     ],
   },
   {
