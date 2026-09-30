@@ -157,6 +157,23 @@ describe('Campagnes de relance — creating one', () => {
     await waitFor(() => expect(api.relancePreviewFilters).toHaveBeenLastCalledWith(expect.objectContaining({ countries: ['CM'] })));
   });
 
+  it('puts the cursor in the country search as soon as the list opens', async () => {
+    const wizard = await openWizard();
+    await userEvent.click(within(wizard).getByRole('button', { name: 'Tous les pays' }));
+    expect(within(wizard).getByRole('textbox', { name: 'Chercher un pays' })).toHaveFocus();
+  });
+
+  it('lists countries by name and finds them without accents', async () => {
+    const wizard = await openWizard();
+    await userEvent.click(within(wizard).getByRole('button', { name: 'Tous les pays' }));
+    const names = within(wizard).getAllByRole('checkbox').map(box => box.closest('label')!.textContent!.trim());
+    expect(names.findIndex(n => n.endsWith('Bénin'))).toBeLessThan(names.findIndex(n => n.endsWith('Burundi')));
+
+    await userEvent.keyboard('benin');
+    expect(within(wizard).getAllByRole('checkbox')).toHaveLength(1);
+    expect(within(wizard).getByText(/Bénin/)).toBeInTheDocument();
+  });
+
   it('launches with SBC\'s messages by default, and starts the campaign it created', async () => {
     const wizard = await openWizard();
     await within(wizard).findByText('142');

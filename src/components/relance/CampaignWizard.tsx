@@ -17,6 +17,8 @@ const STEPS = ['Qui relancer ?', 'Le message', 'Confirmer'] as const;
 
 const EMPTY: CampaignDraft = { name: '', period: '3m', countries: [], skipAlreadyInRelance: true };
 
+const foldAccents = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
+
 /**
  * A campagne de relance in three steps. The old wizard had four, 57 country
  * chips, a channel choice and a "combien de contacts / à partir de #" slicer
@@ -85,9 +87,13 @@ export function CampaignWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey, open, step]);
 
+  // The shared list is sorted by its flag emoji, i.e. by country code (Burundi
+  // before Bénin); sort by name here, and match "benin" to "Bénin".
   const countries = useMemo(() => {
-    const q = countryQuery.trim().toLowerCase();
-    return allAfricanCountries.filter(c => !q || c.value.toLowerCase().includes(q) || c.code.toLowerCase() === q);
+    const q = foldAccents(countryQuery.trim());
+    return allAfricanCountries
+      .filter(c => !q || foldAccents(c.value).includes(q) || c.code.toLowerCase() === q)
+      .sort((a, b) => a.value.localeCompare(b.value, 'fr'));
   }, [countryQuery]);
 
   const go = (next: number) => { setDir(next > step ? 1 : -1); setStep(next); };
@@ -262,11 +268,13 @@ export function CampaignWizard({
                             <div className="mt-2 flex items-center gap-2 h-11 px-3 rounded-tile bg-surface-2">
                               <HugeiconsIcon icon={Search01Icon} size={18} className="text-ink-3" />
                               <input
+                                // Opening the list is always to find a country: type straight away.
+                                autoFocus
                                 value={countryQuery}
                                 onChange={e => setCountryQuery(e.target.value)}
                                 placeholder="Chercher un pays"
                                 aria-label="Chercher un pays"
-                                className="flex-1 bg-transparent outline-none text-sm text-ink"
+                                className="flex-1 bg-transparent outline-none text-sm text-ink placeholder:text-ink-3"
                               />
                             </div>
                             <ul className="mt-2 max-h-56 overflow-y-auto divide-y divide-border rounded-tile border border-border bg-surface">
