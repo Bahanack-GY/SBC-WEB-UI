@@ -1649,6 +1649,7 @@ export class SBCApiService extends ApiService {
   async relanceGetDefaultTargets(params?: {
     page?: number;
     limit?: number;
+    status?: 'active' | 'completed';
   }): Promise<ApiResponse> {
     return await this.get('/relance/campaigns/default/targets', {
       queryParameters: params
@@ -1667,25 +1668,26 @@ export class SBCApiService extends ApiService {
 
   /**
    * Get detailed campaign statistics
-   * GET /api/relance/admin/campaigns/:id/stats
+   * GET /api/relance/campaigns/:id/stats
    */
   async relanceGetCampaignStats(campaignId: string): Promise<ApiResponse> {
-    return await this.get(`/relance/admin/campaigns/${campaignId}/stats`);
+    // The user route: the admin one refuses non-admins (since 2026-09-30).
+    return await this.get(`/relance/campaigns/${campaignId}/stats`);
   }
 
   /**
    * Get recent messages for a specific campaign
-   * GET /api/relance/admin/campaigns/:id/messages/recent
+   * GET /api/relance/campaigns/:id/messages/recent
    */
   async relanceGetCampaignMessages(campaignId: string, limit?: number): Promise<ApiResponse> {
-    return await this.get(`/relance/admin/campaigns/${campaignId}/messages/recent`, {
+    return await this.get(`/relance/campaigns/${campaignId}/messages/recent`, {
       queryParameters: limit ? { limit } : undefined
     });
   }
 
   /**
    * Preview an email template with sample data
-   * POST /api/relance/admin/messages/preview
+   * POST /api/relance/campaigns/message-preview
    */
   async relancePreviewMessage(data: {
     dayNumber: number;
@@ -1696,7 +1698,8 @@ export class SBCApiService extends ApiService {
     recipientName?: string;
     referrerName?: string;
   }): Promise<ApiResponse> {
-    return await this.post('/relance/admin/messages/preview', { body: data });
+    // Signed-in users preview here; /relance/admin/messages/preview is admins only.
+    return await this.post('/relance/campaigns/message-preview', { body: data });
   }
 
   // ==================== SSO (Login with SBC) ====================

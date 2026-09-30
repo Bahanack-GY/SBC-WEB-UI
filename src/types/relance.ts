@@ -22,11 +22,13 @@ export type TargetStatus = 'active' | 'completed' | 'paused' | 'failed';
  * Exit reason for referral leaving the loop
  */
 export type ExitReason =
-  | 'paid'                    // Target subscribed
-  | 'completed_7_days'        // Finished all 7 days
-  | 'subscription_expired'    // Referrer's subscription expired
-  | 'manual'                  // Manually removed
-  | 'referrer_inactive';      // Referrer became inactive
+  | 'paid'                    // Filleul paid
+  | 'completed_7days'         // Finished all 7 days (the backend value — not completed_7_days)
+  | 'subscription_expired'    // Referrer's subscription expired (legacy)
+  | 'manual'                  // Manually removed / campaign stopped
+  | 'referrer_inactive'       // Referrer became inactive (legacy, no longer set)
+  | 'email_suppressed'        // Address bounced permanently
+  | 'expired';                // Enrolled too long ago — backlog closed 2026-09-30
 
 /**
  * Supported languages for messages
@@ -197,12 +199,7 @@ export interface CampaignDetailStats {
   clickRate?: number;                // Percentage of delivered emails clicked
   clickThroughRate?: number;         // Percentage of opened emails that were clicked
   dayProgression: Array<{ day: number; count: number }>;
-  exitReasons: {
-    paid: number;
-    completed_7_days: number;
-    manual: number;
-    referrer_inactive: number;
-  };
+  exitReasons: Partial<Record<ExitReason, number>>; // keyed by the raw backend value, e.g. completed_7days
 }
 
 /**
@@ -234,8 +231,9 @@ export interface SampleUser {
  * Filter preview response
  */
 export interface FilterPreviewResponse {
-  estimatedCount: number;
+  totalCount: number;         // what the backend sends (the old type said estimatedCount)
   sampleUsers: SampleUser[];
+  message?: string;
 }
 
 /**
@@ -364,12 +362,7 @@ export interface RelanceStats {
   totalSuccessRate: number;            // Percentage (0-100)
   targetsEnrolledToday: number;
   messagesSentToday: number;
-  exitReasons: {
-    paid: number;
-    completed_7_days: number;
-    subscription_expired: number;
-    manual: number;
-  };
+  exitReasons: Partial<Record<ExitReason, number>>;
 }
 
 /**

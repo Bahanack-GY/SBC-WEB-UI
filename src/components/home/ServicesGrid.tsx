@@ -152,9 +152,9 @@ function ServicesGrid({
           <HugeiconsIcon icon={Mail01Icon} size={20} />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block font-semibold text-ink text-sm">Relance auto</span>
+          <span className="block font-semibold text-ink text-sm">Relance</span>
           <span className="block text-xs text-ink-3">
-            {hasRelanceAccess ? 'Messages programmés' : 'Activer la relance'}
+            {hasRelanceAccess ? 'Vos filleuls non payés' : 'Relancez vos filleuls non payés'}
           </span>
         </span>
         {typeof relanceBadge === 'number' && relanceBadge > 0 && (

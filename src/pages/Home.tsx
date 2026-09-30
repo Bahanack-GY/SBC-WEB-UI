@@ -15,7 +15,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
-import RelancePacksModal from '../components/relance/RelancePacksModal';
 import { useRelance } from '../contexts/RelanceContext';
 import NewEventPopup from '../components/events/NewEventPopup';
 import { useFormations } from '../hooks/useFormations';
@@ -56,7 +55,6 @@ function Home() {
   const { user } = useAuth();
   const [subscriptionStatus, setSubscriptionStatus] = useState<string>('Non abonné');
   const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
-  const [showRelanceModal, setShowRelanceModal] = useState(false);
   const { hasCredits: hasRelanceAccess } = useRelance();
 
   // Use React Query for API calls with optimized settings
@@ -188,13 +186,7 @@ function Home() {
           hasRelanceAccess={hasRelanceAccess}
           relanceBadge={null}
           onFormations={() => navigate('/formations')}
-            onRelance={() => {
-              if (hasRelanceAccess) {
-                navigate('/relance');
-              } else {
-                setShowRelanceModal(true);
-              }
-            }}
+            onRelance={() => navigate('/relance')}
           />
         </div>
 
@@ -231,11 +223,6 @@ function Home() {
         <CommunityLinks />
       </div>
 
-      {/* Relance credit packs modal */}
-      <RelancePacksModal
-        isOpen={showRelanceModal}
-        onClose={() => setShowRelanceModal(false)}
-      />
 
 
       <TourButton />
