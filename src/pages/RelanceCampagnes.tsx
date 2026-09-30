@@ -65,11 +65,6 @@ export default function RelanceCampagnes() {
       </motion.header>
 
       <div className="px-4 max-w-lg mx-auto space-y-4">
-        <motion.p variants={popIn} className="text-sm text-ink-2">
-          La relance des nouveaux ne concerne que les filleuls qui s'inscrivent à partir de maintenant.
-          Pour ceux inscrits avant, choisissez qui relancer : ils reçoivent le même parcours de 7 jours.
-        </motion.p>
-
         <motion.div variants={popIn} className="flex items-center justify-between p-3 rounded-tile bg-surface border border-border text-sm">
           <span className="text-ink-2">Crédits email</span>
           <span className="font-semibold text-ink">
@@ -96,7 +91,6 @@ export default function RelanceCampagnes() {
               <HugeiconsIcon icon={Megaphone01Icon} size={26} />
             </motion.span>
             <h2 className="mt-3 font-semibold text-ink">Aucune campagne pour l'instant</h2>
-            <p className="mt-1 text-sm text-ink-2">Lancez-en une pour relancer vos filleuls inscrits avant.</p>
           </motion.div>
         ) : (
           <>

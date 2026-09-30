@@ -6,25 +6,25 @@ import type { RelanceState } from '../../utils/relance';
 const COPY: Record<RelanceState, { title: string; body: string; tone: string; dot: string }> = {
   running: {
     title: 'Relance en marche',
-    body: "Vos nouveaux filleuls reçoivent un message par jour, jusqu'à ce qu'ils paient.",
+    body: '',
     tone: 'bg-success-soft border-success/30',
     dot: 'bg-success-dot',
   },
   paused: {
     title: 'Relance en pause',
-    body: 'Aucun message ne part. Vos filleuls restent où ils en sont et reprennent quand vous rallumez.',
+    body: '',
     tone: 'bg-surface-2 border-border',
     dot: 'bg-ink-3',
   },
   no_credits: {
     title: 'Plus de crédits',
-    body: 'Vos filleuls attendent. Rechargez : la relance reprend toute seule.',
+    body: '',
     tone: 'bg-accent-soft border-accent/30',
     dot: 'bg-accent',
   },
   daily_limit: {
     title: 'Limite du jour atteinte',
-    body: 'Les messages suivants partent demain, automatiquement.',
+    body: 'Reprise demain.',
     tone: 'bg-primary-soft border-primary/30',
     dot: 'bg-primary',
   },
@@ -34,7 +34,7 @@ const COPY: Record<RelanceState, { title: string; body: string; tone: string; do
  * The single answer to "is anything being sent right now?". The old page had
  * six overlapping ways to stop things (activer, pause ajout, pause envoi, pause
  * par canal, pause et annuler de campagne) and no line that said what was
- * actually happening. Here there is one switch and one sentence.
+ * actually happening. Here there is one switch and one title.
  */
 export function RelanceStatusCard({
   state, on, busy, onToggle, sentToday, maxPerDay, onRecharge, onChangeLimit,
@@ -79,7 +79,7 @@ export function RelanceStatusCard({
               transition={{ duration: 0.2 }}
             >
               <h2 className="font-semibold text-ink" data-testid="relance-state">{c.title}</h2>
-              <p className="text-sm text-ink-2 mt-0.5">{c.body}</p>
+              {c.body && <p className="text-sm text-ink-2 mt-0.5">{c.body}</p>}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -90,7 +90,7 @@ export function RelanceStatusCard({
       {(state === 'running' || state === 'daily_limit') && (
         <div className="mt-4">
           <div className="flex items-baseline justify-between text-xs text-ink-2">
-            <span>Emails envoyés aujourd'hui</span>
+            <span>Envoyés aujourd'hui</span>
             <button onClick={onChangeLimit} className="text-ink font-semibold underline-offset-2 hover:underline">
               <CountUp value={sentToday} /> / {maxPerDay}
             </button>
