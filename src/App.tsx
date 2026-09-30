@@ -9,6 +9,7 @@ import AdsPack from './pages/AdsPack'
 import Marketplace from './pages/Marketplace'
 import Wallet from './pages/Wallet'
 import Profile from './pages/Profile'
+import NotFound from './pages/NotFound'
 import Contacts from './pages/Contacts'
 import OTP from './pages/OTP'
 import TransactionConfirmation from './pages/TransactionConfirmation'
@@ -25,6 +26,7 @@ import ModifierProduit from './pages/ModifierProduit'
 import Abonnement from './pages/Abonnement'
 import MesFilleuls from './pages/MesFilleuls'
 import Classement from './pages/Classement'
+import Formations from './pages/Formations'
 import InstallPrompt from './components/pwa/InstallPrompt'
 import Header from './components/common/Header'
 import { AffiliationProvider, useAffiliation } from './contexts/AffiliationContext'
@@ -59,6 +61,21 @@ import AdsNetworkAnnonceur from './pages/AdsNetworkAnnonceur'
 import AdsNetworkCampaignForm from './pages/AdsNetworkCampaignForm'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
 import SbcLove from './pages/SbcLove'
+import Events from './pages/Events'
+import EventDetail from './pages/EventDetail'
+import EventCheckout from './pages/EventCheckout'
+import EventOrderConfirmation from './pages/EventOrderConfirmation'
+import EventParticipants from './pages/EventParticipants'
+import MyTickets from './pages/MyTickets'
+import MyTicketScreen from './pages/MyTicketScreen'
+import OrganizerHub from './pages/OrganizerHub'
+import OrganizerEventForm from './pages/OrganizerEventForm'
+import OrganizerScanner from './pages/OrganizerScanner'
+import TicketResaleForm from './pages/TicketResaleForm'
+import ResaleMarket from './pages/ResaleMarket'
+import OrganizerFinances from './pages/OrganizerFinances'
+import OpenDispute from './pages/OpenDispute'
+import MyDisputes from './pages/MyDisputes'
 
 function AppContent() {
   const location = useLocation();
@@ -145,13 +162,18 @@ function AppContent() {
     }
   }, [location.pathname, isAuthenticated, authLoading]);
 
-  // Subscribed users land on / when they hit /connexion (and similarly leave
-  // /abonnement when they activate).
+  // Subscribed users land on / when they hit /connexion, and leave /abonnement
+  // at the moment they activate — NOT whenever they are subscribed. Bouncing
+  // every subscriber off /abonnement made the page unreachable from the sidebar
+  // and locked Classique members out of the upgrade to Ciblé.
+  const wasSubscribed = useRef<boolean | null>(null);
   useEffect(() => {
     if (!isAuthenticated || subscriptionLoading) return;
+    const justActivated = wasSubscribed.current === false && isSubscribed;
+    wasSubscribed.current = isSubscribed;
     if (location.pathname === '/connexion') {
       window.location.replace(isSubscribed ? '/' : '/abonnement');
-    } else if (location.pathname === '/abonnement' && isSubscribed) {
+    } else if (location.pathname === '/abonnement' && justActivated) {
       window.location.replace('/');
     }
   }, [isAuthenticated, subscriptionLoading, isSubscribed, location.pathname]);
@@ -174,7 +196,7 @@ function AppContent() {
   ];
   const hideHeader = HEADERLESS.includes(location.pathname) || isInChatConversation;
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || isInChatConversation;
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname === '/relance' || location.pathname === '/relance/sms-links' || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isInChatConversation;
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -241,6 +263,7 @@ function AppContent() {
           <Route path="/modifier-produit/:id" element={<ModifierProduit />} />
           <Route path="/filleuls" element={<MesFilleuls />} />
           <Route path="/classement" element={<Classement />} />
+          <Route path="/formations" element={<Formations />} />
           <Route path="/partenaire" element={<PartnerSpace />} />
           <Route path="/relance" element={<RelancePage />} />
           <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
@@ -253,6 +276,24 @@ function AppContent() {
               roles pay out or spend money against an SBC account. */}
           {/* Every Ads Network screen sits behind the launch gate — a
               bookmarked sub-page must not slip past it. */}
+          {/* SBC Event — ticketing + resale */}
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/revente" element={<ResaleMarket />} />
+          <Route path="/events/commande/:orderId" element={<EventOrderConfirmation />} />
+          <Route path="/events/mes-billets" element={<MyTickets />} />
+          <Route path="/events/mes-billets/:id" element={<MyTicketScreen />} />
+          <Route path="/events/mes-billets/:id/revendre" element={<TicketResaleForm />} />
+          <Route path="/events/signaler" element={<OpenDispute />} />
+          <Route path="/events/mes-disputes" element={<MyDisputes />} />
+          <Route path="/events/organizer" element={<OrganizerHub />} />
+          <Route path="/events/organizer/finances" element={<OrganizerFinances />} />
+          <Route path="/events/organizer/nouveau" element={<OrganizerEventForm />} />
+          <Route path="/events/organizer/:id" element={<OrganizerEventForm />} />
+          <Route path="/events/organizer/:id/participants" element={<EventParticipants />} />
+          <Route path="/events/organizer/:id/scanner" element={<OrganizerScanner />} />
+          <Route path="/events/:slug" element={<EventDetail />} />
+          <Route path="/events/:slug/checkout" element={<EventCheckout />} />
+
           <Route element={<AdsLaunchGate />}>
           <Route path="/ads-network" element={<AdsNetwork />} />
           <Route path="/ads-network/diffuseur/onboarding" element={<AdsNetworkDiffuseurOnboarding />} />
@@ -264,6 +305,10 @@ function AppContent() {
           <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
           </Route>
         </Route>
+
+        {/* Anything unmatched. Without this a wrong link renders a blank page
+            the user cannot get out of. */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideNav && <NavigationBar />}
       {!hideNav && <InstallPrompt />}

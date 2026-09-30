@@ -28,12 +28,17 @@ function ForgotPassword() {
         setLoading(true);
 
         try {
-            await sbcApiService.requestPasswordResetOtp(identifier, channel as 'email' | 'whatsapp' || undefined);
-            
+            const response = await sbcApiService.requestPasswordResetOtp(identifier, channel as 'email' | 'whatsapp' || undefined);
+
+            // 429: a code went out moments ago and is still valid, so send them to
+            // the code screen anyway, counting down the server's real wait.
+            const throttled = response?.statusCode === 429;
             const channelText = channel || 'votre méthode préférée';
             setModalContent({
                 type: 'success',
-                message: `Un code de vérification a été envoyé via ${channelText}.`
+                message: throttled
+                    ? 'Un code vous a déjà été envoyé. Vérifiez votre boîte mail (et les spams).'
+                    : `Un code de vérification a été envoyé via ${channelText}.`
             });
             setShowModal(true);
 
@@ -42,7 +47,8 @@ function ForgotPassword() {
                 navigate('/otp', {
                     state: {
                         email: identifier,
-                        flow: 'passwordReset'
+                        flow: 'passwordReset',
+                        resendAfterSeconds: throttled ? response.body?.retryAfterSeconds : undefined,
                     }
                 });
             }, 2000);

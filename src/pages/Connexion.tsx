@@ -110,7 +110,8 @@ function Connexion() {
             state: {
               userId: result.userId,
               email: result.email || identifier,
-              fromLogin: true
+              fromLogin: true,
+              resendAfterSeconds: result.otpRetryAfterSeconds,
             }
           });
         } else {

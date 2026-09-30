@@ -81,6 +81,9 @@ function VerifyOtp() {
                                 type="text"
                                 inputMode="text"
                                 autoComplete="one-time-code"
+                                autoCapitalize="none"
+                                autoCorrect="off"
+                                spellCheck={false}
                                 value={val}
                                 onFocus={e => e.target.select()}
                                 onChange={e => handleChange(i, e.target.value)}
