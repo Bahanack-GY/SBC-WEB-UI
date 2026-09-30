@@ -85,6 +85,18 @@ npm run preview
 ### API Testing
 The codebase includes `ApiTestComponent` and `LoginDebugComponent` for API endpoint testing during development.
 
+### Unit / page tests (Vitest)
+`npm test` runs Vitest + Testing Library (jsdom); CI runs it after the build. Helpers in
+`src/test/api.tsx` (`ok()`, `fail()`, `renderPage()` = QueryClient + MemoryRouter). Gotchas:
+- `@testing-library/dom` must stay an explicit devDependency — CI installs with
+  `--legacy-peer-deps`, which skips peer deps, and every suite then fails to load.
+- The matchMedia shim in `src/test/setup.ts` reports reduced motion so motion's animated
+  counters settle instantly. motion queries `(prefers-reduced-motion)` without `: reduce`,
+  so match on the prefix or counters read 0.
+- Animated content (wizard steps, sheets) mounts after a frame: use `findBy*`, not `getBy*`.
+- Test files are excluded in `tsconfig.app.json` so `tsc -b` doesn't type-check them against
+  the app config.
+
 ### Internationalization
 Uses i18next with browser language detection and HTTP backend for translations.
 
