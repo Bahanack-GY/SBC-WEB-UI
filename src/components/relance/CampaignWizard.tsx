@@ -197,7 +197,7 @@ export function CampaignWizard({
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: reduce ? 0 : dir * -40 }}
                 transition={{ type: 'spring', stiffness: 320, damping: 32 }}
-                className="px-4 py-5 max-w-lg mx-auto space-y-5"
+                className="px-4 py-5 space-y-5"
               >
                 {launched ? (
                   <div className="py-16 text-center">
@@ -444,7 +444,7 @@ export function CampaignWizard({
 
           {!launched && (
             <footer className="px-4 pt-3 pb-5 border-t border-border bg-bg">
-              <div className="max-w-lg mx-auto">
+              <div>
                 {step < 2 ? (
                   <button
                     onClick={() => go(step + 1)}

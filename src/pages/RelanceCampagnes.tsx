@@ -56,7 +56,7 @@ export default function RelanceCampagnes() {
 
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-bg pb-28">
-      <motion.header variants={headerDrop} className="sticky top-0 z-20 bg-bg flex items-center gap-2 px-3 py-3">
+      <motion.header variants={headerDrop} className="sticky top-0 z-20 bg-bg flex items-center gap-2 px-4 py-3">
         <BackButton />
         <div className="flex-1 min-w-0">
           <h1 className="text-lg font-semibold text-ink leading-tight">Campagnes de relance</h1>
@@ -64,7 +64,7 @@ export default function RelanceCampagnes() {
         </div>
       </motion.header>
 
-      <div className="px-4 max-w-lg mx-auto space-y-4">
+      <div className="px-4 space-y-4">
         <motion.div variants={popIn} className="flex items-center justify-between p-3 rounded-tile bg-surface border border-border text-sm">
           <span className="text-ink-2">Crédits email</span>
           <span className="font-semibold text-ink">
@@ -123,7 +123,7 @@ export default function RelanceCampagnes() {
           whileTap={{ scale: 0.97 }}
           onClick={startNew}
           data-tour="campagne-new"
-          className="max-w-lg mx-auto w-full h-12 rounded-tile bg-primary text-white font-semibold flex items-center justify-center gap-2"
+          className="w-full h-12 rounded-tile bg-primary text-white font-semibold flex items-center justify-center gap-2"
         >
           <HugeiconsIcon icon={Add01Icon} size={20} />
           {emailBalance > 0 ? 'Nouvelle campagne' : 'Acheter des crédits pour commencer'}

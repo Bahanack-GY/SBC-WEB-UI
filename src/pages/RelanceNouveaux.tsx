@@ -105,7 +105,7 @@ export default function RelanceNouveaux() {
 
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-bg pb-10">
-      <motion.header variants={headerDrop} className="sticky top-0 z-20 bg-bg flex items-center gap-2 px-3 py-3">
+      <motion.header variants={headerDrop} className="sticky top-0 z-20 bg-bg flex items-center gap-2 px-4 py-3">
         <BackButton />
         <div className="flex-1 min-w-0">
           <h1 className="text-lg font-semibold text-ink leading-tight">Relance des nouveaux</h1>
@@ -123,7 +123,7 @@ export default function RelanceNouveaux() {
         )}
       </motion.header>
 
-      <div className="px-4 max-w-lg mx-auto">
+      <div className="px-4">
         {loading ? (
           <div className="space-y-3 pt-2" aria-busy="true" aria-label="Chargement">
             {[88, 120, 320].map(h => (
