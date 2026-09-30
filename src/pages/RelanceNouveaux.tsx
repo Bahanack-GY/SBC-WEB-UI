@@ -133,7 +133,6 @@ export default function RelanceNouveaux() {
         ) : failed ? (
           <div className="bg-surface border border-border rounded-card p-5 text-center mt-2">
             <p className="text-ink font-medium">Impossible de charger la relance.</p>
-            <p className="text-sm text-ink-3 mt-1">Vérifiez votre connexion.</p>
             <button
               onClick={() => { status.refetch(); stats.refetch(); refreshBalance(); }}
               className="mt-4 h-10 px-5 rounded-pill bg-primary text-white font-semibold"
@@ -184,12 +183,7 @@ export default function RelanceNouveaux() {
               <span className="size-10 grid place-items-center rounded-tile bg-accent-soft text-accent shrink-0">
                 <HugeiconsIcon icon={Megaphone01Icon} size={20} />
               </span>
-              <span className="flex-1 min-w-0">
-                <span className="block font-semibold text-ink text-sm">Relancer vos anciens filleuls</span>
-                <span className="block text-xs text-ink-3">
-                  Pour ceux inscrits avant — lancez une campagne de relance.
-                </span>
-              </span>
+              <span className="flex-1 min-w-0 font-semibold text-ink text-sm">Relancer vos anciens filleuls</span>
               <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="text-ink-3 shrink-0" />
             </motion.button>
 
@@ -213,10 +207,10 @@ export default function RelanceNouveaux() {
                     exit={{ height: 0, opacity: 0 }}
                     className="overflow-hidden px-4 pb-4 space-y-2 text-sm text-ink-2 list-decimal list-inside"
                   >
-                    <li>Quelqu'un s'inscrit avec votre lien mais ne paie pas.</li>
-                    <li>15 minutes après, il reçoit un premier message, puis un par jour pendant 7 jours.</li>
-                    <li>Dès qu'il paie, les messages s'arrêtent. Sinon, ils s'arrêtent au 7ᵉ jour.</li>
-                    <li>Chaque message utilise 1 crédit. Sans crédit, vos filleuls attendent, sans rien perdre.</li>
+                    <li>Inscrit sans payer</li>
+                    <li>1 message par jour, 7 jours</li>
+                    <li>Il paie : ça s'arrête</li>
+                    <li>1 message = 1 crédit</li>
                   </motion.ol>
                 )}
               </AnimatePresence>

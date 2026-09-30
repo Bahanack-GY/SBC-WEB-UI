@@ -33,7 +33,7 @@ export function RelanceCreditsCard({
             <CountUp value={emailBalance} /> <span className="text-sm font-medium text-ink-2">emails</span>
           </div>
           <div className="text-xs text-ink-3">
-            ≈ <CountUp value={filleulsCovered(emailBalance)} /> filleuls relancés sur 7 jours
+            ≈ <CountUp value={filleulsCovered(emailBalance)} /> filleuls
           </div>
         </div>
       </div>

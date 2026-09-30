@@ -298,10 +298,7 @@ export function CampaignWizard({
                     </section>
 
                     <section className="flex items-center gap-3 p-4 rounded-tile bg-surface border border-border">
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-ink">Ignorer ceux déjà en relance</div>
-                        <div className="text-xs text-ink-3">Personne ne reçoit deux fois le même message.</div>
-                      </div>
+                      <div className="flex-1 text-sm font-medium text-ink">Ignorer ceux déjà en relance</div>
                       <Switch
                         checked={draft.skipAlreadyInRelance}
                         onChange={v => setDraft(d => ({ ...d, skipAlreadyInRelance: v }))}
@@ -311,7 +308,7 @@ export function CampaignWizard({
 
                     <section aria-live="polite" className="p-4 rounded-card bg-primary-soft">
                       {count === null && !counting ? (
-                        <p className="text-sm text-ink-2">Choisissez les dates pour voir combien de filleuls sont concernés.</p>
+                        <p className="text-sm text-ink-2">Choisissez les dates.</p>
                       ) : countError ? (
                         <p className="text-sm text-danger">{countError}</p>
                       ) : (
@@ -343,8 +340,8 @@ export function CampaignWizard({
                         </div>
                         <div className="text-xs text-ink-2 mt-0.5">
                           {own
-                            ? 'Écrivez un ou plusieurs jours. Les jours laissés vides utilisent le message SBC.'
-                            : '7 messages déjà écrits pour convaincre, un par jour, sans harceler.'}
+                            ? 'Jours vides : message SBC'
+                            : '7 messages prêts, 1 par jour'}
                         </div>
                       </button>
                     ))}

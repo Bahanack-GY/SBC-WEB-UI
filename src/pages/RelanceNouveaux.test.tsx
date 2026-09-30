@@ -46,7 +46,7 @@ describe('Relance des nouveaux', () => {
     renderPage(<RelanceNouveaux />);
     expect(await screen.findByTestId('relance-state')).toHaveTextContent('Relance en marche');
     expect(screen.getByRole('switch', { name: 'Relance des nouveaux' })).toHaveAttribute('aria-checked', 'true');
-    expect(screen.getByText(/Emails envoyés aujourd'hui/)).toBeInTheDocument();
+    expect(screen.getByText(/Envoyés aujourd'hui/)).toBeInTheDocument();
     expect(screen.getByText('/ 500', { exact: false })).toBeInTheDocument();
   });
 
@@ -99,7 +99,7 @@ describe('Relance des nouveaux', () => {
     api.relanceGetStatus.mockResolvedValue(ok(status({ messagesSentToday: 500 })));
     renderPage(<RelanceNouveaux />);
     expect(await screen.findByTestId('relance-state')).toHaveTextContent('Limite du jour atteinte');
-    expect(screen.getByText(/partent demain/)).toBeInTheDocument();
+    expect(screen.getByText(/Reprise demain/)).toBeInTheDocument();
   });
 
   it('explains relance and offers credits to someone who has never used it', async () => {

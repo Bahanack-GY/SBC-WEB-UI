@@ -28,7 +28,7 @@ export function RelanceFilleulList({ filleuls, total, onSeeAll }: { filleuls: Fi
 
       {filleuls.length === 0 ? (
         <p className="text-sm text-ink-3 py-4">
-          Personne pour l'instant. Dès qu'un filleul s'inscrit avec votre lien sans payer, il apparaît ici.
+          Personne pour l'instant.
         </p>
       ) : (
         <motion.ul variants={listContainer} initial="hidden" animate="show" className="divide-y divide-border">

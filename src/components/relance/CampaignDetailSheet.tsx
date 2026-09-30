@@ -15,12 +15,12 @@ type Action = 'pause' | 'resume' | 'stop' | 'delete';
 const CONFIRM: Record<'stop' | 'delete', { title: string; message: string; label: string }> = {
   stop: {
     title: 'Arrêter la campagne ?',
-    message: "Les filleuls de cette campagne ne recevront plus aucun message. Ce n'est pas une pause : on ne peut pas la reprendre.",
+    message: 'Plus aucun message. Impossible de reprendre.',
     label: 'Arrêter',
   },
   delete: {
     title: 'Supprimer la campagne ?',
-    message: 'Elle disparaît de votre liste. Les messages déjà envoyés ne sont pas concernés.',
+    message: 'Retirée de votre liste.',
     label: 'Supprimer',
   },
 };
@@ -58,7 +58,7 @@ export function CampaignDetailSheet({
       handleApiResponse(await call());
       setConfirm(null);
       onChanged({
-        pause: 'Campagne en pause. Ses filleuls attendent là où ils en sont.',
+        pause: 'Campagne en pause.',
         resume: 'Campagne relancée.',
         stop: 'Campagne arrêtée.',
         delete: 'Campagne supprimée.',

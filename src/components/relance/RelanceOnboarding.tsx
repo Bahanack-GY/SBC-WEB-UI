@@ -36,9 +36,9 @@ function JourneyTeaser() {
 }
 
 const STEPS = [
-  { icon: Wallet01Icon, title: 'Achetez des crédits', text: '1 crédit = 1 message. 3 000 crédits suffisent pour environ 428 filleuls.' },
-  { icon: SentIcon, title: "SBC s'occupe du reste", text: "Chaque nouveau filleul qui n'a pas payé reçoit un message par jour, pendant 7 jours." },
-  { icon: CheckmarkCircle02Icon, title: 'Il paie, ça s’arrête', text: 'Dès qu’un filleul paie, il ne reçoit plus rien. Vous ne dépensez que pour ceux qui hésitent.' },
+  { icon: Wallet01Icon, title: 'Achetez des crédits', text: '1 crédit = 1 message' },
+  { icon: SentIcon, title: "SBC s'occupe du reste", text: '1 message par jour, 7 jours' },
+  { icon: CheckmarkCircle02Icon, title: 'Il paie, ça s’arrête', text: 'Plus aucun message' },
 ];
 
 /** First visit, no credits yet: what relance does, in three steps, and one button. */
@@ -48,10 +48,6 @@ export function RelanceOnboarding({ onBuy }: { onBuy: () => void }) {
       <motion.section variants={popIn} className="bg-surface border border-border rounded-card p-5 text-center">
         <JourneyTeaser />
         <h2 className="mt-3 text-xl font-bold text-ink">Relancez vos nouveaux filleuls, automatiquement</h2>
-        <p className="mt-2 text-sm text-ink-2">
-          Quand quelqu'un s'inscrit avec votre lien sans payer, SBC lui écrit un message par jour
-          pendant 7 jours — jusqu'à ce qu'il paie.
-        </p>
       </motion.section>
 
       <motion.ol variants={slideLeft} className="bg-surface border border-border rounded-card divide-y divide-border">

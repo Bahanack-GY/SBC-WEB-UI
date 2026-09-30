@@ -44,10 +44,10 @@ beforeEach(() => {
 });
 
 describe('Campagnes de relance — the list', () => {
-  it('explains what campaigns are for when there are none', async () => {
+  it('says who campaigns are for when there are none', async () => {
     renderPage(<RelanceCampagnes />);
     expect(await screen.findByText("Aucune campagne pour l'instant")).toBeInTheDocument();
-    expect(screen.getByText(/ne concerne que les filleuls qui s'inscrivent à partir de maintenant/)).toBeInTheDocument();
+    expect(screen.getByText('Relancez vos anciens filleuls')).toBeInTheDocument();
   });
 
   it('separates running campaigns from finished ones, with plain status words', async () => {
