@@ -53,11 +53,11 @@ describe('Relance des nouveaux', () => {
   it('draws the journey from the stats — waiting is what is active on no day', async () => {
     renderPage(<RelanceNouveaux />);
     const journey = await screen.findByRole('region', { name: 'Le parcours de vos filleuls' });
-    // The row holding a label, read whole (a day row also shows its node number).
-    const text = (label: string) => within(journey).getByText(label).closest('li')?.textContent;
-    expect(text('En attente du 1er message')).toContain('10'); // 30 active − 12 − 8
-    expect(text('Jour 1')).toContain('12');
-    expect(text('Ont payé')).toContain('5');
+    const chip = (label: string) => within(journey).getByText(label).closest('li')?.textContent;
+    expect(chip('En attente')).toContain('10'); // 30 active − 12 − 8
+    expect(within(journey).getByLabelText('Jour 1 : 12 filleuls')).toHaveTextContent('12');
+    expect(within(journey).getByLabelText('Jour 7 : 0 filleul')).toBeInTheDocument();
+    expect(chip('Ont payé')).toContain('5');
   });
 
   it('shows filleuls by name and day, never a fragment of a database id', async () => {
