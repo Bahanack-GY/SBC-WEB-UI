@@ -104,7 +104,7 @@ describe('Campagnes de relance — one campaign', () => {
     renderPage(<RelanceCampagnes />);
     await userEvent.click(await screen.findByRole('button', { name: /Anciens de juin/ }));
     const journey = await screen.findByRole('region', { name: 'Le parcours de vos filleuls' });
-    expect(within(journey).getByText('Jour 3').closest('li')).toHaveTextContent('20');
+    expect(within(journey).getByLabelText('Jour 3 : 20 filleuls')).toHaveTextContent('20');
     expect(within(journey).getByText('Ont payé').closest('li')).toHaveTextContent('4');
   });
 
