@@ -29,3 +29,6 @@ if (!('IntersectionObserver' in window)) {
     takeRecords() { return []; }
   };
 }
+
+// jsdom does not implement scrolling; some components scroll into view.
+window.scrollTo = () => undefined;

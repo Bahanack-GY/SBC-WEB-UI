@@ -13,6 +13,7 @@ import { RelanceFilleulList, type FilleulRow } from '../components/relance/Relan
 import { RelanceOnboarding } from '../components/relance/RelanceOnboarding';
 import { RelanceSettingsSheet } from '../components/relance/RelanceSettingsSheet';
 import { RelanceMessagesSheet } from '../components/relance/RelanceMessagesSheet';
+import { PushOptIn } from '../components/relance/PushOptIn';
 import { Sheet } from '../components/relance/ui/Sheet';
 import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -170,6 +171,8 @@ export default function RelanceNouveaux() {
                 onChangeLimit={() => setSettingsOpen(true)}
               />
             </motion.div>
+
+            <PushOptIn />
 
             <motion.div variants={slideLeft} data-tour="relance-credits">
               <RelanceCreditsCard emailBalance={emailBalance} smsBalance={smsBalance} onRecharge={() => setPacksOpen(true)} />
