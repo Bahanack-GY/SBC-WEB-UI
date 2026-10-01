@@ -200,7 +200,19 @@ export interface CampaignDraft {
   skipAlreadyInRelance: boolean;
   /** Absent = SBC's own 7 messages. Keyed by day 1..7. */
   ownMessages?: Partial<Record<number, OwnMessage>>;
+  /** Stop at what the credits cover, newest filleuls first. */
+  fitBudget: boolean;
 }
+
+export const DEFAULT_CAMPAIGN_DRAFT: CampaignDraft = { name: '', period: '3m', countries: [], skipAlreadyInRelance: true, fitBudget: true };
+
+/**
+ * How many filleuls a campaign will reach: everyone matching, or — when the
+ * parrain keeps to their budget — what the credits cover after a month of
+ * relance des nouveaux, which keeps running alongside.
+ */
+export const campaignReach = (count: number, budget: { maxTargets: number } | undefined, fitBudget: boolean) =>
+  fitBudget && budget && count > budget.maxTargets ? budget.maxTargets : count;
 
 /** The filter the campaign preview and creation both use. */
 export function campaignFilter(draft: CampaignDraft, now: Date = new Date()) {
@@ -222,7 +234,7 @@ export function campaignFilter(draft: CampaignDraft, now: Date = new Date()) {
  * the parrain type both and silently dropped any day whose English was empty,
  * so a French-only message never went out. The French is used for both here.
  */
-export function buildCampaignPayload(draft: CampaignDraft, now: Date = new Date()): CreateCampaignRequest {
+export function buildCampaignPayload(draft: CampaignDraft, now: Date = new Date(), maxTargets?: number): CreateCampaignRequest {
   const customMessages: CustomMessage[] = [];
   for (let day = 1; day <= RELANCE_DAYS; day++) {
     const m = draft.ownMessages?.[day];
@@ -237,7 +249,7 @@ export function buildCampaignPayload(draft: CampaignDraft, now: Date = new Date(
   return {
     name: draft.name.trim() || defaultCampaignName(now),
     type: 'filtered',
-    targetFilter: campaignFilter(draft, now),
+    targetFilter: { ...campaignFilter(draft, now), ...(maxTargets ? { maxTargets } : {}) },
     ...(customMessages.length ? { customMessages } : {}),
   } as CreateCampaignRequest;
 }

@@ -215,6 +215,7 @@ export interface CampaignFilter {
   maxAge?: number;
   excludeCurrentTargets?: boolean;     // Exclude already enrolled targets
   subscriptionStatus?: 'subscribed' | 'non-subscribed' | 'all'; // Filter by payment status
+  maxTargets?: number;                 // Budget: stop after this many (newest first)
 }
 
 /**
@@ -233,7 +234,15 @@ export interface SampleUser {
 export interface FilterPreviewResponse {
   totalCount: number;         // what the backend sends (the old type said estimatedCount)
   sampleUsers: SampleUser[];
+  /** What the parrain can afford with a month of relance des nouveaux kept back. */
+  budget?: CampaignBudget;
   message?: string;
+}
+
+export interface CampaignBudget {
+  emailBalance: number;
+  reservedForNew: number;
+  maxTargets: number;
 }
 
 /**

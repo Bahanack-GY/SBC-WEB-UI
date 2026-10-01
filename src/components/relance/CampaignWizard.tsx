@@ -9,13 +9,12 @@ import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
 import { allAfricanCountries } from '../../utils/countriesData';
 import {
-  buildCampaignPayload, campaignFilter, creditsNeeded, defaultCampaignName, filleulsCovered, frenchErrorFrom,
-  MESSAGE_VARIABLES, PERIOD_OPTIONS, RELANCE_DAYS, type CampaignDraft, type OwnMessage,
+  buildCampaignPayload, campaignFilter, campaignReach, creditsNeeded, defaultCampaignName, DEFAULT_CAMPAIGN_DRAFT, filleulsCovered,
+  frenchErrorFrom, MESSAGE_VARIABLES, PERIOD_OPTIONS, RELANCE_DAYS, type CampaignDraft, type OwnMessage,
 } from '../../utils/relance';
+import type { CampaignBudget } from '../../types/relance';
 
 const STEPS = ['Qui relancer ?', 'Le message', 'Confirmer'] as const;
-
-const EMPTY: CampaignDraft = { name: '', period: '3m', countries: [], skipAlreadyInRelance: true };
 
 const foldAccents = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu, '').toLowerCase();
 
@@ -37,7 +36,7 @@ export function CampaignWizard({
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
-  const [draft, setDraft] = useState<CampaignDraft>(EMPTY);
+  const [draft, setDraft] = useState<CampaignDraft>(DEFAULT_CAMPAIGN_DRAFT);
   const [ownMode, setOwnMode] = useState(false);
   const [day, setDay] = useState(1);
   const [countryQuery, setCountryQuery] = useState('');
@@ -47,6 +46,7 @@ export function CampaignWizard({
   const [sample, setSample] = useState<string[]>([]);
   const [counting, setCounting] = useState(false);
   const [countError, setCountError] = useState<string | null>(null);
+  const [budget, setBudget] = useState<CampaignBudget | undefined>();
 
   const [previewHtml, setPreviewHtml] = useState<string | null>(null);
   const [launching, setLaunching] = useState(false);
@@ -55,7 +55,7 @@ export function CampaignWizard({
 
   useEffect(() => {
     if (!open) return;
-    setStep(0); setDir(1); setDraft(EMPTY); setOwnMode(false); setDay(1);
+    setStep(0); setDir(1); setDraft(DEFAULT_CAMPAIGN_DRAFT); setOwnMode(false); setDay(1);
     setCount(null); setSample([]); setLaunchError(null); setLaunched(false); setCountriesOpen(false);
   }, [open]);
 
@@ -75,6 +75,7 @@ export function CampaignWizard({
         const data = handleApiResponse(await sbcApiService.relancePreviewFilters(campaignFilter(draft)));
         if (cancelled) return;
         setCount(data?.totalCount ?? 0);
+        setBudget(data?.budget);
         setSample((data?.sampleUsers ?? []).map((u: { name?: string }) => u.name).filter(Boolean).slice(0, 3));
       } catch (err) {
         if (!cancelled) setCountError(frenchErrorFrom(err, 'Impossible de compter les filleuls. Réessayez.'));
@@ -111,6 +112,9 @@ export function CampaignWizard({
   const current = draft.ownMessages?.[day] ?? { subject: '', text: '' };
   const writtenDays = Object.entries(draft.ownMessages ?? {}).filter(([, m]) => m?.text.trim()).map(([d]) => Number(d));
 
+  const reach = campaignReach(count ?? 0, budget, draft.fitBudget);
+  const overBudget = !!budget && (count ?? 0) > budget.maxTargets;
+
   const preview = async () => {
     try {
       const data = handleApiResponse(await sbcApiService.relancePreviewMessage({
@@ -130,7 +134,11 @@ export function CampaignWizard({
     setLaunching(true);
     setLaunchError(null);
     try {
-      const payload = buildCampaignPayload(ownMode ? draft : { ...draft, ownMessages: undefined });
+      const payload = buildCampaignPayload(
+        ownMode ? draft : { ...draft, ownMessages: undefined },
+        new Date(),
+        draft.fitBudget && overBudget ? budget!.maxTargets : undefined,
+      );
       const created = handleApiResponse(await sbcApiService.relanceCreateCampaign(payload));
       const id = created?._id;
       if (id && created?.status !== 'active') handleApiResponse(await sbcApiService.relanceStartCampaign(id));
@@ -143,9 +151,9 @@ export function CampaignWizard({
     }
   };
 
-  const needed = creditsNeeded(count ?? 0);
+  const needed = creditsNeeded(reach);
   const enough = emailBalance >= needed;
-  const canNext0 = !counting && (count ?? 0) > 0;
+  const canNext0 = !counting && reach > 0;
   const canNext1 = !ownMode || writtenDays.length > 0;
 
   return (
@@ -322,6 +330,25 @@ export function CampaignWizard({
                           {sample.length > 0 && (
                             <div className="mt-1 text-xs text-ink-3 truncate">Dont {sample.join(', ')}…</div>
                           )}
+                          {overBudget && (
+                            <div className="mt-3 pt-3 border-t border-primary/20 flex items-center gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="text-sm font-semibold text-ink">
+                                  {budget!.maxTargets > 0
+                                    ? `Selon vos crédits : ${budget!.maxTargets} les plus récents`
+                                    : 'Vos crédits vont à vos nouveaux filleuls'}
+                                </div>
+                                {budget!.reservedForNew > 0 && (
+                                  <div className="text-xs text-ink-3">{budget!.reservedForNew} crédits gardés pour la relance des nouveaux</div>
+                                )}
+                              </div>
+                              <Switch
+                                checked={draft.fitBudget}
+                                onChange={v => setDraft(d => ({ ...d, fitBudget: v }))}
+                                label="Selon vos crédits"
+                              />
+                            </div>
+                          )}
                         </>
                       )}
                     </section>
@@ -405,7 +432,7 @@ export function CampaignWizard({
                   <>
                     <section className="rounded-card bg-surface border border-border divide-y divide-border">
                       {[
-                        ['Filleuls relancés', <CountUp key="c" value={count ?? 0} />],
+                        ['Filleuls relancés', <CountUp key="c" value={reach} />],
                         ['Messages par filleul', `${RELANCE_DAYS}, un par jour`],
                         ['Messages', ownMode ? `Les vôtres (${writtenDays.length} jour${writtenDays.length > 1 ? 's' : ''}) + SBC` : 'Ceux de SBC'],
                         ['Crédits nécessaires', <span key="n">≈ <CountUp value={needed} /></span>],

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildCampaignPayload,
+  campaignReach,
   campaignFilter,
   creditsNeeded,
   dayLabel,
@@ -109,7 +110,7 @@ describe('wording', () => {
 
 describe('campaigns', () => {
   const now = new Date('2026-09-30T12:00:00Z');
-  const draft: CampaignDraft = { name: '', period: '3m', countries: [], skipAlreadyInRelance: true };
+  const draft: CampaignDraft = { name: '', period: '3m', countries: [], skipAlreadyInRelance: true, fitBudget: true };
 
   it('turns a period into a registration window', () => {
     expect(periodToRange('30d', now)).toEqual({ registrationDateFrom: '2026-08-31' });
@@ -135,6 +136,21 @@ describe('campaigns', () => {
 
   it('sends no custom messages when the parrain keeps SBC\'s', () => {
     expect(buildCampaignPayload(draft, now)).not.toHaveProperty('customMessages');
+  });
+
+  // Sterling: relancing older filleuls follows the budget, and relance des
+  // nouveaux keeps running alongside (the server keeps a month of it back).
+  it('reaches what the budget covers when the parrain keeps to it, everyone otherwise', () => {
+    const budget = { maxTargets: 120 };
+    expect(campaignReach(300, budget, true)).toBe(120);
+    expect(campaignReach(300, budget, false)).toBe(300);
+    expect(campaignReach(80, budget, true)).toBe(80);
+    expect(campaignReach(300, undefined, true)).toBe(300); // budget not known yet
+  });
+
+  it('puts the budget cap in the filter only when one applies', () => {
+    expect(buildCampaignPayload(draft, now, 120).targetFilter.maxTargets).toBe(120);
+    expect(buildCampaignPayload(draft, now).targetFilter).not.toHaveProperty('maxTargets');
   });
 
   it('sends only the days written, using the French text for English too', () => {
