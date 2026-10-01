@@ -265,3 +265,7 @@ export function frenchError(message: string | undefined, fallback: string): stri
 /** frenchError for whatever a `catch` receives. */
 export const frenchErrorFrom = (err: unknown, fallback: string) =>
   frenchError(err instanceof Error ? err.message : undefined, fallback);
+
+/** SMS relance is for Cameroonian parrains only (Rufus). Country is ISO-2, with a few legacy names. */
+export const isCameroon = (country?: string | null) =>
+  ['CM', 'CAMEROUN', 'CAMEROON'].includes((country ?? '').trim().toUpperCase());

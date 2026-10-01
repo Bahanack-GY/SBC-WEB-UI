@@ -16,6 +16,7 @@ vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 const relance = vi.hoisted(() => ({
   state: { emailBalance: 3000, smsBalance: 0, isLoading: false, hasCredits: true, refreshBalance: vi.fn() },
 }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { country: 'CM' } }) }));
 vi.mock('../contexts/RelanceContext', () => ({ useRelance: () => relance.state }));
 
 import RelanceNouveaux from './RelanceNouveaux';

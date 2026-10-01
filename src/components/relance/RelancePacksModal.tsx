@@ -1,5 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { filleulsCovered, filleulsCoveredBySms } from '../../utils/relance';
+import { filleulsCovered, filleulsCoveredBySms, isCameroon } from '../../utils/relance';
+import { useAuth } from '../../contexts/AuthContext';
 import { Cancel01Icon, Mail01Icon, SmsCodeIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -24,6 +25,8 @@ export default function RelancePacksModal({
   showEmail = true,
   showSms = true,
 }: RelancePacksModalProps) {
+  const { user } = useAuth();
+  const smsAllowed = showSms && isCameroon(user?.country);
   const [packs, setPacks] = useState<RelancePacksResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
@@ -160,12 +163,11 @@ export default function RelancePacksModal({
                   </section>
                 )}
 
-                {showSms && packs.smsPacks?.length > 0 && (
+                {smsAllowed && packs.smsPacks?.length > 0 && (
                   <section>
                     <div className="flex items-center gap-2 mb-2 text-green-700">
                       <HugeiconsIcon icon={SmsCodeIcon} />
                       <h4 className="font-bold">Packs SMS</h4>
-                      <span className="text-xs text-ink-3">Cameroun uniquement</span>
                     </div>
                     <div className="space-y-2">
                       {packs.smsPacks.map(renderPack)}
