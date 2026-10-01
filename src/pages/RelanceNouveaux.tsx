@@ -13,6 +13,7 @@ import { RelanceFilleulList, type FilleulRow } from '../components/relance/Relan
 import { RelanceOnboarding } from '../components/relance/RelanceOnboarding';
 import { RelanceSettingsSheet } from '../components/relance/RelanceSettingsSheet';
 import { RelanceMessagesSheet } from '../components/relance/RelanceMessagesSheet';
+import { RelanceEarningsCard, type RelanceEarnings } from '../components/relance/RelanceEarningsCard';
 import { Sheet } from '../components/relance/ui/Sheet';
 import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -72,6 +73,11 @@ export default function RelanceNouveaux() {
       handleApiResponse(await sbcApiService.relancePreviewFilters(campaignFilter(DEFAULT_CAMPAIGN_DRAFT))),
     enabled: emailBalance > 0,
     staleTime: 30 * 60_000,
+  });
+  const earnings = useQuery({
+    queryKey: ['relance', 'earnings'],
+    queryFn: async (): Promise<RelanceEarnings> => handleApiResponse(await sbcApiService.relanceGetEarnings()),
+    ...live,
   });
   const olderCount = older.data?.totalCount ?? 0;
   const olderAffordable = campaignReach(olderCount, older.data?.budget, true);
@@ -170,6 +176,8 @@ export default function RelanceNouveaux() {
                 onChangeLimit={() => setSettingsOpen(true)}
               />
             </motion.div>
+
+            {(earnings.data?.paid ?? 0) > 0 && <RelanceEarningsCard data={earnings.data!} />}
 
             <motion.div variants={slideLeft} data-tour="relance-credits">
               <RelanceCreditsCard emailBalance={emailBalance} smsBalance={smsBalance} onRecharge={() => setPacksOpen(true)} />
