@@ -1,3 +1,4 @@
+import { PushOptIn } from '../components/common/PushOptIn';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Download01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
@@ -179,6 +180,8 @@ function Home() {
         <div className="balance-card">
           <BalanceCard balance={balance} usdBalance={usdBalance} />
         </div>
+
+        <PushOptIn hint="Commissions, retraits, messages : sois prévenu tout de suite." dismissKey="home" />
 
         <div className="quick-actions">
           <ServicesGrid

@@ -13,7 +13,7 @@ import { RelanceFilleulList, type FilleulRow } from '../components/relance/Relan
 import { RelanceOnboarding } from '../components/relance/RelanceOnboarding';
 import { RelanceSettingsSheet } from '../components/relance/RelanceSettingsSheet';
 import { RelanceMessagesSheet } from '../components/relance/RelanceMessagesSheet';
-import { PushOptIn } from '../components/relance/PushOptIn';
+import { PushOptIn } from '../components/common/PushOptIn';
 import { Sheet } from '../components/relance/ui/Sheet';
 import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';

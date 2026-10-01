@@ -1402,6 +1402,16 @@ export class SBCApiService extends ApiService {
     return await this.post('/notifications/push/subscribe', { body: { subscription } });
   }
 
+  /** Web push: every kind of alert, on or off for this user. GET /api/notifications/push/preferences */
+  async pushGetPreferences(): Promise<ApiResponse> {
+    return await this.get('/notifications/push/preferences');
+  }
+
+  /** Web push: the kinds this user turned off. PUT /api/notifications/push/preferences */
+  async pushSetPreferences(disabled: string[]): Promise<ApiResponse> {
+    return await this.put('/notifications/push/preferences', { body: { disabled } });
+  }
+
   /** Web push: forget this browser. POST /api/notifications/push/unsubscribe */
   async pushUnsubscribe(endpoint: string): Promise<ApiResponse> {
     return await this.post('/notifications/push/unsubscribe', { body: { endpoint } });

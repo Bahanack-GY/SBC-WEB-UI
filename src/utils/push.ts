@@ -52,3 +52,14 @@ export async function enablePush(): Promise<EnableResult> {
   handleApiResponse(await sbcApiService.pushSubscribe(subscription.toJSON()));
   return 'enabled';
 }
+
+/** Stops notifications on this browser (other devices keep theirs). */
+export async function disablePush(): Promise<void> {
+  if (pushSupport() !== 'supported') return;
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  const sub = await reg?.pushManager.getSubscription();
+  if (!sub) return;
+  const endpoint = sub.endpoint;
+  await sub.unsubscribe();
+  await sbcApiService.pushUnsubscribe(endpoint).catch(() => undefined);
+}
