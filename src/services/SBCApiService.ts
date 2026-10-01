@@ -1392,6 +1392,21 @@ export class SBCApiService extends ApiService {
 
   // ===== Credit packs & balance (replaces monthly subscription) =====
 
+  /** Web push: the server's VAPID public key (null = push off). GET /api/notifications/push/public-key */
+  async pushGetPublicKey(): Promise<ApiResponse> {
+    return await this.get('/notifications/push/public-key');
+  }
+
+  /** Web push: save this browser's subscription. POST /api/notifications/push/subscribe */
+  async pushSubscribe(subscription: PushSubscriptionJSON): Promise<ApiResponse> {
+    return await this.post('/notifications/push/subscribe', { body: { subscription } });
+  }
+
+  /** Web push: forget this browser. POST /api/notifications/push/unsubscribe */
+  async pushUnsubscribe(endpoint: string): Promise<ApiResponse> {
+    return await this.post('/notifications/push/unsubscribe', { body: { endpoint } });
+  }
+
   /**
    * The 7 SBC relance messages, read-only
    * GET /api/relance/default-messages
