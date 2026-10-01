@@ -12,6 +12,7 @@ import { RelanceJourney } from '../components/relance/RelanceJourney';
 import { RelanceFilleulList, type FilleulRow } from '../components/relance/RelanceFilleulList';
 import { RelanceOnboarding } from '../components/relance/RelanceOnboarding';
 import { RelanceSettingsSheet } from '../components/relance/RelanceSettingsSheet';
+import { RelanceMessagesSheet } from '../components/relance/RelanceMessagesSheet';
 import { Sheet } from '../components/relance/ui/Sheet';
 import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -52,6 +53,7 @@ export default function RelanceNouveaux() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [allOpen, setAllOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
+  const [messagesOpen, setMessagesOpen] = useState(false);
   const [toggling, setToggling] = useState(false);
   const [flash, setFlash] = useState<{ tone: 'ok' | 'error'; text: string } | null>(null);
 
@@ -141,7 +143,7 @@ export default function RelanceNouveaux() {
             </button>
           </div>
         ) : neverUsed ? (
-          <RelanceOnboarding onBuy={() => setPacksOpen(true)} />
+          <RelanceOnboarding onBuy={() => setPacksOpen(true)} onSeeMessages={() => setMessagesOpen(true)} />
         ) : (
           <motion.div variants={sequence} initial="hidden" animate="show" className="space-y-3 pt-1">
             <motion.div variants={popIn} data-tour="relance-status">
@@ -164,6 +166,10 @@ export default function RelanceNouveaux() {
             <motion.div variants={riseFar} data-tour="relance-journey">
               <RelanceJourney buckets={buckets} live={state === 'running'} />
             </motion.div>
+
+            <motion.button variants={riseFar} onClick={() => setMessagesOpen(true)} className="w-full h-10 text-sm font-semibold text-primary">
+              Voir les messages
+            </motion.button>
 
             <motion.div variants={slideRight}>
               <RelanceFilleulList
@@ -233,6 +239,7 @@ export default function RelanceNouveaux() {
         )}
       </AnimatePresence>
 
+      <RelanceMessagesSheet open={messagesOpen} onClose={() => setMessagesOpen(false)} />
       <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} />
 
       <RelanceSettingsSheet

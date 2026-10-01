@@ -42,7 +42,7 @@ const STEPS = [
 ];
 
 /** First visit, no credits yet: what relance does, in three steps, and one button. */
-export function RelanceOnboarding({ onBuy }: { onBuy: () => void }) {
+export function RelanceOnboarding({ onBuy, onSeeMessages }: { onBuy: () => void; onSeeMessages: () => void }) {
   return (
     <motion.div variants={sequence} initial="hidden" animate="show" className="space-y-4 pt-2">
       <motion.section variants={popIn} className="bg-surface border border-border rounded-card p-5 text-center">
@@ -74,6 +74,9 @@ export function RelanceOnboarding({ onBuy }: { onBuy: () => void }) {
         className="w-full h-12 rounded-tile bg-primary text-white font-semibold"
       >
         Acheter des crédits
+      </motion.button>
+      <motion.button variants={riseFar} onClick={onSeeMessages} className="w-full h-10 text-sm font-semibold text-primary">
+        Voir les messages
       </motion.button>
     </motion.div>
   );
