@@ -10,13 +10,14 @@ const api = vi.hoisted(() => ({
   relanceUpdateSettings: vi.fn(),
   relanceUpdateConfig: vi.fn(),
   relanceGetPacks: vi.fn(),
+  relanceGetDefaultMessages: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 
 const relance = vi.hoisted(() => ({
   state: { emailBalance: 3000, smsBalance: 0, isLoading: false, hasCredits: true, refreshBalance: vi.fn() },
 }));
-vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { country: 'CM' } }) }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { country: 'CM', name: 'Paul' } }) }));
 vi.mock('../contexts/RelanceContext', () => ({ useRelance: () => relance.state }));
 
 import RelanceNouveaux from './RelanceNouveaux';
@@ -40,6 +41,10 @@ beforeEach(() => {
   }));
   api.relanceUpdateSettings.mockResolvedValue(ok({}));
   api.relanceGetPacks.mockResolvedValue(ok({ emailPacks: [], smsPacks: [] }));
+  api.relanceGetDefaultMessages.mockResolvedValue(ok([
+    { dayNumber: 1, subject: 'Bienvenue chez SBC - Message de {{referrerName}}', text: 'Bonjour {{name}}, je suis {{referrerName}}.' },
+    { dayNumber: 2, subject: 'Jour 2: Découvrez les opportunités SBC', text: 'Deuxième message pour {{name}}.' },
+  ]));
 });
 
 describe('Relance des nouveaux', () => {
@@ -109,6 +114,8 @@ describe('Relance des nouveaux', () => {
     renderPage(<RelanceNouveaux />);
     expect(await screen.findByText(/Relancez vos nouveaux filleuls, automatiquement/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Acheter des crédits' })).toBeInTheDocument();
+    // Read what goes out before paying for it.
+    expect(screen.getByRole('button', { name: 'Voir les messages' })).toBeInTheDocument();
     expect(screen.queryByRole('switch')).not.toBeInTheDocument();
   });
 
@@ -133,5 +140,16 @@ describe('Relance des nouveaux', () => {
   it('sends the parrain to campaigns for their older filleuls', async () => {
     renderPage(<RelanceNouveaux />);
     expect(await screen.findByRole('button', { name: /Relancer vos anciens filleuls/ })).toBeInTheDocument();
+  });
+
+  it('lets the parrain read the messages, filled in with their own name', async () => {
+    renderPage(<RelanceNouveaux />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Voir les messages' }));
+    const panel = await screen.findByRole('tabpanel');
+    expect(panel).toHaveTextContent('Bienvenue chez SBC - Message de Paul');
+    expect(panel).toHaveTextContent('Bonjour Marie, je suis Paul.');
+
+    await userEvent.click(screen.getByRole('tab', { name: 'J2' }));
+    expect(screen.getByRole('tabpanel')).toHaveTextContent('Deuxième message pour Marie.');
   });
 });

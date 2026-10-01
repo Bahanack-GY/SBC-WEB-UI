@@ -1393,6 +1393,14 @@ export class SBCApiService extends ApiService {
   // ===== Credit packs & balance (replaces monthly subscription) =====
 
   /**
+   * The 7 SBC relance messages, read-only
+   * GET /api/relance/default-messages
+   */
+  async relanceGetDefaultMessages(): Promise<ApiResponse> {
+    return await this.get('/relance/default-messages');
+  }
+
+  /**
    * List all available credit packs (email + SMS)
    * GET /api/relance/packs
    */
