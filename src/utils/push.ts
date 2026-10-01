@@ -1,6 +1,6 @@
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from './apiHelpers';
-import { APP_SW_PATH } from './cacheBuster';
+import { APP_SW_URL } from './cacheBuster';
 
 /**
  * Web push in the phone's browser.
@@ -26,14 +26,13 @@ const keyBytes = (base64Url: string) => {
   return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
 };
 
-const registration = async () =>
-  (await navigator.serviceWorker.getRegistration(APP_SW_PATH)) ??
-  (await navigator.serviceWorker.register(APP_SW_PATH, { scope: '/' }));
+// Registering the current URL also updates a worker still running an older build.
+const registration = () => navigator.serviceWorker.register(APP_SW_URL, { scope: '/' });
 
 /** Whether this browser already receives SBC notifications. */
 export async function isPushEnabled(): Promise<boolean> {
   if (pushSupport() !== 'supported' || Notification.permission !== 'granted') return false;
-  const reg = await navigator.serviceWorker.getRegistration(APP_SW_PATH);
+  const reg = await navigator.serviceWorker.getRegistration('/');
   return !!(await reg?.pushManager.getSubscription());
 }
 

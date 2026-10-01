@@ -18,16 +18,27 @@
  */
 export const APP_SW_PATH = '/sw.js';
 
+/**
+ * The worker is registered under a URL that changes with every build. nginx
+ * marks every .js file cacheable for a month and Cloudflare honours it, so a
+ * fixed /sw.js stayed stale at the edge for weeks — on 2026-10-01 phones ran a
+ * worker without the push handler and showed nothing. A new URL is always a
+ * fresh fetch, and the browser treats it as an update of the same
+ * registration, so push subscriptions survive deploys.
+ */
+export const APP_SW_URL = `${APP_SW_PATH}?v=${__APP_BUILD__}`;
+
+const isAppWorker = (scriptURL: string) => {
+  try { return new URL(scriptURL, location.origin).pathname === APP_SW_PATH; } catch { return false; }
+};
+
 export async function purgeStaleCaches(): Promise<void> {
   try {
     if ('serviceWorker' in navigator) {
       const registrations = await navigator.serviceWorker.getRegistrations();
       await Promise.all(
         registrations
-          .filter((reg) => {
-            const url = reg.active?.scriptURL ?? reg.installing?.scriptURL ?? reg.waiting?.scriptURL ?? '';
-            return !url.endsWith(APP_SW_PATH);
-          })
+          .filter((reg) => !isAppWorker(reg.active?.scriptURL ?? reg.installing?.scriptURL ?? reg.waiting?.scriptURL ?? ''))
           .map((reg) => reg.unregister()),
       );
     }
@@ -55,7 +66,7 @@ export async function registerAppServiceWorker(): Promise<void> {
   // skipping keeps dev consoles clean.
   if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
   try {
-    await navigator.serviceWorker.register(APP_SW_PATH, { scope: '/' });
+    await navigator.serviceWorker.register(APP_SW_URL, { scope: '/' });
   } catch {
     // ignore — the app works fine, it just is not installable
   }
