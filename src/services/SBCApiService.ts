@@ -1393,6 +1393,14 @@ export class SBCApiService extends ApiService {
   // ===== Credit packs & balance (replaces monthly subscription) =====
 
   /**
+   * Relanced filleuls who paid, and the commissions that earned
+   * GET /api/relance/earnings
+   */
+  async relanceGetEarnings(): Promise<ApiResponse> {
+    return await this.get('/relance/earnings');
+  }
+
+  /**
    * The 7 SBC relance messages, read-only
    * GET /api/relance/default-messages
    */

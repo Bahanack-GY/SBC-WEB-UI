@@ -12,6 +12,7 @@ const api = vi.hoisted(() => ({
   relanceGetPacks: vi.fn(),
   relanceGetDefaultMessages: vi.fn(),
   relancePreviewFilters: vi.fn(),
+  relanceGetEarnings: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 
@@ -43,6 +44,7 @@ beforeEach(() => {
   api.relanceUpdateSettings.mockResolvedValue(ok({}));
   api.relanceGetPacks.mockResolvedValue(ok({ emailPacks: [], smsPacks: [] }));
   api.relancePreviewFilters.mockResolvedValue(ok({ totalCount: 0, sampleUsers: [] }));
+  api.relanceGetEarnings.mockResolvedValue(ok({ paid: 0, earnings: { XAF: 0, USD: 0 } }));
   api.relanceGetDefaultMessages.mockResolvedValue(ok([
     { dayNumber: 1, subject: 'Bienvenue chez SBC - Message de {{referrerName}}', text: 'Bonjour {{name}}, je suis {{referrerName}}.' },
     { dayNumber: 2, subject: 'Jour 2: Découvrez les opportunités SBC', text: 'Deuxième message pour {{name}}.' },
@@ -165,5 +167,34 @@ describe('Relance des nouveaux', () => {
 
     await userEvent.click(screen.getByRole('tab', { name: 'J2' }));
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Deuxième message pour Marie.');
+  });
+  describe('what relance earned', () => {
+    it('shows the commissions from relanced filleuls who paid', async () => {
+      api.relanceGetEarnings.mockResolvedValue(ok({ paid: 5, earnings: { XAF: 12500, USD: 0 } }));
+      renderPage(<RelanceNouveaux />);
+      const card = await screen.findByRole('region', { name: 'Gains de la relance' });
+      expect(card).toHaveTextContent('12 500 FCFA');
+      expect(card).toHaveTextContent('gagnés grâce à 5 filleuls relancés');
+    });
+
+    it('adds crypto commissions in dollars when there are some', async () => {
+      api.relanceGetEarnings.mockResolvedValue(ok({ paid: 1, earnings: { XAF: 1000, USD: 2 } }));
+      renderPage(<RelanceNouveaux />);
+      const card = await screen.findByRole('region', { name: 'Gains de la relance' });
+      expect(card).toHaveTextContent('+ 2 $');
+      expect(card).toHaveTextContent('grâce à 1 filleul relancé');
+    });
+
+    it('still says who paid when the amount is unavailable', async () => {
+      api.relanceGetEarnings.mockResolvedValue(ok({ paid: 3, earnings: null }));
+      renderPage(<RelanceNouveaux />);
+      expect(await screen.findByRole('region', { name: 'Gains de la relance' })).toHaveTextContent('3 filleuls relancés ont payé');
+    });
+
+    it('shows nothing until someone has paid', async () => {
+      renderPage(<RelanceNouveaux />);
+      await screen.findByTestId('relance-state');
+      expect(screen.queryByRole('region', { name: 'Gains de la relance' })).not.toBeInTheDocument();
+    });
   });
 });
