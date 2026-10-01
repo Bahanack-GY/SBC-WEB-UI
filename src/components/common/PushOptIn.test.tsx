@@ -58,4 +58,23 @@ describe('relance alerts on this phone', () => {
     await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Activer' })).not.toBeInTheDocument());
     expect(screen.queryByText('Alertes activées')).not.toBeInTheDocument();
   });
+
+  it('can be closed for good where it offers a close button', async () => {
+    localStorage.clear();
+    const { unmount } = render(<PushOptIn hint="Commissions, retraits, messages" dismissKey="home" />);
+    expect(await screen.findByText('Commissions, retraits, messages')).toBeInTheDocument();
+    await userEvent.click(screen.getByRole('button', { name: 'Fermer' }));
+    await vi.waitFor(() => expect(screen.queryByRole('button', { name: 'Activer' })).not.toBeInTheDocument());
+    unmount();
+
+    render(<PushOptIn hint="Commissions, retraits, messages" dismissKey="home" />);
+    await Promise.resolve();
+    expect(screen.queryByRole('button', { name: 'Activer' })).not.toBeInTheDocument();
+  });
+
+  it('has no close button where it is not meant to be closed (relance)', async () => {
+    render(<PushOptIn />);
+    await screen.findByRole('button', { name: 'Activer' });
+    expect(screen.queryByRole('button', { name: 'Fermer' })).not.toBeInTheDocument();
+  });
 });

@@ -32,3 +32,19 @@ if (!('IntersectionObserver' in window)) {
 
 // jsdom does not implement scrolling; some components scroll into view.
 window.scrollTo = () => undefined;
+
+// Recent Node ships a global localStorage that shadows jsdom's and, without a
+// backing file, lacks the Storage methods. Tests get a plain in-memory one.
+if (typeof globalThis.localStorage?.clear !== 'function') {
+  const store = new Map<string, string>();
+  const memory: Storage = {
+    get length() { return store.size; },
+    clear: () => store.clear(),
+    getItem: (k) => (store.has(k) ? store.get(k)! : null),
+    key: (i) => [...store.keys()][i] ?? null,
+    removeItem: (k) => { store.delete(k); },
+    setItem: (k, v) => { store.set(k, String(v)); },
+  };
+  Object.defineProperty(globalThis, 'localStorage', { value: memory, configurable: true });
+  Object.defineProperty(window, 'localStorage', { value: memory, configurable: true });
+}
