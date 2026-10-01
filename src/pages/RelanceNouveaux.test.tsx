@@ -11,6 +11,7 @@ const api = vi.hoisted(() => ({
   relanceUpdateConfig: vi.fn(),
   relanceGetPacks: vi.fn(),
   relanceGetDefaultMessages: vi.fn(),
+  relancePreviewFilters: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 
@@ -41,6 +42,7 @@ beforeEach(() => {
   }));
   api.relanceUpdateSettings.mockResolvedValue(ok({}));
   api.relanceGetPacks.mockResolvedValue(ok({ emailPacks: [], smsPacks: [] }));
+  api.relancePreviewFilters.mockResolvedValue(ok({ totalCount: 0, sampleUsers: [] }));
   api.relanceGetDefaultMessages.mockResolvedValue(ok([
     { dayNumber: 1, subject: 'Bienvenue chez SBC - Message de {{referrerName}}', text: 'Bonjour {{name}}, je suis {{referrerName}}.' },
     { dayNumber: 2, subject: 'Jour 2: Découvrez les opportunités SBC', text: 'Deuxième message pour {{name}}.' },
@@ -140,6 +142,18 @@ describe('Relance des nouveaux', () => {
   it('sends the parrain to campaigns for their older filleuls', async () => {
     renderPage(<RelanceNouveaux />);
     expect(await screen.findByRole('button', { name: /Relancer vos anciens filleuls/ })).toBeInTheDocument();
+  });
+
+  it('says how many older filleuls are waiting, and how many the credits cover', async () => {
+    api.relancePreviewFilters.mockResolvedValue(ok({
+      totalCount: 312, sampleUsers: [], budget: { emailBalance: 3000, reservedForNew: 140, maxTargets: 122 },
+    }));
+    renderPage(<RelanceNouveaux />);
+    expect(await screen.findByText('312 non payés (3 mois) · 122 avec vos crédits')).toBeInTheDocument();
+    // Asked with the filter the wizard opens with, so the two numbers agree.
+    expect(api.relancePreviewFilters).toHaveBeenCalledWith(expect.objectContaining({
+      subscriptionStatus: 'non-subscribed', excludeCurrentTargets: true,
+    }));
   });
 
   it('lets the parrain read the messages, filled in with their own name', async () => {

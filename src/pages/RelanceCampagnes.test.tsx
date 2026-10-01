@@ -191,6 +191,48 @@ describe('Campagnes de relance — creating one', () => {
     expect(await within(wizard).findByText('Campagne lancée')).toBeInTheDocument();
   });
 
+  // Sterling: older filleuls are relanced within the budget; relance des
+  // nouveaux keeps running alongside, so the server keeps a month of it back.
+  describe('within the budget', () => {
+    const overBudget = () => api.relancePreviewFilters.mockResolvedValue(ok({
+      totalCount: 300, sampleUsers: [], budget: { emailBalance: 1000, reservedForNew: 140, maxTargets: 122 },
+    }));
+    const launch = async (wizard: HTMLElement) => {
+      await userEvent.click(within(wizard).getByRole('button', { name: 'Continuer' }));
+      await within(wizard).findByRole('button', { name: /Les messages SBC/ });
+      await userEvent.click(within(wizard).getByRole('button', { name: 'Continuer' }));
+      await userEvent.click(within(wizard).getByRole('button', { name: 'Lancer la campagne' }));
+      await waitFor(() => expect(api.relanceCreateCampaign).toHaveBeenCalled());
+      return api.relanceCreateCampaign.mock.calls[0][0];
+    };
+
+    it('offers to keep to the credits, newest filleuls first, and does so by default', async () => {
+      overBudget();
+      const wizard = await openWizard();
+      expect(await within(wizard).findByText('Selon vos crédits : 122 les plus récents')).toBeInTheDocument();
+      expect(within(wizard).getByText('140 crédits gardés pour la relance des nouveaux')).toBeInTheDocument();
+      expect(within(wizard).getByRole('switch', { name: 'Selon vos crédits' })).toBeChecked();
+      expect((await launch(wizard)).targetFilter.maxTargets).toBe(122);
+    });
+
+    it('relances everyone matching when the parrain turns it off', async () => {
+      overBudget();
+      const wizard = await openWizard();
+      await userEvent.click(await within(wizard).findByRole('switch', { name: 'Selon vos crédits' }));
+      expect((await launch(wizard)).targetFilter).not.toHaveProperty('maxTargets');
+    });
+
+    it('says nothing about budget when the credits cover everyone', async () => {
+      api.relancePreviewFilters.mockResolvedValue(ok({
+        totalCount: 50, sampleUsers: [], budget: { emailBalance: 3000, reservedForNew: 0, maxTargets: 428 },
+      }));
+      const wizard = await openWizard();
+      await within(wizard).findByText('50');
+      expect(within(wizard).queryByRole('switch', { name: 'Selon vos crédits' })).not.toBeInTheDocument();
+      expect((await launch(wizard)).targetFilter).not.toHaveProperty('maxTargets');
+    });
+  });
+
   it('sends the parrain\'s own message for the day they wrote, in French only', async () => {
     const wizard = await openWizard();
     await within(wizard).findByText('142');

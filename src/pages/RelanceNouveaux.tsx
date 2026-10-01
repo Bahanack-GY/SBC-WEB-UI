@@ -18,7 +18,8 @@ import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { headerDrop, pageFade, popIn, riseFar, sequence, slideLeft, slideRight, unfold } from '../utils/motion';
-import { deriveRelanceState, frenchErrorFrom, journeyBuckets } from '../utils/relance';
+import { campaignFilter, campaignReach, DEFAULT_CAMPAIGN_DRAFT, deriveRelanceState, frenchErrorFrom, journeyBuckets } from '../utils/relance';
+import type { FilterPreviewResponse } from '../types/relance';
 import type { DefaultRelanceStats, RelanceStatus } from '../types/relance';
 
 const relanceKeys = {
@@ -63,6 +64,17 @@ export default function RelanceNouveaux() {
   const status = useQuery({ queryKey: relanceKeys.status, queryFn: fetchStatus, ...live });
   const stats = useQuery({ queryKey: relanceKeys.stats, queryFn: fetchStats, ...live });
   const filleuls = useQuery({ queryKey: relanceKeys.filleuls(10), queryFn: () => fetchFilleuls(10), ...live });
+  // Older unpaid filleuls a campaign would reach — same filter the wizard opens with,
+  // so the numbers match. Only worth asking once there are credits to spend.
+  const older = useQuery({
+    queryKey: ['relance', 'older-unpaid'],
+    queryFn: async (): Promise<FilterPreviewResponse> =>
+      handleApiResponse(await sbcApiService.relancePreviewFilters(campaignFilter(DEFAULT_CAMPAIGN_DRAFT))),
+    enabled: emailBalance > 0,
+    staleTime: 30 * 60_000,
+  });
+  const olderCount = older.data?.totalCount ?? 0;
+  const olderAffordable = campaignReach(olderCount, older.data?.budget, true);
   const allFilleuls = useQuery({ queryKey: relanceKeys.filleuls(100), queryFn: () => fetchFilleuls(100), enabled: allOpen });
 
   const say = (tone: 'ok' | 'error', text: string) => {
@@ -189,7 +201,15 @@ export default function RelanceNouveaux() {
               <span className="size-10 grid place-items-center rounded-tile bg-accent-soft text-accent shrink-0">
                 <HugeiconsIcon icon={Megaphone01Icon} size={20} />
               </span>
-              <span className="flex-1 min-w-0 font-semibold text-ink text-sm">Relancer vos anciens filleuls</span>
+              <span className="flex-1 min-w-0">
+                <span className="block font-semibold text-ink text-sm">Relancer vos anciens filleuls</span>
+                {olderCount > 0 && (
+                  <span className="block text-xs text-ink-3">
+                    {olderCount} non payés (3 mois)
+                    {olderAffordable < olderCount && ` · ${olderAffordable} avec vos crédits`}
+                  </span>
+                )}
+              </span>
               <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="text-ink-3 shrink-0" />
             </motion.button>
 
