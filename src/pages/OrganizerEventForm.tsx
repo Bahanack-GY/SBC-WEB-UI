@@ -415,6 +415,14 @@ export default function OrganizerEventForm() {
                         {event.status === 'PUBLISHED' && event.category !== 'webinaire' && (
                             <button onClick={() => navigate(`/events/organizer/${event._id}/scanner`)} className="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-3 rounded-tile transition-colors">📱 Scanner les billets</button>
                         )}
+                        {['PUBLISHED', 'COMPLETED', 'SUSPENDED', 'PENDING_REVIEW'].includes(event.status) && (
+                            <button
+                                onClick={() => navigate(`/events/organizer/${event._id}/animation`)}
+                                className="w-full bg-accent-soft border border-border text-ink font-semibold py-3 rounded-tile"
+                            >
+                                🎉 Animation (défis, votes, récompenses)
+                            </button>
+                        )}
                         {(event.status === 'PUBLISHED' || event.status === 'COMPLETED') && (
                             <>
                                 <button
@@ -446,7 +454,8 @@ export default function OrganizerEventForm() {
                                         <p className="text-xs text-ink-2">
                                             Cette action est <strong>irréversible</strong>. Tous les billets vendus seront annulés et
                                             <strong> chaque acheteur sera intégralement remboursé</strong>. L'événement disparaîtra de la
-                                            billetterie et les reventes en cours seront retirées.
+                                            billetterie et les reventes en cours seront retirées. Les défis en cours sont annulés et les votes
+                                            payants remboursés. Les montants de ces ventes déjà crédités sur votre solde organisateur seront repris.
                                         </p>
                                         <textarea
                                             value={cancelReason}
