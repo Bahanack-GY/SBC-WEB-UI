@@ -590,16 +590,6 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Create payment intent
-   */
-  async createPaymentIntent(data: Record<string, any>): Promise<ApiResponse> {
-    return await this.post('/payments/intents', {
-      body: data,
-      requiresAuth: false
-    });
-  }
-
-  /**
    * Submit payment details
    */
   async submitPaymentDetails(sessionId: string, paymentData: Record<string, any>): Promise<ApiResponse> {
