@@ -57,6 +57,9 @@ self.addEventListener('push', (event) => {
       tag: data.tag,
       // A new chat message replaces the conversation's previous one — and still buzzes.
       renotify: !!(data.renotify && data.tag),
+      // Our button (data.cta), beside the "Unsubscribe" Chrome adds on sites
+      // that are not installed. Tapping it or the notification opens data.url.
+      actions: data.cta ? [{ action: 'open', title: String(data.cta) }] : [],
       data: { url: data.url || '/' },
     });
   })());
