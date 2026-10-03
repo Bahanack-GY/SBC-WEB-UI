@@ -13,9 +13,9 @@ vi.mock('../utils/push', () => push);
 import NotificationSettings from './NotificationSettings';
 
 const categories = [
-  { key: 'money', label: 'Argent : commissions et retraits', urgent: true, enabled: true },
-  { key: 'chat', label: 'Messages', urgent: true, enabled: true },
-  { key: 'tombola', label: 'Tombola', urgent: false, enabled: false },
+  { key: 'money', label: 'Argent : commissions et retraits', enabled: true },
+  { key: 'chat', label: 'Messages', enabled: true },
+  { key: 'tombola', label: 'Tombola', enabled: false },
 ];
 
 beforeEach(() => {
@@ -33,7 +33,7 @@ describe('notification settings', () => {
     renderPage(<NotificationSettings />);
     expect(await screen.findByRole('switch', { name: 'Messages' })).toBeChecked();
     expect(screen.getByRole('switch', { name: 'Tombola' })).not.toBeChecked();
-    expect(screen.getByText(/Entre 22 h et 7 h/)).toBeInTheDocument();
+    expect(screen.getByText(/entre 22 h et 7 h arrivent le matin/)).toBeInTheDocument();
   });
 
   it('turns a kind off and saves the full list of what is off', async () => {
