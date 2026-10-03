@@ -1,16 +1,18 @@
 import { DEFAULT_AVATAR } from './Avatar';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Menu01Icon, User02Icon } from '@hugeicons/core-free-icons';
+import { Menu01Icon, Notification01Icon, User02Icon } from '@hugeicons/core-free-icons';
 import logo from '../../assets/img/logo-sbc.png';
 import ServicesSidebar from './ServicesSidebar';
 import { useAuth } from '../../contexts/AuthContext';
 import { sbcApiService } from '../../services/SBCApiService';
+import { badgeText, useUnreadCount } from '../../hooks/useInbox';
 
 function Header() {
   const navigate = useNavigate();
+  const unread = useUnreadCount().data ?? 0;
   const { user } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [avatarFailed, setAvatarFailed] = useState(false);
@@ -29,15 +31,15 @@ function Header() {
       {/* z-50 so the header stays above page content that uses z-10..z-40.
           The drawer (z-70+) and its backdrop still cover it, which is correct. */}
       <header className="sticky top-0 z-50 bg-surface border-b border-border">
-        {/* Three columns so the logo is centred on the VIEWPORT, not merely
-            between two buttons of unequal width. */}
-        <div className="grid grid-cols-[auto_1fr_auto] items-center gap-2 px-3 py-2">
+        {/* Equal side columns so the logo stays centred on the VIEWPORT even
+            though the right side (bell + avatar) is wider than the left. */}
+        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-2">
           <motion.button
             onClick={() => setMenuOpen(true)}
             whileTap={{ scale: 0.9 }}
             aria-label="Ouvrir le menu des services"
             aria-expanded={menuOpen}
-            className="size-9 grid place-items-center rounded-tile text-ink-2 hover:bg-surface-2 transition-colors"
+            className="justify-self-start size-9 grid place-items-center rounded-tile text-ink-2 hover:bg-surface-2 transition-colors"
           >
             <HugeiconsIcon icon={Menu01Icon} size={22} />
           </motion.button>
@@ -48,6 +50,30 @@ function Header() {
             </button>
           </div>
 
+          <div className="justify-self-end flex items-center gap-1.5">
+          <motion.button
+            onClick={() => navigate('/notifications')}
+            whileTap={{ scale: 0.9 }}
+            aria-label={unread ? `Notifications, ${unread} non lue${unread > 1 ? 's' : ''}` : 'Notifications'}
+            className="relative size-9 grid place-items-center rounded-pill text-ink-2 hover:bg-surface-2 transition-colors"
+          >
+            <HugeiconsIcon icon={Notification01Icon} size={22} />
+            <AnimatePresence>
+              {unread > 0 && (
+                <motion.span
+                  key={badgeText(unread)}
+                  aria-hidden
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                  className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 grid place-items-center rounded-pill bg-danger text-white text-[10px] font-bold leading-none"
+                >
+                  {badgeText(unread)}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </motion.button>
           <motion.button
             onClick={() => navigate('/profile')}
             whileTap={{ scale: 0.9 }}
@@ -68,6 +94,7 @@ function Header() {
               <HugeiconsIcon icon={User02Icon} size={20} />
             )}
           </motion.button>
+          </div>
         </div>
       </header>
 
