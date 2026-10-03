@@ -5,6 +5,8 @@ import { ok, renderPage } from '../test/api';
 
 const api = vi.hoisted(() => ({ inboxList: vi.fn(), inboxMarkRead: vi.fn(), inboxDelete: vi.fn(), inboxClear: vi.fn() }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
+const tray = vi.hoisted(() => ({ closeTrayNotifications: vi.fn() }));
+vi.mock('../utils/push', () => tray);
 const nav = vi.hoisted(() => ({ navigate: vi.fn() }));
 vi.mock('react-router-dom', async (orig) => ({ ...(await orig<typeof import('react-router-dom')>()), useNavigate: () => nav.navigate }));
 
@@ -15,12 +17,13 @@ const now = Date.now();
 const ago = (min: number) => new Date(now - min * 60_000).toISOString();
 const items = [
   { _id: 'a', category: 'money', title: '+1 000 FCFA de commission', body: 'Marie vient de prendre son abonnement.', url: '/wallet', createdAt: ago(3) },
-  { _id: 'b', category: 'filleuls', title: 'Nouveau filleul', body: "Paul vient de s'inscrire.", url: '/filleuls', createdAt: ago(30), readAt: ago(10) },
+  { _id: 'b', tag: 'filleul-u9', category: 'filleuls', title: 'Nouveau filleul', body: "Paul vient de s'inscrire.", url: '/filleuls', createdAt: ago(30), readAt: ago(10) },
   { _id: 'c', category: 'events', title: 'Rappel', body: 'Le concert approche.', createdAt: ago(3 * 24 * 60), readAt: ago(60) },
 ];
 
 beforeEach(() => {
   nav.navigate.mockReset();
+  tray.closeTrayNotifications.mockReset();
   api.inboxList.mockReset().mockResolvedValue(ok({ items, unread: 1, hasMore: false }));
   api.inboxMarkRead.mockReset().mockResolvedValue(ok({ unread: 0 }));
   api.inboxDelete.mockReset().mockResolvedValue(ok({ unread: 0 }));
@@ -57,6 +60,7 @@ describe('notification list', () => {
     renderPage(<NotificationInbox />);
     await userEvent.click(await screen.findByText('Nouveau filleul'));
     expect(nav.navigate).toHaveBeenCalledWith('/filleuls');
+    expect(tray.closeTrayNotifications).toHaveBeenCalledWith(['filleul-u9']);
   });
 
   it('removes one notification', async () => {
@@ -64,6 +68,8 @@ describe('notification list', () => {
     await userEvent.click(await screen.findByRole('button', { name: 'Supprimer « Nouveau filleul »' }));
     await waitFor(() => expect(screen.queryByText('Nouveau filleul')).not.toBeInTheDocument());
     expect(api.inboxDelete).toHaveBeenCalledWith('b');
+    // …and from the phone's notification bar.
+    expect(tray.closeTrayNotifications).toHaveBeenCalledWith(['filleul-u9']);
   });
 
   it('clears everything after asking', async () => {
@@ -73,6 +79,7 @@ describe('notification list', () => {
     expect(api.inboxClear).not.toHaveBeenCalled();
     await userEvent.click(within(sheet).getByRole('button', { name: 'Tout effacer' }));
     await waitFor(() => expect(api.inboxClear).toHaveBeenCalled());
+    expect(tray.closeTrayNotifications).toHaveBeenCalledWith(); // every SBC notification but chat
     expect(await screen.findByText('Aucune notification')).toBeInTheDocument();
   });
 

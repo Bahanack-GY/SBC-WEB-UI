@@ -63,3 +63,22 @@ export async function disablePush(): Promise<void> {
   await sub.unsubscribe();
   await sbcApiService.pushUnsubscribe(endpoint).catch(() => undefined);
 }
+
+/**
+ * Closes SBC notifications in the phone's notification bar: those with the
+ * given tags, or — with no tags — every one except chat (the bell's list
+ * does not hold chat). Clearing in the app clears there too. Best-effort.
+ */
+export async function closeTrayNotifications(tags?: string[]): Promise<void> {
+  try {
+    if (!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.getRegistration('/');
+    if (!reg?.getNotifications) return;
+    const shown = await reg.getNotifications();
+    shown
+      .filter(n => (tags ? !!n.tag && tags.includes(n.tag) : !n.tag?.startsWith('chat-')))
+      .forEach(n => n.close());
+  } catch {
+    /* nothing to close */
+  }
+}
