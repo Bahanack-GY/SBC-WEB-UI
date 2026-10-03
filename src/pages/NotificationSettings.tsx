@@ -9,7 +9,7 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import { disablePush, enablePush, isPushEnabled, pushSupport } from '../utils/push';
 import { headerDrop, listContainer, listItem, pageFade, popIn } from '../utils/motion';
 
-type Category = { key: string; label: string; urgent: boolean; enabled: boolean };
+type Category = { key: string; label: string; enabled: boolean };
 type Preferences = { categories: Category[]; quietHours: { from: number; until: number } };
 
 const prefsKey = ['push', 'preferences'] as const;
@@ -115,7 +115,7 @@ export default function NotificationSettings() {
                 ))}
               </motion.ul>
               <p className="mt-2 text-xs text-ink-3">
-                Entre {prefs.data.quietHours.from} h et {prefs.data.quietHours.until} h, seuls l'argent et les messages arrivent tout de suite ; le reste attend le matin.
+                Les annonces SBC envoyées entre {prefs.data.quietHours.from} h et {prefs.data.quietHours.until} h arrivent le matin. Tout le reste arrive tout de suite.
               </p>
             </>
           )}
