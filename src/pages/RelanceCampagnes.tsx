@@ -13,7 +13,8 @@ import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { headerDrop, listContainer, listItem, pageFade, popIn } from '../utils/motion';
-import { filleulsCovered } from '../utils/relance';
+import { filleulsCovered, isCameroon } from '../utils/relance';
+import { useAuth } from '../contexts/AuthContext';
 import type { Campaign } from '../types/relance';
 
 const campaignsKey = ['relance', 'campaigns'] as const;
@@ -27,7 +28,9 @@ const campaignsKey = ['relance', 'campaigns'] as const;
  */
 export default function RelanceCampagnes() {
   const queryClient = useQueryClient();
-  const { emailBalance, refreshBalance } = useRelance();
+  const { emailBalance, smsBalance, smsEnabled, refreshBalance } = useRelance();
+  const { user } = useAuth();
+  const smsState = !isCameroon(user?.country) ? 'none' : smsEnabled && smsBalance > 0 ? 'ready' : 'off';
   const [wizardOpen, setWizardOpen] = useState(false);
   const [packsOpen, setPacksOpen] = useState(false);
   const [selected, setSelected] = useState<Campaign | null>(null);
@@ -148,6 +151,7 @@ export default function RelanceCampagnes() {
         open={wizardOpen}
         onClose={() => setWizardOpen(false)}
         emailBalance={emailBalance}
+        sms={smsState}
         onLaunched={() => { refresh(); refreshBalance(); say('Campagne lancée.'); }}
       />
       <CampaignDetailSheet campaign={selected} onClose={() => setSelected(null)} onChanged={(m) => { refresh(); say(m); }} />

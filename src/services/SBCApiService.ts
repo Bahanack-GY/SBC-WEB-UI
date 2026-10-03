@@ -1500,8 +1500,18 @@ export class SBCApiService extends ApiService {
     sendingPaused?: boolean;
     sendingPausedEmail?: boolean;
     sendingPausedSms?: boolean;
+    /** SMS relance on/off (Cameroon only; refused elsewhere). */
+    smsEnabled?: boolean;
   }): Promise<ApiResponse> {
     return await this.put('/relance/settings', { body: settings });
+  }
+
+  /**
+   * The SMS texts relance sends, read-only
+   * GET /api/relance/sms-messages
+   */
+  async relanceGetSmsMessages(): Promise<ApiResponse> {
+    return await this.get('/relance/sms-messages');
   }
 
   /**

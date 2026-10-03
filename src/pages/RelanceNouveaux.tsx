@@ -19,7 +19,8 @@ import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { headerDrop, pageFade, popIn, riseFar, sequence, slideLeft, slideRight, unfold } from '../utils/motion';
-import { campaignFilter, campaignReach, DEFAULT_CAMPAIGN_DRAFT, deriveRelanceState, frenchErrorFrom, journeyBuckets } from '../utils/relance';
+import { campaignFilter, campaignReach, DEFAULT_CAMPAIGN_DRAFT, deriveRelanceState, frenchErrorFrom, isCameroon, journeyBuckets } from '../utils/relance';
+import { useAuth } from '../contexts/AuthContext';
 import type { FilterPreviewResponse } from '../types/relance';
 import type { DefaultRelanceStats, RelanceStatus } from '../types/relance';
 
@@ -49,7 +50,9 @@ const fetchFilleuls = async (limit: number): Promise<{ targets: FilleulRow[]; to
 export default function RelanceNouveaux() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { emailBalance, smsBalance, isLoading: balanceLoading, refreshBalance } = useRelance();
+  const { emailBalance, smsBalance, smsEnabled, isLoading: balanceLoading, refreshBalance } = useRelance();
+  const { user } = useAuth();
+  const [smsBusy, setSmsBusy] = useState(false);
 
   const [packsOpen, setPacksOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
@@ -115,6 +118,21 @@ export default function RelanceNouveaux() {
     }
   };
 
+  // SMS relance is the parrain's call now (Cameroon only); it used to be an admin flag.
+  const toggleSms = async (next: boolean) => {
+    setSmsBusy(true);
+    try {
+      handleApiResponse(await sbcApiService.relanceUpdateSettings({ smsEnabled: next }));
+      await refreshBalance();
+      await queryClient.invalidateQueries({ queryKey: relanceKeys.status });
+      say('ok', next ? 'SMS activés.' : 'SMS désactivés.');
+    } catch (err) {
+      say('error', frenchErrorFrom(err, 'Impossible de changer les SMS. Réessayez.'));
+    } finally {
+      setSmsBusy(false);
+    }
+  };
+
   const loading = status.isLoading || stats.isLoading || balanceLoading;
   const failed = status.isError && stats.isError;
 
@@ -175,7 +193,14 @@ export default function RelanceNouveaux() {
             <PushOptIn />
 
             <motion.div variants={slideLeft} data-tour="relance-credits">
-              <RelanceCreditsCard emailBalance={emailBalance} smsBalance={smsBalance} onRecharge={() => setPacksOpen(true)} />
+              <RelanceCreditsCard
+                emailBalance={emailBalance}
+                smsBalance={smsBalance}
+                onRecharge={() => setPacksOpen(true)}
+                sms={isCameroon(user?.country)
+                  ? { enabled: smsEnabled, busy: smsBusy, onToggle: toggleSms, onLinks: () => navigate('/relance/sms-links') }
+                  : undefined}
+              />
             </motion.div>
 
             <motion.div variants={riseFar} data-tour="relance-journey">
@@ -262,7 +287,7 @@ export default function RelanceNouveaux() {
         )}
       </AnimatePresence>
 
-      <RelanceMessagesSheet open={messagesOpen} onClose={() => setMessagesOpen(false)} />
+      <RelanceMessagesSheet open={messagesOpen} onClose={() => setMessagesOpen(false)} showSms={isCameroon(user?.country)} />
       <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} />
 
       <RelanceSettingsSheet

@@ -1,4 +1,4 @@
-import { describe, expect, it, vi, beforeEach } from 'vitest';
+import { describe, expect, it, vi, beforeEach, afterEach } from 'vitest';
 import { screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ok, fail, renderPage } from '../test/api';
@@ -19,7 +19,8 @@ const api = vi.hoisted(() => ({
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 
 const relance = vi.hoisted(() => ({ state: { emailBalance: 3000, smsBalance: 0, isLoading: false, hasCredits: true, refreshBalance: vi.fn() } }));
-vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { country: 'CM' } }) }));
+const auth = vi.hoisted(() => ({ user: { country: 'CM' } }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => auth }));
 vi.mock('../contexts/RelanceContext', () => ({ useRelance: () => relance.state }));
 
 import RelanceCampagnes from './RelanceCampagnes';
@@ -193,6 +194,57 @@ describe('Campagnes de relance — creating one', () => {
 
   // Sterling: older filleuls are relanced within the budget; relance des
   // nouveaux keeps running alongside, so the server keeps a month of it back.
+  describe('with SMS (Cameroon)', () => {
+    const toMessageStep = async (wizard: HTMLElement) => {
+      await within(wizard).findByText('142');
+      await userEvent.click(within(wizard).getByRole('button', { name: 'Continuer' }));
+      await within(wizard).findByRole('button', { name: /Les messages SBC/ });
+    };
+    const launchFrom = async (wizard: HTMLElement) => {
+      await userEvent.click(within(wizard).getByRole('button', { name: 'Continuer' }));
+      await userEvent.click(within(wizard).getByRole('button', { name: 'Lancer la campagne' }));
+      await waitFor(() => expect(api.relanceCreateCampaign).toHaveBeenCalled());
+      return api.relanceCreateCampaign.mock.calls[0][0];
+    };
+    afterEach(() => {
+      auth.user = { country: 'CM' };
+      relance.state = { ...relance.state, smsBalance: 0, smsEnabled: false } as typeof relance.state;
+    });
+
+    it('sends the campaign with SMS when SMS is on and paid for', async () => {
+      relance.state = { ...relance.state, smsBalance: 100, smsEnabled: true } as typeof relance.state;
+      const wizard = await openWizard();
+      await toMessageStep(wizard);
+      expect(within(wizard).getByRole('switch', { name: 'Aussi par SMS' })).toBeChecked();
+      expect((await launchFrom(wizard)).channel).toBe('both');
+    });
+
+    it('sends it by email only when the parrain turns SMS off for this campaign', async () => {
+      relance.state = { ...relance.state, smsBalance: 100, smsEnabled: true } as typeof relance.state;
+      const wizard = await openWizard();
+      await toMessageStep(wizard);
+      await userEvent.click(within(wizard).getByRole('switch', { name: 'Aussi par SMS' }));
+      expect((await launchFrom(wizard)).channel).toBe('email');
+    });
+
+    it('says where to switch SMS on when it is off', async () => {
+      relance.state = { ...relance.state, smsBalance: 100, smsEnabled: false } as typeof relance.state;
+      const wizard = await openWizard();
+      await toMessageStep(wizard);
+      expect(within(wizard).getByText(/active-les sur la page Relance/)).toBeInTheDocument();
+      expect((await launchFrom(wizard)).channel).toBe('email');
+    });
+
+    it('offers nothing about SMS outside Cameroon', async () => {
+      auth.user = { country: 'SN' };
+      relance.state = { ...relance.state, smsBalance: 100, smsEnabled: true } as typeof relance.state;
+      const wizard = await openWizard();
+      await toMessageStep(wizard);
+      expect(within(wizard).queryByRole('switch', { name: 'Aussi par SMS' })).not.toBeInTheDocument();
+      expect((await launchFrom(wizard)).channel).toBe('email');
+    });
+  });
+
   describe('within the budget', () => {
     const overBudget = () => api.relancePreviewFilters.mockResolvedValue(ok({
       totalCount: 300, sampleUsers: [], budget: { emailBalance: 1000, reservedForNew: 140, maxTargets: 122 },

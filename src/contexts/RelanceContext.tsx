@@ -6,6 +6,8 @@ import { useAuth } from './AuthContext';
 interface RelanceContextType {
   emailBalance: number;
   smsBalance: number;
+  /** SMS relance switched on (the parrain's choice; Cameroon only). */
+  smsEnabled: boolean;
   hasCredits: boolean;            // true if either balance > 0 OR admin/tester
   isLoading: boolean;
   refreshBalance: () => Promise<void>;
@@ -18,6 +20,7 @@ export const RelanceProvider: React.FC<{ children: ReactNode }> = ({ children })
   const isAdminOrTester = user?.role === 'admin' || user?.role === 'tester';
   const [emailBalance, setEmailBalance] = useState(0);
   const [smsBalance, setSmsBalance] = useState(0);
+  const [smsEnabled, setSmsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshBalance = async () => {
@@ -32,6 +35,7 @@ export const RelanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       const data = handleApiResponse(response);
       setEmailBalance(data?.emailBalance ?? 0);
       setSmsBalance(data?.smsBalance ?? 0);
+      setSmsEnabled(!!data?.smsEnabled);
     } catch (error) {
       setEmailBalance(0);
       setSmsBalance(0);
@@ -51,6 +55,7 @@ export const RelanceProvider: React.FC<{ children: ReactNode }> = ({ children })
       value={{
         emailBalance,
         smsBalance,
+        smsEnabled,
         hasCredits,
         isLoading,
         refreshBalance,
