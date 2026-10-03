@@ -4,7 +4,7 @@ import { ok } from '../test/api';
 const api = vi.hoisted(() => ({ pushGetPublicKey: vi.fn(), pushSubscribe: vi.fn() }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 
-import { enablePush, isPushEnabled, pushSupport } from './push';
+import { closeTrayNotifications, enablePush, isPushEnabled, pushSupport } from './push';
 
 const ANDROID = 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/128 Mobile Safari/537.36';
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_5 like Mac OS X) AppleWebKit/605.1.15 Version/17.5 Mobile/15E148 Safari/604.1';
@@ -100,5 +100,37 @@ describe('turning alerts on', () => {
     permission = 'granted';
     pushManager.getSubscription.mockResolvedValue(subscription);
     expect(await isPushEnabled()).toBe(true);
+  });
+});
+
+describe('clearing the phone\'s notification bar', () => {
+  const shown = (tag?: string) => ({ tag, close: vi.fn() });
+  const stubTray = (notes: ReturnType<typeof shown>[]) => {
+    Object.defineProperty(navigator, 'serviceWorker', {
+      configurable: true,
+      value: { getRegistration: vi.fn().mockResolvedValue({ getNotifications: vi.fn().mockResolvedValue(notes) }) },
+    });
+  };
+
+  it('closes only the notifications with the given tags', async () => {
+    const [a, b] = [shown('n-1'), shown('n-2')];
+    stubTray([a, b]);
+    await closeTrayNotifications(['n-2']);
+    expect(a.close).not.toHaveBeenCalled();
+    expect(b.close).toHaveBeenCalled();
+  });
+
+  it('closes every SBC notification but chat when clearing all', async () => {
+    const [money, chat, untagged] = [shown('n-1'), shown('chat-c1'), shown(undefined)];
+    stubTray([money, chat, untagged]);
+    await closeTrayNotifications();
+    expect(money.close).toHaveBeenCalled();
+    expect(untagged.close).toHaveBeenCalled();
+    expect(chat.close).not.toHaveBeenCalled();
+  });
+
+  it('does nothing where the browser cannot', async () => {
+    Object.defineProperty(navigator, 'serviceWorker', { configurable: true, value: { getRegistration: vi.fn().mockResolvedValue(undefined) } });
+    await expect(closeTrayNotifications()).resolves.toBeUndefined();
   });
 });

@@ -13,9 +13,10 @@ import { SwipeToDismiss } from '../components/common/SwipeToDismiss';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { inboxKeys } from '../hooks/useInbox';
+import { closeTrayNotifications } from '../utils/push';
 import { headerDrop, pageFade } from '../utils/motion';
 
-type Item = { _id: string; category: string; title: string; body: string; url?: string; readAt?: string; createdAt: string };
+type Item = { _id: string; category: string; title: string; body: string; url?: string; tag?: string; readAt?: string; createdAt: string };
 type Page = { items: Item[]; unread: number; hasMore: boolean };
 
 const ICONS: Record<string, { icon: typeof Notification01Icon; tone: string }> = {
@@ -85,7 +86,11 @@ export default function NotificationInbox() {
       pages: old.pages.map(p => ({ ...p, items: p.items.filter(keep) })),
     });
 
+  // What is cleared here goes from the phone's notification bar too.
+  const closeOnPhone = (i?: Item) => { if (i?.tag) void closeTrayNotifications([i.tag]); };
+
   const remove = async (id: string) => {
+    closeOnPhone(items.find(i => i._id === id));
     setItems(i => i._id !== id);
     try { await sbcApiService.inboxDelete(id); } catch { list.refetch(); }
   };
@@ -95,6 +100,7 @@ export default function NotificationInbox() {
     try {
       handleApiResponse(await sbcApiService.inboxClear());
       setItems(() => false);
+      void closeTrayNotifications();
       queryClient.setQueryData(inboxKeys.unread, 0);
       setConfirmClear(false);
     } finally {
@@ -102,7 +108,7 @@ export default function NotificationInbox() {
     }
   };
 
-  const open = (i: Item) => { if (i.url) navigate(i.url); };
+  const open = (i: Item) => { closeOnPhone(i); if (i.url) navigate(i.url); };
 
   let lastGroup = '';
 
