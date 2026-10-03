@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion } from 'motion/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
+import { InstallAppCard } from '../components/pwa/InstallAppCard';
 import { Switch } from '../components/relance/ui/Switch';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -71,6 +72,7 @@ export default function NotificationSettings() {
       </motion.header>
 
       <div className="px-4 space-y-4">
+        <InstallAppCard />
         <motion.section variants={popIn} aria-label="Ce téléphone" className="bg-surface border border-border rounded-card p-4">
           {support === 'supported' && !blocked && (
             <div className="flex items-center gap-3">
