@@ -26,12 +26,17 @@ const foldAccents = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu,
  * dropping any day without one.
  */
 export function CampaignWizard({
-  open, onClose, emailBalance, onLaunched,
+  open, onClose, emailBalance, onLaunched, sms = 'none',
 }: {
   open: boolean;
   onClose: () => void;
   emailBalance: number;
   onLaunched: () => void;
+  /**
+   * SMS for this campaign: "ready" = Cameroonian parrain with SMS on and
+   * credits; "off" = Cameroonian but SMS switched off; "none" = not offered.
+   */
+  sms?: 'ready' | 'off' | 'none';
 }) {
   const reduce = useReducedMotion();
   const [step, setStep] = useState(0);
@@ -135,7 +140,7 @@ export function CampaignWizard({
     setLaunchError(null);
     try {
       const payload = buildCampaignPayload(
-        ownMode ? draft : { ...draft, ownMessages: undefined },
+        { ...(ownMode ? draft : { ...draft, ownMessages: undefined }), withSms: sms === 'ready' && draft.withSms },
         new Date(),
         draft.fitBudget && overBudget ? budget!.maxTargets : undefined,
       );
@@ -373,6 +378,20 @@ export function CampaignWizard({
                       </button>
                     ))}
 
+                    {sms === 'ready' && (
+                      <section className="flex items-center gap-3 p-4 rounded-tile bg-surface border border-border">
+                        <div className="flex-1 text-sm font-medium text-ink">Aussi par SMS (+237)</div>
+                        <Switch
+                          checked={draft.withSms}
+                          onChange={v => setDraft(d => ({ ...d, withSms: v }))}
+                          label="Aussi par SMS"
+                        />
+                      </section>
+                    )}
+                    {sms === 'off' && (
+                      <p className="text-xs text-ink-3">Pour envoyer aussi des SMS, active-les sur la page Relance.</p>
+                    )}
+
                     {ownMode && (
                       <section className="space-y-3">
                         <div className="flex gap-1.5 overflow-x-auto pb-1" role="tablist" aria-label="Jour du message">
@@ -435,6 +454,7 @@ export function CampaignWizard({
                         ['Filleuls relancés', <CountUp key="c" value={reach} />],
                         ['Messages par filleul', `${RELANCE_DAYS}, un par jour`],
                         ['Messages', ownMode ? `Les vôtres (${writtenDays.length} jour${writtenDays.length > 1 ? 's' : ''}) + SBC` : 'Ceux de SBC'],
+                        ...(sms === 'ready' ? [['SMS', draft.withSms ? 'Oui (+237)' : 'Non']] : []),
                         ['Crédits nécessaires', <span key="n">≈ <CountUp value={needed} /></span>],
                         ['Vos crédits email', <CountUp key="b" value={emailBalance} />],
                       ].map(([k, v]) => (

@@ -202,9 +202,11 @@ export interface CampaignDraft {
   ownMessages?: Partial<Record<number, OwnMessage>>;
   /** Stop at what the credits cover, newest filleuls first. */
   fitBudget: boolean;
+  /** Also send the SMS (Cameroonian parrains with SMS on and credits). */
+  withSms: boolean;
 }
 
-export const DEFAULT_CAMPAIGN_DRAFT: CampaignDraft = { name: '', period: '3m', countries: [], skipAlreadyInRelance: true, fitBudget: true };
+export const DEFAULT_CAMPAIGN_DRAFT: CampaignDraft = { name: '', period: '3m', countries: [], skipAlreadyInRelance: true, fitBudget: true, withSms: true };
 
 /**
  * How many filleuls a campaign will reach: everyone matching, or — when the
@@ -250,6 +252,8 @@ export function buildCampaignPayload(draft: CampaignDraft, now: Date = new Date(
     name: draft.name.trim() || defaultCampaignName(now),
     type: 'filtered',
     targetFilter: { ...campaignFilter(draft, now), ...(maxTargets ? { maxTargets } : {}) },
+    // The sender sends a campaign's SMS only when it was created with them.
+    channel: draft.withSms ? 'both' : 'email',
     ...(customMessages.length ? { customMessages } : {}),
   } as CreateCampaignRequest;
 }

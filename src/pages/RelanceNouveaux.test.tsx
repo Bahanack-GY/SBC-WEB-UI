@@ -12,13 +12,15 @@ const api = vi.hoisted(() => ({
   relanceGetPacks: vi.fn(),
   relanceGetDefaultMessages: vi.fn(),
   relancePreviewFilters: vi.fn(),
+  relanceGetSmsMessages: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 
 const relance = vi.hoisted(() => ({
   state: { emailBalance: 3000, smsBalance: 0, isLoading: false, hasCredits: true, refreshBalance: vi.fn() },
 }));
-vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { country: 'CM', name: 'Paul' } }) }));
+const auth = vi.hoisted(() => ({ user: { country: 'CM', name: 'Paul' } }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => auth }));
 vi.mock('../contexts/RelanceContext', () => ({ useRelance: () => relance.state }));
 
 import RelanceNouveaux from './RelanceNouveaux';
@@ -41,6 +43,12 @@ beforeEach(() => {
     total: 1,
   }));
   api.relanceUpdateSettings.mockResolvedValue(ok({}));
+  auth.user = { country: 'CM', name: 'Paul' };
+  api.relanceGetSmsMessages.mockResolvedValue(ok([
+    { type: 'auto', dayNumber: 0, text: 'Bienvenue ! Active ici : {{link}}' },
+    { type: 'auto', dayNumber: 1, text: 'Jour 1 {{link}}' },
+    { type: 'manual', dayNumber: 1, text: 'Campagne J1 {{link}}' },
+  ]));
   api.relanceGetPacks.mockResolvedValue(ok({ emailPacks: [], smsPacks: [] }));
   api.relancePreviewFilters.mockResolvedValue(ok({ totalCount: 0, sampleUsers: [] }));
   api.relanceGetDefaultMessages.mockResolvedValue(ok([
@@ -165,5 +173,42 @@ describe('Relance des nouveaux', () => {
 
     await userEvent.click(screen.getByRole('tab', { name: 'J2' }));
     expect(screen.getByRole('tabpanel')).toHaveTextContent('Deuxième message pour Marie.');
+  });
+
+  // Rufus's team, 2026-10-03: nothing in the app started SMS, and "Voir les
+  // messages" showed only the emails. SMS stays Cameroon-only.
+  describe('SMS', () => {
+    it('lets a Cameroonian parrain switch SMS relance on', async () => {
+      relance.state = { ...relance.state, smsBalance: 50, smsEnabled: false } as typeof relance.state;
+      renderPage(<RelanceNouveaux />);
+      await userEvent.click(await screen.findByRole('switch', { name: 'Relance par SMS' }));
+      await waitFor(() => expect(api.relanceUpdateSettings).toHaveBeenCalledWith({ smsEnabled: true }));
+      expect(relance.state.refreshBalance).toHaveBeenCalled();
+    });
+
+    it('cannot switch SMS on without SMS credits, and offers to buy some', async () => {
+      relance.state = { ...relance.state, smsBalance: 0, smsEnabled: false } as typeof relance.state;
+      renderPage(<RelanceNouveaux />);
+      expect(await screen.findByRole('switch', { name: 'Relance par SMS' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Acheter des SMS' })).toBeInTheDocument();
+    });
+
+    it('shows no SMS control outside Cameroon', async () => {
+      auth.user = { country: 'BJ', name: 'Paul' };
+      relance.state = { ...relance.state, smsBalance: 0, smsEnabled: false } as typeof relance.state;
+      renderPage(<RelanceNouveaux />);
+      await screen.findByTestId('relance-state');
+      expect(screen.queryByRole('switch', { name: 'Relance par SMS' })).not.toBeInTheDocument();
+    });
+
+    it('shows the SMS texts in "Voir les messages", with "ton lien" where the link goes', async () => {
+      renderPage(<RelanceNouveaux />);
+      await userEvent.click(await screen.findByRole('button', { name: 'Voir les messages' }));
+      await userEvent.click(await screen.findByRole('radio', { name: 'SMS' }));
+      const panel = await screen.findByRole('tabpanel');
+      expect(panel).toHaveTextContent('Bienvenue ! Active ici : ton lien');
+      // Relance des nouveaux days only — not the campaign texts.
+      expect(screen.getAllByRole('tab').map(t => t.textContent)).toEqual(['J0', 'J1']);
+    });
   });
 });
