@@ -1,3 +1,4 @@
+import { InstallAppCard } from '../components/pwa/InstallAppCard';
 import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, Notification01Icon, PencilEdit01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
@@ -350,6 +351,7 @@ function Profile() {
               </button>
             </div>
           )}
+          <InstallAppCard className="mx-4 mt-4" />
           <div className="mt-4 divide-y divide-gray-100">
             {actions.map((action, i) => (
               <motion.button
