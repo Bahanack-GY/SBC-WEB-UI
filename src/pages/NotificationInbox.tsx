@@ -9,6 +9,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import BackButton from '../components/common/BackButton';
 import { ConfirmSheet } from '../components/relance/ui/ConfirmSheet';
+import { SwipeToDismiss } from '../components/common/SwipeToDismiss';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { inboxKeys } from '../hooks/useInbox';
@@ -159,6 +160,7 @@ export default function NotificationInbox() {
                     exit={{ opacity: 0, x: 40, height: 0, marginTop: 0 }}
                   >
                     {heading && <h2 className="text-xs font-semibold text-ink-3 uppercase tracking-wide mt-4 mb-2">{heading}</h2>}
+                    <SwipeToDismiss onDismiss={() => remove(i._id)}>
                     <div className={`flex items-start gap-3 p-3 rounded-card border ${isNew ? 'bg-primary-soft border-primary/20' : 'bg-surface border-border'}`}>
                       <button onClick={() => open(i)} className="flex-1 min-w-0 flex items-start gap-3 text-left">
                         <span className={`size-10 grid place-items-center rounded-pill shrink-0 ${tone}`}>
@@ -180,6 +182,7 @@ export default function NotificationInbox() {
                         <HugeiconsIcon icon={Cancel01Icon} size={14} />
                       </button>
                     </div>
+                    </SwipeToDismiss>
                   </motion.li>
                 );
               })}
