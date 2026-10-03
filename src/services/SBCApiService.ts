@@ -1392,6 +1392,31 @@ export class SBCApiService extends ApiService {
 
   // ===== Credit packs & balance (replaces monthly subscription) =====
 
+  /** The bell: notifications, newest first. GET /api/notifications/inbox */
+  async inboxList(before?: string): Promise<ApiResponse> {
+    return await this.get('/notifications/inbox', { queryParameters: before ? { before } : {} });
+  }
+
+  /** The number on the bell. GET /api/notifications/inbox/unread-count */
+  async inboxUnreadCount(): Promise<ApiResponse> {
+    return await this.get('/notifications/inbox/unread-count');
+  }
+
+  /** Mark some ({ ids }) or all ({ all: true }) read. POST /api/notifications/inbox/read */
+  async inboxMarkRead(target: { ids: string[] } | { all: true }): Promise<ApiResponse> {
+    return await this.post('/notifications/inbox/read', { body: target });
+  }
+
+  /** Clear the whole list. DELETE /api/notifications/inbox */
+  async inboxClear(): Promise<ApiResponse> {
+    return await this.delete('/notifications/inbox');
+  }
+
+  /** Remove one notification. DELETE /api/notifications/inbox/:id */
+  async inboxDelete(id: string): Promise<ApiResponse> {
+    return await this.delete(`/notifications/inbox/${id}`);
+  }
+
   /** Web push: the server's VAPID public key (null = push off). GET /api/notifications/push/public-key */
   async pushGetPublicKey(): Promise<ApiResponse> {
     return await this.get('/notifications/push/public-key');

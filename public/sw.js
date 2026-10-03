@@ -48,6 +48,9 @@ self.addEventListener('push', (event) => {
       const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
       if (windows.some((w) => w.focused && w.url === target)) return;
     }
+    // Open windows refresh the bell's count right away.
+    const open = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    open.forEach((w) => w.postMessage({ type: 'sbc-push' }));
     await self.registration.showNotification(data.title || 'SBC', {
       body: data.body || '',
       icon: await inlineIcon(data.icon),
