@@ -10,6 +10,15 @@ import type { SmsLink, SmsLinkType, SmsTemplate } from '../types/relance';
 const dayLabel = (type: SmsLinkType, day: number) =>
   type === 'auto' && day === 0 ? 'J0 (15 min)' : `J${day}`;
 
+const linksFrom = (data: unknown): SmsLink[] =>
+  Array.isArray(data) ? data : ((data as { links?: SmsLink[] } | null)?.links ?? []);
+
+const toValueMap = (links: SmsLink[]) => {
+  const map: Record<string, string> = {};
+  for (const l of links) map[`${l.type}:${l.dayNumber}`] = l.link;
+  return map;
+};
+
 export default function RelanceSmsLinks() {
   const [templates, setTemplates] = useState<SmsTemplate[]>([]);
   const [linkValues, setLinkValues] = useState<Record<string, string>>({});
@@ -27,11 +36,11 @@ export default function RelanceSmsLinks() {
       .then(([linksRes, templatesRes]) => {
         if (cancelled) return;
 
-        const linksData = handleApiResponse(linksRes);
-        const links: SmsLink[] = linksData?.links || [];
-        const valueMap: Record<string, string> = {};
-        for (const l of links) valueMap[`${l.type}:${l.dayNumber}`] = l.link;
-        setLinkValues(valueMap);
+        // The server answers { success, data: SmsLink[] }, which handleApiResponse
+        // unwraps to the array. This used to read `.links`, which is always
+        // undefined, so every field came back empty after a save and the links
+        // looked lost although they were stored.
+        setLinkValues(toValueMap(linksFrom(handleApiResponse(linksRes))));
 
         // Templates response is { success, data: SmsTemplate[] } — handleApiResponse
         // unwraps to the array.
@@ -68,14 +77,17 @@ export default function RelanceSmsLinks() {
     setError('');
     setSavedAt(null);
     try {
-      const links: SmsLink[] = [];
-      for (const t of templates) {
-        const link = (linkValues[`${t.type}:${t.dayNumber}`] || '').trim();
-        if (link) {
-          links.push({ type: t.type, dayNumber: t.dayNumber, link });
-        }
-      }
-      await sbcApiService.relanceUpdateSmsLinks(links);
+      // Every field is sent, empty ones included: the server only updates the
+      // entries it receives, so leaving a cleared field out kept the old link.
+      const links: SmsLink[] = templates.map(t => ({
+        type: t.type,
+        dayNumber: t.dayNumber,
+        link: (linkValues[`${t.type}:${t.dayNumber}`] || '').trim(),
+      }));
+      // handleApiResponse throws on an error answer; the success message used to
+      // show whatever the server replied.
+      const saved = handleApiResponse(await sbcApiService.relanceUpdateSmsLinks(links));
+      setLinkValues(toValueMap(linksFrom(saved)));
       setSavedAt(new Date());
     } catch (err: any) {
       setError(err?.message || 'Erreur lors de la sauvegarde.');
