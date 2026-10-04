@@ -7,6 +7,7 @@ import BackButton from '../components/common/BackButton';
 import Skeleton from '../components/common/Skeleton';
 import { xaf } from '../lib/eventStatus';
 import { cn } from '../lib/utils';
+import EventAnimations from '../components/events/EventAnimations';
 
 interface TicketType {
     _id: string;
@@ -166,6 +167,8 @@ export default function EventDetail() {
                 )}
 
                 <p className="text-sm text-ink-2 whitespace-pre-wrap leading-relaxed text-pretty">{event.description}</p>
+
+                <EventAnimations slug={event.slug} />
 
                 <section className="flex flex-col gap-2">
                     <h3 className="text-base font-bold text-ink">Billets</h3>
