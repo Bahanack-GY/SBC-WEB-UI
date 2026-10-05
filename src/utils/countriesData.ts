@@ -149,7 +149,10 @@ export const momoCorrespondents: MomoCorrespondentsMap = {
     'currencies': ['XOF']
   },
   'GH': {
-    'operators': ['MTN_MOMO_GHA', 'VODAFONE_GHA'],
+    // The three networks MoneyFusion pays out to in Ghana (live methods list,
+    // 2026-09-23). VODAFONE_GHA is kept for accounts already registered that
+    // way — Vodafone Ghana is now Telecel, same network.
+    'operators': ['MTN_MOMO_GHA', 'TELECEL_GHA', 'AIRTEL_GHA', 'VODAFONE_GHA'],
     'currencies': ['GHS']
   },
   'TG': {
@@ -198,7 +201,9 @@ export const getMomoOperatorDisplayName = (operatorValue: string): string => {
     'ORANGE_NER': 'Orange Money Niger',
     'MOOV_NER': 'Moov Niger',
     'MTN_MOMO_GHA': 'MTN MoMo Ghana',
-    'VODAFONE_GHA': 'Vodafone Ghana',
+    'TELECEL_GHA': 'Telecel Ghana',
+    'AIRTEL_GHA': 'AirtelTigo Ghana',
+    'VODAFONE_GHA': 'Telecel Ghana (ex-Vodafone)',
     'TOGOCOM_TG': 'Togocom',
     'MOOV_TG': 'Moov Togo',
   };
