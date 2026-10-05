@@ -285,3 +285,24 @@ export const frenchErrorFrom = (err: unknown, fallback: string) =>
 /** SMS relance is for Cameroonian parrains only (Rufus). Country is ISO-2, with a few legacy names. */
 export const isCameroon = (country?: string | null) =>
   ['CM', 'CAMEROUN', 'CAMEROON'].includes((country ?? '').trim().toUpperCase());
+
+/** What GET /api/relance/campaigns/suggestion answers (null when there is nothing to suggest). */
+export interface CampaignSuggestion {
+  period: '30d' | 'custom';
+  from: string;
+  to: string;
+  count: number;
+  affordable: number;
+}
+
+const MONTH_YEAR = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+/** "ces 30 derniers jours" or "en juillet 2026". */
+export const suggestionRange = (s: CampaignSuggestion) =>
+  s.period === '30d' ? 'ces 30 derniers jours' : `en ${MONTH_YEAR.format(new Date(s.from))}`;
+
+/** The wizard's filters for a suggestion: same period, unpaid filleuls not already in relance. */
+export const suggestionDraft = (s: CampaignSuggestion): Partial<CampaignDraft> =>
+  s.period === '30d'
+    ? { period: '30d' }
+    : { period: 'custom', customDates: { from: s.from.slice(0, 10), to: s.to.slice(0, 10) } };
