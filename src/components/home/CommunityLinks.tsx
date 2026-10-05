@@ -1,8 +1,13 @@
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { WhatsappIcon, TelegramIcon, YoutubeIcon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import { MentoringIcon, WhatsappIcon, TelegramIcon, YoutubeIcon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
 
 const CHANNELS = [
+  {
+    key: 'accompagnement', label: "Groupe d'accompagnement", subtitle: 'Parcours SBC',
+    icon: MentoringIcon, tint: 'bg-primary',
+    href: 'https://www.parcourssbc.com/',
+  },
   {
     key: 'whatsapp', label: 'WhatsApp', subtitle: 'Canal officiel SBC',
     icon: WhatsappIcon, tint: 'bg-whatsapp',

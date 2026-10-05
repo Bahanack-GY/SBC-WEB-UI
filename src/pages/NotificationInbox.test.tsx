@@ -68,6 +68,16 @@ describe('notification list', () => {
     expect(tray.closeTrayNotifications).toHaveBeenCalledWith(['filleul-u9']);
   });
 
+  it('lets the parrain write to a new filleul on WhatsApp, and only where there is a number', async () => {
+    const wa = 'https://wa.me/237675123456?text=Bonjour%20Paul';
+    api.inboxList.mockResolvedValue(ok({ items: items.map(i => (i._id === 'b' ? { ...i, whatsapp: wa } : i)), unread: 1, hasMore: false }));
+    renderPage(<NotificationInbox />);
+    const link = await screen.findByRole('link', { name: 'Écrire sur WhatsApp' });
+    expect(link).toHaveAttribute('href', wa);
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(screen.getAllByRole('link', { name: 'Écrire sur WhatsApp' })).toHaveLength(1);
+  });
+
   it('removes one notification', async () => {
     renderPage(<NotificationInbox />);
     await userEvent.click(await screen.findByRole('button', { name: 'Supprimer « Nouveau filleul »' }));
