@@ -851,6 +851,9 @@ function Signup() {
         <div className="text-center text-sm text-gray-500 mt-6">
           Déjà un compte ? <a href="/connexion" className="text-primary font-semibold hover:underline">Connexion</a>
         </div>
+        <div className="text-center text-sm text-gray-500 mt-2">
+          Plus simple : <a href={`/signup${window.location.search}`} className="text-primary font-semibold hover:underline">créer mon compte en discutant</a>
+        </div>
       </motion.div>
 
       <div className="w-full max-w-md px-4">

@@ -16,6 +16,7 @@ import TransactionConfirmation from './pages/TransactionConfirmation'
 import SplashScreen from './pages/SplashScreen'
 import Connexion from './pages/Connexion'
 import Signup from './pages/Signup'
+import SignupChat from './pages/signup/SignupChat';
 import ForgotPassword from './pages/ForgotPassword'
 import ChangePassword from './pages/ChangePassword'
 import ModifierLeProfil from './pages/ModifierLeProfil'
@@ -183,7 +184,9 @@ function AppContent() {
 
   // Logout button for unsubscribed users (so they can switch accounts from
   // /abonnement). The paywall guard means anyone seeing this is logged in.
-  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed;
+  // Not on the sign-up chat: right after the code it is logged in but still
+  // asking the optional profile questions, and the button would cover its header.
+  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup';
 
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
@@ -192,14 +195,14 @@ function AppContent() {
   // has no meaning: the auth/onboarding flows, the public marketing pages, and
   // inside a chat conversation, which owns the whole viewport.
   const HEADERLESS = [
-    '/splash-screen', '/connexion', '/signup', '/forgot-password', '/reset-password',
+    '/splash-screen', '/connexion', '/signup', '/signup/formulaire', '/forgot-password', '/reset-password',
     '/reset-password-otp', '/verify-otp', '/verify-email-otp', '/otp', '/complete-profile',
     '/a-propos', '/conditions', '/confidentialite', '/sso/authorize',
     '/withdrawal-otp-verification',
   ];
   const hideHeader = HEADERLESS.includes(location.pathname) || isInChatConversation;
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isInChatConversation;
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isInChatConversation;
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -223,7 +226,8 @@ function AppContent() {
             which is reached while authenticated — public is the union). */}
         <Route path="/splash-screen" element={<SplashScreen />} />
         <Route path="/connexion" element={<Connexion />} />
-        <Route path="/signup" element={<Signup />} />
+        <Route path="/signup" element={<SignupChat />} />
+        <Route path="/signup/formulaire" element={<Signup />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
