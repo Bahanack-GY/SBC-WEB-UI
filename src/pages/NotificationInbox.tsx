@@ -15,6 +15,7 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import { inboxKeys } from '../hooks/useInbox';
 import { closeTrayNotifications } from '../utils/push';
 import { headerDrop, pageFade } from '../utils/motion';
+import { InstallAppCard } from '../components/pwa/InstallAppCard';
 
 type Item = { _id: string; category: string; title: string; body: string; url?: string; tag?: string; readAt?: string; createdAt: string };
 type Page = { items: Item[]; unread: number; hasMore: boolean };
@@ -132,6 +133,8 @@ export default function NotificationInbox() {
       </motion.header>
 
       <div className="px-4">
+        {/* Installed, notifications arrive in SBC's name (and without Chrome's "Unsubscribe"). */}
+        <InstallAppCard compact className="mb-3" />
         {list.isLoading ? (
           <div className="space-y-2">
             {[0, 1, 2, 3].map(i => <div key={i} className="h-20 rounded-card bg-surface-2 animate-pulse" />)}

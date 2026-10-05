@@ -9,6 +9,7 @@ import {
   HandshakeIcon, ArrowRight01Icon, StatusIcon, Ticket01Icon, BookOpen01Icon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
+import { InstallAppCard } from '../pwa/InstallAppCard';
 
 type Item = { label: string; to: string; icon: typeof Home01Icon; tint: string };
 
@@ -119,6 +120,8 @@ function ServicesSidebar({ open, onClose }: { open: boolean; onClose: () => void
             </div>
 
             <nav className="flex-1 overflow-y-auto px-3 py-3">
+              {/* First thing in the menu, until SBC is installed (it hides itself then). */}
+              <InstallAppCard compact className="mb-3" />
               <button
                 onClick={() => go('/')}
                 className={cn(
