@@ -15,6 +15,7 @@ const api = vi.hoisted(() => ({
   relanceStartCampaign: vi.fn(),
   relancePreviewMessage: vi.fn(),
   relanceGetPacks: vi.fn(),
+  relanceGetCampaignSuggestion: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 
@@ -43,6 +44,7 @@ beforeEach(() => {
   api.relanceCreateCampaign.mockResolvedValue(ok({ _id: 'new1', status: 'draft' }));
   api.relanceStartCampaign.mockResolvedValue(ok({}));
   api.relanceGetPacks.mockResolvedValue(ok({ emailPacks: [], smsPacks: [] }));
+  api.relanceGetCampaignSuggestion.mockResolvedValue(ok(null));
 });
 
 describe('Campagnes de relance — the list', () => {
@@ -320,5 +322,31 @@ describe('Campagnes de relance — creating one', () => {
     await userEvent.click(within(wizard).getByRole('button', { name: 'Lancer la campagne' }));
     expect(await within(wizard).findByRole('alert')).toHaveTextContent('Rechargez pour lancer une campagne');
     expect(api.relanceStartCampaign).not.toHaveBeenCalled();
+  });
+});
+
+describe('Campagnes de relance — the suggested campaign', () => {
+  it('points a parrain with unused credits to their unpaid filleuls of the last 30 days', async () => {
+    api.relanceGetCampaignSuggestion.mockResolvedValue(ok({ period: '30d', from: '2026-09-05T10:00:00Z', to: '2026-10-05T10:00:00Z', count: 42, affordable: 42 }));
+    renderPage(<RelanceCampagnes />);
+    const card = await screen.findByRole('region', { name: 'Campagne suggérée' });
+    expect(within(card).getByText(/42 filleuls inscrits ces 30 derniers jours n'ont pas encore payé/)).toBeInTheDocument();
+    await userEvent.click(within(card).getByRole('button', { name: 'Préparer la campagne' }));
+    const wizard = await screen.findByRole('dialog', { name: 'Nouvelle campagne de relance' });
+    expect(within(wizard).getByRole('button', { name: '30 derniers jours' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
+  it('names the busiest month, and says how many the credits cover', async () => {
+    api.relanceGetCampaignSuggestion.mockResolvedValue(ok({ period: 'custom', from: '2026-07-01T00:00:00.000Z', to: '2026-07-31T23:59:59.999Z', count: 30, affordable: 12 }));
+    renderPage(<RelanceCampagnes />);
+    const card = await screen.findByRole('region', { name: 'Campagne suggérée' });
+    expect(within(card).getByText(/30 filleuls inscrits en juillet 2026/)).toBeInTheDocument();
+    expect(within(card).getByText(/Vos crédits en couvrent 12/)).toBeInTheDocument();
+  });
+
+  it('shows nothing when there is nothing to suggest', async () => {
+    renderPage(<RelanceCampagnes />);
+    await screen.findByText("Aucune campagne pour l'instant");
+    expect(screen.queryByRole('region', { name: 'Campagne suggérée' })).not.toBeInTheDocument();
   });
 });

@@ -26,12 +26,14 @@ const foldAccents = (s: string) => s.normalize('NFD').replace(/\p{Diacritic}/gu,
  * dropping any day without one.
  */
 export function CampaignWizard({
-  open, onClose, emailBalance, onLaunched, sms = 'none',
+  open, onClose, emailBalance, onLaunched, sms = 'none', initialDraft,
 }: {
   open: boolean;
   onClose: () => void;
   emailBalance: number;
   onLaunched: () => void;
+  /** Filters to start from, e.g. the period of a suggestion. */
+  initialDraft?: Partial<CampaignDraft>;
   /**
    * SMS for this campaign: "ready" = Cameroonian parrain with SMS on and
    * credits; "off" = Cameroonian but SMS switched off; "none" = not offered.
@@ -60,8 +62,10 @@ export function CampaignWizard({
 
   useEffect(() => {
     if (!open) return;
-    setStep(0); setDir(1); setDraft(DEFAULT_CAMPAIGN_DRAFT); setOwnMode(false); setDay(1);
+    setStep(0); setDir(1); setDraft({ ...DEFAULT_CAMPAIGN_DRAFT, ...initialDraft }); setOwnMode(false); setDay(1);
     setCount(null); setSample([]); setLaunchError(null); setLaunched(false); setCountriesOpen(false);
+    // initialDraft is read when the wizard opens, not on every parent render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Live count of who a campaign would reach, as the parrain changes the filters.
