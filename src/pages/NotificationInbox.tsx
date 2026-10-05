@@ -5,7 +5,7 @@ import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/r
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   Cancel01Icon, CreditCardIcon, GiftIcon, Mail01Icon, Megaphone01Icon, MoneyReceive02Icon,
-  Notification01Icon, Settings02Icon, Ticket01Icon, UserAdd01Icon, WhatsappIcon,
+  Notification01Icon, Settings02Icon, Ticket01Icon, UserAdd01Icon,
 } from '@hugeicons/core-free-icons';
 import BackButton from '../components/common/BackButton';
 import { ConfirmSheet } from '../components/relance/ui/ConfirmSheet';
@@ -17,7 +17,7 @@ import { closeTrayNotifications } from '../utils/push';
 import { headerDrop, pageFade } from '../utils/motion';
 import { InstallAppCard } from '../components/pwa/InstallAppCard';
 
-type Item = { _id: string; category: string; title: string; body: string; url?: string; tag?: string; whatsapp?: string; readAt?: string; createdAt: string };
+type Item = { _id: string; category: string; title: string; body: string; url?: string; tag?: string; readAt?: string; createdAt: string };
 type Page = { items: Item[]; unread: number; hasMore: boolean };
 
 const ICONS: Record<string, { icon: typeof Notification01Icon; tone: string }> = {
@@ -171,8 +171,7 @@ export default function NotificationInbox() {
                     {heading && <h2 className="text-xs font-semibold text-ink-3 uppercase tracking-wide mt-4 mb-2">{heading}</h2>}
                     <SwipeToDismiss onDismiss={() => remove(i._id)}>
                     <div className={`flex items-start gap-3 p-3 rounded-card border ${isNew ? 'bg-primary-soft border-primary/20' : 'bg-surface border-border'}`}>
-                      <div className="flex-1 min-w-0">
-                      <button onClick={() => open(i)} className="w-full flex items-start gap-3 text-left">
+                      <button onClick={() => open(i)} className="flex-1 min-w-0 flex items-start gap-3 text-left">
                         <span className={`size-10 grid place-items-center rounded-pill shrink-0 ${tone}`}>
                           <HugeiconsIcon icon={icon} size={20} />
                         </span>
@@ -184,20 +183,6 @@ export default function NotificationInbox() {
                           <span className="block text-sm text-ink-2 line-clamp-2">{i.body}</span>
                         </span>
                       </button>
-                      {/* A new filleul: welcome them on WhatsApp in one tap (Rufus). */}
-                      {i.whatsapp && (
-                        <a
-                          href={i.whatsapp}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => closeOnPhone(i)}
-                          className="mt-2 ml-[52px] inline-flex items-center gap-1.5 h-8 px-3 rounded-pill bg-whatsapp text-white text-xs font-semibold"
-                        >
-                          <HugeiconsIcon icon={WhatsappIcon} size={16} />
-                          Écrire sur WhatsApp
-                        </a>
-                      )}
-                      </div>
                       <button
                         onClick={() => remove(i._id)}
                         aria-label={`Supprimer « ${i.title} »`}
