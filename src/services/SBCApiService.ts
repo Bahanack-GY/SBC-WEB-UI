@@ -1570,6 +1570,15 @@ export class SBCApiService extends ApiService {
    * Get all user's campaigns
    * GET /api/relance/campaigns
    */
+  /**
+   * The campaign to suggest: unpaid filleuls of the last 30 days, else the
+   * busiest month of the past year; null when there is nothing to suggest.
+   * GET /api/relance/campaigns/suggestion
+   */
+  async relanceGetCampaignSuggestion(): Promise<ApiResponse> {
+    return await this.get('/relance/campaigns/suggestion');
+  }
+
   async relanceGetCampaigns(params?: {
     status?: string;
     page?: number;

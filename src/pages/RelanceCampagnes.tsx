@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -8,12 +9,13 @@ import RelancePacksModal from '../components/relance/RelancePacksModal';
 import { CampaignCard } from '../components/relance/CampaignCard';
 import { CampaignWizard } from '../components/relance/CampaignWizard';
 import { CampaignDetailSheet } from '../components/relance/CampaignDetailSheet';
+import { CampaignSuggestionCard, campaignSuggestionKey } from '../components/relance/CampaignSuggestionCard';
 import { CountUp } from '../components/relance/ui/CountUp';
 import { useRelance } from '../contexts/RelanceContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { headerDrop, listContainer, listItem, pageFade, popIn } from '../utils/motion';
-import { filleulsCovered, isCameroon } from '../utils/relance';
+import { filleulsCovered, isCameroon, suggestionDraft, type CampaignDraft, type CampaignSuggestion } from '../utils/relance';
 import { useAuth } from '../contexts/AuthContext';
 import type { Campaign } from '../types/relance';
 
@@ -32,6 +34,9 @@ export default function RelanceCampagnes() {
   const { user } = useAuth();
   const smsState = !isCameroon(user?.country) ? 'none' : smsEnabled && smsBalance > 0 ? 'ready' : 'off';
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [initialDraft, setInitialDraft] = useState<Partial<CampaignDraft> | undefined>();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [packsOpen, setPacksOpen] = useState(false);
   const [selected, setSelected] = useState<Campaign | null>(null);
   const [flash, setFlash] = useState<string | null>(null);
@@ -55,7 +60,17 @@ export default function RelanceCampagnes() {
   const running = list.filter(c => c.status === 'active' || c.status === 'paused');
   const past = list.filter(c => c.status !== 'active' && c.status !== 'paused');
 
-  const startNew = () => (emailBalance > 0 ? setWizardOpen(true) : setPacksOpen(true));
+  const startNew = () => { setInitialDraft(undefined); if (emailBalance > 0) setWizardOpen(true); else setPacksOpen(true); };
+  const startSuggested = (s: CampaignSuggestion) => { setInitialDraft(suggestionDraft(s)); setWizardOpen(true); };
+
+  // Arriving from the suggestion on the relance page: open the wizard on its period.
+  useEffect(() => {
+    const suggestion = (location.state as { suggestion?: CampaignSuggestion } | null)?.suggestion;
+    if (!suggestion) return;
+    startSuggested(suggestion);
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-bg pb-28">
@@ -74,6 +89,8 @@ export default function RelanceCampagnes() {
             <CountUp value={emailBalance} /> <span className="text-ink-3 font-normal">≈ {filleulsCovered(emailBalance)} filleuls</span>
           </span>
         </motion.div>
+
+        <CampaignSuggestionCard onStart={startSuggested} />
 
         {campaigns.isLoading ? (
           <div className="space-y-3">
@@ -152,7 +169,8 @@ export default function RelanceCampagnes() {
         onClose={() => setWizardOpen(false)}
         emailBalance={emailBalance}
         sms={smsState}
-        onLaunched={() => { refresh(); refreshBalance(); say('Campagne lancée.'); }}
+        initialDraft={initialDraft}
+        onLaunched={() => { refresh(); refreshBalance(); queryClient.invalidateQueries({ queryKey: campaignSuggestionKey }); say('Campagne lancée.'); }}
       />
       <CampaignDetailSheet campaign={selected} onClose={() => setSelected(null)} onChanged={(m) => { refresh(); say(m); }} />
       <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} />

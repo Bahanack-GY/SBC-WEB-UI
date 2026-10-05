@@ -38,6 +38,9 @@ async function inlineIcon(url) {
   }
 }
 
+// Only a wa.me chat link may open from a notification button.
+const isWhatsApp = (v) => typeof v === 'string' && v.startsWith('https://wa.me/');
+
 self.addEventListener('push', (event) => {
   let data = {};
   try { data = event.data ? event.data.json() : {}; } catch { data = { body: event.data && event.data.text() }; }
@@ -57,16 +60,25 @@ self.addEventListener('push', (event) => {
       tag: data.tag,
       // A new chat message replaces the conversation's previous one — and still buzzes.
       renotify: !!(data.renotify && data.tag),
-      // Our button (data.cta), beside the "Unsubscribe" Chrome adds on sites
-      // that are not installed. Tapping it or the notification opens data.url.
-      actions: data.cta ? [{ action: 'open', title: String(data.cta) }] : [],
-      data: { url: data.url || '/' },
+      // Our buttons, beside the "Unsubscribe" Chrome adds on sites that are not
+      // installed: WhatsApp for a new filleul (data.whatsapp), then data.cta.
+      // Tapping the cta or the notification opens data.url.
+      actions: [
+        ...(isWhatsApp(data.whatsapp) ? [{ action: 'whatsapp', title: 'WhatsApp' }] : []),
+        ...(data.cta ? [{ action: 'open', title: String(data.cta) }] : []),
+      ],
+      data: { url: data.url || '/', ...(isWhatsApp(data.whatsapp) ? { whatsapp: data.whatsapp } : {}) },
     });
   })());
 });
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const whatsapp = event.notification.data && event.notification.data.whatsapp;
+  if (event.action === 'whatsapp' && isWhatsApp(whatsapp)) {
+    event.waitUntil(self.clients.openWindow(whatsapp));
+    return;
+  }
   const url = new URL((event.notification.data && event.notification.data.url) || '/', self.location.origin).href;
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });

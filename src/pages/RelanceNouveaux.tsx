@@ -13,6 +13,7 @@ import { RelanceFilleulList, type FilleulRow } from '../components/relance/Relan
 import { RelanceOnboarding } from '../components/relance/RelanceOnboarding';
 import { RelanceSettingsSheet } from '../components/relance/RelanceSettingsSheet';
 import { RelanceMessagesSheet } from '../components/relance/RelanceMessagesSheet';
+import { CampaignSuggestionCard } from '../components/relance/CampaignSuggestionCard';
 import { PushOptIn } from '../components/common/PushOptIn';
 import { Sheet } from '../components/relance/ui/Sheet';
 import { useRelance } from '../contexts/RelanceContext';
@@ -189,6 +190,9 @@ export default function RelanceNouveaux() {
                 onChangeLimit={() => setSettingsOpen(true)}
               />
             </motion.div>
+
+            {/* Credits but no new filleuls to send to: point to a campaign on older ones. */}
+            <CampaignSuggestionCard onStart={(suggestion) => navigate('/relance/campagnes', { state: { suggestion } })} />
 
             <PushOptIn />
 
