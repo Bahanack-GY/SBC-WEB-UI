@@ -52,7 +52,8 @@ function CompleteProfile() {
       if (naissance) updates.birthDate = naissance;
       if (sexe) updates.sex = sexe;
       if (profession) updates.profession = removeAccents(profession);
-      if (langue) updates.language = langue;
+      // user-service stores languages as a list and ignores a lone string.
+      if (langue) updates.language = [langue];
       if (interests.length > 0) updates.interests = interests.map(i => removeAccents(i));
 
       await updateProfile(updates);
