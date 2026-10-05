@@ -37,6 +37,11 @@ describe('the bell number', () => {
 });
 
 describe('notification list', () => {
+  it('offers to install the app at the top, until it is installed', async () => {
+    renderPage(<NotificationInbox />);
+    expect(await screen.findByRole('region', { name: "Installer l'application" })).toBeInTheDocument();
+  });
+
   it('lists notifications newest first, grouped by day', async () => {
     renderPage(<NotificationInbox />);
     expect(await screen.findByText('+1 000 FCFA de commission')).toBeInTheDocument();
