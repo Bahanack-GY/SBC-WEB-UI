@@ -1392,6 +1392,64 @@ export class SBCApiService extends ApiService {
 
   // ===== Credit packs & balance (replaces monthly subscription) =====
 
+  /** The bell: notifications, newest first. GET /api/notifications/inbox */
+  async inboxList(before?: string): Promise<ApiResponse> {
+    return await this.get('/notifications/inbox', { queryParameters: before ? { before } : {} });
+  }
+
+  /** The number on the bell. GET /api/notifications/inbox/unread-count */
+  async inboxUnreadCount(): Promise<ApiResponse> {
+    return await this.get('/notifications/inbox/unread-count');
+  }
+
+  /** Mark some ({ ids }) or all ({ all: true }) read. POST /api/notifications/inbox/read */
+  async inboxMarkRead(target: { ids: string[] } | { all: true }): Promise<ApiResponse> {
+    return await this.post('/notifications/inbox/read', { body: target });
+  }
+
+  /** Clear the whole list. DELETE /api/notifications/inbox */
+  async inboxClear(): Promise<ApiResponse> {
+    return await this.delete('/notifications/inbox');
+  }
+
+  /** Remove one notification. DELETE /api/notifications/inbox/:id */
+  async inboxDelete(id: string): Promise<ApiResponse> {
+    return await this.delete(`/notifications/inbox/${id}`);
+  }
+
+  /** Web push: the server's VAPID public key (null = push off). GET /api/notifications/push/public-key */
+  async pushGetPublicKey(): Promise<ApiResponse> {
+    return await this.get('/notifications/push/public-key');
+  }
+
+  /** Web push: save this browser's subscription. POST /api/notifications/push/subscribe */
+  async pushSubscribe(subscription: PushSubscriptionJSON): Promise<ApiResponse> {
+    return await this.post('/notifications/push/subscribe', { body: { subscription } });
+  }
+
+  /** Web push: every kind of alert, on or off for this user. GET /api/notifications/push/preferences */
+  async pushGetPreferences(): Promise<ApiResponse> {
+    return await this.get('/notifications/push/preferences');
+  }
+
+  /** Web push: the kinds this user turned off. PUT /api/notifications/push/preferences */
+  async pushSetPreferences(disabled: string[]): Promise<ApiResponse> {
+    return await this.put('/notifications/push/preferences', { body: { disabled } });
+  }
+
+  /** Web push: forget this browser. POST /api/notifications/push/unsubscribe */
+  async pushUnsubscribe(endpoint: string): Promise<ApiResponse> {
+    return await this.post('/notifications/push/unsubscribe', { body: { endpoint } });
+  }
+
+  /**
+   * The 7 SBC relance messages, read-only
+   * GET /api/relance/default-messages
+   */
+  async relanceGetDefaultMessages(): Promise<ApiResponse> {
+    return await this.get('/relance/default-messages');
+  }
+
   /**
    * List all available credit packs (email + SMS)
    * GET /api/relance/packs
@@ -1467,8 +1525,18 @@ export class SBCApiService extends ApiService {
     sendingPaused?: boolean;
     sendingPausedEmail?: boolean;
     sendingPausedSms?: boolean;
+    /** SMS relance on/off (Cameroon only; refused elsewhere). */
+    smsEnabled?: boolean;
   }): Promise<ApiResponse> {
     return await this.put('/relance/settings', { body: settings });
+  }
+
+  /**
+   * The SMS texts relance sends, read-only
+   * GET /api/relance/sms-messages
+   */
+  async relanceGetSmsMessages(): Promise<ApiResponse> {
+    return await this.get('/relance/sms-messages');
   }
 
   /**
@@ -1649,6 +1717,7 @@ export class SBCApiService extends ApiService {
   async relanceGetDefaultTargets(params?: {
     page?: number;
     limit?: number;
+    status?: 'active' | 'completed';
   }): Promise<ApiResponse> {
     return await this.get('/relance/campaigns/default/targets', {
       queryParameters: params
@@ -1667,25 +1736,26 @@ export class SBCApiService extends ApiService {
 
   /**
    * Get detailed campaign statistics
-   * GET /api/relance/admin/campaigns/:id/stats
+   * GET /api/relance/campaigns/:id/stats
    */
   async relanceGetCampaignStats(campaignId: string): Promise<ApiResponse> {
-    return await this.get(`/relance/admin/campaigns/${campaignId}/stats`);
+    // The user route: the admin one refuses non-admins (since 2026-09-30).
+    return await this.get(`/relance/campaigns/${campaignId}/stats`);
   }
 
   /**
    * Get recent messages for a specific campaign
-   * GET /api/relance/admin/campaigns/:id/messages/recent
+   * GET /api/relance/campaigns/:id/messages/recent
    */
   async relanceGetCampaignMessages(campaignId: string, limit?: number): Promise<ApiResponse> {
-    return await this.get(`/relance/admin/campaigns/${campaignId}/messages/recent`, {
+    return await this.get(`/relance/campaigns/${campaignId}/messages/recent`, {
       queryParameters: limit ? { limit } : undefined
     });
   }
 
   /**
    * Preview an email template with sample data
-   * POST /api/relance/admin/messages/preview
+   * POST /api/relance/campaigns/message-preview
    */
   async relancePreviewMessage(data: {
     dayNumber: number;
@@ -1696,7 +1766,8 @@ export class SBCApiService extends ApiService {
     recipientName?: string;
     referrerName?: string;
   }): Promise<ApiResponse> {
-    return await this.post('/relance/admin/messages/preview', { body: data });
+    // Signed-in users preview here; /relance/admin/messages/preview is admins only.
+    return await this.post('/relance/campaigns/message-preview', { body: data });
   }
 
   // ==================== SSO (Login with SBC) ====================

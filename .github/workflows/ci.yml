@@ -22,3 +22,6 @@ jobs:
 
       - name: Build
         run: npx tsc -b && npx vite build
+
+      - name: Test
+        run: npm test

@@ -28,6 +28,31 @@ const wasRecentlyDismissed = () => {
   }
 };
 
+/*
+ * Chrome fires beforeinstallprompt once, early on page load. Captured here at
+ * module level (this module loads with the app shell) so any screen — the
+ * banner, the profile, the notification settings — can offer to install,
+ * even one opened long after the event fired.
+ */
+let captured: BeforeInstallPromptEvent | null = null;
+let installedThisSession = false;
+const subscribers = new Set<() => void>();
+const publish = () => subscribers.forEach(fn => fn());
+
+if (typeof window !== 'undefined') {
+  window.addEventListener('beforeinstallprompt', (e) => {
+    // Suppress Chrome's own mini-infobar so ours is the only prompt.
+    e.preventDefault();
+    captured = e as BeforeInstallPromptEvent;
+    publish();
+  });
+  window.addEventListener('appinstalled', () => {
+    installedThisSession = true;
+    captured = null;
+    publish();
+  });
+}
+
 /**
  * Install affordance for both platforms.
  *
@@ -37,35 +62,26 @@ const wasRecentlyDismissed = () => {
  * instead of a button that cannot work.
  */
 export function useInstallPrompt() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(isStandalone);
+  const [, rerender] = useState(0);
   const [dismissed, setDismissed] = useState(wasRecentlyDismissed);
 
   useEffect(() => {
-    const onBeforeInstall = (e: Event) => {
-      // Suppress Chrome's own mini-infobar so ours is the only prompt.
-      e.preventDefault();
-      setDeferred(e as BeforeInstallPromptEvent);
-    };
-    const onInstalled = () => {
-      setInstalled(true);
-      setDeferred(null);
-    };
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    window.addEventListener('appinstalled', onInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onBeforeInstall);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
+    const onChange = () => rerender(n => n + 1);
+    subscribers.add(onChange);
+    return () => { subscribers.delete(onChange); };
   }, []);
 
+  const installed = installedThisSession || isStandalone();
+
   const install = async () => {
-    if (!deferred) return 'unavailable' as const;
-    await deferred.prompt();
-    const { outcome } = await deferred.userChoice;
+    const event = captured;
+    if (!event) return 'unavailable' as const;
+    await event.prompt();
+    const { outcome } = await event.userChoice;
     // The event is single-use: Chrome will fire a fresh one if still eligible.
-    setDeferred(null);
-    if (outcome === 'accepted') setInstalled(true);
+    captured = null;
+    if (outcome === 'accepted') installedThisSession = true;
+    publish();
     return outcome;
   };
 
@@ -79,9 +95,8 @@ export function useInstallPrompt() {
   };
 
   const ios = isIos();
-  // Show when: not already installed, not snoozed, and either Chrome gave us a
-  // prompt to replay or we are on iOS where instructions are the only option.
-  const canShow = !installed && !dismissed && (!!deferred || ios);
+  // The banner: not installed, not snoozed, and something to offer.
+  const canShow = !installed && !dismissed && (!!captured || ios);
 
-  return { canShow, isIos: ios, canPromptNatively: !!deferred, install, dismiss, installed };
+  return { canShow, isIos: ios, canPromptNatively: !!captured, install, dismiss, installed };
 }

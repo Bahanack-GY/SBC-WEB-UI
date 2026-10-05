@@ -1,4 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
+import { filleulsCovered, filleulsCoveredBySms, isCameroon } from '../../utils/relance';
+import { useAuth } from '../../contexts/AuthContext';
 import { Cancel01Icon, Mail01Icon, SmsCodeIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
@@ -14,7 +16,7 @@ interface RelancePacksModalProps {
   showSms?: boolean;
 }
 
-const formatXAF = (amount: number) => `${amount.toLocaleString('fr-FR')} XAF`;
+const formatXAF = (amount: number) => `${amount.toLocaleString('fr-FR')} FCFA`;
 const formatCredits = (n: number) => n.toLocaleString('fr-FR');
 
 export default function RelancePacksModal({
@@ -23,6 +25,8 @@ export default function RelancePacksModal({
   showEmail = true,
   showSms = true,
 }: RelancePacksModalProps) {
+  const { user } = useAuth();
+  const smsAllowed = showSms && isCameroon(user?.country);
   const [packs, setPacks] = useState<RelancePacksResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [purchasingId, setPurchasingId] = useState<string | null>(null);
@@ -39,9 +43,9 @@ export default function RelancePacksModal({
         const data = handleApiResponse(res);
         setPacks(data);
       })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err?.message || 'Impossible de charger les packs.');
+        setError((err instanceof Error && err.message) || 'Impossible de charger les packs.');
       })
       .finally(() => {
         if (!cancelled) setLoading(false);
@@ -60,8 +64,8 @@ export default function RelancePacksModal({
       } else {
         setError("Lien de paiement indisponible.");
       }
-    } catch (err: any) {
-      setError(err?.message || "Erreur lors de l'achat.");
+    } catch (err) {
+      setError((err instanceof Error && err.message) || "Erreur lors de l'achat.");
     } finally {
       setPurchasingId(null);
     }
@@ -86,7 +90,11 @@ export default function RelancePacksModal({
             <div className="font-bold text-gray-800">
               {formatCredits(pack.credits)} crédits {isEmail ? 'email' : 'SMS'}
             </div>
-            {pack.label && <div className="text-xs text-gray-500 mt-1">{pack.label}</div>}
+            <div className="text-xs text-ink-3 mt-1">
+              {isEmail
+                ? `≈ ${filleulsCovered(pack.credits).toLocaleString('fr-FR')} filleuls relancés sur 7 jours`
+                : `≈ ${filleulsCoveredBySms(pack.credits).toLocaleString('fr-FR')} filleuls · numéros du Cameroun (+237)`}
+            </div>
           </div>
           <div className="text-right">
             <div className={`font-bold ${isEmail ? 'text-blue-600' : 'text-green-600'}`}>
@@ -127,7 +135,8 @@ export default function RelancePacksModal({
 
             <h3 className="text-xl font-bold mb-2">Acheter des crédits Relance</h3>
             <p className="text-sm text-gray-600 mb-5">
-              Les crédits sont consommés à chaque message envoyé. Aucun abonnement, vous payez à l'usage.
+              1 crédit = 1 message envoyé. Chaque filleul reçoit un message par jour
+              pendant 7 jours, sauf s'il paie avant. Pas d'abonnement.
             </p>
 
             {loading && (
@@ -154,7 +163,7 @@ export default function RelancePacksModal({
                   </section>
                 )}
 
-                {showSms && packs.smsPacks?.length > 0 && (
+                {smsAllowed && packs.smsPacks?.length > 0 && (
                   <section>
                     <div className="flex items-center gap-2 mb-2 text-green-700">
                       <HugeiconsIcon icon={SmsCodeIcon} />

@@ -1,0 +1,84 @@
+import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse } from './apiHelpers';
+import { APP_SW_URL } from './cacheBuster';
+
+/**
+ * Web push in the phone's browser.
+ *
+ * Android (Chrome, Samsung Internet…) supports it in the browser itself.
+ * iPhone only once SBC is added to the home screen (iOS 16.4+), so there the
+ * parrain is told how instead of being shown a button that cannot work.
+ */
+export type PushSupport = 'supported' | 'ios-needs-install' | 'unsupported';
+
+const isIos = () => /iphone|ipad|ipod/i.test(navigator.userAgent);
+const isStandalone = () =>
+  window.matchMedia?.('(display-mode: standalone)').matches || (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+export function pushSupport(): PushSupport {
+  const capable = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+  if (isIos() && !isStandalone()) return 'ios-needs-install';
+  return capable ? 'supported' : 'unsupported';
+}
+
+const keyBytes = (base64Url: string) => {
+  const base64 = (base64Url + '='.repeat((4 - (base64Url.length % 4)) % 4)).replace(/-/g, '+').replace(/_/g, '/');
+  return Uint8Array.from(atob(base64), c => c.charCodeAt(0));
+};
+
+// Registering the current URL also updates a worker still running an older build.
+const registration = () => navigator.serviceWorker.register(APP_SW_URL, { scope: '/' });
+
+/** Whether this browser already receives SBC notifications. */
+export async function isPushEnabled(): Promise<boolean> {
+  if (pushSupport() !== 'supported' || Notification.permission !== 'granted') return false;
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  return !!(await reg?.pushManager.getSubscription());
+}
+
+export type EnableResult = 'enabled' | 'denied' | 'unavailable';
+
+/** Asks permission (must run from a tap), subscribes this browser, and tells the server. */
+export async function enablePush(): Promise<EnableResult> {
+  if (pushSupport() !== 'supported') return 'unavailable';
+  const permission = await Notification.requestPermission();
+  if (permission !== 'granted') return 'denied';
+  const { publicKey } = handleApiResponse(await sbcApiService.pushGetPublicKey()) ?? {};
+  if (!publicKey) return 'unavailable';
+  const reg = await registration();
+  const subscription =
+    (await reg.pushManager.getSubscription()) ??
+    (await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(publicKey) }));
+  handleApiResponse(await sbcApiService.pushSubscribe(subscription.toJSON()));
+  return 'enabled';
+}
+
+/** Stops notifications on this browser (other devices keep theirs). */
+export async function disablePush(): Promise<void> {
+  if (pushSupport() !== 'supported') return;
+  const reg = await navigator.serviceWorker.getRegistration('/');
+  const sub = await reg?.pushManager.getSubscription();
+  if (!sub) return;
+  const endpoint = sub.endpoint;
+  await sub.unsubscribe();
+  await sbcApiService.pushUnsubscribe(endpoint).catch(() => undefined);
+}
+
+/**
+ * Closes SBC notifications in the phone's notification bar: those with the
+ * given tags, or — with no tags — every one except chat (the bell's list
+ * does not hold chat). Clearing in the app clears there too. Best-effort.
+ */
+export async function closeTrayNotifications(tags?: string[]): Promise<void> {
+  try {
+    if (!('serviceWorker' in navigator)) return;
+    const reg = await navigator.serviceWorker.getRegistration('/');
+    if (!reg?.getNotifications) return;
+    const shown = await reg.getNotifications();
+    shown
+      .filter(n => (tags ? !!n.tag && tags.includes(n.tag) : !n.tag?.startsWith('chat-')))
+      .forEach(n => n.close());
+  } catch {
+    /* nothing to close */
+  }
+}

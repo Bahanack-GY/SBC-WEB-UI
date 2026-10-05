@@ -9,6 +9,8 @@ declare const process: { env: Record<string, string | undefined> }
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Changes every build; versions the service worker URL (see utils/cacheBuster.ts).
+  define: { __APP_BUILD__: JSON.stringify(Date.now().toString(36)) },
   // ponytail: import.meta.url instead of path.resolve — same result, no @types/node dep
   resolve: {
     alias: { '@': new URL('./src', import.meta.url).pathname },

@@ -33,5 +33,12 @@
   },
   "include": [
     "src"
+  ],
+  // Tests run under Vitest, which transpiles without type-checking; keeping them
+  // out of `tsc -b` stops the production build depending on test-only types.
+  "exclude": [
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/test"
   ]
 }
