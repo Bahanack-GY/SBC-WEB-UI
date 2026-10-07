@@ -52,6 +52,8 @@ export function CampaignWizard({
   const [count, setCount] = useState<number | null>(null);
   const [sample, setSample] = useState<string[]>([]);
   const [counting, setCounting] = useState(false);
+  // A big network (millioncfa: 35,000 filleuls) takes several seconds to count.
+  const [slowCount, setSlowCount] = useState(false);
   const [countError, setCountError] = useState<string | null>(null);
   const [budget, setBudget] = useState<CampaignBudget | undefined>();
 
@@ -68,6 +70,16 @@ export function CampaignWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  // While the wizard covers the screen, the page behind must not scroll: on an
+  // iPhone the swipe went to that hidden page whenever the wizard had nothing
+  // to scroll, and the wizard looked frozen (Rufus, 2026-10-07).
+  useEffect(() => {
+    if (!open) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [open]);
+
   // Live count of who a campaign would reach, as the parrain changes the filters.
   const filterKey = JSON.stringify(campaignFilter(draft));
   useEffect(() => {
@@ -78,7 +90,9 @@ export function CampaignWizard({
     }
     let cancelled = false;
     setCounting(true);
+    setSlowCount(false);
     setCountError(null);
+    const slow = window.setTimeout(() => { if (!cancelled) setSlowCount(true); }, 2500);
     const t = window.setTimeout(async () => {
       try {
         const data = handleApiResponse(await sbcApiService.relancePreviewFilters(campaignFilter(draft)));
@@ -89,10 +103,11 @@ export function CampaignWizard({
       } catch (err) {
         if (!cancelled) setCountError(frenchErrorFrom(err, 'Impossible de compter les filleuls. Réessayez.'));
       } finally {
-        if (!cancelled) setCounting(false);
+        if (!cancelled) { setCounting(false); setSlowCount(false); }
+        window.clearTimeout(slow);
       }
     }, 400);
-    return () => { cancelled = true; window.clearTimeout(t); };
+    return () => { cancelled = true; window.clearTimeout(t); window.clearTimeout(slow); };
     // filterKey captures every field the filter depends on.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey, open, step]);
@@ -205,7 +220,7 @@ export function CampaignWizard({
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain">
             <AnimatePresence mode="wait" custom={dir} initial={false}>
               <motion.div
                 key={launched ? 'done' : step}
@@ -330,8 +345,21 @@ export function CampaignWizard({
                         <p className="text-sm text-danger">{countError}</p>
                       ) : (
                         <>
+                          {counting ? (
+                            // The previous filter's number used to stay on screen while a
+                            // big count ran, and read as this filter's answer ("1" for
+                            // « Depuis toujours »).
+                            <div role="status" className="flex items-center gap-3 py-1">
+                              <span className="size-6 rounded-full border-2 border-primary/30 border-t-primary animate-spin" aria-hidden />
+                              <div>
+                                <div className="text-sm font-semibold text-ink">Calcul en cours…</div>
+                                {slowCount && <div className="text-xs text-ink-3">Vous avez beaucoup de filleuls : cela peut prendre quelques secondes.</div>}
+                              </div>
+                            </div>
+                          ) : (
+                          <>
                           <div className="text-3xl font-bold text-primary">
-                            {counting && count === null ? '…' : <CountUp value={count ?? 0} />}
+                            <CountUp value={count ?? 0} />
                           </div>
                           <div className="text-sm text-ink-2">
                             {count === 0 ? "filleul non payé ne correspond. Élargissez la période." : 'filleuls non payés correspondent'}
@@ -345,10 +373,14 @@ export function CampaignWizard({
                                 <div className="text-sm font-semibold text-ink">
                                   {budget!.maxTargets > 0
                                     ? `Selon vos crédits : ${budget!.maxTargets} les plus récents`
-                                    : 'Vos crédits vont à vos nouveaux filleuls'}
+                                    : `Vos ${Math.min(budget!.reservedForNew, emailBalance)} crédits vont à vos nouveaux filleuls`}
                                 </div>
                                 {budget!.reservedForNew > 0 && (
-                                  <div className="text-xs text-ink-3">{budget!.reservedForNew} crédits gardés pour la relance des nouveaux</div>
+                                  <div className="text-xs text-ink-3">
+                                    {budget!.maxTargets > 0
+                                      ? `${Math.min(budget!.reservedForNew, emailBalance)} crédits gardés pour la relance des nouveaux`
+                                      : 'Désactivez pour les utiliser dans cette campagne.'}
+                                  </div>
                                 )}
                               </div>
                               <Switch
@@ -357,6 +389,8 @@ export function CampaignWizard({
                                 label="Selon vos crédits"
                               />
                             </div>
+                          )}
+                          </>
                           )}
                         </>
                       )}
