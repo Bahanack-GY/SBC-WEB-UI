@@ -1,5 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
-import { RELANCE_VISIBLE } from './config/features'
+import { Routes, Route, useLocation } from 'react-router-dom'
 import { MotionConfig } from 'motion/react'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
@@ -259,7 +258,7 @@ function AppContent() {
         <Route element={<RequireSubscription />}>
           <Route path="/" element={<Home />} />
           <Route path="/money" element={<Money />} />
-          <Route path="/ads-pack" element={RELANCE_VISIBLE ? <AdsPack /> : <Navigate to="/" replace />} />
+          <Route path="/ads-pack" element={<AdsPack />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/profile" element={<Profile />} />
@@ -275,15 +274,9 @@ function AppContent() {
           <Route path="/partenaire" element={<PartnerSpace />} />
           <Route path="/notifications" element={<NotificationInbox />} />
           <Route path="/notifications/reglages" element={<NotificationSettings />} />
-          {RELANCE_VISIBLE ? (
-            <>
-              <Route path="/relance" element={<RelanceNouveaux />} />
-              <Route path="/relance/campagnes" element={<RelanceCampagnes />} />
-              <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
-            </>
-          ) : (
-            <Route path="/relance/*" element={<Navigate to="/" replace />} />
-          )}
+          <Route path="/relance" element={<RelanceNouveaux />} />
+          <Route path="/relance/campagnes" element={<RelanceCampagnes />} />
+          <Route path="/relance/sms-links" element={<RelanceSmsLinks />} />
           <Route path="/activation-balance" element={<ActivationBalance />} />
           <Route path="/chat" element={<Chat />} />
           {/* SBC Love. The weekly window and the kill-switch are enforced by
