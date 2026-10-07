@@ -10,7 +10,6 @@ import {
 } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
 import { InstallAppCard } from '../pwa/InstallAppCard';
-import { RELANCE_VISIBLE } from '../../config/features';
 
 type Item = { label: string; to: string; icon: typeof Home01Icon; tint: string };
 
@@ -30,8 +29,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { label: 'Événements', to: '/events', icon: Ticket01Icon, tint: 'bg-primary-soft text-primary' },
       // /ads-pack was only ever reachable from the bottom nav; it lost that
       // entry point when Publicité became SBC Statut, so it lives here now.
-      // Packs publicité sells relance credits and nothing else.
-      ...(RELANCE_VISIBLE ? [{ label: 'Packs publicité', to: '/ads-pack', icon: ConnectIcon, tint: 'bg-accent-soft text-accent' }] : []),
+      { label: 'Packs publicité', to: '/ads-pack', icon: ConnectIcon, tint: 'bg-accent-soft text-accent' },
     ],
   },
   {
@@ -47,7 +45,7 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { label: 'SBC Love', to: '/sbclove', icon: FavouriteIcon, tint: 'bg-danger-soft text-danger' },
       { label: 'Messages', to: '/chat', icon: Message01Icon, tint: 'bg-primary-soft text-primary' },
       { label: 'Contacts', to: '/contacts', icon: Call02Icon, tint: 'bg-success-soft text-success' },
-      ...(RELANCE_VISIBLE ? [{ label: 'Relance', to: '/relance', icon: Mail01Icon, tint: 'bg-accent-soft text-accent' }] : []),
+      { label: 'Relance', to: '/relance', icon: Mail01Icon, tint: 'bg-accent-soft text-accent' },
     ],
   },
   {

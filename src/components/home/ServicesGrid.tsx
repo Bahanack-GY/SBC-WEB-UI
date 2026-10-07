@@ -10,7 +10,6 @@ import shopImg from '../../assets/icon/SBCShop.png';
 import adsImg from '../../assets/icon/ads.png';
 import contactsImg from '../../assets/icon/Contacts.png';
 import sbcloveImg from '../../assets/icon/sbclove.png';
-import { RELANCE_VISIBLE } from '../../config/features';
 
 interface Props {
   formationsCount: number | null;
@@ -141,34 +140,30 @@ function ServicesGrid({
         ))}
       </div>
 
-      {RELANCE_VISIBLE && (
-        <>
-          {/* Relance keeps today's behaviour exactly: navigate if the user has
-              credits, otherwise open the packs modal. No illustration was supplied
-              for it, so it keeps its glyph. */}
-          <motion.button
-            onClick={onRelance}
-            whileTap={{ scale: 0.98 }}
-            className="bg-surface border border-border rounded-card p-3 flex items-center gap-3 text-left"
-          >
-            <span className="size-10 grid place-items-center rounded-tile bg-accent-soft text-accent shrink-0">
-              <HugeiconsIcon icon={Mail01Icon} size={20} />
-            </span>
-            <span className="min-w-0 flex-1">
-              <span className="block font-semibold text-ink text-sm">Relance</span>
-              <span className="block text-xs text-ink-3">
-                {hasRelanceAccess ? 'Vos filleuls non payés' : 'Relancez vos filleuls non payés'}
-              </span>
-            </span>
-            {typeof relanceBadge === 'number' && relanceBadge > 0 && (
-              <span className="shrink-0 min-w-6 h-6 px-1.5 grid place-items-center rounded-pill bg-accent text-white text-xs font-bold">
-                {relanceBadge}
-              </span>
-            )}
-            <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="text-ink-3 shrink-0" />
-          </motion.button>
-        </>
-      )}
+      {/* Relance keeps today's behaviour exactly: navigate if the user has
+          credits, otherwise open the packs modal. No illustration was supplied
+          for it, so it keeps its glyph. */}
+      <motion.button
+        onClick={onRelance}
+        whileTap={{ scale: 0.98 }}
+        className="bg-surface border border-border rounded-card p-3 flex items-center gap-3 text-left"
+      >
+        <span className="size-10 grid place-items-center rounded-tile bg-accent-soft text-accent shrink-0">
+          <HugeiconsIcon icon={Mail01Icon} size={20} />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block font-semibold text-ink text-sm">Relance</span>
+          <span className="block text-xs text-ink-3">
+            {hasRelanceAccess ? 'Vos filleuls non payés' : 'Relancez vos filleuls non payés'}
+          </span>
+        </span>
+        {typeof relanceBadge === 'number' && relanceBadge > 0 && (
+          <span className="shrink-0 min-w-6 h-6 px-1.5 grid place-items-center rounded-pill bg-accent text-white text-xs font-bold">
+            {relanceBadge}
+          </span>
+        )}
+        <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="text-ink-3 shrink-0" />
+      </motion.button>
     </section>
   );
 }

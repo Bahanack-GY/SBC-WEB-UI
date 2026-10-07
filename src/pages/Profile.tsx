@@ -13,7 +13,6 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import TourButton from '../components/common/TourButton';
 import { useTour } from '../components/common/TourProvider';
-import { RELANCE_VISIBLE } from '../config/features';
 
 type ActionItem = {
   label: string;
@@ -69,7 +68,7 @@ function Profile() {
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
     ...baseActions.slice(0, 7), // Up to "Mes Contacts"
-    ...(RELANCE_VISIBLE ? [{ label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/relance' }] : []),
+    { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/relance' },
     ...baseActions.slice(7), // Rest of the actions
   ];
 
