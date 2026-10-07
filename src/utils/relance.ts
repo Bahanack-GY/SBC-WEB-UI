@@ -23,7 +23,7 @@ export const RELANCE_DAYS = 7;
 // Relance des nouveaux — what is happening right now
 // ---------------------------------------------------------------------------
 
-export type RelanceState = 'paused' | 'no_credits' | 'daily_limit' | 'running';
+export type RelanceState = 'paused' | 'no_credits' | 'running';
 
 export interface RelanceStateInput {
   enabled: boolean;
@@ -31,7 +31,6 @@ export interface RelanceStateInput {
   emailBalance: number;
   smsBalance: number;
   messagesSentToday?: number;
-  maxMessagesPerDay?: number;
 }
 
 /**
@@ -44,8 +43,6 @@ export interface RelanceStateInput {
 export function deriveRelanceState(s: RelanceStateInput): RelanceState {
   if (!s.enabled || s.sendingPaused) return 'paused';
   if (s.emailBalance <= 0 && s.smsBalance <= 0) return 'no_credits';
-  const limit = s.maxMessagesPerDay ?? 500;
-  if ((s.messagesSentToday ?? 0) >= limit) return 'daily_limit';
   return 'running';
 }
 

@@ -25,7 +25,7 @@ vi.mock('../contexts/RelanceContext', () => ({ useRelance: () => relance.state }
 
 import RelanceNouveaux from './RelanceNouveaux';
 
-const status = (over = {}) => ({ enabled: true, sendingPaused: false, enrollmentPaused: false, messagesSentToday: 120, maxMessagesPerDay: 500, ...over });
+const status = (over = {}) => ({ enabled: true, sendingPaused: false, enrollmentPaused: false, messagesSentToday: 120, ...over });
 const stats = (over = {}) => ({
   activeTargets: 30,
   dayProgression: [{ day: 1, count: 12 }, { day: 2, count: 8 }],
@@ -63,7 +63,7 @@ describe('Relance des nouveaux', () => {
     expect(await screen.findByTestId('relance-state')).toHaveTextContent('Relance en marche');
     expect(screen.getByRole('switch', { name: 'Relance des nouveaux' })).toHaveAttribute('aria-checked', 'true');
     expect(screen.getByText(/Envoyés aujourd'hui/)).toBeInTheDocument();
-    expect(screen.getByText('/ 500', { exact: false })).toBeInTheDocument();
+    expect(screen.queryByText('/ 500', { exact: false })).not.toBeInTheDocument(); // no daily limit shown
   });
 
   it('draws the journey from the stats — waiting is what is active on no day', async () => {
@@ -111,11 +111,11 @@ describe('Relance des nouveaux', () => {
     expect(screen.getByRole('button', { name: 'Recharger mes crédits' })).toBeInTheDocument();
   });
 
-  it('says the daily limit is reached and that sending resumes tomorrow', async () => {
-    api.relanceGetStatus.mockResolvedValue(ok(status({ messagesSentToday: 500 })));
+  it('keeps sending however many emails went out today — no daily limit any more', async () => {
+    api.relanceGetStatus.mockResolvedValue(ok(status({ messagesSentToday: 5000 })));
     renderPage(<RelanceNouveaux />);
-    expect(await screen.findByTestId('relance-state')).toHaveTextContent('Limite du jour atteinte');
-    expect(screen.getByText(/Reprise demain/)).toBeInTheDocument();
+    expect(await screen.findByTestId('relance-state')).not.toHaveTextContent('Limite du jour');
+    expect(screen.queryByText(/Reprise demain/)).not.toBeInTheDocument();
   });
 
   it('explains relance and offers credits to someone who has never used it', async () => {
@@ -138,13 +138,11 @@ describe('Relance des nouveaux', () => {
     await waitFor(() => expect(api.relanceGetStatus).toHaveBeenCalledTimes(2));
   });
 
-  it('saves a new daily limit from the settings', async () => {
-    api.relanceUpdateConfig.mockResolvedValue(ok({}));
+  it('has no daily email limit to set', async () => {
     renderPage(<RelanceNouveaux />);
-    await userEvent.click(await screen.findByRole('button', { name: 'Réglages' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Plus' }));
-    await userEvent.click(screen.getByRole('button', { name: 'Enregistrer' }));
-    await waitFor(() => expect(api.relanceUpdateConfig).toHaveBeenCalledWith({ maxMessagesPerDay: 550 }));
+    await screen.findByTestId('relance-state');
+    expect(screen.queryByRole('button', { name: 'Réglages' })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Emails maximum par jour/)).not.toBeInTheDocument();
   });
 
   it('sends the parrain to campaigns for their older filleuls', async () => {

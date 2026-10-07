@@ -22,12 +22,6 @@ const COPY: Record<RelanceState, { title: string; body: string; tone: string; do
     tone: 'bg-accent-soft border-accent/30',
     dot: 'bg-accent',
   },
-  daily_limit: {
-    title: 'Limite du jour atteinte',
-    body: 'Reprise demain.',
-    tone: 'bg-primary-soft border-primary/30',
-    dot: 'bg-primary',
-  },
 };
 
 /**
@@ -37,19 +31,16 @@ const COPY: Record<RelanceState, { title: string; body: string; tone: string; do
  * actually happening. Here there is one switch and one title.
  */
 export function RelanceStatusCard({
-  state, on, busy, onToggle, sentToday, maxPerDay, onRecharge, onChangeLimit,
+  state, on, busy, onToggle, sentToday, onRecharge,
 }: {
   state: RelanceState;
   on: boolean;
   busy?: boolean;
   onToggle: (next: boolean) => void;
   sentToday: number;
-  maxPerDay: number;
   onRecharge: () => void;
-  onChangeLimit: () => void;
 }) {
   const c = COPY[state];
-  const share = Math.min(1, maxPerDay > 0 ? sentToday / maxPerDay : 0);
 
   return (
     <motion.section
@@ -87,22 +78,10 @@ export function RelanceStatusCard({
         <Switch checked={on} onChange={onToggle} disabled={busy} label="Relance des nouveaux" />
       </div>
 
-      {(state === 'running' || state === 'daily_limit') && (
-        <div className="mt-4">
-          <div className="flex items-baseline justify-between text-xs text-ink-2">
-            <span>Envoyés aujourd'hui</span>
-            <button onClick={onChangeLimit} className="text-ink font-semibold underline-offset-2 hover:underline">
-              <CountUp value={sentToday} /> / {maxPerDay}
-            </button>
-          </div>
-          <div className="mt-1.5 h-2 rounded-pill bg-surface/70 overflow-hidden">
-            <motion.div
-              className={`h-full rounded-pill ${state === 'daily_limit' ? 'bg-primary' : 'bg-success'}`}
-              initial={{ width: 0 }}
-              animate={{ width: `${share * 100}%` }}
-              transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-            />
-          </div>
+      {state === 'running' && (
+        <div className="mt-4 flex items-baseline justify-between text-xs text-ink-2">
+          <span>Envoyés aujourd'hui</span>
+          <span className="text-ink font-semibold"><CountUp value={sentToday} /></span>
         </div>
       )}
 

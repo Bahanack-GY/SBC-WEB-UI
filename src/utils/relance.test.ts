@@ -15,7 +15,7 @@ import {
   type CampaignDraft,
 } from './relance';
 
-const base = { enabled: true, sendingPaused: false, emailBalance: 100, smsBalance: 0, messagesSentToday: 0, maxMessagesPerDay: 500 };
+const base = { enabled: true, sendingPaused: false, emailBalance: 100, smsBalance: 0, messagesSentToday: 0 };
 
 describe('deriveRelanceState — is anything being sent right now?', () => {
   it('is running with credits and room left today', () => {
@@ -39,13 +39,8 @@ describe('deriveRelanceState — is anything being sent right now?', () => {
     expect(deriveRelanceState({ ...base, emailBalance: 0, smsBalance: 10 })).toBe('running');
   });
 
-  it('has reached today\'s limit exactly at the limit', () => {
-    expect(deriveRelanceState({ ...base, messagesSentToday: 499 })).toBe('running');
-    expect(deriveRelanceState({ ...base, messagesSentToday: 500 })).toBe('daily_limit');
-  });
-
-  it('falls back to the server default limit when none is known', () => {
-    expect(deriveRelanceState({ ...base, maxMessagesPerDay: undefined, messagesSentToday: 500 })).toBe('daily_limit');
+  it('keeps running however many emails went out today — there is no daily limit any more', () => {
+    expect(deriveRelanceState({ ...base, messagesSentToday: 5000 })).toBe('running');
   });
 });
 
