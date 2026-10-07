@@ -471,16 +471,19 @@ function AdsNetworkCampaignForm() {
               </div>
             </div>
 
+            {/* min-w-0: an <input> will not shrink below its default ~20 characters,
+                so two side by side were wider than a phone — the whole page then
+                scrolled sideways into blank space (Rufus, 2026-10-07). */}
             <div className="flex gap-2">
               <input
                 type="number" inputMode="numeric" value={minAge}
                 onChange={(e) => setMinAge(e.target.value)} placeholder="Âge min."
-                className="flex-1 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
+                className="flex-1 min-w-0 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
               />
               <input
                 type="number" inputMode="numeric" value={maxAge}
                 onChange={(e) => setMaxAge(e.target.value)} placeholder="Âge max."
-                className="flex-1 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
+                className="flex-1 min-w-0 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
               />
             </div>
           </motion.div>
