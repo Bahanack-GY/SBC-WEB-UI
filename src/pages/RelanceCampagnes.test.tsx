@@ -276,6 +276,20 @@ describe('Campagnes de relance — creating one', () => {
       expect((await launch(wizard)).targetFilter).not.toHaveProperty('maxTargets');
     });
 
+    it('when new filleuls need every credit, says so plainly and lets the parrain take them back (millioncfa, 2026-10-07)', async () => {
+      relance.state = { ...relance.state, emailBalance: 4303 };
+      api.relancePreviewFilters.mockResolvedValue(ok({
+        totalCount: 29821, sampleUsers: [], budget: { emailBalance: 4303, reservedForNew: 12999, maxTargets: 0 },
+      }));
+      const wizard = await openWizard();
+      // Never "12999 crédits gardés" when there are only 4303.
+      expect(await within(wizard).findByText('Vos 4303 crédits vont à vos nouveaux filleuls')).toBeInTheDocument();
+      expect(within(wizard).getByText('Désactivez pour les utiliser dans cette campagne.')).toBeInTheDocument();
+      expect(within(wizard).getByRole('button', { name: 'Continuer' })).toBeDisabled();
+      await userEvent.click(within(wizard).getByRole('switch', { name: 'Selon vos crédits' }));
+      expect(within(wizard).getByRole('button', { name: 'Continuer' })).toBeEnabled();
+    });
+
     it('says nothing about budget when the credits cover everyone', async () => {
       api.relancePreviewFilters.mockResolvedValue(ok({
         totalCount: 50, sampleUsers: [], budget: { emailBalance: 3000, reservedForNew: 0, maxTargets: 428 },
@@ -322,6 +336,32 @@ describe('Campagnes de relance — creating one', () => {
     await userEvent.click(within(wizard).getByRole('button', { name: 'Lancer la campagne' }));
     expect(await within(wizard).findByRole('alert')).toHaveTextContent('Rechargez pour lancer une campagne');
     expect(api.relanceStartCampaign).not.toHaveBeenCalled();
+  });
+});
+
+describe('Campagnes de relance — counting a big network', () => {
+  const openWizard = async () => {
+    renderPage(<RelanceCampagnes />);
+    await userEvent.click(await screen.findByRole('button', { name: 'Nouvelle campagne' }));
+    return screen.findByRole('dialog', { name: 'Nouvelle campagne de relance' });
+  };
+
+  it('never shows the previous period\'s number while a long count runs — « 1 » read as « Depuis toujours »', async () => {
+    api.relancePreviewFilters.mockResolvedValueOnce(ok({ totalCount: 1, sampleUsers: [{ name: 'Benae' }] }));
+    const wizard = await openWizard();
+    expect(await within(wizard).findByText('1')).toBeInTheDocument();
+    api.relancePreviewFilters.mockReturnValue(new Promise(() => {})); // 35,000 filleuls: still counting
+    await userEvent.click(within(wizard).getByRole('button', { name: 'Depuis toujours' }));
+    expect(await within(wizard).findByText('Calcul en cours…')).toBeInTheDocument();
+    expect(within(wizard).queryByText('1')).not.toBeInTheDocument();
+    expect(within(wizard).getByRole('button', { name: 'Continuer' })).toBeDisabled();
+  });
+
+  it('keeps the page behind from scrolling while the wizard is open, and gives it back after', async () => {
+    const wizard = await openWizard();
+    expect(document.body.style.overflow).toBe('hidden');
+    await userEvent.click(within(wizard).getByRole('button', { name: 'Fermer' }));
+    await waitFor(() => expect(document.body.style.overflow).toBe(''));
   });
 });
 
