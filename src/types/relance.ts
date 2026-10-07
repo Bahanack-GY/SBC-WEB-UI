@@ -107,7 +107,6 @@ export interface RelanceStatus {
   enrollmentPaused: boolean;
   sendingPaused: boolean;
   messagesSentToday: number;
-  maxMessagesPerDay: number;
   smsEnabled?: boolean;            // Admin-gated SMS access flag (may be absent on older backends)
   sendingPausedEmail?: boolean;    // Per-channel pause (optional, falls back to sendingPaused)
   sendingPausedSms?: boolean;
@@ -274,8 +273,6 @@ export interface Campaign {
   // Custom messages (optional override of default messages)
   customMessages?: CustomMessage[];
 
-  // Limits
-  maxMessagesPerDay?: number;
   messagesSentToday?: number;
 
   // Statistics
@@ -310,7 +307,6 @@ export interface CreateCampaignRequest {
   channel?: CampaignChannel;
   targetFilter: CampaignFilter;
   customMessages?: CustomMessage[];
-  maxMessagesPerDay?: number;
   contactBatch?: { offset: number; limit: number };
   scheduledStartDate?: string;
   runAfterCampaignId?: string;
@@ -349,7 +345,6 @@ export interface RelanceConfigUpdate {
   enabled?: boolean;
   enrollmentPaused?: boolean;
   sendingPaused?: boolean;
-  maxMessagesPerDay?: number;
 }
 
 /**

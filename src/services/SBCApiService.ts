@@ -1544,7 +1544,6 @@ export class SBCApiService extends ApiService {
    * PATCH /api/relance/config
    */
   async relanceUpdateConfig(config: {
-    maxMessagesPerDay?: number;
     enabled?: boolean;
   }): Promise<ApiResponse> {
     return await this.patch('/relance/config', { body: config });
@@ -1623,7 +1622,6 @@ export class SBCApiService extends ApiService {
         color?: string;
       }>;
     }>;
-    maxMessagesPerDay?: number;
     contactBatch?: { offset: number; limit: number };
     scheduledStartDate?: string;
   }): Promise<ApiResponse> {
