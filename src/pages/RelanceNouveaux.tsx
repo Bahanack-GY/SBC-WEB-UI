@@ -11,7 +11,6 @@ import { RelanceCreditsCard } from '../components/relance/RelanceCreditsCard';
 import { RelanceJourney } from '../components/relance/RelanceJourney';
 import { RelanceFilleulList, type FilleulRow } from '../components/relance/RelanceFilleulList';
 import { RelanceOnboarding } from '../components/relance/RelanceOnboarding';
-import { RelanceSettingsSheet } from '../components/relance/RelanceSettingsSheet';
 import { RelanceMessagesSheet } from '../components/relance/RelanceMessagesSheet';
 import { CampaignSuggestionCard } from '../components/relance/CampaignSuggestionCard';
 import { PushOptIn } from '../components/common/PushOptIn';
@@ -56,7 +55,6 @@ export default function RelanceNouveaux() {
   const [smsBusy, setSmsBusy] = useState(false);
 
   const [packsOpen, setPacksOpen] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [allOpen, setAllOpen] = useState(false);
   const [howOpen, setHowOpen] = useState(false);
   const [messagesOpen, setMessagesOpen] = useState(false);
@@ -99,6 +97,8 @@ export default function RelanceNouveaux() {
     : 'paused';
   const on = !!s && s.enabled && !s.sendingPaused;
 
+  // The SMS-links page is the only setting left (Cameroonian SMS).
+  const showSmsLinks = smsBalance > 0 || !!smsEnabled || !!s?.smsEnabled;
   const neverUsed = emailBalance <= 0 && smsBalance <= 0
     && buckets.inProgress === 0 && buckets.paid === 0 && buckets.finished === 0;
 
@@ -145,11 +145,12 @@ export default function RelanceNouveaux() {
           <h1 className="text-lg font-semibold text-ink leading-tight">Relance des nouveaux</h1>
           <p className="text-xs text-ink-3">Vos filleuls qui n'ont pas encore payé</p>
         </div>
-        {!neverUsed && (
+        {/* The only setting left is the link added to SMS (Cameroon); the daily
+            email limit is gone — the mail server paces relance itself. */}
+        {!neverUsed && showSmsLinks && (
           <button
-            onClick={() => setSettingsOpen(true)}
-            aria-label="Réglages"
-            data-tour="relance-settings"
+            onClick={() => navigate('/relance/sms-links')}
+            aria-label="Liens dans vos SMS"
             className="size-10 grid place-items-center rounded-pill text-ink-2 hover:bg-surface-2"
           >
             <HugeiconsIcon icon={Settings02Icon} size={22} />
@@ -185,9 +186,7 @@ export default function RelanceNouveaux() {
                 busy={toggling}
                 onToggle={toggle}
                 sentToday={s?.messagesSentToday ?? 0}
-                maxPerDay={s?.maxMessagesPerDay ?? 500}
                 onRecharge={() => setPacksOpen(true)}
-                onChangeLimit={() => setSettingsOpen(true)}
               />
             </motion.div>
 
@@ -294,16 +293,6 @@ export default function RelanceNouveaux() {
       <RelanceMessagesSheet open={messagesOpen} onClose={() => setMessagesOpen(false)} showSms={isCameroon(user?.country)} />
       <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} />
 
-      <RelanceSettingsSheet
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        maxPerDay={s?.maxMessagesPerDay ?? 500}
-        showSmsLinks={smsBalance > 0 || !!s?.smsEnabled}
-        onSaved={async (value) => {
-          await queryClient.invalidateQueries({ queryKey: relanceKeys.status });
-          say('ok', `Limite enregistrée : ${value} emails par jour.`);
-        }}
-      />
 
       <Sheet open={allOpen} onClose={() => setAllOpen(false)} title="Vos filleuls en cours">
         {allFilleuls.isLoading ? (
