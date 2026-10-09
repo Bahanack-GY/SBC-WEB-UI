@@ -36,7 +36,7 @@ export const allAfricanCountries: CountryData[] = [
   { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: 'CI', flag: '🇨🇮', phoneCode: '+225', currency: 'XOF', supportsMomo: true },
   { value: 'Gambie', label: '🇬🇲 Gambie', code: 'GM', flag: '🇬🇲', phoneCode: '+220', currency: 'GMD', supportsMomo: false },
   { value: 'Ghana', label: '🇬🇭 Ghana', code: 'GH', flag: '🇬🇭', phoneCode: '+233', currency: 'GHS', supportsMomo: true },
-  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN', flag: '🇬🇳', phoneCode: '+224', currency: 'GNF', supportsMomo: false },
+  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN', flag: '🇬🇳', phoneCode: '+224', currency: 'GNF', supportsMomo: true },
   { value: 'Guinée-Bissau', label: '🇬🇼 Guinée-Bissau', code: 'GW', flag: '🇬🇼', phoneCode: '+245', currency: 'XOF', supportsMomo: false },
   { value: 'Libéria', label: '🇱🇷 Libéria', code: 'LR', flag: '🇱🇷', phoneCode: '+231', currency: 'LRD', supportsMomo: false },
   { value: 'Mali', label: '🇲🇱 Mali', code: 'ML', flag: '🇲🇱', phoneCode: '+223', currency: 'XOF', supportsMomo: true },
@@ -155,6 +155,12 @@ export const momoCorrespondents: MomoCorrespondentsMap = {
     'operators': ['MTN_MOMO_GHA', 'TELECEL_GHA', 'AIRTEL_GHA', 'VODAFONE_GHA'],
     'currencies': ['GHS']
   },
+  'GN': {
+    // Orange is the only network MoneyFusion pays out to in Guinée (live
+    // methods list). Withdrawals are entered in F and paid in GNF.
+    'operators': ['ORANGE_GN'],
+    'currencies': ['GNF']
+  },
   'TG': {
     'operators': ['TOGOCOM_TG', 'MOOV_TG'],
     'currencies': ['XOF']
@@ -204,6 +210,7 @@ export const getMomoOperatorDisplayName = (operatorValue: string): string => {
     'TELECEL_GHA': 'Telecel Ghana',
     'AIRTEL_GHA': 'AirtelTigo Ghana',
     'VODAFONE_GHA': 'Telecel Ghana (ex-Vodafone)',
+    'ORANGE_GN': 'Orange Money Guinée',
     'TOGOCOM_TG': 'Togocom',
     'MOOV_TG': 'Moov Togo',
   };
