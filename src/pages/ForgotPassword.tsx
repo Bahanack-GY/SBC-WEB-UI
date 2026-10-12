@@ -129,7 +129,6 @@ function ForgotPassword() {
                                 >
                                     <option value="">Utiliser ma préférence</option>
                                     <option value="email">📧 Email</option>
-                                    <option value="whatsapp">📱 WhatsApp</option>
                                 </select>
                             </div>
                         )}
