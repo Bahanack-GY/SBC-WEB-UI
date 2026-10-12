@@ -59,7 +59,7 @@ function ChangePhoneNumber() {
       
       setModalContent({
         type: 'success',
-        message: 'Code OTP envoyé à votre nouveau numéro via WhatsApp!'
+        message: 'Code de vérification envoyé à votre adresse email.'
       });
       setShowModal(true);
       setStep('verify');
@@ -196,7 +196,7 @@ function ChangePhoneNumber() {
                 disabled={loading}
               >
                 {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" /> : <HugeiconsIcon icon={Call02Icon} />}
-                {loading ? 'Envoi en cours...' : 'Envoyer le code via WhatsApp'}
+                {loading ? 'Envoi en cours...' : 'Envoyer le code'}
               </button>
             </form>
           ) : (

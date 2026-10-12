@@ -323,7 +323,8 @@ function OTP() {
               📬 Choisir la méthode de réception
             </h4>
             <p className="text-sm text-gray-700 text-center mb-6">
-              Comment souhaitez-vous recevoir le nouveau code OTP ?
+              {/* WhatsApp codes are unavailable (Meta rejected our templates). */}
+              Le nouveau code vous sera envoyé par email.
             </p>
 
             <div className="space-y-3">
@@ -340,18 +341,6 @@ function OTP() {
                 </div>
               </button>
 
-              <button
-                type="button"
-                onClick={() => handleResendWithMethod('whatsapp')}
-                disabled={loading}
-                className="w-full flex items-center gap-3 p-4 border-2 border-border rounded-xl hover:border-success hover:bg-green-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <span className="text-2xl">📱</span>
-                <div className="text-left">
-                  <div className="font-medium text-gray-800">WhatsApp</div>
-                  <div className="text-sm text-gray-500">Recevoir le code via WhatsApp</div>
-                </div>
-              </button>
             </div>
 
             <button

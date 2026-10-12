@@ -682,23 +682,6 @@ function ModifierLeProfil() {
                     </div>
                   </div>
                 </label>
-                <label className="flex items-center gap-3 p-3 border border-border rounded-xl hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="notificationPreference"
-                    value="whatsapp"
-                    checked={formData.notificationPreference === 'whatsapp'}
-                    onChange={handleChange}
-                    className="text-green-600 focus:ring-green-500"
-                  />
-                  <div className="flex items-center gap-2">
-                    <span className="text-2xl">📱</span>
-                    <div>
-                      <div className="font-medium text-gray-700">WhatsApp</div>
-                      <div className="text-sm text-gray-500">Recevoir les codes OTP via WhatsApp</div>
-                    </div>
-                  </div>
-                </label>
               </div>
               <div className="mt-2 text-xs text-gray-500">
                 💡 Vous pouvez modifier cette préférence pour des demandes individuelles
