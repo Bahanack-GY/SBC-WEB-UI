@@ -117,6 +117,11 @@ export default function PublicLanding() {
         <section className="bg-white/80 backdrop-blur rounded-2xl p-6 mb-10 border border-border">
           <h2 className="text-xl font-bold text-gray-900 mb-3">Documents</h2>
           <div className="flex flex-col gap-2">
+            {/* A static page (public/centre-information), not a React route: crawlers
+                and AI assistants read it without running JavaScript. */}
+            <a href="/centre-information/" className="text-primary hover:underline font-semibold">
+              📘 Centre d'information officiel
+            </a>
             <a
               href="https://storage.googleapis.com/sbc-file-storage/documents/pres_pdf_1753011729757_SBC%20Pr%C3%83%C2%A9sentation.pdf"
               target="_blank"

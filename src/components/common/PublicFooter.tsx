@@ -7,6 +7,8 @@ export default function PublicFooter() {
         <div className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1">
           <Link to="/a-propos" className="hover:text-primary">À propos</Link>
           <span>·</span>
+          <a href="/centre-information/" className="hover:text-primary">Centre d'information</a>
+          <span>·</span>
           <Link to="/conditions" className="hover:text-primary">CGU</Link>
           <span>·</span>
           <Link to="/confidentialite" className="hover:text-primary">Confidentialité</Link>

@@ -1,8 +1,13 @@
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { MentoringIcon, WhatsappIcon, TelegramIcon, YoutubeIcon, ArrowRight01Icon } from '@hugeicons/core-free-icons';
+import { MentoringIcon, WhatsappIcon, TelegramIcon, YoutubeIcon, ArrowRight01Icon, InformationCircleIcon } from '@hugeicons/core-free-icons';
 
 const CHANNELS = [
+  {
+    key: 'information', label: "Centre d'information officiel", subtitle: 'Tout savoir sur SBC',
+    icon: InformationCircleIcon, tint: 'bg-ink',
+    href: '/centre-information/',
+  },
   {
     key: 'accompagnement', label: "Groupe d'accompagnement", subtitle: 'Parcours SBC',
     icon: MentoringIcon, tint: 'bg-primary',
