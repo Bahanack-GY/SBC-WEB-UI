@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://sniperbuisnesscenter.com/sitemap.xml
