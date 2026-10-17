@@ -28,6 +28,10 @@ interface Campaign {
   mediaFileId: string;
   clicksTotal: number;
   bankedAmount?: number;
+  /** Already taken toward this campaign: credit, SBC balance, mobile money received. */
+  creditApplied?: number;
+  balanceApplied?: number;
+  mobileMoneyPaid?: number;
   progress: {
     uniqueViewsDelivered: number;
     targetUniqueViews: number;
@@ -72,6 +76,10 @@ const STATUS_STYLES: Record<CampaignStatus, string> = {
 };
 
 const formatFCFA = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} F`;
+
+/** What the annonceur still has to pay: a campaign moves only once fully paid. */
+const remainingToPay = (c: Campaign) =>
+  Math.max(0, c.amountPaid - (c.creditApplied ?? 0) - (c.balanceApplied ?? 0) - (c.mobileMoneyPaid ?? 0));
 
 /**
  * Annonceur dashboard: campaigns, where each one stands, and what to do next.
@@ -363,6 +371,13 @@ function AdsNetworkAnnonceur() {
                   </p>
                 )}
 
+                {!c.paidAt && (c.mobileMoneyPaid ?? 0) > 0 && remainingToPay(c) > 0 && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-border rounded-xl p-2 mt-3">
+                    {formatFCFA(c.amountPaid - remainingToPay(c))} déjà reçus. Reste à payer : <strong>{formatFCFA(remainingToPay(c))}</strong> —
+                    la campagne part en validation dès que tout est payé.
+                  </p>
+                )}
+
                 {c.status === 'banked' && (
                   <p className="text-xs text-yellow-800 bg-yellow-50 border border-border rounded-xl p-2 mt-3">
                     {formatFCFA(c.bankedAmount ?? 0)} conservés en crédit pour une prochaine campagne.
@@ -542,7 +557,7 @@ function AdsNetworkAnnonceur() {
       <PayChoiceSheet
         open={Boolean(payChoice)}
         title={payChoice?.title ?? ''}
-        amount={payChoice?.amountPaid ?? 0}
+        amount={payChoice ? remainingToPay(payChoice) : 0}
         balance={user?.balance ?? 0}
         busy={Boolean(payChoice && acting === payChoice._id)}
         onPay={(useBalance) => payChoice && payCampaign(payChoice, useBalance)}
