@@ -8,6 +8,7 @@ import ServicesGrid from '../components/home/ServicesGrid';
 import LeaderboardPreview from '../components/home/LeaderboardPreview';
 import CustomVideoPlayer from '../components/CustomVideoPlayer';
 import CommunityLinks from '../components/home/CommunityLinks';
+import ImpactChallengeBanner from '../components/home/ImpactChallengeBanner';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -182,6 +183,9 @@ function Home() {
         </div>
 
         <PushOptIn hint="Commissions, retraits, messages : sois prévenu tout de suite." dismissKey="home" />
+
+        {/* Renders nothing unless a challenge is open to votes. */}
+        <ImpactChallengeBanner />
 
         <div className="quick-actions">
           <ServicesGrid
