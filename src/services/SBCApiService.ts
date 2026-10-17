@@ -2324,8 +2324,8 @@ export class SBCApiService extends ApiService {
     return await this.post(`/advertising/campaigns/${campaignId}/cancel`);
   }
 
-  async payAdsCampaign(campaignId: string): Promise<ApiResponse> {
-    return await this.post(`/advertising/campaigns/${campaignId}/pay`);
+  async payAdsCampaign(campaignId: string, opts: { useBalance?: boolean } = {}): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/pay`, { body: { useBalance: opts.useBalance === true } });
   }
 
   /** Pause a live campaign (stops new offers/top-ups). Resumable, no money moves. */

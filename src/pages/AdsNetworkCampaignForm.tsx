@@ -5,6 +5,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
+import { useAuth } from '../contexts/AuthContext';
 import { motion } from 'motion/react';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
@@ -42,6 +43,10 @@ function AdsNetworkCampaignForm() {
   const [params] = useSearchParams();
   // Present when editing an existing campaign rather than creating one.
   const { id: editingId } = useParams<{ id: string }>();
+  const { user, refreshUser } = useAuth();
+  const sbcBalance = Math.max(0, Math.floor(user?.balance ?? 0));
+  // Rufus: « payer ou compléter la campagne avec son solde SBC ».
+  const [useBalance, setUseBalance] = useState(false);
   const isEditing = Boolean(editingId);
 
   const [amount, setAmount] = useState(params.get('amount') || String(MIN_AMOUNT));
@@ -272,7 +277,8 @@ function AdsNetworkCampaignForm() {
       // Pay-first: paying is what puts the annonce in front of a moderator, so a
       // new campaign goes straight to payment. Submitting it for review unpaid is
       // exactly what filled the queue with campaigns nobody had paid for.
-      const paid = await sbcApiService.payAdsCampaign(campaignId);
+      const paid = await sbcApiService.payAdsCampaign(campaignId, { useBalance: useBalance && sbcBalance > 0 });
+      if (useBalance) refreshUser();
       if (!paid.isSuccessByStatusCode) {
         // The draft is saved either way; it can be paid from the dashboard.
         setError(
@@ -548,6 +554,27 @@ function AdsNetworkCampaignForm() {
 
         {error && (
           <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800 mt-4">{error}</div>
+        )}
+
+        {!isEditing && sbcBalance > 0 && (
+          <label className="flex items-start gap-3 border border-border rounded-xl p-3 mt-4 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useBalance}
+              onChange={(e) => setUseBalance(e.target.checked)}
+              className="mt-1 size-4 accent-primary"
+            />
+            <span className="text-sm">
+              <span className="block font-medium text-gray-900">
+                Utiliser mon solde SBC ({sbcBalance.toLocaleString('fr-FR')} F disponibles)
+              </span>
+              <span className="block text-gray-600">
+                {Number.isFinite(parsedAmount) && parsedAmount > 0 && sbcBalance >= parsedAmount
+                  ? 'Votre solde couvre tout le paiement.'
+                  : 'Votre solde paie une partie, le reste se paie par Mobile Money.'}
+              </span>
+            </span>
+          </label>
         )}
 
         <button

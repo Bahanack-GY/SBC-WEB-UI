@@ -8,6 +8,8 @@ import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton, AdsStatCard, adsItemMotion, adsHeaderMotion } from '../components/ads/AdsScreen';
 import illustrationEmpty from '../assets/icon/ads-empty.jpg';
 import { sbcApiService } from '../services/SBCApiService';
+import { useAuth } from '../contexts/AuthContext';
+import PayChoiceSheet from '../components/ads/PayChoiceSheet';
 
 type CampaignStatus =
   | 'draft' | 'pending_review' | 'approved' | 'paid' | 'rejected'
@@ -83,6 +85,8 @@ function AdsNetworkAnnonceur() {
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<Campaign | null>(null);
   const [closing, setClosing] = useState<Campaign | null>(null);
+  const [payChoice, setPayChoice] = useState<Campaign | null>(null);
+  const { user, refreshUser } = useAuth();
   const [cancelling, setCancelling] = useState<Campaign | null>(null);
 
   const { data: campaigns, isLoading, refetch } = useQuery({
@@ -102,11 +106,19 @@ function AdsNetworkAnnonceur() {
     enabled: Boolean(detail),
   });
 
-  const handlePay = async (c: Campaign) => {
+  // A member with SBC balance chooses how to pay; everyone else goes straight
+  // to mobile money, as before.
+  const handlePay = (c: Campaign) => {
+    if ((user?.balance ?? 0) > 0) setPayChoice(c);
+    else void payCampaign(c, false);
+  };
+
+  const payCampaign = async (c: Campaign, useBalance: boolean) => {
     setActing(c._id);
     setError(null);
     try {
-      const res = await sbcApiService.payAdsCampaign(c._id);
+      const res = await sbcApiService.payAdsCampaign(c._id, { useBalance });
+      if (useBalance) refreshUser();
       if (!res.isSuccessByStatusCode) {
         setError(res.body?.message || "Le paiement n'a pas pu être ouvert.");
         return;
@@ -115,6 +127,7 @@ function AdsNetworkAnnonceur() {
       // A null sessionId is the success case where banked credit covered the whole
       // budget: the campaign is already live and there is nothing to pay.
       const sessionId = res.body?.data?.sessionId;
+      setPayChoice(null);
       if (!sessionId) {
         refetch();
         return;
@@ -526,6 +539,16 @@ function AdsNetworkAnnonceur() {
 
       {/* Closing is one tap but not reversible — the campaign leaves diffusion
           for good. Spell out what is kept and what stops before acting. */}
+      <PayChoiceSheet
+        open={Boolean(payChoice)}
+        title={payChoice?.title ?? ''}
+        amount={payChoice?.amountPaid ?? 0}
+        balance={user?.balance ?? 0}
+        busy={Boolean(payChoice && acting === payChoice._id)}
+        onPay={(useBalance) => payChoice && payCampaign(payChoice, useBalance)}
+        onClose={() => setPayChoice(null)}
+      />
+
       <AnimatePresence>
         {closing && (
           <motion.div
