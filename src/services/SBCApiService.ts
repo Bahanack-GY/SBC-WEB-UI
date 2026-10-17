@@ -935,6 +935,57 @@ export class SBCApiService extends ApiService {
     return await this.get('/tombola/tickets/me');
   }
 
+  // ==================== SBC IMPACT CHALLENGE ====================
+  // tombola-service, behind the gateway at /api/challenges.
+
+  /**
+   * The challenge open to votes right now — status active AND between its start
+   * and end dates — with its approved entrepreneurs: { challenge, entrepreneurs }.
+   * 404 means no challenge is running, not an error.
+   */
+  async getCurrentImpactChallenge(): Promise<ApiResponse> {
+    return await this.get('/challenges/current', { requiresAuth: false });
+  }
+
+  /** Live ranking: { entrepreneurs: [{ _id, name, projectName, voteCount, rank, ... }], lastUpdated }. */
+  async getImpactChallengeLeaderboard(challengeId: string): Promise<ApiResponse> {
+    return await this.get(`/challenges/${challengeId}/leaderboard`, { requiresAuth: false });
+  }
+
+  /** One approved entrepreneur, public fields only (no email or phone). */
+  async getImpactChallengeEntrepreneur(entrepreneurId: string): Promise<ApiResponse> {
+    return await this.get(`/challenges/entrepreneurs/${entrepreneurId}`, { requiresAuth: false });
+  }
+
+  /** The member's tombola tickets this month: { used, remaining, max }. */
+  async getImpactChallengeTicketAllowance(challengeId: string): Promise<ApiResponse> {
+    return await this.get(`/challenges/${challengeId}/ticket-allowance`);
+  }
+
+  /**
+   * A paid vote. `amount` is a multiple of the vote price (200 F); each vote also
+   * gives one tombola ticket, and the server refuses more votes than the tickets
+   * left this month. Returns { paymentSessionId, ... }: send the member to
+   * generatePaymentUrl(paymentSessionId), same as subscriptions.
+   */
+  async voteImpactChallenge(challengeId: string, entrepreneurId: string, amount: number): Promise<ApiResponse> {
+    return await this.post(`/challenges/${challengeId}/vote`, { body: { entrepreneurId, amount } });
+  }
+
+  /**
+   * A paid support: counts as votes for the entrepreneur but gives no ticket.
+   * For members who already have their tickets for the month.
+   */
+  async supportImpactChallenge(challengeId: string, body: {
+    entrepreneurId: string;
+    amount: number;
+    supporterName?: string;
+    supportMessage?: string;
+    isAnonymous?: boolean;
+  }): Promise<ApiResponse> {
+    return await this.post(`/challenges/${challengeId}/support`, { body });
+  }
+
   // ==================== ADVERTISING ====================
 
   /**
