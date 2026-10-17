@@ -113,6 +113,22 @@ function AdsNetworkCampaignForm() {
     setPreview(f ? URL.createObjectURL(f) : null);
   };
 
+  // Several cities, typed however the phone allows: Android keyboards often
+  // don't report Entrée or "," to the page, so a city used to stay in the field
+  // and was dropped on save (Rufus: "cibler plusieurs villes, c'est pas possible").
+  const addCities = (text: string) => {
+    const next = [...cities];
+    for (const part of text.split(/[,;\n]/)) {
+      const v = part.trim();
+      if (v && !next.some(c => c.toLowerCase() === v.toLowerCase())) next.push(v);
+    }
+    setCities(next);
+  };
+  const pendingCity = cityInput.trim();
+  const allCities = pendingCity && !cities.some(c => c.toLowerCase() === pendingCity.toLowerCase())
+    ? [...cities, pendingCity]
+    : cities;
+
   const toggle = (list: string[], value: string, set: (v: string[]) => void) =>
     set(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
 
@@ -120,7 +136,7 @@ function AdsNetworkCampaignForm() {
   // Rufus: warn while they are still choosing, not after they have paid.
   const targetingPayload = {
     countries: countries.length ? countries : undefined,
-    cities: cities.length ? cities.map(c => removeAccents(c)) : undefined,
+    cities: allCities.length ? allCities.map(c => removeAccents(c)) : undefined,
     interests: interests.length ? interests : undefined,
     sex: sex.length ? sex : undefined,
     minAge: minAge ? Number(minAge) : undefined,
@@ -238,7 +254,7 @@ function AdsNetworkCampaignForm() {
           countries: countries.length ? countries : undefined,
           // Accent-stripped, same normalization as user profiles, so matching
           // doesn't quietly lose half the audience.
-          cities: cities.length ? cities.map(c => removeAccents(c)) : undefined,
+          cities: allCities.length ? allCities.map(c => removeAccents(c)) : undefined,
           interests: interests.length ? interests : undefined,
           sex: sex.length ? sex : undefined,
           minAge: minAge ? Number(minAge) : undefined,
@@ -421,18 +437,36 @@ function AdsNetworkCampaignForm() {
               <div className="flex gap-2">
                 <input
                   value={cityInput}
-                  onChange={(e) => setCityInput(e.target.value)}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    // A comma, however it was typed, closes the cities before it.
+                    if (/[,;]/.test(v)) {
+                      const parts = v.split(/[,;]/);
+                      addCities(parts.slice(0, -1).join(','));
+                      setCityInput(parts[parts.length - 1].trimStart());
+                    } else {
+                      setCityInput(v.trimStart());
+                    }
+                  }}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ',') {
+                    if (e.key === 'Enter') {
                       e.preventDefault();
-                      const v = cityInput.trim().replace(/,$/, '');
-                      if (v && !cities.some(c => c.toLowerCase() === v.toLowerCase())) setCities([...cities, v]);
+                      addCities(cityInput);
                       setCityInput('');
                     }
                   }}
-                  placeholder="Villes (Entrée pour ajouter)"
-                  className="flex-1 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
+                  enterKeyHint="done"
+                  placeholder="Villes, ex. Douala, Yaoundé"
+                  className="flex-1 min-w-0 border border-border rounded-xl px-4 py-3 focus:ring-2 focus:ring-primary focus:outline-none"
                 />
+                <button
+                  type="button"
+                  onClick={() => { addCities(cityInput); setCityInput(''); }}
+                  disabled={!pendingCity}
+                  className="shrink-0 px-4 rounded-xl border border-primary text-primary font-semibold disabled:opacity-40"
+                >
+                  Ajouter
+                </button>
               </div>
               {cities.length > 0 && (
                 <div className="flex flex-wrap gap-2 mt-2">
