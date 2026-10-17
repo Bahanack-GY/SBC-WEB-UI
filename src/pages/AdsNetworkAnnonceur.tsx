@@ -8,6 +8,8 @@ import BackButton from '../components/common/BackButton';
 import { AdsCardSkeleton, AdsStatCard, adsItemMotion, adsHeaderMotion } from '../components/ads/AdsScreen';
 import illustrationEmpty from '../assets/icon/ads-empty.jpg';
 import { sbcApiService } from '../services/SBCApiService';
+import { useAuth } from '../contexts/AuthContext';
+import PayChoiceSheet from '../components/ads/PayChoiceSheet';
 
 type CampaignStatus =
   | 'draft' | 'pending_review' | 'approved' | 'paid' | 'rejected'
@@ -26,6 +28,10 @@ interface Campaign {
   mediaFileId: string;
   clicksTotal: number;
   bankedAmount?: number;
+  /** Already taken toward this campaign: credit, SBC balance, mobile money received. */
+  creditApplied?: number;
+  balanceApplied?: number;
+  mobileMoneyPaid?: number;
   progress: {
     uniqueViewsDelivered: number;
     targetUniqueViews: number;
@@ -71,6 +77,10 @@ const STATUS_STYLES: Record<CampaignStatus, string> = {
 
 const formatFCFA = (n: number) => `${Math.round(n).toLocaleString('fr-FR')} F`;
 
+/** What the annonceur still has to pay: a campaign moves only once fully paid. */
+const remainingToPay = (c: Campaign) =>
+  Math.max(0, c.amountPaid - (c.creditApplied ?? 0) - (c.balanceApplied ?? 0) - (c.mobileMoneyPaid ?? 0));
+
 /**
  * Annonceur dashboard: campaigns, where each one stands, and what to do next.
  *
@@ -83,6 +93,8 @@ function AdsNetworkAnnonceur() {
   const [error, setError] = useState<string | null>(null);
   const [detail, setDetail] = useState<Campaign | null>(null);
   const [closing, setClosing] = useState<Campaign | null>(null);
+  const [payChoice, setPayChoice] = useState<Campaign | null>(null);
+  const { user, refreshUser } = useAuth();
   const [cancelling, setCancelling] = useState<Campaign | null>(null);
 
   const { data: campaigns, isLoading, refetch } = useQuery({
@@ -102,11 +114,19 @@ function AdsNetworkAnnonceur() {
     enabled: Boolean(detail),
   });
 
-  const handlePay = async (c: Campaign) => {
+  // A member with SBC balance chooses how to pay; everyone else goes straight
+  // to mobile money, as before.
+  const handlePay = (c: Campaign) => {
+    if ((user?.balance ?? 0) > 0) setPayChoice(c);
+    else void payCampaign(c, false);
+  };
+
+  const payCampaign = async (c: Campaign, useBalance: boolean) => {
     setActing(c._id);
     setError(null);
     try {
-      const res = await sbcApiService.payAdsCampaign(c._id);
+      const res = await sbcApiService.payAdsCampaign(c._id, { useBalance });
+      if (useBalance) refreshUser();
       if (!res.isSuccessByStatusCode) {
         setError(res.body?.message || "Le paiement n'a pas pu être ouvert.");
         return;
@@ -115,6 +135,7 @@ function AdsNetworkAnnonceur() {
       // A null sessionId is the success case where banked credit covered the whole
       // budget: the campaign is already live and there is nothing to pay.
       const sessionId = res.body?.data?.sessionId;
+      setPayChoice(null);
       if (!sessionId) {
         refetch();
         return;
@@ -350,6 +371,13 @@ function AdsNetworkAnnonceur() {
                   </p>
                 )}
 
+                {!c.paidAt && (c.mobileMoneyPaid ?? 0) > 0 && remainingToPay(c) > 0 && (
+                  <p className="text-xs text-amber-800 bg-amber-50 border border-border rounded-xl p-2 mt-3">
+                    {formatFCFA(c.amountPaid - remainingToPay(c))} déjà reçus. Reste à payer : <strong>{formatFCFA(remainingToPay(c))}</strong> —
+                    la campagne part en validation dès que tout est payé.
+                  </p>
+                )}
+
                 {c.status === 'banked' && (
                   <p className="text-xs text-yellow-800 bg-yellow-50 border border-border rounded-xl p-2 mt-3">
                     {formatFCFA(c.bankedAmount ?? 0)} conservés en crédit pour une prochaine campagne.
@@ -526,6 +554,16 @@ function AdsNetworkAnnonceur() {
 
       {/* Closing is one tap but not reversible — the campaign leaves diffusion
           for good. Spell out what is kept and what stops before acting. */}
+      <PayChoiceSheet
+        open={Boolean(payChoice)}
+        title={payChoice?.title ?? ''}
+        amount={payChoice ? remainingToPay(payChoice) : 0}
+        balance={user?.balance ?? 0}
+        busy={Boolean(payChoice && acting === payChoice._id)}
+        onPay={(useBalance) => payChoice && payCampaign(payChoice, useBalance)}
+        onClose={() => setPayChoice(null)}
+      />
+
       <AnimatePresence>
         {closing && (
           <motion.div
