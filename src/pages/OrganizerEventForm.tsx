@@ -23,6 +23,8 @@ export default function OrganizerEventForm() {
     const [city, setCity] = useState('');
     const [venue, setVenue] = useState('');
     const [address, setAddress] = useState('');
+    const [accessLink, setAccessLink] = useState('');
+    const isWebinar = category === 'webinaire';
     const [startsAt, setStartsAt] = useState('');
     const [endsAt, setEndsAt] = useState('');
     const [resaleEnabled, setResaleEnabled] = useState(true);
@@ -70,6 +72,7 @@ export default function OrganizerEventForm() {
                     setCity(found.city);
                     setVenue(found.venue);
                     setAddress(found.address);
+                    setAccessLink(found.accessLink || '');
                     setStartsAt(toInputDate(found.startsAt));
                     setEndsAt(toInputDate(found.endsAt));
                     setResaleEnabled(found.resaleEnabled);
@@ -145,12 +148,13 @@ export default function OrganizerEventForm() {
                 description: description.trim(),
                 category,
                 country,
-                city: city.trim(),
-                venue: venue.trim(),
-                address: address.trim(),
+                // A webinar's location is set by the server ("En ligne").
+                ...(isWebinar
+                    ? { accessLink: accessLink.trim() }
+                    : { city: city.trim(), venue: venue.trim(), address: address.trim() }),
                 startsAt: startsAt ? new Date(startsAt).toISOString() : undefined,
                 endsAt: endsAt ? new Date(endsAt).toISOString() : undefined,
-                resaleEnabled,
+                resaleEnabled: isWebinar ? false : resaleEnabled,
                 maxResalePricePct: maxResalePricePct ? parseFloat(maxResalePricePct) : null,
             };
             if (uploadedPosterId) payload.posterFileId = uploadedPosterId;
@@ -204,7 +208,7 @@ export default function OrganizerEventForm() {
         if (!event) return;
         const res = await sbcApiService.publishOrganizerEvent(event._id);
         if (res.apiReportedSuccess) { setEvent(res.body?.data); }
-        else setError(res.message || 'Impossible de publier.');
+        else setError(res.message || 'Impossible de soumettre l\'événement.');
     };
 
     const cancelEvent = async () => {
@@ -299,6 +303,7 @@ export default function OrganizerEventForm() {
                         <option value="festival">Festival</option>
                         <option value="salon">Salon / Exposition</option>
                         <option value="religieux">Religieux</option>
+                        <option value="webinaire">Webinaire (WhatsApp)</option>
                         <option value="autre">Autre</option>
                     </select>
                     <select
@@ -321,18 +326,34 @@ export default function OrganizerEventForm() {
                         <option value="NE">Niger</option>
                     </select>
                 </div>
-                <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ville" className={inputClass} />
-                <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Lieu" className={inputClass} />
-                <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Adresse" className={inputClass} />
+                {isWebinar ? (
+                    <label className="block text-xs text-ink-2">
+                        Lien WhatsApp (groupe, discussion ou chaîne)
+                        <input
+                            value={accessLink}
+                            onChange={(e) => setAccessLink(e.target.value)}
+                            placeholder="https://chat.whatsapp.com/…"
+                            inputMode="url"
+                            className={`${inputClass} mt-1`}
+                        />
+                        <span className="block mt-1 text-ink-3">Visible uniquement par les participants qui ont payé leur billet.</span>
+                    </label>
+                ) : (
+                    <>
+                        <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Ville" className={inputClass} />
+                        <input value={venue} onChange={(e) => setVenue(e.target.value)} placeholder="Lieu" className={inputClass} />
+                        <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="Adresse" className={inputClass} />
+                    </>
+                )}
                 <div className="grid grid-cols-2 gap-2">
                     <label className="text-xs text-ink-2">Début<input type="datetime-local" value={startsAt} onChange={(e) => setStartsAt(e.target.value)} className={`${inputClass} mt-1`} /></label>
                     <label className="text-xs text-ink-2">Fin<input type="datetime-local" value={endsAt} onChange={(e) => setEndsAt(e.target.value)} className={`${inputClass} mt-1`} /></label>
                 </div>
-                <label className="flex items-center gap-2 text-sm text-ink">
+                {!isWebinar && <label className="flex items-center gap-2 text-sm text-ink">
                     <input type="checkbox" checked={resaleEnabled} onChange={(e) => setResaleEnabled(e.target.checked)} />
                     Autoriser la revente entre utilisateurs
-                </label>
-                {resaleEnabled && (
+                </label>}
+                {!isWebinar && resaleEnabled && (
                     <label className="flex items-center gap-2 text-sm text-ink-2">
                         Prix maximum de revente (%)
                         <input type="number" min="100" max="500" value={maxResalePricePct} onChange={(e) => setMaxResalePricePct(e.target.value)} className="w-24 bg-surface border border-border rounded-tile px-2 py-1 text-sm text-ink outline-none focus:border-primary" />
@@ -374,10 +395,24 @@ export default function OrganizerEventForm() {
                         </div>
                         <button onClick={addTicketType} className="w-full bg-surface border border-primary text-primary font-semibold py-2 rounded-tile">Ajouter ce type de billet</button>
 
-                        {event.status === 'DRAFT' && (
-                            <button onClick={publish} disabled={ticketTypes.length === 0} className="w-full bg-success text-white font-semibold py-3 rounded-tile disabled:bg-surface-2 disabled:text-ink-3">Publier l'événement</button>
+                        {event.status === 'REJECTED' && (
+                            <div className="bg-danger-soft border border-border rounded-card p-3 text-sm text-danger">
+                                <div className="font-semibold">Événement refusé par l'équipe SBC</div>
+                                <div className="mt-1">Motif : {event.rejectionReason || 'non précisé'}</div>
+                                <div className="mt-1 text-ink-2">Corrigez votre événement puis soumettez-le à nouveau.</div>
+                            </div>
                         )}
-                        {event.status === 'PUBLISHED' && (
+                        {event.status === 'PENDING_REVIEW' && (
+                            <div className="bg-accent-soft border border-border rounded-card p-3 text-sm text-ink">
+                                Votre événement est en attente de validation par l'équipe SBC. Vous serez notifié dès qu'il sera accepté ou refusé.
+                            </div>
+                        )}
+                        {(event.status === 'DRAFT' || event.status === 'REJECTED') && (
+                            <button onClick={publish} disabled={ticketTypes.length === 0} className="w-full bg-success text-white font-semibold py-3 rounded-tile disabled:bg-surface-2 disabled:text-ink-3">
+                                {event.status === 'REJECTED' ? 'Soumettre à nouveau' : 'Soumettre pour validation'}
+                            </button>
+                        )}
+                        {event.status === 'PUBLISHED' && event.category !== 'webinaire' && (
                             <button onClick={() => navigate(`/events/organizer/${event._id}/scanner`)} className="w-full bg-primary hover:bg-primary-hover text-white font-semibold py-3 rounded-tile transition-colors">📱 Scanner les billets</button>
                         )}
                         {(event.status === 'PUBLISHED' || event.status === 'COMPLETED') && (
