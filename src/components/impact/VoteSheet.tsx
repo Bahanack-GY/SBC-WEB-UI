@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { MinusSignIcon, PlusSignIcon, Ticket01Icon } from '@hugeicons/core-free-icons';
-import { VOTE_PRICE, francs } from '../../hooks/useImpactChallenge';
+import { francs } from '../../hooks/useImpactChallenge';
 
 export type VoteMode = 'vote' | 'support';
 
@@ -15,6 +15,7 @@ interface Props {
   maxVotes: number;
   /** The monthly ticket cap, for the support explanation. */
   maxTickets: number;
+  votePrice: number;
   busy: boolean;
   error: string;
   onConfirm: (votes: number) => void;
@@ -29,7 +30,7 @@ const clamp = (n: number, max: number) => Math.min(Math.max(1, Math.floor(n) || 
  * counts for the entrepreneur, only the tombola ticket is gone.
  */
 export default function VoteSheet({
-  open, mode, projectName, entrepreneurName, maxVotes, maxTickets, busy, error, onConfirm, onClose,
+  open, mode, projectName, entrepreneurName, maxVotes, maxTickets, votePrice, busy, error, onConfirm, onClose,
 }: Props) {
   // The field's text. The count is derived from it, so the total shown and the
   // amount sent are the same number even while the member is still typing.
@@ -43,7 +44,7 @@ export default function VoteSheet({
 
   const set = (n: number) => setDraft(String(clamp(n, maxVotes)));
 
-  const total = votes * VOTE_PRICE;
+  const total = votes * votePrice;
   const isVote = mode === 'vote';
 
   return (
@@ -69,8 +70,8 @@ export default function VoteSheet({
             </h2>
             <p className="text-sm text-ink-2 mt-1">
               {isVote
-                ? `1 vote = ${francs(VOTE_PRICE)}, et chaque vote vous donne 1 ticket pour la tombola du mois.`
-                : `Vous avez déjà vos ${maxTickets} tickets de tombola ce mois-ci. Vous pouvez continuer à soutenir ${entrepreneurName} : chaque soutien de ${francs(VOTE_PRICE)} compte comme un vote pour lui, mais ne donne pas de ticket.`}
+                ? `1 vote = ${francs(votePrice)}, et chaque vote vous donne 1 ticket pour la tombola du mois.`
+                : `Vous avez déjà vos ${maxTickets} tickets de tombola ce mois-ci. Vous pouvez continuer à soutenir ${entrepreneurName} : chaque soutien de ${francs(votePrice)} compte comme un vote pour lui, mais ne donne pas de ticket.`}
             </p>
 
             <div className="mt-5 flex items-center justify-center gap-4">

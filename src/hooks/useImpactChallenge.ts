@@ -60,6 +60,8 @@ export interface TicketAllowance {
 export interface CurrentChallenge {
   challenge: ImpactChallenge;
   entrepreneurs: ChallengeEntrepreneur[];
+  /** Sent by the server (vote price, monthly ticket cap); falls back to the defaults below. */
+  rules: { votePrice: number; maxTicketsPerMonth: number };
 }
 
 /**
@@ -94,7 +96,14 @@ export const useCurrentImpactChallenge = () =>
       if (!res.isSuccessByStatusCode) throw new Error(messageOf(res, 'Impossible de charger le challenge.'));
       const data = res.body?.data;
       if (!data?.challenge) return null;
-      return { challenge: data.challenge, entrepreneurs: data.entrepreneurs ?? [] };
+      return {
+        challenge: data.challenge,
+        entrepreneurs: data.entrepreneurs ?? [],
+        rules: {
+          votePrice: Number(data.rules?.votePrice) || VOTE_PRICE,
+          maxTicketsPerMonth: Number(data.rules?.maxTicketsPerMonth) || DEFAULT_MAX_TICKETS,
+        },
+      };
     },
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,

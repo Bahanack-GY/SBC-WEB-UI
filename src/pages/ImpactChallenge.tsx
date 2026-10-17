@@ -93,11 +93,11 @@ function Hero({ challenge, phase, totalVotes, onReached }: {
   );
 }
 
-function HowItWorks() {
+function HowItWorks({ votePrice, maxTickets }: { votePrice: number; maxTickets: number }) {
   const steps = [
     'Chaque mois, 3 entrepreneurs présentent leur projet dans une courte vidéo.',
-    `Vous votez pour le projet que vous préférez : ${francs(VOTE_PRICE)} par vote. Vous pouvez voter plusieurs fois.`,
-    `Chaque vote vous donne aussi 1 ticket pour la tombola du mois (${DEFAULT_MAX_TICKETS} tickets maximum par mois).`,
+    `Vous votez pour le projet que vous préférez : ${francs(votePrice)} par vote. Vous pouvez voter plusieurs fois.`,
+    `Chaque vote vous donne aussi 1 ticket pour la tombola du mois (${maxTickets} tickets maximum par mois).`,
     "À la fin du mois, l'entrepreneur qui a le plus de votes gagne.",
   ];
   const split = [
@@ -230,9 +230,9 @@ function Ranking({ rows, totalVotes }: {
   );
 }
 
-function EntrepreneurCard({ e, votes, totalVotes, rank, action, disabled, onAction }: {
+function EntrepreneurCard({ e, votes, totalVotes, rank, action, disabled, votePrice, onAction }: {
   e: ChallengeEntrepreneur; votes: number; totalVotes: number; rank: number;
-  action: VoteMode; disabled: boolean; onAction: () => void;
+  action: VoteMode; disabled: boolean; votePrice: number; onAction: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const pct = totalVotes > 0 ? Math.round((votes / totalVotes) * 100) : 0;
@@ -325,7 +325,7 @@ function EntrepreneurCard({ e, votes, totalVotes, rank, action, disabled, onActi
           )}
         >
           {label}
-          {action === 'vote' && !disabled && <span className="font-normal opacity-80"> · {francs(VOTE_PRICE)}</span>}
+          {action === 'vote' && !disabled && <span className="font-normal opacity-80"> · {francs(votePrice)}</span>}
         </motion.button>
       </div>
     </motion.article>
@@ -360,6 +360,8 @@ export default function ImpactChallenge() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const current = useCurrentImpactChallenge();
+  const votePrice = current.data?.rules.votePrice ?? VOTE_PRICE;
+  const ticketCap = current.data?.rules.maxTicketsPerMonth ?? DEFAULT_MAX_TICKETS;
   const challenge = current.data?.challenge;
   const entrepreneurs = useMemo(() => current.data?.entrepreneurs ?? [], [current.data]);
   const leaderboard = useImpactChallengeLeaderboard(challenge?._id);
@@ -397,7 +399,7 @@ export default function ImpactChallenge() {
   const rankOf = (id: string) => ranking.findIndex((r) => r._id === id) + 1;
 
   const phase: VotingPhase | null = challenge ? votingPhase(challenge, now) : null;
-  const maxTickets = allowance.data?.max ?? DEFAULT_MAX_TICKETS;
+  const maxTickets = allowance.data?.max ?? ticketCap;
   // Unknown allowance: let the member try; the server refuses beyond the limit.
   const remaining = allowance.data ? allowance.data.remaining : maxTickets;
   const action: VoteMode = allowance.data && allowance.data.remaining <= 0 ? 'support' : 'vote';
@@ -409,7 +411,7 @@ export default function ImpactChallenge() {
 
   const confirm = async (votes: number) => {
     if (!challenge || !sheet) return;
-    const amount = votes * VOTE_PRICE;
+    const amount = votes * votePrice;
     setBusy(true);
     setSheetError('');
     try {
@@ -466,7 +468,7 @@ export default function ImpactChallenge() {
         ) : !challenge ? (
           <motion.div variants={sequence} initial="hidden" animate="show" className="flex flex-col gap-4">
             <EmptyState />
-            <HowItWorks />
+            <HowItWorks votePrice={votePrice} maxTickets={ticketCap} />
           </motion.div>
         ) : (
           <motion.div variants={sequence} initial="hidden" animate="show" className="flex flex-col gap-4">
@@ -498,6 +500,7 @@ export default function ImpactChallenge() {
                 <motion.div variants={listContainer} initial="hidden" animate="show" className="flex flex-col gap-4">
                   {entrepreneurs.map((e) => (
                     <EntrepreneurCard
+                      votePrice={votePrice}
                       key={e._id}
                       e={e}
                       votes={votesOf(e)}
@@ -512,7 +515,7 @@ export default function ImpactChallenge() {
               )}
             </motion.section>
 
-            <HowItWorks />
+            <HowItWorks votePrice={votePrice} maxTickets={ticketCap} />
           </motion.div>
         )}
       </div>
@@ -524,6 +527,7 @@ export default function ImpactChallenge() {
         entrepreneurName={sheet?.entrepreneur.name ?? ''}
         maxVotes={sheet?.mode === 'support' ? 500 : Math.max(1, remaining)}
         maxTickets={maxTickets}
+        votePrice={votePrice}
         busy={busy}
         error={sheetError}
         onConfirm={confirm}
