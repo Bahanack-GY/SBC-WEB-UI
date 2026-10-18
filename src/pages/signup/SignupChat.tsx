@@ -204,21 +204,23 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
     };
 
     // ---------- existence / recovery checks (same endpoints as the form) ----------
-    /** null when free; otherwise a refusal already said in the chat. */
-    const checkTaken = async (kind: 'email' | 'phone', value: string): Promise<'taken' | 'error' | null> => {
+    /** { status: 'free' } when nothing is in the way; otherwise a refusal already said in the chat. */
+    type CheckResult = { status: 'taken'; maskedEmail?: string } | { status: 'error' } | { status: 'free' };
+    const checkTaken = async (kind: 'email' | 'phone', value: string): Promise<CheckResult> => {
         try {
             const res = await sbcApiService.checkUserExistence(kind === 'email' ? { email: value } : { phoneNumber: value });
-            if (handleApiResponse(res)?.exists) return 'taken';
+            const data = handleApiResponse(res);
+            if (data?.exists) return { status: 'taken', maskedEmail: data?.maskedEmail };
         } catch (e) {
             await error(errText(e, 'Je n’arrive pas à vérifier pour le moment. Vérifiez votre connexion et réessayez.'));
-            return 'error';
+            return { status: 'error' };
         }
         // A pending recovery (transactions from an old account) is good news; a 409 means the account exists.
         const a = answersRef.current;
         const rec = await safeRecoveryApiCall(() => sbcApiService.checkRecoveryRegistration(
             kind === 'email' ? value : a.email, kind === 'phone' ? value : (a.phone ? fullPhone(a) : undefined)));
         if (rec) {
-            if (sbcApiService.parseConflictError(rec)) return 'taken';
+            if (sbcApiService.parseConflictError(rec)) return { status: 'taken' };
             try {
                 const data = handleApiResponse(rec);
                 if (data?.hasPendingRecoveries) {
@@ -228,14 +230,21 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 }
             } catch { /* recovery is best-effort, as in the form */ }
         }
-        return null;
+        return { status: 'free' };
     };
 
-    const refuseTaken = async (kind: 'email' | 'phone') => {
-        await error(kind === 'email'
-            ? 'Cette adresse e-mail est déjà utilisée par un compte SBC.'
-            : 'Ce numéro WhatsApp est déjà associé à un compte SBC.');
-        await bot(kind === 'email' ? 'Connectez-vous, ou donnez une autre adresse.' : 'Connectez-vous, ou donnez un autre numéro.');
+    const refuseTaken = async (kind: 'email' | 'phone', maskedEmail?: string) => {
+        if (kind === 'email') {
+            await error('Cette adresse e-mail est déjà utilisée par un compte SBC.');
+            await bot('Connectez-vous, ou donnez une autre adresse.');
+        } else {
+            await error(maskedEmail
+                ? `Ce numéro WhatsApp est déjà associé à un compte SBC (${maskedEmail}).`
+                : 'Ce numéro WhatsApp est déjà associé à un compte SBC.');
+            await bot(maskedEmail
+                ? 'Connectez-vous avec cette adresse, ou donnez un autre numéro.'
+                : 'Connectez-vous, ou donnez un autre numéro.');
+        }
         setQuick([{ label: 'Me connecter', run: () => navigate('/connexion') }]);
     };
 
@@ -269,8 +278,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 if ('error' in parsed) { me(v, s); await error(parsed.error); return; }
                 me(displayPhone(parsed), s);
                 const taken = await checkTaken('phone', fullPhone(parsed));
-                if (taken === 'taken') { await refuseTaken('phone'); return; }
-                if (taken === 'error') return;
+                if (taken.status === 'taken') { await refuseTaken('phone', taken.maskedEmail); return; }
+                if (taken.status === 'error') return;
                 setA(parsed);
                 markDone(s); await advance(); return;
             }
@@ -280,8 +289,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 if (err) { await error(err); return; }
                 const email = v.trim().toLowerCase();
                 const taken = await checkTaken('email', email);
-                if (taken === 'taken') { await refuseTaken('email'); return; }
-                if (taken === 'error') return;
+                if (taken.status === 'taken') { await refuseTaken('email'); return; }
+                if (taken.status === 'error') return;
                 setA({ email });
                 markDone(s); await advance(); return;
             }
@@ -464,7 +473,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             setResendIn(RESEND_COOLDOWN);
             await bot(
                 <>C’est presque fini ! Je vous ai envoyé un code de 6 caractères par e-mail à <b>{a.email}</b>.</>,
-                'Il est valable 10 minutes. Pensez à regarder dans les spams. Tapez-le ici :',
+                'Il est valable 10 minutes. S’il n’apparaît pas dans votre boîte de réception, pensez à vérifier le dossier Spam (Gmail) ou Courrier indésirable (iCloud, Outlook). Tapez-le ici :',
             );
             setStep('otp');
         } catch (e) {
@@ -494,7 +503,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             setResendIn(RESEND_COOLDOWN);
             await bot(channel === 'whatsapp'
                 ? `Code renvoyé sur WhatsApp au ${p.phone}, avec une copie par e-mail.`
-                : `Code renvoyé par e-mail à ${p.email}.`);
+                : `Code renvoyé par e-mail à ${p.email}. S’il n’arrive pas dans votre boîte de réception, pensez à regarder dans le dossier Spam ou Courrier indésirable.`);
         } catch (e) {
             await error(errText(e, 'Échec du renvoi du code.'));
         } finally {
@@ -563,7 +572,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             known.forEach((s) => doneRef.current.add(s));
 
             await bot('Bonjour 👋 Je suis l’assistant SBC. Je vais créer votre compte avec vous, en quelques questions.');
-            if (sponsorRef.current?.locked) await bot({ content: `Vous êtes invité(e) par ${sponsorRef.current.name} 🎉`, tone: 'success' });
+            if (sponsorRef.current?.locked) await bot({ content: `Vous avez été parrainé(e) par ${sponsorRef.current.name} 🎉`, tone: 'success' });
             if (draft && draft.done.length) {
                 await bot('Je reprends où nous en étions.');
             } else if (fromLink) {
