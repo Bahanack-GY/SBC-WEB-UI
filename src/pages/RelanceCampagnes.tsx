@@ -173,7 +173,7 @@ export default function RelanceCampagnes() {
         onLaunched={() => { refresh(); refreshBalance(); queryClient.invalidateQueries({ queryKey: campaignSuggestionKey }); say('Campagne lancée.'); }}
       />
       <CampaignDetailSheet campaign={selected} onClose={() => setSelected(null)} onChanged={(m) => { refresh(); say(m); }} />
-      <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} />
+      <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} onPurchased={refreshBalance} />
     </motion.div>
   );
 }

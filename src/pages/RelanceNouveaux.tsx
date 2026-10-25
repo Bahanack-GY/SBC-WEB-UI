@@ -291,7 +291,7 @@ export default function RelanceNouveaux() {
       </AnimatePresence>
 
       <RelanceMessagesSheet open={messagesOpen} onClose={() => setMessagesOpen(false)} showSms={isCameroon(user?.country)} />
-      <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} />
+      <RelancePacksModal isOpen={packsOpen} onClose={() => { setPacksOpen(false); refreshBalance(); }} onPurchased={refreshBalance} />
 
 
       <Sheet open={allOpen} onClose={() => setAllOpen(false)} title="Vos filleuls en cours">
