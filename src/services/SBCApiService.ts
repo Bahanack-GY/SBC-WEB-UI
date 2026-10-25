@@ -1518,11 +1518,20 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Purchase a credit pack — returns checkoutUrl to redirect user to
-   * POST /api/relance/packs/purchase
+   * Purchase a credit pack — POST /api/relance/packs/purchase
+   *
+   * By Mobile Money (default): returns checkoutUrl to redirect the user to.
+   * With `useBalance`: the SBC balance pays the full price and the pack is
+   * credited at once (no checkoutUrl). `requestId` makes a repeated tap the same
+   * purchase, so send one per choice the member makes.
    */
-  async relancePurchasePack(packId: string): Promise<ApiResponse> {
-    return await this.post('/relance/packs/purchase', { body: { packId } });
+  async relancePurchasePack(packId: string, opts: { useBalance?: boolean; requestId?: string } = {}): Promise<ApiResponse> {
+    const body: Record<string, unknown> = { packId };
+    if (opts.useBalance) {
+      body.useBalance = true;
+      if (opts.requestId) body.requestId = opts.requestId;
+    }
+    return await this.post('/relance/packs/purchase', { body });
   }
 
   // ===== SMS day-by-day link templates =====
