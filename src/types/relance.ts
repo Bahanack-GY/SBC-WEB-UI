@@ -440,9 +440,17 @@ export interface RelanceBalance {
 }
 
 export interface PurchasePackResponse {
-  sessionId: string;
-  checkoutUrl: string;
+  /** Mobile Money only. */
+  sessionId?: string;
+  checkoutUrl?: string;
   pack: RelancePack;
+  /** Paid from the SBC balance: credited at once, no payment page. */
+  paidWithBalance?: boolean;
+  credits?: number;
+  /** Credit balance of that type after the purchase, when known. */
+  balance?: number;
+  /** The purchase is still being completed; the credits follow shortly. */
+  inProgress?: boolean;
 }
 
 // ==================== SMS day-by-day links ====================
