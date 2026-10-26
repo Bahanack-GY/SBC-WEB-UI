@@ -56,6 +56,7 @@ const CATEGORIES = [
     { value: 'festival', label: 'Festival' },
     { value: 'salon', label: 'Salon / Exposition' },
     { value: 'religieux', label: 'Religieux' },
+    { value: 'webinaire', label: 'Webinaire' },
     { value: 'autre', label: 'Autre' },
 ];
 

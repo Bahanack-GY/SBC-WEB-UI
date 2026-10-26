@@ -59,6 +59,8 @@ export default function MyTicketScreen() {
     const st = ticketStatusInfo(ticket.status, isListed);
     // §28 eligibility: paid, unused, not cancelled/refunded, resale allowed by the organizer.
     const canResell = ticket.status === 'ISSUED' && event?.resaleEnabled && !isListed;
+    // A webinar has no door to scan: the ticket is the WhatsApp link the organizer shared.
+    const isWebinar = event?.category === 'webinaire';
 
     const withdrawListing = async () => {
         if (!activeResaleListing?._id) return;
@@ -90,7 +92,20 @@ export default function MyTicketScreen() {
                     <p className="text-lg font-bold text-ink tabular-nums">{ticket.serial}</p>
                     <p className="text-sm text-ink-2 mt-1">{ticket.holderName}</p>
 
-                    {qrImageDataUrl ? (
+                    {isWebinar && event?.accessLink ? (
+                        <div className="mt-4 flex flex-col items-center gap-2">
+                            <p className="text-sm text-ink-2">Webinaire en ligne sur WhatsApp</p>
+                            <a
+                                href={event.accessLink}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="rounded-pill bg-success px-5 py-2.5 text-sm font-semibold text-white"
+                            >
+                                Rejoindre sur WhatsApp
+                            </a>
+                            <p className="text-xs text-ink-3 break-all">{event.accessLink}</p>
+                        </div>
+                    ) : qrImageDataUrl && !isWebinar ? (
                         <img src={qrImageDataUrl} alt="QR Code du billet" className="mx-auto mt-4 size-56 rounded-tile border border-border bg-white p-2" />
                     ) : (
                         <p className="mt-4 rounded-tile bg-danger-soft p-3 text-sm text-danger">
@@ -111,7 +126,7 @@ export default function MyTicketScreen() {
                         </p>
                     )}
                     <p className="text-sm text-ink-2">{event?.venue}</p>
-                    <p className="text-xs text-ink-3">{event?.address}</p>
+                    {!isWebinar && <p className="text-xs text-ink-3">{event?.address}</p>}
                     <p className="text-xs text-ink-2 mt-2">Type de billet : <span className="font-medium text-ink">{ticketType?.name}</span></p>
                 </section>
 
