@@ -6,6 +6,18 @@ import { ApiResponse } from './ApiResponse';
  * SBC API Service with all endpoint methods
  * Comprehensive implementation based on API documentation
  */
+
+/**
+ * Public files: Cloudflare R2 behind the media domain since November 2026.
+ * Older records still carry the Google Cloud Storage address.
+ */
+const MEDIA_BASE_URL = (import.meta.env.VITE_MEDIA_BASE_URL || 'https://media.sniperbuisnesscenter.com').replace(/\/+$/, '');
+const PUBLIC_FILE_PREFIXES = [
+  `${MEDIA_BASE_URL}/`,
+  'https://media.sniperbuisnesscenter.com/',
+  'https://storage.googleapis.com/sbc-file-storage/',
+];
+
 export class SBCApiService extends ApiService {
 
   // ==================== USER AUTHENTICATION & MANAGEMENT ====================
@@ -1052,7 +1064,7 @@ export class SBCApiService extends ApiService {
    * Generate settings file URL
    */
   generateSettingsFileUrl(fileId: string): string {
-    return `https://storage.googleapis.com/sbc-file-storage/${fileId}`;
+    return `${MEDIA_BASE_URL}/${fileId}`;
   }
 
   /**
@@ -1066,10 +1078,8 @@ export class SBCApiService extends ApiService {
    */
   generateThumbnailUrl(fileIdOrUrl: string | undefined | null, width = 96): string {
     if (!fileIdOrUrl) return '';
-    const bucketPrefix = 'https://storage.googleapis.com/sbc-file-storage/';
-    const fileId = fileIdOrUrl.startsWith(bucketPrefix)
-      ? fileIdOrUrl.slice(bucketPrefix.length)
-      : fileIdOrUrl;
+    const prefix = PUBLIC_FILE_PREFIXES.find(p => fileIdOrUrl.startsWith(p));
+    const fileId = prefix ? fileIdOrUrl.slice(prefix.length) : fileIdOrUrl;
     // Signed/private URLs and anything external cannot be resized by that route.
     if (/^https?:\/\//.test(fileId)) return fileIdOrUrl;
     return `${this.baseUrl}/settings/files/${encodeURIComponent(fileId)}?w=${width}`;
@@ -1084,11 +1094,9 @@ export class SBCApiService extends ApiService {
    * could never attach the creative. This routes through settings-service, which
    * pipes the file back from our own origin.
    *
-   * generateSettingsFileUrl is NOT the cheap alternative, despite pointing at
-   * storage.googleapis.com. Nothing caches in front of that bucket, so every new
-   * viewer pays full egress on the original — 636 GiB of it in August 2026, on a
-   * 36 GiB bucket. Prefer generateThumbnailUrl anywhere an image is drawn smaller
-   * than it was uploaded.
+   * Prefer generateThumbnailUrl anywhere an image is drawn smaller than it was
+   * uploaded: the originals are large (avatars ~1.8 MB) and were most of the
+   * 636 GiB of download in August 2026.
    */
   generateStreamedFileUrl(fileId: string, opts: { download?: boolean } = {}): string {
     const param = opts.download ? 'download=1' : 'stream=1';
