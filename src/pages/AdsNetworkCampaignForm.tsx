@@ -316,7 +316,7 @@ function AdsNetworkCampaignForm() {
           <HugeiconsIcon icon={Shield01Icon} className="mt-0.5 shrink-0" />
           <span>
             {targetingOnly
-              ? "Cette campagne est en diffusion : des diffuseurs l'ont déjà publiée, donc le visuel et le budget ne changent plus. Vous pouvez encore élargir le ciblage pour atteindre vos vues."
+              ? "Cette campagne est en diffusion : son budget ne change plus. Ici, vous pouvez élargir le ciblage pour atteindre vos vues. Pour changer de visuel, utilisez « Remplacer le visuel » depuis votre espace annonceur : notre équipe le valide avant la mise en ligne."
               : budgetLocked
                 ? 'Cette campagne est déjà payée. Vous pouvez tout modifier sauf le budget — aucun nouveau paiement ne sera demandé.'
                 : "Votre annonce sera relue par notre équipe avant d'être diffusée."}
