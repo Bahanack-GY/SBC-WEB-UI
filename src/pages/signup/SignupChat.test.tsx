@@ -104,10 +104,23 @@ describe('sign-up chat', () => {
         expect(screen.getByLabelText('Adresse e-mail')).toBeInTheDocument(); // asked again
     });
 
+    it('refuses a WhatsApp number that already has an account and reveals the masked e-mail attached to it', async () => {
+        api.checkUserExistence.mockImplementation(async (q: { phoneNumber?: string }) =>
+            ok(q.phoneNumber ? { exists: true, maskedEmail: 'ma***@example.com' } : { exists: false })
+        );
+        renderPage(<SignupChat pace={0} />, '/signup');
+        await say('Nom complet', 'Paul Biya');
+        await pick(/Cameroun/);
+        await say('Numéro WhatsApp', '699123456');
+        expect(await within(log()).findByText(/ma\*\*\*@example\.com/)).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Me connecter' })).toBeInTheDocument();
+        expect(screen.getByLabelText('Numéro WhatsApp')).toBeInTheDocument(); // asked again
+    });
+
     it('takes the sponsor from the invitation link and does not ask for it', async () => {
         aff.affiliationCode = 'awa237';
         renderPage(<SignupChat pace={0} />, '/signup');
-        expect(await within(log()).findByText('Vous êtes invité(e) par Awa Events 🎉')).toBeInTheDocument();
+        expect(await within(log()).findByText('Vous avez été parrainé(e) par Awa Events 🎉')).toBeInTheDocument();
         expect(screen.getByText('Question 1 sur 7')).toBeInTheDocument();
         await answerSignup({ sponsor: false });
         await tap('Créer mon compte');
