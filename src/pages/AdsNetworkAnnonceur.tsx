@@ -1,6 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, ChampionIcon, Cursor01Icon, EyeIcon, GiftIcon, LinkSquare01Icon, Loading03Icon, Megaphone01Icon, PlusSignIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'motion/react';
@@ -26,6 +26,11 @@ interface Campaign {
   rejectionReason?: string;
   landingPageUrl?: string;
   mediaFileId: string;
+  mediaType?: 'image' | 'video';
+  /** A new creative waiting for our validation; the current one stays online meanwhile. */
+  pendingMedia?: { fileId: string; type: 'image' | 'video'; submittedAt: string };
+  /** Why the last proposed creative was refused. */
+  mediaChangeRejection?: { reason: string; at: string };
   clicksTotal: number;
   bankedAmount?: number;
   /** Already taken toward this campaign: credit, SBC balance, mobile money received. */
@@ -96,6 +101,8 @@ function AdsNetworkAnnonceur() {
   const [payChoice, setPayChoice] = useState<Campaign | null>(null);
   const { user, refreshUser } = useAuth();
   const [cancelling, setCancelling] = useState<Campaign | null>(null);
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [replaceTarget, setReplaceTarget] = useState<Campaign | null>(null);
 
   const { data: campaigns, isLoading, refetch } = useQuery({
     queryKey: ['ads-my-campaigns'],
@@ -198,9 +205,66 @@ function AdsNetworkAnnonceur() {
     }
   };
 
+  // A live campaign's creative is on diffuseurs' statuses, so a new one goes
+  // through our validation before it replaces the current one.
+  const pickReplacement = (c: Campaign) => {
+    setReplaceTarget(c);
+    setError(null);
+    fileInput.current?.click();
+  };
+
+  const onReplacementPicked = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    const c = replaceTarget;
+    if (!file || !c) return;
+    if (!file.type.startsWith('image/') && !file.type.startsWith('video/')) {
+      setError('Choisissez une image ou une vidéo.');
+      return;
+    }
+    setActing(c._id);
+    try {
+      const upload = await sbcApiService.uploadFile(file);
+      const fileId = upload.body?.data?.fileId;
+      if (!upload.isSuccessByStatusCode || !fileId) {
+        setError(upload.body?.message || "Le visuel n'a pas pu être envoyé.");
+        return;
+      }
+      const res = await sbcApiService.requestAdsMediaChange(c._id, {
+        mediaFileId: fileId,
+        mediaType: file.type.startsWith('video/') ? 'video' : 'image',
+        mediaMimeType: file.type,
+      });
+      if (!res.isSuccessByStatusCode) {
+        setError(res.body?.message || "La demande n'a pas pu être envoyée.");
+        return;
+      }
+      refetch();
+    } finally {
+      setActing(null);
+      setReplaceTarget(null);
+    }
+  };
+
+  const withdrawReplacement = async (c: Campaign) => {
+    setActing(c._id);
+    setError(null);
+    try {
+      const res = await sbcApiService.withdrawAdsMediaChange(c._id);
+      if (!res.isSuccessByStatusCode) {
+        setError(res.body?.message || "L'opération a échoué.");
+        return;
+      }
+      refetch();
+    } finally {
+      setActing(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white p-4 pb-24">
       <BackButton />
+      <input ref={fileInput} type="file" accept="image/*,video/*" className="hidden" onChange={onReplacementPicked} />
 
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mt-2">
@@ -384,6 +448,44 @@ function AdsNetworkAnnonceur() {
                   </p>
                 )}
 
+                {c.pendingMedia && (
+                  <div className="flex items-center gap-3 bg-indigo-50 border border-indigo-200 rounded-xl p-3 mt-3">
+                    {c.pendingMedia.type === 'video' ? (
+                      <video
+                        src={sbcApiService.generateSettingsFileUrl(c.pendingMedia.fileId)}
+                        className="w-14 h-14 rounded-lg object-cover bg-gray-100"
+                        muted
+                        playsInline
+                        preload="metadata"
+                      />
+                    ) : (
+                      <img
+                        src={sbcApiService.generateThumbnailUrl(c.pendingMedia.fileId, 112)}
+                        alt=""
+                        className="w-14 h-14 rounded-lg object-cover bg-gray-100"
+                      />
+                    )}
+                    <div className="flex-1 text-xs text-indigo-800">
+                      <p className="font-medium">Nouveau visuel en attente de validation</p>
+                      <p className="mt-0.5">Votre visuel actuel reste en ligne jusqu'à la validation.</p>
+                    </div>
+                    <button
+                      onClick={() => withdrawReplacement(c)}
+                      disabled={acting === c._id}
+                      className="text-xs text-indigo-700 underline disabled:text-gray-400"
+                    >
+                      Annuler
+                    </button>
+                  </div>
+                )}
+
+                {!c.pendingMedia && c.mediaChangeRejection && (c.status === 'active' || c.status === 'paused') && (
+                  <div className="bg-red-50 border border-border rounded-xl p-3 text-sm text-red-800 mt-3">
+                    <p className="font-medium">Nouveau visuel refusé</p>
+                    <p className="mt-1">{c.mediaChangeRejection.reason}</p>
+                  </div>
+                )}
+
                 <div className="flex flex-wrap gap-2 mt-3">
                   {c.status === 'approved' && (
                     <>
@@ -421,6 +523,15 @@ function AdsNetworkAnnonceur() {
                       className="px-4 border border-border text-gray-700 rounded-xl py-2.5 text-sm"
                     >
                       {c.status === 'active' || c.status === 'paused' ? 'Modifier le ciblage' : 'Modifier'}
+                    </button>
+                  )}
+                  {(c.status === 'active' || c.status === 'paused') && !c.pendingMedia && (
+                    <button
+                      onClick={() => pickReplacement(c)}
+                      disabled={acting === c._id}
+                      className="px-4 border border-border text-gray-700 rounded-xl py-2.5 text-sm disabled:text-gray-400"
+                    >
+                      {acting === c._id && replaceTarget?._id === c._id ? 'Envoi…' : 'Remplacer le visuel'}
                     </button>
                   )}
                   {/* Paid once is paid: a refusal that was already paid for goes
