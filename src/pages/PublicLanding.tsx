@@ -123,7 +123,7 @@ export default function PublicLanding() {
               📘 Centre d'information officiel
             </a>
             <a
-              href="https://storage.googleapis.com/sbc-file-storage/documents/pres_pdf_1753011729757_SBC%20Pr%C3%83%C2%A9sentation.pdf"
+              href="https://media.sniperbuisnesscenter.com/documents/pres_pdf_1753011729757_SBC%20Pr%C3%83%C2%A9sentation.pdf"
               target="_blank"
               rel="noopener noreferrer"
               className="text-primary hover:underline"
