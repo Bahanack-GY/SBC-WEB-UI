@@ -2362,8 +2362,8 @@ export class SBCApiService extends ApiService {
   /**
    * Editable until the campaign is over: a draft, a refusal, and a paid campaign
    * awaiting validation take any field except the budget (that money already
-   * moved). A campaign already being diffused takes ONLY `targeting` — its
-   * creative is frozen because verification matches diffuseurs' posts against it.
+   * moved). A campaign already being diffused takes ONLY `targeting`; its
+   * creative changes through requestAdsMediaChange (validated by an admin).
    */
   async updateAdsCampaign(campaignId: string, body: Record<string, unknown>): Promise<ApiResponse> {
     return await this.patch(`/advertising/campaigns/${campaignId}`, { body });
@@ -2404,6 +2404,22 @@ export class SBCApiService extends ApiService {
   /** Relaunch a paused campaign back to active. */
   async resumeAdsCampaign(campaignId: string): Promise<ApiResponse> {
     return await this.post(`/advertising/campaigns/${campaignId}/resume`);
+  }
+
+  /**
+   * Propose a new creative for a live or paused campaign. Our team validates it
+   * before it replaces the current one, which stays online meanwhile.
+   */
+  async requestAdsMediaChange(
+    campaignId: string,
+    data: { mediaFileId: string; mediaType: 'image' | 'video'; mediaMimeType?: string },
+  ): Promise<ApiResponse> {
+    return await this.post(`/advertising/campaigns/${campaignId}/media-change`, { body: data });
+  }
+
+  /** Withdraw a creative replacement that has not been validated yet. */
+  async withdrawAdsMediaChange(campaignId: string): Promise<ApiResponse> {
+    return await this.delete(`/advertising/campaigns/${campaignId}/media-change`);
   }
 
   /** An unfilled campaign: bank the unspent budget as credit, or keep waiting. */
