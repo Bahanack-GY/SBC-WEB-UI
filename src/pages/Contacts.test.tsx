@@ -33,4 +33,11 @@ describe('Contacts: Espace Pro banner', () => {
     expect(await screen.findByText('Espace Pro actif')).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: "Activer l'Espace Pro" })).not.toBeInTheDocument();
   });
+
+  it('tells every member to download the SBC Network app', async () => {
+    auth.user = { activeSubscriptions: ['CIBLE', 'PRO'] };
+    renderPage(<Contacts />, '/contacts');
+    expect(await screen.findByText(/sur Play Store ou App Store pour mieux gérer les contacts SBC/)).toBeInTheDocument();
+    expect(screen.getByText('SBC Network')).toBeInTheDocument();
+  });
 });
