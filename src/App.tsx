@@ -1,11 +1,10 @@
-import { Routes, Route, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { MotionConfig } from 'motion/react'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import './styles/recovery.css'
 import Money from './pages/Money'
-import AdsPack from './pages/AdsPack'
 import Marketplace from './pages/Marketplace'
 import Wallet from './pages/Wallet'
 import Profile from './pages/Profile'
@@ -268,7 +267,8 @@ function AppContent() {
         <Route element={<RequireSubscription />}>
           <Route path="/" element={<Home />} />
           <Route path="/money" element={<Money />} />
-          <Route path="/ads-pack" element={<AdsPack />} />
+          {/* "Packs publicité" was retired (Rufus, 2026-11-07); old links land on the packs. */}
+          <Route path="/ads-pack" element={<Navigate to="/abonnement" replace />} />
           <Route path="/marketplace" element={<Marketplace />} />
           <Route path="/wallet" element={<Wallet />} />
           <Route path="/profile" element={<Profile />} />
