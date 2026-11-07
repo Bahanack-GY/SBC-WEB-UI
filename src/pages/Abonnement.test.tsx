@@ -105,17 +105,18 @@ describe('Abonnement', () => {
     const packs = screen.getAllByRole('article').slice(0, 3).map((a) => a.getAttribute('aria-labelledby'));
     expect(packs).toEqual(['pack-CLASSIQUE', 'pack-CIBLE', 'pack-WINNER']);
 
-    expect(screen.getByText(/Vous payez une seule fois, il est à vie/)).toBeInTheDocument();
-    expect(screen.getByText(/Votre pack actuel : Pack Classique/)).toBeInTheDocument();
+    // The old intro for a Classique member.
+    expect(screen.getByText('Votre Pack Classique est actif')).toBeInTheDocument();
+    expect(screen.getByText(/Passez au Pack Ciblé pour gagner jusqu'à 2 FCFA par vue/)).toBeInTheDocument();
 
-    expect(within(classique).getByText('Votre pack actuel')).toBeInTheDocument();
-    expect(within(classique).queryByRole('button')).not.toBeInTheDocument();
-    expect(within(classique).getByRole('link', { name: /Commencer à gagner/ })).toHaveAttribute('href', '/ads-network');
+    expect(within(classique).getByText(/Votre pack actuel · actif à vie/)).toBeInTheDocument();
+    expect(within(classique).getByRole('button', { name: /Commencer à gagner avec mes statuts/ })).toBeEnabled();
+    expect(within(classique).getByText(/FCFA · payé/)).toBeInTheDocument();
 
-    expect(within(cible).getByRole('button', { name: /^Passer au Pack Ciblé · 3\s150 FCFA$/ })).toBeEnabled();
-    expect(within(cible).getByText(/Vous payez seulement/)).toHaveTextContent(/3\s150 FCFA/);
-    expect(within(winner).getByRole('button', { name: /^Passer au Pack Winner · 13\s650 FCFA$/ })).toBeEnabled();
-    expect(within(winner).getByText('Le plus complet')).toBeInTheDocument();
+    expect(within(cible).getByRole('button', { name: /^Passer au Ciblé · 3\s150 FCFA$/ })).toBeEnabled();
+    expect(within(cible).getByText('Vous ne payez que la différence.')).toBeInTheDocument();
+    expect(within(winner).getByRole('button', { name: /^Passer au Winner · 13\s650 FCFA$/ })).toBeEnabled();
+    expect(within(winner).getByText('Pour viser 1 million de FCFA en 3 mois.')).toBeInTheDocument();
 
     // The old disabled teaser is gone.
     expect(screen.queryByText(/Bientôt|Disponible prochainement/)).not.toBeInTheDocument();
@@ -126,7 +127,7 @@ describe('Abonnement', () => {
     renderPage(<Abonnement />, '/abonnement');
     const cible = await screen.findByRole('article', { name: 'Pack Ciblé' });
 
-    await userEvent.click(within(cible).getByRole('button', { name: /Passer au Pack Ciblé/ }));
+    await userEvent.click(within(cible).getByRole('button', { name: /Passer au Ciblé/ }));
 
     await waitFor(() => expect(nav.redirectTo).toHaveBeenCalledWith('https://pay.example/payments/page/sess_cible'));
     expect(api.purchaseSubscription).toHaveBeenCalledWith('CIBLE', 'traditional');
@@ -139,7 +140,7 @@ describe('Abonnement', () => {
     await screen.findByRole('article', { name: 'Pack Ciblé' });
 
     await userEvent.click(screen.getByRole('button', { name: /Crypto \(USD\)/ }));
-    const winner = await screen.findByRole('button', { name: /^Choisir le Pack Winner · 37,10 \$$/ });
+    const winner = await screen.findByRole('button', { name: /^Choisir le Winner · 37,10 \$$/ });
     expect(api.getSubscriptionOffers).toHaveBeenLastCalledWith('crypto');
 
     api.purchaseSubscription.mockResolvedValueOnce(ok({ paymentDetails: { sessionId: 'sess_usd' } }));
@@ -151,7 +152,7 @@ describe('Abonnement', () => {
   it('opens on crypto for a member outside the Mobile Money countries', async () => {
     auth.user = { country: 'FR', balance: 0 };
     renderPage(<Abonnement />, '/abonnement');
-    expect(await screen.findByRole('button', { name: /^Choisir le Pack Classique · 4,80 \$$/ })).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: /^Choisir le Classique · 4,80 \$$/ })).toBeInTheDocument();
     expect(api.getSubscriptionOffers).toHaveBeenCalledWith('crypto');
     expect(screen.getByRole('button', { name: /Crypto \(USD\)/ })).toHaveAttribute('aria-pressed', 'true');
   });
@@ -180,19 +181,19 @@ describe('Abonnement', () => {
     api.purchaseSubscription.mockResolvedValueOnce(fail(409, 'Vous avez déjà ce pack.'));
     renderPage(<Abonnement />, '/abonnement');
     const cible = await screen.findByRole('article', { name: 'Pack Ciblé' });
-    await userEvent.click(within(cible).getByRole('button', { name: /Passer au Pack Ciblé/ }));
+    await userEvent.click(within(cible).getByRole('button', { name: /Passer au Ciblé/ }));
 
     const dialog = await screen.findByRole('alertdialog');
     expect(within(dialog).getByText('Vous avez déjà ce pack.')).toBeInTheDocument();
     expect(nav.redirectTo).not.toHaveBeenCalled();
-    expect(within(cible).getByRole('button', { name: /Passer au Pack Ciblé/ })).toBeEnabled();
+    expect(within(cible).getByRole('button', { name: /Passer au Ciblé/ })).toBeEnabled();
   });
 
   it('falls back to a French message when the server error is not meant for members', async () => {
     api.purchaseSubscription.mockResolvedValueOnce(fail(500, 'Internal server error'));
     renderPage(<Abonnement />, '/abonnement');
     const cible = await screen.findByRole('article', { name: 'Pack Ciblé' });
-    await userEvent.click(within(cible).getByRole('button', { name: /Passer au Pack Ciblé/ }));
+    await userEvent.click(within(cible).getByRole('button', { name: /Passer au Ciblé/ }));
     expect(await screen.findByText('Le paiement n\'a pas pu démarrer. Réessayez dans un instant.')).toBeInTheDocument();
     expect(screen.queryByText('Internal server error')).not.toBeInTheDocument();
   });
@@ -212,9 +213,9 @@ describe('Abonnement', () => {
     await act(async () => { document.dispatchEvent(new Event('visibilitychange')); });
 
     const cible = screen.getByRole('article', { name: 'Pack Ciblé' });
-    expect(await within(cible).findByText('Votre pack actuel')).toBeInTheDocument();
-    expect(within(screen.getByRole('article', { name: 'Pack Classique' })).getByText('Inclus dans votre pack')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /^Passer au Pack Winner · 10\s600 FCFA$/ })).toBeInTheDocument();
+    expect(await within(cible).findByText(/Votre pack actuel · actif à vie/)).toBeInTheDocument();
+    expect(within(screen.getByRole('article', { name: 'Pack Classique' })).getByText('Inclus dans votre Pack Ciblé')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /^Passer au Winner · 10\s600 FCFA$/ })).toBeInTheDocument();
     expect(auth.refreshUser).toHaveBeenCalled();
   });
 
@@ -273,7 +274,7 @@ describe('Abonnement', () => {
     expect(within(winner).getByText('SBC IA Creator')).toHaveClass('text-primary');
   });
 
-  it('keeps packs covered by a higher pack short', async () => {
+  it('shows packs covered by a higher pack in full, as before', async () => {
     const winnerMember = classiqueMember();
     winnerMember.packs = winnerMember.packs.map((p) =>
       p.id === 'WINNER' ? { ...p, state: 'owned', payPrice: null } : { ...p, state: 'included', payPrice: null });
@@ -282,9 +283,9 @@ describe('Abonnement', () => {
     renderPage(<Abonnement />, '/abonnement');
 
     const classique = await screen.findByRole('article', { name: 'Pack Classique' });
-    expect(within(classique).getByText('Inclus dans votre pack')).toBeInTheDocument();
-    expect(within(classique).queryByText(/formations incluses/)).not.toBeInTheDocument();
-    expect(within(classique).queryByRole('region', { name: 'Gains sur vos statuts WhatsApp' })).not.toBeInTheDocument();
+    expect(within(classique).getByText('Inclus dans votre Pack Winner')).toBeInTheDocument();
+    expect(within(classique).getByText('5 formations incluses')).toBeInTheDocument();
+    expect(screen.getByText('Votre Pack Winner est actif')).toBeInTheDocument();
     expect(within(screen.getByRole('article', { name: 'Pack Winner' })).getByText('6 formations incluses')).toBeInTheDocument();
   });
 });
