@@ -408,6 +408,27 @@ export const splitStoredPhone = (stored: string, home?: string | null): { dial: 
   return { dial: homeCountry ? dialCodeOf(homeCountry) : DEFAULT_DIAL_CODE, local: n };
 };
 
+/**
+ * The number as typed, with the chosen dial code, into the international
+ * digits the server stores ("237677123456"). A number typed in international
+ * form (+33…, 0033…) brings its own code. The leading 0 is kept as typed, as
+ * on sign-up: in Congo-Brazzaville and Côte d'Ivoire it belongs to the number.
+ */
+export const toInternationalDigits = (raw: string, dial: DialCode): { digits: string } | { error: string } => {
+  let s = raw.replace(/[\s\-().]/g, '');
+  let code = dial.code;
+  if (s.startsWith('00')) s = `+${s.slice(2)}`;
+  if (s.startsWith('+')) {
+    const country = countryForPhone(s, dial.value);
+    if (!country) return { error: 'Indicatif inconnu. Choisissez le pays dans la liste, puis tapez le numéro.' };
+    code = country.phoneCode;
+    s = s.slice(country.phoneCode.length);
+  }
+  if (!/^\d+$/.test(s)) return { error: 'Un numéro ne contient que des chiffres. Exemple : 677123456' };
+  if (s.length < 6 || s.length > 14) return { error: 'Ce numéro ne semble pas complet. Vérifiez-le.' };
+  return { digits: `${code.slice(1)}${s}` };
+};
+
 // Mobile money operators by country (only for countries that support momo)
 export const momoCorrespondents: MomoCorrespondentsMap = {
   'BJ': {

@@ -18,7 +18,7 @@ import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { redirectTo } from '../utils/redirect';
-import { findAnyCountry } from '../utils/countriesData';
+import { defaultPaymentMethod } from '../utils/paymentMethod';
 import type { AddonOffer, PackId, PackOffer, PaymentMethod, PurchasablePlan, SubscriptionOffers } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import TourButton from '../components/common/TourButton';
@@ -31,15 +31,6 @@ const money = (n: number, currency: string) =>
     currency === 'USD'
         ? `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
         : fcfa(n);
-
-/**
- * Mobile Money where the member's country has it, crypto elsewhere. An unknown
- * country keeps Mobile Money: most members are in Mobile Money countries.
- */
-const defaultPaymentMethod = (country?: string | null): PaymentMethod => {
-    if (!country) return 'traditional';
-    return findAnyCountry(country)?.supportsMomo ? 'traditional' : 'crypto';
-};
 
 const PACK_CLASS: Record<PackId, string> = { CLASSIQUE: 'classic-plan', CIBLE: 'premium-plan', WINNER: 'winner-plan' };
 const PACK_BADGE: Partial<Record<PackId, { label: string; className: string }>> = {
