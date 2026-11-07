@@ -667,6 +667,22 @@ export class SBCApiService extends ApiService {
   }
 
   /**
+   * The number prospects see on SBC Network and the sales page. null (or the
+   * main number) = the main number; otherwise one of the extra numbers.
+   * Answers with the same shape as getExtraNumbers; 400 with a French message.
+   */
+  async setFeaturedExtraNumber(number: string | null): Promise<ApiResponse> {
+    return await this.put('/users/me/extra-numbers/featured', { body: { number } });
+  }
+
+  // ==================== PACK WINNER SALES PAGE (public) ====================
+
+  /** A Winner member's sales page (/p/:code). 404 when the code is unknown or not a Winner. */
+  async getSalesPage(code: string): Promise<ApiResponse> {
+    return await this.get(`/users/sales-page/${encodeURIComponent(code)}`, { requiresAuth: false });
+  }
+
+  /**
    * Generate payment URL
    */
   generatePaymentUrl(sessionId: string): string {
