@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { CheckmarkCircle02Icon, Download01Icon, FilterIcon, Loading03Icon, Location01Icon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle02Icon, Download01Icon, FilterIcon, Loading03Icon, Location01Icon, SmartPhone01Icon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import BackButton from "../components/common/BackButton";
@@ -415,6 +415,11 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         </Link>
                     </section>
                 )}
+                {/* Rufus 2026-11-07. No store links yet: text only. */}
+                <p className="mb-3 flex items-center gap-2 rounded-card border border-border bg-surface px-3 py-2 text-xs text-ink-2 text-pretty">
+                    <HugeiconsIcon icon={SmartPhone01Icon} size={16} className="shrink-0 text-primary" />
+                    <span>Téléchargez l'application <strong className="font-semibold text-ink">SBC Network</strong> sur Play Store ou App Store pour mieux gérer les contacts SBC.</span>
+                </p>
                 <input
                     type="text"
                     value={criteria.search}
