@@ -11,7 +11,7 @@ import type { User } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { countryOptions } from '../utils/countriesData';
+import { allCountries } from '../utils/countriesData';
 
 const professions = [
     'Étudiant(e)', 'Sans emploi',
@@ -63,8 +63,8 @@ const getInterestBaseValue = (displayValue: string): string => {
 
 const sexes = ["Homme", "Femme", "Autre"];
 
-// Using all African countries from the centralized data
-const africanCountries = countryOptions.map(country => ({
+// Every country: members sign up from anywhere.
+const countryFilterOptions = allCountries.map(country => ({
     name: country.label,
     flag: country.code
 }));
@@ -499,7 +499,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 <h4 className="text-lg font-bold mb-4">Télécharger les contacts filtrés</h4>
                                 <div className="mb-4 text-sm text-gray-700">
                                     <span className="font-semibold">Résumé du filtre :</span><br />
-                                    Pays : {africanCountries.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
+                                    Pays : {countryFilterOptions.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
                                     {isRestrictedToBasicFilters ? (
                                         <p className="text-orange-600 font-medium">Les filtres avancés (âge, sexe, professions, intérêts) sont réservés aux abonnés CIBLÉ.</p>
                                     ) : (
@@ -580,7 +580,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                         className="w-full rounded-lg border border-border px-3 py-2 mb-2 bg-white"
                                     >
                                         <option value="">Sélectionner</option>
-                                        {africanCountries.map(c => (
+                                        {countryFilterOptions.map(c => (
                                             <option key={c.flag} value={c.flag}>
                                                 {c.name} ({c.flag})
                                             </option>

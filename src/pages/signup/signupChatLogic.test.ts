@@ -17,6 +17,12 @@ describe('parsePhone', () => {
         expect(parsePhone('00225 07 12 34 56 78', 'Cameroun')).toEqual({ phone: '0712345678', dialCountry: 'Côte d\'Ivoire' });
     });
 
+    it('accepts numbers from outside Africa, keeping the chosen country for a shared code', () => {
+        expect(parsePhone('+33 6 12 34 56 78', 'Cameroun')).toEqual({ phone: '612345678', dialCountry: 'France' });
+        expect(parsePhone('+1 514 123 4567', 'Canada')).toEqual({ phone: '5141234567', dialCountry: 'Canada' });
+        expect(fullPhone({ dialCountry: 'Canada', phone: '5141234567' })).toBe('+15141234567');
+    });
+
     it('refuses letters, too short numbers and unknown dial codes', () => {
         expect(parsePhone('12ab', 'Cameroun')).toHaveProperty('error');
         expect(parsePhone('1234', 'Cameroun')).toHaveProperty('error');

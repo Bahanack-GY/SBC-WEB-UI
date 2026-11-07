@@ -9,7 +9,7 @@ import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../../utils/apiHelpers';
 import { clearSignupCache } from '../../utils/signupHelpers';
 import { safeRecoveryApiCall } from '../../utils/recoveryHelpers';
-import { allAfricanCountries, regionsPerCountry } from '../../utils/countriesData';
+import { allCountries, regionsPerCountry } from '../../utils/countriesData';
 import { professionOptions, predefinedInterestOptions, getInterestBaseValue } from '../ModifierLeProfil';
 import RecoveryCompletedNotification from '../../components/RecoveryCompletedNotification';
 import {
@@ -56,7 +56,7 @@ interface Quick { label: string; run: () => void }
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const errText = (e: unknown, fallback: string) => (e instanceof Error && e.message ? e.message : fallback);
 const formatWait = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-const COUNTRY_OPTIONS = allAfricanCountries.map((c) => ({ value: c.value, label: `${c.flag} ${c.value}` }));
+const COUNTRY_OPTIONS = allCountries.map((c) => ({ value: c.value, label: `${c.flag} ${c.value}` }));
 
 export default function SignupChat({ pace = 450 }: { pace?: number }) {
     const navigate = useNavigate();
