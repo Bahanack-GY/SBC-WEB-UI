@@ -25,7 +25,9 @@ type ActionItem = {
 const baseActions: ActionItem[] = [
   { label: 'Modifier le profil', icon: <HugeiconsIcon icon={PencilEdit01Icon} className="text-primary" />, to: '/modifier-le-profil' },
   { label: 'Modifier mon email', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/modifier-email' },
-  { label: 'Changer le numéro de téléphone', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/change-phone' },
+  // Rufus: extra WhatsApp numbers for the contacts file. The main number is
+  // still changed from "Modifier le profil" (or /change-phone).
+  { label: 'Ajouter un nouveau numéro', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/numeros-supplementaires' },
   { label: 'Modifier mon mot de passe', icon: <HugeiconsIcon icon={LockIcon} className="text-primary" />, to: '/change-password' },
   { label: 'Notifications', icon: <HugeiconsIcon icon={Notification01Icon} className="text-primary" />, to: '/notifications' },
   { label: 'Mon Abonnement', icon: <HugeiconsIcon icon={CreditCardIcon} className="text-primary" />, to: '/changer-abonnement' },

@@ -7,7 +7,7 @@ import { Sheet } from './ui/Sheet';
 import { CountUp } from './ui/CountUp';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
-import { allAfricanCountries } from '../../utils/countriesData';
+import { allCountries } from '../../utils/countriesData';
 import {
   buildCampaignPayload, campaignFilter, campaignReach, creditsNeeded, defaultCampaignName, DEFAULT_CAMPAIGN_DRAFT, filleulsCovered,
   frenchErrorFrom, MESSAGE_VARIABLES, PERIOD_OPTIONS, RELANCE_DAYS, type CampaignDraft, type OwnMessage,
@@ -112,13 +112,12 @@ export function CampaignWizard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterKey, open, step]);
 
-  // The shared list is sorted by its flag emoji, i.e. by country code (Burundi
-  // before Bénin); sort by name here, and match "benin" to "Bénin".
+  // Every country (members sign up from anywhere), sorted by French name;
+  // "benin" matches "Bénin".
   const countries = useMemo(() => {
     const q = foldAccents(countryQuery.trim());
-    return allAfricanCountries
-      .filter(c => !q || foldAccents(c.value).includes(q) || c.code.toLowerCase() === q)
-      .sort((a, b) => a.value.localeCompare(b.value, 'fr'));
+    return allCountries
+      .filter(c => !q || foldAccents(c.value).includes(q) || c.code.toLowerCase() === q);
   }, [countryQuery]);
 
   const go = (next: number) => { setDir(next > step ? 1 : -1); setStep(next); };
@@ -287,7 +286,7 @@ export function CampaignWizard({
                       >
                         {draft.countries.length === 0
                           ? 'Tous les pays'
-                          : draft.countries.map(c => allAfricanCountries.find(x => x.code === c)?.label ?? c).join(', ')}
+                          : draft.countries.map(c => allCountries.find(x => x.code === c)?.label ?? c).join(', ')}
                       </button>
                       <AnimatePresence>
                         {countriesOpen && (

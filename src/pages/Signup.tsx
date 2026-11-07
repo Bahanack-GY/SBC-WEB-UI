@@ -12,7 +12,7 @@ import { useQuery } from '@tanstack/react-query';
 import { clearSignupCache } from '../utils/signupHelpers';
 import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
 import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
-import { countryOptions, africanCountryCodes } from '../utils/countriesData';
+import { allCountries, worldCountryCodes, DEFAULT_DIAL_CODE, splitStoredPhone } from '../utils/countriesData';
 import PublicFooter from '../components/common/PublicFooter';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 
@@ -72,7 +72,7 @@ function Signup() {
   const [data, setData] = useState<SignupData>(initialData);
   const [errors, setErrors] = useState<SignupErrors>({});
   const [showModal, setShowModal] = useState(false);
-  const [selectedCode, setSelectedCode] = useState(africanCountryCodes[0]);
+  const [selectedCode, setSelectedCode] = useState(DEFAULT_DIAL_CODE);
   const [loading, setLoading] = useState(false);
   const [checkingExistence, setCheckingExistence] = useState(false);
   const [affiliateName, setAffiliateName] = useState<string | null>(null);
@@ -154,25 +154,11 @@ function Signup() {
         };
         
         if (phoneFromUrl) {
-          // Extract country code from phone number - handle different formats
-          
-          // Normalize phone number by removing spaces, hyphens, and ensuring it starts with +
-          let normalizedPhone = phoneFromUrl.replace(/[\s\-()]/g, '');
-          if (!normalizedPhone.startsWith('+')) {
-            normalizedPhone = '+' + normalizedPhone;
-          }
-          
-          
-          // Find matching country code
-          const matchedCode = africanCountryCodes.find(c => normalizedPhone.startsWith(c.code));
-          if (matchedCode) {
-            setSelectedCode(matchedCode);
-            // Remove the country code (including +) from the phone number
-            const phoneWithoutCode = normalizedPhone.replace(matchedCode.code, '');
-            dataToSet.whatsapp = phoneWithoutCode;
-          } else {
-            dataToSet.whatsapp = phoneFromUrl;
-          }
+          // Split the dial code off (longest code first; the country from the
+          // link settles codes shared by several countries).
+          const { dial, local } = splitStoredPhone(phoneFromUrl, countryFromUrl);
+          setSelectedCode(dial);
+          dataToSet.whatsapp = local;
         }
       }
 
@@ -181,23 +167,14 @@ function Signup() {
       // Handle phone number parsing for saved data (if not from URL)
       if (dataToSet.whatsapp && !phoneFromUrl) {
         
-        // Normalize saved phone number
-        let normalizedSavedPhone = dataToSet.whatsapp.replace(/[\s\-()]/g, '');
-        if (!normalizedSavedPhone.startsWith('+')) {
-          normalizedSavedPhone = '+' + normalizedSavedPhone;
-        }
-        
-        const matchedCode = africanCountryCodes.find(c => normalizedSavedPhone.startsWith(c.code));
-        if (matchedCode) {
-          setSelectedCode(matchedCode);
-          const phoneWithoutCode = normalizedSavedPhone.replace(matchedCode.code, '');
-          setData(prev => ({ ...prev, whatsapp: phoneWithoutCode }));
-        } else {
-          setSelectedCode(africanCountryCodes[0]);
-        }
+        // The draft keeps the national part; read it against the chosen country
+        // so "675…" stays Cameroonian instead of becoming a +675 number.
+        const { dial, local } = splitStoredPhone(dataToSet.whatsapp, dataToSet.pays);
+        setSelectedCode(dial);
+        setData(prev => ({ ...prev, whatsapp: local }));
       } else if (!phoneFromUrl) {
         // Set default country code if no phone number
-        setSelectedCode(africanCountryCodes[0]);
+        setSelectedCode(DEFAULT_DIAL_CODE);
       }
 
     } catch (error) {
@@ -411,7 +388,7 @@ function Signup() {
     const { name, value, type } = e.target;
     const checked = type === 'checkbox' ? (e.target as HTMLInputElement).checked : undefined;
     if (name === 'countryCodeSelect') {
-      const code = africanCountryCodes.find(c => c.value === value) || africanCountryCodes[0];
+      const code = worldCountryCodes.find(c => c.value === value) || DEFAULT_DIAL_CODE;
       setSelectedCode(code);
       const whatsappNumber = data.whatsapp;
       setData(prev => ({ ...prev, whatsapp: whatsappNumber }));
@@ -641,7 +618,7 @@ function Signup() {
       setLoading(true);
       setErrors({});
       try {
-        const countryCode = countryOptions.find(c => c.value === data.pays)?.code || data.pays;
+        const countryCode = allCountries.find(c => c.value === data.pays)?.code || data.pays;
         const userData = {
           email: data.email,
           password: data.password,
@@ -778,7 +755,7 @@ function Signup() {
                     value={selectedCode.value}
                     onChange={handleChange}
                   >
-                    {africanCountryCodes.map((c) => (
+                    {worldCountryCodes.map((c) => (
                       <option key={c.value} value={c.value}>{c.label}</option>
                     ))}
                   </select>
@@ -800,7 +777,7 @@ function Signup() {
                 <label className="block text-gray-700 mb-1">🌍 Pays</label>
                 <select name="pays" value={data.pays} onChange={handleChange} className={`w-full border ${errors.pays ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none`}>
                   <option value="">Sélectionner le pays</option>
-                  {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                  {allCountries.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
                 </select>
                 {errors.pays && <div className="text-red-500 text-xs">{errors.pays}</div>}
               </div>

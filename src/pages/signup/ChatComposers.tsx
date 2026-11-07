@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } from 'react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowUp02Icon, EyeIcon, Search01Icon, ViewOffIcon } from '@hugeicons/core-free-icons';
-import { allAfricanCountries } from '../../utils/countriesData';
+import { allCountries } from '../../utils/countriesData';
 
 /** The inputs a question can ask for. One is shown at a time, above the keyboard. */
 
@@ -133,19 +133,21 @@ export function MultiComposer({ options, onSubmit, onSkip, disabled }: {
     );
 }
 
+const DIAL_OPTIONS: Option[] = allCountries.map((c) => ({ value: c.value, label: `${c.flag} ${c.value}`, hint: c.phoneCode }));
+
 /** WhatsApp number with its dial code; the code follows the chosen country and can be changed. */
 export function PhoneComposer({ dialCountry, onDialChange, onSubmit, disabled }: {
     dialCountry: string; onDialChange: (v: string) => void; onSubmit: (raw: string) => void; disabled?: boolean;
 }) {
     const [v, setV] = useState('');
     const [picking, setPicking] = useState(false);
-    const dial = allAfricanCountries.find((c) => c.value === dialCountry);
+    const dial = allCountries.find((c) => c.value === dialCountry);
     const ref = useRef<HTMLInputElement>(null);
     useEffect(() => { if (!picking) ref.current?.focus(); }, [picking]);
     if (picking) {
         return (
             <ListComposer label="Indicatif du pays" placeholder="Pays ou indicatif (ex. 237)"
-                options={allAfricanCountries.map((c) => ({ value: c.value, label: `${c.flag} ${c.value}`, hint: c.phoneCode }))}
+                options={DIAL_OPTIONS}
                 onSubmit={(val) => { onDialChange(val); setPicking(false); }} />
         );
     }

@@ -83,7 +83,7 @@ export const allAfricanCountries: CountryData[] = [
   { value: 'Lesotho', label: '🇱🇸 Lesotho', code: 'LS', flag: '🇱🇸', phoneCode: '+266', currency: 'LSL', supportsMomo: false },
   { value: 'Namibie', label: '🇳🇦 Namibie', code: 'NA', flag: '🇳🇦', phoneCode: '+264', currency: 'NAD', supportsMomo: false },
   { value: 'Afrique du Sud', label: '🇿🇦 Afrique du Sud', code: 'ZA', flag: '🇿🇦', phoneCode: '+27', currency: 'ZAR', supportsMomo: false },
-].sort((a, b) => a.label.localeCompare(b.label)); // Sort alphabetically by label
+].sort((a, b) => a.value.localeCompare(b.value, 'fr')); // By French name. The label starts with a flag, so sorting by it was ISO order (Angola first).
 
 // Countries that support mobile money operations
 export const momoSupportedCountries = allAfricanCountries.filter(country => country.supportsMomo);
@@ -97,6 +97,337 @@ export const africanCountryCodes = allAfricanCountries.map(country => ({
   label: `${country.flag} ${country.phoneCode}`,
   code: country.phoneCode
 }));
+
+// ---------------------------------------------------------------------------
+// Every country and territory with an ITU dialling code (Rufus: sign-up is open
+// to the whole world). Money still moves by Mobile Money in Africa only, so the
+// wallet, withdrawals and the Ads Network keep the African lists above.
+// ---------------------------------------------------------------------------
+
+const flagOf = (iso: string) =>
+  String.fromCodePoint(...[...iso.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+
+/** [French name, ISO 3166-1 alpha-2, dialling code, currency]. North America shares +1. */
+type CountryRow = [string, string, string, string];
+
+const NON_AFRICAN_COUNTRIES: CountryRow[] = [
+  // Africa: territories that are not among the 54 states
+  ['La Réunion', 'RE', '+262', 'EUR'],
+  ['Mayotte', 'YT', '+262', 'EUR'],
+  ['Sahara occidental', 'EH', '+212', 'MAD'],
+  ['Sainte-Hélène', 'SH', '+290', 'SHP'],
+  ['Territoire britannique de l\'océan Indien', 'IO', '+246', 'USD'],
+
+  // Europe
+  ['Albanie', 'AL', '+355', 'ALL'],
+  ['Allemagne', 'DE', '+49', 'EUR'],
+  ['Andorre', 'AD', '+376', 'EUR'],
+  ['Autriche', 'AT', '+43', 'EUR'],
+  ['Belgique', 'BE', '+32', 'EUR'],
+  ['Biélorussie', 'BY', '+375', 'BYN'],
+  ['Bosnie-Herzégovine', 'BA', '+387', 'BAM'],
+  ['Bulgarie', 'BG', '+359', 'EUR'],
+  ['Chypre', 'CY', '+357', 'EUR'],
+  ['Croatie', 'HR', '+385', 'EUR'],
+  ['Danemark', 'DK', '+45', 'DKK'],
+  ['Espagne', 'ES', '+34', 'EUR'],
+  ['Estonie', 'EE', '+372', 'EUR'],
+  ['Finlande', 'FI', '+358', 'EUR'],
+  ['France', 'FR', '+33', 'EUR'],
+  ['Gibraltar', 'GI', '+350', 'GIP'],
+  ['Grèce', 'GR', '+30', 'EUR'],
+  ['Guernesey', 'GG', '+44', 'GBP'],
+  ['Hongrie', 'HU', '+36', 'HUF'],
+  ['Île de Man', 'IM', '+44', 'GBP'],
+  ['Îles Åland', 'AX', '+358', 'EUR'],
+  ['Îles Féroé', 'FO', '+298', 'DKK'],
+  ['Irlande', 'IE', '+353', 'EUR'],
+  ['Islande', 'IS', '+354', 'ISK'],
+  ['Italie', 'IT', '+39', 'EUR'],
+  ['Jersey', 'JE', '+44', 'GBP'],
+  ['Kosovo', 'XK', '+383', 'EUR'],
+  ['Lettonie', 'LV', '+371', 'EUR'],
+  ['Liechtenstein', 'LI', '+423', 'CHF'],
+  ['Lituanie', 'LT', '+370', 'EUR'],
+  ['Luxembourg', 'LU', '+352', 'EUR'],
+  ['Macédoine du Nord', 'MK', '+389', 'MKD'],
+  ['Malte', 'MT', '+356', 'EUR'],
+  ['Moldavie', 'MD', '+373', 'MDL'],
+  ['Monaco', 'MC', '+377', 'EUR'],
+  ['Monténégro', 'ME', '+382', 'EUR'],
+  ['Norvège', 'NO', '+47', 'NOK'],
+  ['Pays-Bas', 'NL', '+31', 'EUR'],
+  ['Pologne', 'PL', '+48', 'PLN'],
+  ['Portugal', 'PT', '+351', 'EUR'],
+  ['Roumanie', 'RO', '+40', 'RON'],
+  ['Royaume-Uni', 'GB', '+44', 'GBP'],
+  ['Russie', 'RU', '+7', 'RUB'],
+  ['Saint-Marin', 'SM', '+378', 'EUR'],
+  ['Serbie', 'RS', '+381', 'RSD'],
+  ['Slovaquie', 'SK', '+421', 'EUR'],
+  ['Slovénie', 'SI', '+386', 'EUR'],
+  ['Suède', 'SE', '+46', 'SEK'],
+  ['Suisse', 'CH', '+41', 'CHF'],
+  ['Svalbard et Jan Mayen', 'SJ', '+47', 'NOK'],
+  ['Tchéquie', 'CZ', '+420', 'CZK'],
+  ['Ukraine', 'UA', '+380', 'UAH'],
+  ['Vatican', 'VA', '+39', 'EUR'],
+
+  // Asia and the Middle East
+  ['Afghanistan', 'AF', '+93', 'AFN'],
+  ['Arabie saoudite', 'SA', '+966', 'SAR'],
+  ['Arménie', 'AM', '+374', 'AMD'],
+  ['Azerbaïdjan', 'AZ', '+994', 'AZN'],
+  ['Bahreïn', 'BH', '+973', 'BHD'],
+  ['Bangladesh', 'BD', '+880', 'BDT'],
+  ['Bhoutan', 'BT', '+975', 'BTN'],
+  ['Brunei', 'BN', '+673', 'BND'],
+  ['Cambodge', 'KH', '+855', 'KHR'],
+  ['Chine', 'CN', '+86', 'CNY'],
+  ['Corée du Nord', 'KP', '+850', 'KPW'],
+  ['Corée du Sud', 'KR', '+82', 'KRW'],
+  ['Émirats arabes unis', 'AE', '+971', 'AED'],
+  ['Géorgie', 'GE', '+995', 'GEL'],
+  ['Hong Kong', 'HK', '+852', 'HKD'],
+  ['Inde', 'IN', '+91', 'INR'],
+  ['Indonésie', 'ID', '+62', 'IDR'],
+  ['Irak', 'IQ', '+964', 'IQD'],
+  ['Iran', 'IR', '+98', 'IRR'],
+  ['Israël', 'IL', '+972', 'ILS'],
+  ['Japon', 'JP', '+81', 'JPY'],
+  ['Jordanie', 'JO', '+962', 'JOD'],
+  ['Kazakhstan', 'KZ', '+7', 'KZT'],
+  ['Kirghizistan', 'KG', '+996', 'KGS'],
+  ['Koweït', 'KW', '+965', 'KWD'],
+  ['Laos', 'LA', '+856', 'LAK'],
+  ['Liban', 'LB', '+961', 'LBP'],
+  ['Macao', 'MO', '+853', 'MOP'],
+  ['Malaisie', 'MY', '+60', 'MYR'],
+  ['Maldives', 'MV', '+960', 'MVR'],
+  ['Mongolie', 'MN', '+976', 'MNT'],
+  ['Myanmar (Birmanie)', 'MM', '+95', 'MMK'],
+  ['Népal', 'NP', '+977', 'NPR'],
+  ['Oman', 'OM', '+968', 'OMR'],
+  ['Ouzbékistan', 'UZ', '+998', 'UZS'],
+  ['Pakistan', 'PK', '+92', 'PKR'],
+  ['Palestine', 'PS', '+970', 'ILS'],
+  ['Philippines', 'PH', '+63', 'PHP'],
+  ['Qatar', 'QA', '+974', 'QAR'],
+  ['Singapour', 'SG', '+65', 'SGD'],
+  ['Sri Lanka', 'LK', '+94', 'LKR'],
+  ['Syrie', 'SY', '+963', 'SYP'],
+  ['Tadjikistan', 'TJ', '+992', 'TJS'],
+  ['Taïwan', 'TW', '+886', 'TWD'],
+  ['Thaïlande', 'TH', '+66', 'THB'],
+  ['Timor oriental', 'TL', '+670', 'USD'],
+  ['Turkménistan', 'TM', '+993', 'TMT'],
+  ['Turquie', 'TR', '+90', 'TRY'],
+  ['Viêt Nam', 'VN', '+84', 'VND'],
+  ['Yémen', 'YE', '+967', 'YER'],
+
+  // Americas
+  ['Anguilla', 'AI', '+1', 'XCD'],
+  ['Antigua-et-Barbuda', 'AG', '+1', 'XCD'],
+  ['Argentine', 'AR', '+54', 'ARS'],
+  ['Aruba', 'AW', '+297', 'AWG'],
+  ['Bahamas', 'BS', '+1', 'BSD'],
+  ['Barbade', 'BB', '+1', 'BBD'],
+  ['Belize', 'BZ', '+501', 'BZD'],
+  ['Bermudes', 'BM', '+1', 'BMD'],
+  ['Bolivie', 'BO', '+591', 'BOB'],
+  ['Bonaire, Saint-Eustache et Saba', 'BQ', '+599', 'USD'],
+  ['Brésil', 'BR', '+55', 'BRL'],
+  ['Canada', 'CA', '+1', 'CAD'],
+  ['Chili', 'CL', '+56', 'CLP'],
+  ['Colombie', 'CO', '+57', 'COP'],
+  ['Costa Rica', 'CR', '+506', 'CRC'],
+  ['Cuba', 'CU', '+53', 'CUP'],
+  ['Curaçao', 'CW', '+599', 'XCG'],
+  ['Dominique', 'DM', '+1', 'XCD'],
+  ['Équateur', 'EC', '+593', 'USD'],
+  ['États-Unis', 'US', '+1', 'USD'],
+  ['Grenade', 'GD', '+1', 'XCD'],
+  ['Groenland', 'GL', '+299', 'DKK'],
+  ['Guadeloupe', 'GP', '+590', 'EUR'],
+  ['Guatemala', 'GT', '+502', 'GTQ'],
+  ['Guyana', 'GY', '+592', 'GYD'],
+  ['Guyane française', 'GF', '+594', 'EUR'],
+  ['Haïti', 'HT', '+509', 'HTG'],
+  ['Honduras', 'HN', '+504', 'HNL'],
+  ['Îles Caïmans', 'KY', '+1', 'KYD'],
+  ['Îles Malouines', 'FK', '+500', 'FKP'],
+  ['Îles Turques-et-Caïques', 'TC', '+1', 'USD'],
+  ['Îles Vierges britanniques', 'VG', '+1', 'USD'],
+  ['Îles Vierges des États-Unis', 'VI', '+1', 'USD'],
+  ['Jamaïque', 'JM', '+1', 'JMD'],
+  ['Martinique', 'MQ', '+596', 'EUR'],
+  ['Mexique', 'MX', '+52', 'MXN'],
+  ['Montserrat', 'MS', '+1', 'XCD'],
+  ['Nicaragua', 'NI', '+505', 'NIO'],
+  ['Panama', 'PA', '+507', 'PAB'],
+  ['Paraguay', 'PY', '+595', 'PYG'],
+  ['Pérou', 'PE', '+51', 'PEN'],
+  ['Porto Rico', 'PR', '+1', 'USD'],
+  ['République dominicaine', 'DO', '+1', 'DOP'],
+  ['Saint-Barthélemy', 'BL', '+590', 'EUR'],
+  ['Saint-Christophe-et-Niévès', 'KN', '+1', 'XCD'],
+  ['Saint-Martin', 'MF', '+590', 'EUR'],
+  ['Saint-Pierre-et-Miquelon', 'PM', '+508', 'EUR'],
+  ['Saint-Vincent-et-les-Grenadines', 'VC', '+1', 'XCD'],
+  ['Sainte-Lucie', 'LC', '+1', 'XCD'],
+  ['Salvador', 'SV', '+503', 'USD'],
+  ['Sint Maarten', 'SX', '+1', 'XCG'],
+  ['Suriname', 'SR', '+597', 'SRD'],
+  ['Trinité-et-Tobago', 'TT', '+1', 'TTD'],
+  ['Uruguay', 'UY', '+598', 'UYU'],
+  ['Venezuela', 'VE', '+58', 'VES'],
+
+  // Oceania
+  ['Australie', 'AU', '+61', 'AUD'],
+  ['Fidji', 'FJ', '+679', 'FJD'],
+  ['Guam', 'GU', '+1', 'USD'],
+  ['Île Christmas', 'CX', '+61', 'AUD'],
+  ['Île Norfolk', 'NF', '+672', 'AUD'],
+  ['Îles Cocos', 'CC', '+61', 'AUD'],
+  ['Îles Cook', 'CK', '+682', 'NZD'],
+  ['Îles Mariannes du Nord', 'MP', '+1', 'USD'],
+  ['Îles Marshall', 'MH', '+692', 'USD'],
+  ['Îles Salomon', 'SB', '+677', 'SBD'],
+  ['Kiribati', 'KI', '+686', 'AUD'],
+  ['Micronésie', 'FM', '+691', 'USD'],
+  ['Nauru', 'NR', '+674', 'AUD'],
+  ['Niue', 'NU', '+683', 'NZD'],
+  ['Nouvelle-Calédonie', 'NC', '+687', 'XPF'],
+  ['Nouvelle-Zélande', 'NZ', '+64', 'NZD'],
+  ['Palaos', 'PW', '+680', 'USD'],
+  ['Papouasie-Nouvelle-Guinée', 'PG', '+675', 'PGK'],
+  ['Polynésie française', 'PF', '+689', 'XPF'],
+  ['Samoa', 'WS', '+685', 'WST'],
+  ['Samoa américaines', 'AS', '+1', 'USD'],
+  ['Tokelau', 'TK', '+690', 'NZD'],
+  ['Tonga', 'TO', '+676', 'TOP'],
+  ['Tuvalu', 'TV', '+688', 'AUD'],
+  ['Vanuatu', 'VU', '+678', 'VUV'],
+  ['Wallis-et-Futuna', 'WF', '+681', 'XPF'],
+];
+
+/**
+ * Every country, the 54 African ones exactly as above plus the rest of the
+ * world, sorted by French name. Use it wherever a member says where they live
+ * or which number they use; keep the African lists where Mobile Money is involved.
+ */
+export const allCountries: CountryData[] = [
+  ...allAfricanCountries,
+  ...NON_AFRICAN_COUNTRIES.map(([value, code, phoneCode, currency]) => ({
+    value,
+    label: `${flagOf(code)} ${value}`,
+    code,
+    flag: flagOf(code),
+    phoneCode,
+    currency,
+    supportsMomo: false,
+  })),
+].sort((a, b) => a.value.localeCompare(b.value, 'fr'));
+
+/** Dial codes for every country, same shape as africanCountryCodes. */
+export const worldCountryCodes = allCountries.map(country => ({
+  value: country.value,
+  label: `${country.flag} ${country.phoneCode}`,
+  code: country.phoneCode,
+}));
+
+export type DialCode = (typeof worldCountryCodes)[number];
+
+/** Cameroun: where most members are, so the dial pickers open on it. */
+export const DEFAULT_DIAL_CODE: DialCode = worldCountryCodes.find(c => c.value === 'Cameroun')!;
+
+export const dialCodeOf = (country: CountryData): DialCode =>
+  worldCountryCodes.find(c => c.value === country.value) ?? DEFAULT_DIAL_CODE;
+
+/** The country whose code ends "a +1 number" when several share it. */
+const MAIN_COUNTRY_FOR_CODE: Record<string, string> = {
+  '+1': 'US', '+7': 'RU', '+39': 'IT', '+44': 'GB', '+47': 'NO', '+61': 'AU',
+  '+212': 'MA', '+262': 'RE', '+358': 'FI', '+590': 'GP', '+599': 'CW',
+};
+
+/** A country given as its French name ("Cameroun") or its ISO code ("CM"). */
+export const findAnyCountry = (raw?: string | null): CountryData | undefined => {
+  const v = raw?.trim().toLowerCase();
+  if (!v) return undefined;
+  return allCountries.find(c => c.code.toLowerCase() === v || c.value.toLowerCase() === v);
+};
+
+/**
+ * The country an international number ("+237…", "00237…") belongs to. The
+ * longest matching code wins (+2420… is Congo-Brazzaville, not a shorter code);
+ * among countries sharing a code (+1, +7, +44…) `prefer` (a name or ISO code,
+ * usually the member's own country) wins, then the main country for that code.
+ * A number without "+" or "00" is not international: undefined.
+ */
+export const countryForPhone = (
+  international: string,
+  prefer?: string | null,
+  list: CountryData[] = allCountries,
+): CountryData | undefined => {
+  let s = international.replace(/[\s\-().]/g, '');
+  if (s.startsWith('00')) s = `+${s.slice(2)}`;
+  if (!s.startsWith('+')) return undefined;
+  const matches = list.filter(c => s.startsWith(c.phoneCode));
+  if (matches.length === 0) return undefined;
+  const longest = Math.max(...matches.map(c => c.phoneCode.length));
+  const best = matches.filter(c => c.phoneCode.length === longest);
+  const preferred = findAnyCountry(prefer);
+  return best.find(c => c.code === preferred?.code)
+    ?? best.find(c => MAIN_COUNTRY_FOR_CODE[c.phoneCode] === c.code)
+    ?? best[0];
+};
+
+/**
+ * Splits a number as the server stores it into a dial code and the national
+ * part, for a form with a dial picker. `home` is the member's country (name or
+ * ISO code). Numbers stored without "+" are read the way the old African-only
+ * forms did — older accounts hold the national number alone, so a bare
+ * "675090755" must not be read as Papua New Guinea (+675).
+ */
+export const splitStoredPhone = (stored: string, home?: string | null): { dial: DialCode; local: string } => {
+  const n = (stored || '').replace(/[\s\-().]/g, '');
+  const homeCountry = findAnyCountry(home);
+  if (n.startsWith('+') || n.startsWith('00')) {
+    const c = countryForPhone(n, home);
+    if (c) {
+      const digits = n.startsWith('00') ? n.slice(2) : n.slice(1);
+      return { dial: dialCodeOf(c), local: digits.slice(c.phoneCode.length - 1) };
+    }
+    return { dial: homeCountry ? dialCodeOf(homeCountry) : DEFAULT_DIAL_CODE, local: n.replace(/^(\+|00)/, '') };
+  }
+  if (homeCountry && n.startsWith(homeCountry.phoneCode.slice(1))) {
+    return { dial: dialCodeOf(homeCountry), local: n.slice(homeCountry.phoneCode.length - 1) };
+  }
+  const african = n ? countryForPhone(`+${n}`, home, allAfricanCountries) : undefined;
+  if (african) return { dial: dialCodeOf(african), local: n.slice(african.phoneCode.length - 1) };
+  return { dial: homeCountry ? dialCodeOf(homeCountry) : DEFAULT_DIAL_CODE, local: n };
+};
+
+/**
+ * The number as typed, with the chosen dial code, into the international
+ * digits the server stores ("237677123456"). A number typed in international
+ * form (+33…, 0033…) brings its own code. The leading 0 is kept as typed, as
+ * on sign-up: in Congo-Brazzaville and Côte d'Ivoire it belongs to the number.
+ */
+export const toInternationalDigits = (raw: string, dial: DialCode): { digits: string } | { error: string } => {
+  let s = raw.replace(/[\s\-().]/g, '');
+  let code = dial.code;
+  if (s.startsWith('00')) s = `+${s.slice(2)}`;
+  if (s.startsWith('+')) {
+    const country = countryForPhone(s, dial.value);
+    if (!country) return { error: 'Indicatif inconnu. Choisissez le pays dans la liste, puis tapez le numéro.' };
+    code = country.phoneCode;
+    s = s.slice(country.phoneCode.length);
+  }
+  if (!/^\d+$/.test(s)) return { error: 'Un numéro ne contient que des chiffres. Exemple : 677123456' };
+  if (s.length < 6 || s.length > 14) return { error: 'Ce numéro ne semble pas complet. Vérifiez-le.' };
+  return { digits: `${code.slice(1)}${s}` };
+};
 
 // Mobile money operators by country (only for countries that support momo)
 export const momoCorrespondents: MomoCorrespondentsMap = {
@@ -213,12 +544,12 @@ export const getMomoOperatorDisplayName = (operatorValue: string): string => {
 
 // Helper function to get country by code
 export const getCountryByCode = (code: string): CountryData | undefined => {
-  return allAfricanCountries.find(country => country.code === code);
+  return allCountries.find(country => country.code === code);
 };
 
 // Helper function to get country by value
 export const getCountryByValue = (value: string): CountryData | undefined => {
-  return allAfricanCountries.find(country => country.value === value);
+  return allCountries.find(country => country.value === value);
 };
 
 // Regions per country (by country code)

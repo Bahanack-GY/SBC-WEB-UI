@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Download01Icon, FilterIcon, Loading03Icon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { CheckmarkCircle02Icon, Download01Icon, FilterIcon, Loading03Icon, Location01Icon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import BackButton from "../components/common/BackButton";
@@ -10,8 +10,8 @@ import { handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelper
 import type { User } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import { countryOptions } from '../utils/countriesData';
+import { Link, useNavigate } from 'react-router-dom';
+import { allCountries } from '../utils/countriesData';
 
 const professions = [
     'Étudiant(e)', 'Sans emploi',
@@ -63,8 +63,8 @@ const getInterestBaseValue = (displayValue: string): string => {
 
 const sexes = ["Homme", "Femme", "Autre"];
 
-// Using all African countries from the centralized data
-const africanCountries = countryOptions.map(country => ({
+// Every country: members sign up from anywhere.
+const countryFilterOptions = allCountries.map(country => ({
     name: country.label,
     flag: country.code
 }));
@@ -85,7 +85,11 @@ function Contacts() {
     const { user } = useAuth();
     const navigate = useNavigate();
 
-    const isRestrictedToBasicFilters = user?.activeSubscriptions?.includes('CLASSIQUE') && !user.activeSubscriptions.includes('CIBLE');
+    // Winner includes everything Ciblé has.
+    const isRestrictedToBasicFilters = user?.activeSubscriptions?.includes('CLASSIQUE')
+        && !user.activeSubscriptions.includes('CIBLE')
+        && !user.activeSubscriptions.includes('WINNER');
+    const hasPro = Array.isArray(user?.activeSubscriptions) && user.activeSubscriptions.includes('PRO');
 
     const [modalOpen, setModalOpen] = useState(false);
     const [downloadModalOpen, setDownloadModalOpen] = useState(false);
@@ -389,6 +393,28 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     <BackButton />
                     <h3 className="text-xl font-medium text-center w-full">Fiche de contact</h3>
                 </div>
+                {hasPro ? (
+                    <p className="mb-3 inline-flex items-center gap-1.5 rounded-pill bg-success-soft px-3 py-1 text-xs font-semibold text-success">
+                        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={14} />
+                        Espace Pro actif
+                    </p>
+                ) : (
+                    <section aria-label="Espace Pro" className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-card border border-border bg-primary-soft p-3">
+                        <span className="grid size-9 shrink-0 place-items-center rounded-pill bg-surface text-primary">
+                            <HugeiconsIcon icon={Location01Icon} size={18} />
+                        </span>
+                        <div className="min-w-44 flex-1">
+                            <p className="text-sm font-semibold text-ink text-pretty">Recevez les demandes de clients près de chez vous</p>
+                            <p className="text-xs text-ink-2">{'Espace Pro : 2\u00a0000\u00a0FCFA/mois ou 12\u00a0000\u00a0FCFA/an'}</p>
+                        </div>
+                        <Link
+                            to="/abonnement#pro"
+                            className="ml-auto shrink-0 rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary-hover transition-colors"
+                        >
+                            Activer l'Espace Pro
+                        </Link>
+                    </section>
+                )}
                 <input
                     type="text"
                     value={criteria.search}
@@ -499,7 +525,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                 <h4 className="text-lg font-bold mb-4">Télécharger les contacts filtrés</h4>
                                 <div className="mb-4 text-sm text-gray-700">
                                     <span className="font-semibold">Résumé du filtre :</span><br />
-                                    Pays : {africanCountries.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
+                                    Pays : {countryFilterOptions.find(c => c.flag === criteria.country)?.name || 'Tous'}<br />
                                     {isRestrictedToBasicFilters ? (
                                         <p className="text-orange-600 font-medium">Les filtres avancés (âge, sexe, professions, intérêts) sont réservés aux abonnés CIBLÉ.</p>
                                     ) : (
@@ -580,7 +606,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                                         className="w-full rounded-lg border border-border px-3 py-2 mb-2 bg-white"
                                     >
                                         <option value="">Sélectionner</option>
-                                        {africanCountries.map(c => (
+                                        {countryFilterOptions.map(c => (
                                             <option key={c.flag} value={c.flag}>
                                                 {c.name} ({c.flag})
                                             </option>

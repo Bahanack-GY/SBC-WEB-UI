@@ -1,5 +1,5 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
@@ -21,27 +21,31 @@ export function useSubscriptionStatus() {
     (user as { id?: string; _id?: string })?._id ||
     (typeof window !== 'undefined' ? localStorage.getItem('userId') || undefined : undefined);
 
+  const queryClient = useQueryClient();
   const { data, isLoading } = useQuery<unknown>({
     queryKey: ['current-subscription', scopedUserId ?? 'anonymous'],
-    queryFn: async () => {
+    queryFn: async ({ queryKey }) => {
       try {
         const response = await sbcApiService.getCurrentSubscription();
         return handleApiResponse(response);
-      } catch {
-        // Treat unreachable / failed fetch as "no active subscription" — fail
-        // closed. The guard sends the user to /abonnement, which is the safe
-        // outcome both for the user (clear next step) and for revenue.
+      } catch (err) {
+        // A background refetch that fails keeps the last known answer: a flaky
+        // network on refocus must not throw a paying member onto /abonnement.
+        if (queryClient.getQueryData(queryKey) != null) throw err;
+        // No answer yet: treat as "no active subscription" — fail closed. The
+        // guard sends the user to /abonnement, which is the safe outcome both
+        // for the user (clear next step) and for revenue.
         return null;
       }
     },
     enabled: isAuthenticated,
     staleTime: 2 * 60 * 1000,
     gcTime: 5 * 60 * 1000,
-    // Explicit true here overrode the app-wide false and was the real source
-    // of « la page se rafraîchit seule » : every refocus refetched this query,
-    // and the guard below swapped the whole route tree for a spinner while it
-    // ran — wiping any form mid-entry (campaign creation, Rufus's team).
-    refetchOnWindowFocus: false,
+    // Refetch when the member comes back to the app, so a pack paid on the
+    // payment page shows at once. Safe now: background refetches never block
+    // the guard (see `loading` below), so no form is unmounted mid-entry — the
+    // « la page se rafraîchit seule » bug came from blocking on isFetching.
+    refetchOnWindowFocus: true,
     refetchOnMount: true,
     retry: 1,
   });
