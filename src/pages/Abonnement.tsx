@@ -12,7 +12,7 @@ import {
     WhatsappIcon,
 } from '@hugeicons/core-free-icons';
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import BackButton from '../components/common/BackButton';
@@ -77,6 +77,14 @@ const PLAN_COPY: Partial<Record<PackId, { title: string; pitch: string; features
         extraTraining: 'SBC IA Creator',
     },
 };
+
+/** The pitch under each pack name; Winner's is the line its old teaser card carried. */
+const PITCH: Record<PackId, string> = {
+    CLASSIQUE: 'Tout pour démarrer et gagner dès vos premiers statuts.',
+    CIBLE: 'Le meilleur tarif par vue et un ciblage précis de vos contacts.',
+    WINNER: 'Pour viser 1 million de FCFA en 3 mois.',
+};
+const SHORT_NAME: Record<PackId, string> = { CLASSIQUE: 'Classique', CIBLE: 'Ciblé', WINNER: 'Winner' };
 
 const rate = (n: number) => n.toLocaleString('fr-FR');
 
@@ -170,81 +178,75 @@ function PackFeatures({ packId, features }: { packId: PackId; features: string[]
     );
 }
 
-function PackCard({ pack, winner, busy, locked, onBuy }: {
+function PackCard({ pack, winner, busy, locked, ownerName, onBuy }: {
     pack: PackOffer;
     winner: SubscriptionOffers['winner'];
     busy: boolean;
     locked: boolean;
+    /** Name of the member's own pack, for "Inclus dans votre Pack …". */
+    ownerName: string | null;
     onBuy: (plan: PurchasablePlan) => void;
 }) {
+    const navigate = useNavigate();
     const owned = pack.state === 'owned';
     const included = pack.state === 'included';
-    const forSale = pack.state === 'available' || pack.state === 'upgrade';
-    const badge = forSale ? PACK_BADGE[pack.id] : undefined;
-    const pay = pack.payPrice ?? pack.price;
     const copy = PLAN_COPY[pack.id];
     const name = copy?.title ?? pack.name;
+    // The old cards: Ciblé (and now Winner) framed in blue while they are for sale.
+    const highlighted = pack.id !== 'CLASSIQUE' && !owned && !included;
+    const unit = pack.currency === 'USD' ? 'USD' : 'FCFA';
+    const amount = (n: number) => (pack.currency === 'USD'
+        ? n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        : n.toLocaleString('fr-FR'));
 
     return (
         <article
             aria-labelledby={`pack-${pack.id}`}
             aria-current={owned ? 'true' : undefined}
             className={cn(
-                'bg-surface border rounded-card p-4 flex flex-col gap-3',
+                'relative bg-surface border rounded-card p-4 flex flex-col gap-4 overflow-hidden',
                 PACK_CLASS[pack.id],
                 // A coloured border is state, which the flat rules allow.
-                owned ? 'border-success' : 'border-border',
-                included && 'bg-surface-2',
+                owned ? 'border-success' : highlighted ? 'border-primary' : 'border-border',
             )}
         >
+            {owned && (
+                <p className="-mx-4 -mt-4 flex items-center gap-2 bg-success px-4 py-2 text-sm font-semibold text-white">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />
+                    Votre pack actuel · actif à vie
+                </p>
+            )}
+
+            {/* Name, price, status */}
             <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                         {pack.id === 'WINNER' && <HugeiconsIcon icon={Crown02Icon} size={18} className="text-accent shrink-0" />}
-                        <h3 id={`pack-${pack.id}`} className={cn('text-base font-bold', included ? 'text-ink-2' : 'text-ink')}>{name}</h3>
-                        {badge && (
-                            <span className={cn('rounded-pill px-2 py-0.5 text-[11px] font-semibold', badge.className)}>{badge.label}</span>
+                        <h3 id={`pack-${pack.id}`} className="text-base font-bold text-ink">{name}</h3>
+                        {pack.state === 'available' && PACK_BADGE[pack.id] && (
+                            <span className={cn('rounded-pill px-2 py-0.5 text-[11px] font-semibold', PACK_BADGE[pack.id]!.className)}>
+                                {PACK_BADGE[pack.id]!.label}
+                            </span>
                         )}
                     </div>
-                    {copy && !included && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{copy.pitch}</p>}
+                    <p className="mt-0.5 text-sm text-ink-2 text-pretty">{PITCH[pack.id]}</p>
                 </div>
                 <div className="shrink-0 text-right">
-                    <p className={cn('text-lg font-bold tabular-nums leading-tight', included ? 'text-ink-2' : 'text-ink')}>
-                        {money(pack.price, pack.currency)}
-                    </p>
-                    <p className="text-[11px] text-ink-2">{owned ? 'payé · à vie' : 'une fois · à vie'}</p>
+                    <p className="text-xl font-bold text-ink tabular-nums">{amount(pack.price)}</p>
+                    <p className="text-[11px] text-ink-2">{owned ? `${unit} · payé` : `${unit} · à vie`}</p>
                 </div>
             </div>
 
-            {pack.state === 'upgrade' && pack.payPrice !== null && (
-                <p className="rounded-tile bg-success-soft px-3 py-2 text-sm text-ink">
-                    Vous payez seulement <strong className="font-semibold text-success">{money(pack.payPrice, pack.currency)}</strong>, la différence avec votre pack.
-                </p>
-            )}
-
-            {/* A pack covered by the member's own needs no sales pitch: keep it short. */}
-            {!included && <EarningsBox viewRate={VIEW_RATE[pack.id]} />}
-            {!included && <PackFeatures packId={pack.id} features={copy?.features ?? pack.features} />}
-
-            {forSale && (
-                <button
-                    type="button"
-                    onClick={() => onBuy(pack.id)}
-                    disabled={locked}
-                    className={cn(btn, 'bg-primary text-white hover:bg-primary-hover')}
-                >
-                    {busy
-                        ? REDIRECTING
-                        : `${pack.state === 'upgrade' ? 'Passer au' : 'Choisir le'} ${name} · ${money(pay, pack.currency)}`}
-                </button>
-            )}
+            {/* The earning feature leads every pack */}
+            <EarningsBox viewRate={VIEW_RATE[pack.id]} />
+            <PackFeatures packId={pack.id} features={copy?.features ?? pack.features} />
 
             {owned && (
                 <div className="flex flex-col gap-2">
-                    <p className="flex items-center justify-center gap-1.5 rounded-xl bg-success-soft py-3 text-sm font-semibold text-success">
-                        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />
-                        Votre pack actuel
-                    </p>
+                    <button onClick={() => navigate('/ads-network')} className={cn(btn, 'bg-primary text-white hover:bg-primary-hover')}>
+                        Commencer à gagner avec mes statuts
+                        <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+                    </button>
                     {pack.id === 'WINNER' && winner.vipGroupLink && (
                         <a
                             href={winner.vipGroupLink}
@@ -262,18 +264,38 @@ function PackCard({ pack, winner, busy, locked, onBuy }: {
                             <Link to="/numeros-supplementaires" className="font-semibold text-primary">Gérer mes numéros</Link>
                         </p>
                     )}
-                    <Link to="/ads-network" className="inline-flex items-center justify-center gap-1 py-1 text-sm font-semibold text-primary">
-                        Commencer à gagner
-                        <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
-                    </Link>
                 </div>
             )}
 
             {included && (
-                <p className="flex items-center justify-center gap-1.5 rounded-xl bg-surface py-3 text-sm font-medium text-ink-2 border border-border">
+                <p className="flex items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-3 text-sm font-medium text-ink-2">
                     <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-success" />
-                    Inclus dans votre pack
+                    Inclus dans votre {ownerName ?? 'pack'}
                 </p>
+            )}
+
+            {pack.state === 'upgrade' && (
+                <div className="flex flex-col gap-1.5">
+                    <button onClick={() => onBuy(pack.id)} disabled={locked} className={cn(btn, 'bg-primary text-white hover:bg-primary-hover')}>
+                        {busy ? REDIRECTING : `Passer au ${SHORT_NAME[pack.id]} · ${money(pack.payPrice ?? pack.price, pack.currency)}`}
+                    </button>
+                    <p className="text-center text-xs text-ink-2">Vous ne payez que la différence.</p>
+                </div>
+            )}
+
+            {pack.state === 'available' && (
+                <button
+                    onClick={() => onBuy(pack.id)}
+                    disabled={locked}
+                    className={cn(
+                        btn,
+                        pack.id === 'CLASSIQUE'
+                            ? 'bg-surface text-primary border border-primary hover:bg-primary-soft'
+                            : 'bg-primary text-white hover:bg-primary-hover',
+                    )}
+                >
+                    {busy ? REDIRECTING : `Choisir le ${SHORT_NAME[pack.id]} · ${money(pack.payPrice ?? pack.price, pack.currency)}`}
+                </button>
             )}
         </article>
     );
@@ -545,8 +567,9 @@ function Abonnement() {
         }
     };
 
-    const packs = offers?.packs ?? [];
-    const ownedPack = packs.find((p) => p.state === 'owned');
+    const ownedPack = (offers?.packs ?? []).find((p) => p.state === 'owned');
+    // The member's own pack comes first, so the page opens on what they have (as before).
+    const packs = [...(offers?.packs ?? [])].sort((a, b) => Number(b.state === 'owned') - Number(a.state === 'owned'));
     const proOptions = (offers?.addons ?? []).filter((a) => a.type === 'PRO');
     const highlightOptions = (offers?.addons ?? []).filter((a) => a.type === 'MISE_EN_AVANT');
     const locked = purchasing !== null || pricesPending;
@@ -565,17 +588,31 @@ function Abonnement() {
                         <h1 className="text-xl font-semibold text-ink text-center w-full">Abonnement</h1>
                     </div>
 
-                    <header className="subscription-header mb-4 flex flex-col gap-3">
+                    <header className="subscription-header mb-5 flex flex-col gap-3">
                         <div>
-                            <h2 className="text-2xl font-bold text-ink leading-tight text-balance">Choisissez votre pack</h2>
-                            <p className="mt-1.5 text-sm text-ink-2 text-pretty">
-                                Vous payez une seule fois, il est à vie.
-                            </p>
-                            {ownedPack && (
-                                <p className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-success">
-                                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} className="shrink-0" />
-                                    Votre pack actuel : {ownedPack.name}
-                                </p>
+                            {ownedPack ? (
+                                <>
+                                    <h2 className="text-2xl font-bold text-ink leading-tight text-balance">
+                                        Votre {PLAN_COPY[ownedPack.id]?.title ?? ownedPack.name} est actif
+                                    </h2>
+                                    <p className="mt-2 text-sm text-ink-2 text-pretty">
+                                        {ownedPack.id === 'CLASSIQUE'
+                                            ? `Passez au Pack Ciblé pour gagner jusqu'à ${rate(VIEW_RATE.CIBLE)} FCFA par vue et cibler vos contacts plus finement. Vous ne payez que la différence.`
+                                            : ownedPack.id === 'CIBLE'
+                                                ? `Publiez les pubs des annonceurs en statut : chaque vue vous rapporte jusqu'à ${rate(VIEW_RATE.CIBLE)} FCFA. Passez au Pack Winner pour tout avoir : vous ne payez que la différence.`
+                                                : `Vous avez le pack le plus complet. Publiez les pubs des annonceurs en statut : chaque vue vous rapporte jusqu'à ${rate(VIEW_RATE.CIBLE)} FCFA.`}
+                                    </p>
+                                </>
+                            ) : (
+                                <>
+                                    <h2 className="text-2xl font-bold text-ink leading-tight text-balance">
+                                        Payez une fois. Vos statuts WhatsApp remboursent le reste.
+                                    </h2>
+                                    <p className="mt-2 text-sm text-ink-2 text-pretty">
+                                        Chaque pack est à vie et vous ouvre SBC Ads Network : publiez les pubs des
+                                        annonceurs en statut, et chaque vue vous rapporte de l'argent.
+                                    </p>
+                                </>
                             )}
                         </div>
 
@@ -629,6 +666,7 @@ function Abonnement() {
                                             winner={offers!.winner}
                                             busy={purchasing === pack.id}
                                             locked={locked}
+                                            ownerName={ownedPack ? (PLAN_COPY[ownedPack.id]?.title ?? ownedPack.name) : null}
                                             onBuy={handlePurchase}
                                         />
                                     </motion.div>
@@ -687,7 +725,7 @@ function Abonnement() {
                                 transition={{ duration: 0.18 }}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <h3 id="abonnement-error-title" className="text-lg font-semibold text-ink mb-2">Le paiement n'a pas démarré</h3>
+                                <h3 id="abonnement-error-title" className="text-lg font-semibold text-ink mb-2">Paiement interrompu</h3>
                                 <p id="abonnement-error-message" className="text-sm text-ink-2 mb-6">{errorModal.message}</p>
                                 <button
                                     onClick={() => setErrorModal({ show: false, message: '' })}
