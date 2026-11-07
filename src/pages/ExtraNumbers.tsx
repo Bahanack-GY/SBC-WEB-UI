@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import type { ExtraNumber, ExtraNumbers as ExtraNumbersData } from '../types/api';
 import { handleApiResponse } from '../utils/apiHelpers';
-import { allCountries, countryForPhone, DEFAULT_DIAL_CODE, dialCodeOf, findAnyCountry, toInternationalDigits, worldCountryCodes, type DialCode } from '../utils/countriesData';
+import { allCountries, countryForPhone, DEFAULT_DIAL_CODE, dialCodeOf, findAnyCountry, splitStoredPhone, toInternationalDigits, worldCountryCodes, type DialCode } from '../utils/countriesData';
 import { defaultPaymentMethod } from '../utils/paymentMethod';
 import { redirectTo } from '../utils/redirect';
 import { cn, fcfa } from '../lib/utils';
@@ -26,6 +26,15 @@ const displayNumber = (digits: string) => {
     return `${country.flag} ${country.phoneCode} ${national}`;
 };
 
+/** The account's own number, stored with or (older accounts) without its dialling code. */
+const displayMainNumber = (stored: string, home?: string | null) => {
+    const { dial, local } = splitStoredPhone(stored, home);
+    return `${dial.label} ${local.replace(/(\d{3})(?=\d)/g, '$1 ')}`;
+};
+
+/** Radio value for the main number; extra numbers use their digits. */
+const MAIN = 'main';
+
 const errorText = (err: unknown) => (err instanceof Error && err.message ? err.message : FALLBACK_ERROR);
 
 function ExtraNumbers() {
@@ -40,6 +49,7 @@ function ExtraNumbers() {
     const [pageError, setPageError] = useState<string | null>(null);
     const [toRemove, setToRemove] = useState<ExtraNumber | null>(null);
     const [redirecting, setRedirecting] = useState(false);
+    const [featuredError, setFeaturedError] = useState<string | null>(null);
 
     const query = useQuery<ExtraNumbersData>({
         queryKey: QUERY_KEY,
@@ -73,6 +83,26 @@ function ExtraNumbers() {
             setPageError(errorText(err));
         },
     });
+
+    const feature = useMutation({
+        mutationFn: async (n: string | null) => handleApiResponse(await sbcApiService.setFeaturedExtraNumber(n)) as ExtraNumbersData,
+        onSuccess: (next) => {
+            queryClient.setQueryData(QUERY_KEY, next);
+            setFeaturedError(null);
+        },
+        onError: (err) => setFeaturedError(errorText(err)),
+    });
+
+    // null, or a number that is no longer among the extras, means the main number.
+    const featuredNow = data?.featured && data.numbers.some((n) => n.number === data.featured) ? data.featured : MAIN;
+    // While saving, show the choice just made.
+    const featuredChoice = feature.isPending ? (feature.variables ?? MAIN) : featuredNow;
+    const featuredOptions = data
+        ? [
+            { value: MAIN, label: data.mainNumber ? displayMainNumber(data.mainNumber, user?.country) : 'Votre numéro de compte', main: true },
+            ...data.numbers.map((n) => ({ value: n.number, label: displayNumber(n.number), main: false })),
+        ]
+        : [];
 
     const buySlot = async () => {
         setPageError(null);
@@ -172,6 +202,54 @@ function ExtraNumbers() {
                                 )}
                             </section>
 
+                            <section aria-labelledby="featured-title" className="bg-surface border border-border rounded-card p-4">
+                                <h2 id="featured-title" className="text-base font-bold text-ink">Numéro mis en avant</h2>
+                                <p className="mt-1 text-sm text-ink-2 text-pretty">
+                                    C'est le numéro que voient vos prospects sur SBC Network et sur votre page de vente. Si votre numéro principal est bloqué sur WhatsApp, mettez en avant un de vos nouveaux numéros.
+                                </p>
+                                <fieldset className="mt-3 flex flex-col gap-2" disabled={feature.isPending}>
+                                    <legend className="sr-only">Numéro mis en avant</legend>
+                                    {featuredOptions.map((o) => {
+                                        const checked = featuredChoice === o.value;
+                                        return (
+                                            <label
+                                                key={o.value}
+                                                className={cn(
+                                                    'flex cursor-pointer items-center gap-3 rounded-tile border px-3 py-2.5 transition-colors',
+                                                    // A coloured border is state, which the flat rules allow.
+                                                    checked ? 'border-primary bg-primary-soft' : 'border-border hover:bg-surface-2',
+                                                )}
+                                            >
+                                                <input
+                                                    type="radio"
+                                                    name="featured-number"
+                                                    value={o.value}
+                                                    checked={checked}
+                                                    onChange={() => {
+                                                        setFeaturedError(null);
+                                                        feature.mutate(o.main ? null : o.value);
+                                                    }}
+                                                    className="size-4 shrink-0 accent-primary"
+                                                />
+                                                <span className="min-w-0 flex-1">
+                                                    <span className="block text-sm font-semibold text-ink tabular-nums">{o.label}</span>
+                                                    {o.main && <span className="block text-xs text-ink-2">Numéro principal</span>}
+                                                </span>
+                                                {checked && (
+                                                    <span className="shrink-0 rounded-pill bg-success-soft px-2 py-0.5 text-[11px] font-semibold text-success">
+                                                        Mis en avant
+                                                    </span>
+                                                )}
+                                            </label>
+                                        );
+                                    })}
+                                </fieldset>
+                                {data.numbers.length === 0 && (
+                                    <p className="mt-2 text-xs text-ink-2">Ajoutez un numéro en plus pour pouvoir le mettre en avant.</p>
+                                )}
+                                {featuredError && <p role="alert" className="mt-2 text-sm text-danger">{featuredError}</p>}
+                            </section>
+
                             {free > 0 ? (
                                 <form onSubmit={submit} aria-labelledby="add-title" className="bg-surface border border-border rounded-card p-4 flex flex-col gap-3">
                                     <div className="flex items-baseline justify-between gap-3">
@@ -258,7 +336,8 @@ function ExtraNumbers() {
                 open={toRemove !== null}
                 title="Retirer ce numéro ?"
                 message={toRemove
-                    ? `Le ${displayNumber(toRemove.number)} sera retiré du fichier de contacts SBC. L'emplacement reste à vous : vous pourrez y mettre un autre numéro.`
+                    ? `Le ${displayNumber(toRemove.number)} sera retiré du fichier de contacts SBC. L'emplacement reste à vous : vous pourrez y mettre un autre numéro.${
+                        toRemove.number === featuredNow ? ' Vos prospects verront de nouveau votre numéro principal.' : ''}`
                     : ''}
                 confirmLabel="Retirer"
                 danger
