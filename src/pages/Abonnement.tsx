@@ -1,450 +1,473 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-    WhatsappIcon,
-    Tick02Icon,
-    CheckmarkCircle02Icon,
     ArrowRight01Icon,
+    Bitcoin01Icon,
+    CheckmarkCircle02Icon,
     Crown02Icon,
-    ChartIncreaseIcon,
     LockIcon,
+    SmartPhone01Icon,
+    Tick02Icon,
+    WhatsappIcon,
 } from '@hugeicons/core-free-icons';
-import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useReducedMotion } from "motion/react";
-import BackButton from "../components/common/BackButton";
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import BackButton from '../components/common/BackButton';
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
-import type { SubscriptionPlan, Subscription } from '../types/api';
+import { redirectTo } from '../utils/redirect';
+import { findAnyCountry } from '../utils/countriesData';
+import type { AddonOffer, PackId, PackOffer, PaymentMethod, PurchasablePlan, SubscriptionOffers } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { useApiCache } from '../hooks/useApiCache';
 import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import { useAuth } from '../contexts/AuthContext';
 import { cn, fcfa } from '../lib/utils';
 
-// ponytail: marketing rates shown on the cards, by plan. advertising-service does
-// NOT read the plan today — it pays every diffuseur DIFFUSEUR_RATES per campaign
-// day (1 + 0.5 + 0.25 = 1.75 FCFA max per view). Make the backend plan-aware
-// before promising CIBLE its 2 FCFA, and keep these two in sync.
-const VIEW_RATE: Record<string, number> = { CLASSIQUE: 1.75, CIBLE: 2 };
-const EXAMPLE_VIEWS = 1000;
+/** "2 150 FCFA" or "4,80 $". */
+const money = (n: number, currency: string) =>
+    currency === 'USD'
+        ? `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} $`
+        : fcfa(n);
 
-const TRAININGS = ['Trading', 'Achat en Chine', 'Art oratoire', 'Marketing digital', 'Bots WhatsApp'];
-
-const PLAN_COPY: Record<string, { title: string; pitch: string; features: string[]; extraTraining?: string }> = {
-    CLASSIQUE: {
-        title: 'Pack Classique',
-        pitch: 'Tout pour démarrer et gagner dès vos premiers statuts.',
-        features: [
-            'Possibilité de gagner entre 5 000 et 10 000 FCFA par jour',
-            'Vente de produits digitaux',
-            'Contacts WhatsApp ciblés par pays',
-            'Accès à la marketplace SBC',
-        ],
-    },
-    CIBLE: {
-        title: 'Pack Ciblé',
-        pitch: 'Le meilleur tarif par vue et un ciblage précis de vos contacts.',
-        features: [
-            'Ciblage avancé : pays, sexe, âge, profession, ville et centres d\'intérêt',
-        ],
-        extraTraining: 'SBC IA Creator',
-    },
+/**
+ * Mobile Money where the member's country has it, crypto elsewhere. An unknown
+ * country keeps Mobile Money: most members are in Mobile Money countries.
+ */
+const defaultPaymentMethod = (country?: string | null): PaymentMethod => {
+    if (!country) return 'traditional';
+    return findAnyCountry(country)?.supportsMomo ? 'traditional' : 'crypto';
 };
 
-const rate = (n: number) => n.toLocaleString('fr-FR');
+const PACK_CLASS: Record<PackId, string> = { CLASSIQUE: 'classic-plan', CIBLE: 'premium-plan', WINNER: 'winner-plan' };
+const PACK_BADGE: Partial<Record<PackId, { label: string; className: string }>> = {
+    CIBLE: { label: 'Le plus rentable', className: 'bg-primary-soft text-primary' },
+    WINNER: { label: 'Le plus complet', className: 'bg-accent-soft text-ink' },
+};
+const MAX_FEATURES = 5;
+
+const longDate = (iso: string) =>
+    new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+const btn = 'w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 disabled:cursor-not-allowed';
+const REDIRECTING = 'Redirection vers le paiement…';
+const START_FAILED = 'Le paiement n\'a pas pu démarrer. Réessayez dans un instant.';
+
+function Features({ items, muted }: { items: string[]; muted?: boolean }) {
+    if (items.length === 0) return null;
+    return (
+        <ul className="subscription-features flex flex-col gap-1.5">
+            {items.slice(0, MAX_FEATURES).map((feature) => (
+                <li key={feature} className={cn('flex items-start gap-2 text-sm', muted ? 'text-ink-2' : 'text-ink')}>
+                    <HugeiconsIcon icon={Tick02Icon} size={16} className={cn('mt-0.5 shrink-0', muted ? 'text-ink-3' : 'text-primary')} />
+                    <span>{feature}</span>
+                </li>
+            ))}
+        </ul>
+    );
+}
+
+function PackCard({ pack, winner, busy, locked, onBuy }: {
+    pack: PackOffer;
+    winner: SubscriptionOffers['winner'];
+    busy: boolean;
+    locked: boolean;
+    onBuy: (plan: PurchasablePlan) => void;
+}) {
+    const owned = pack.state === 'owned';
+    const included = pack.state === 'included';
+    const forSale = pack.state === 'available' || pack.state === 'upgrade';
+    const badge = forSale ? PACK_BADGE[pack.id] : undefined;
+    const pay = pack.payPrice ?? pack.price;
+
+    return (
+        <article
+            aria-labelledby={`pack-${pack.id}`}
+            aria-current={owned ? 'true' : undefined}
+            className={cn(
+                'bg-surface border rounded-card p-4 flex flex-col gap-3',
+                PACK_CLASS[pack.id],
+                // A coloured border is state, which the flat rules allow.
+                owned ? 'border-success' : 'border-border',
+                included && 'bg-surface-2',
+            )}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex items-center gap-2 flex-wrap">
+                    {pack.id === 'WINNER' && <HugeiconsIcon icon={Crown02Icon} size={18} className="text-accent shrink-0" />}
+                    <h3 id={`pack-${pack.id}`} className={cn('text-base font-bold', included ? 'text-ink-2' : 'text-ink')}>{pack.name}</h3>
+                    {badge && (
+                        <span className={cn('rounded-pill px-2 py-0.5 text-[11px] font-semibold', badge.className)}>{badge.label}</span>
+                    )}
+                </div>
+                <div className="shrink-0 text-right">
+                    <p className={cn('text-lg font-bold tabular-nums leading-tight', included ? 'text-ink-2' : 'text-ink')}>
+                        {money(pack.price, pack.currency)}
+                    </p>
+                    <p className="text-[11px] text-ink-2">{owned ? 'payé · à vie' : 'une fois · à vie'}</p>
+                </div>
+            </div>
+
+            {pack.state === 'upgrade' && pack.payPrice !== null && (
+                <p className="rounded-tile bg-success-soft px-3 py-2 text-sm text-ink">
+                    Vous payez seulement <strong className="font-semibold text-success">{money(pack.payPrice, pack.currency)}</strong>, la différence avec votre pack.
+                </p>
+            )}
+
+            <Features items={pack.features} muted={included} />
+
+            {forSale && (
+                <button
+                    type="button"
+                    onClick={() => onBuy(pack.id)}
+                    disabled={locked}
+                    className={cn(btn, 'bg-primary text-white hover:bg-primary-hover')}
+                >
+                    {busy
+                        ? REDIRECTING
+                        : `${pack.state === 'upgrade' ? 'Passer au' : 'Choisir le'} ${pack.name} · ${money(pay, pack.currency)}`}
+                </button>
+            )}
+
+            {owned && (
+                <div className="flex flex-col gap-2">
+                    <p className="flex items-center justify-center gap-1.5 rounded-xl bg-success-soft py-3 text-sm font-semibold text-success">
+                        <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />
+                        Votre pack actuel
+                    </p>
+                    {pack.id === 'WINNER' && winner.vipGroupLink && (
+                        <a
+                            href={winner.vipGroupLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn(btn, 'bg-surface text-ink border border-border hover:bg-surface-2')}
+                        >
+                            <HugeiconsIcon icon={WhatsappIcon} size={16} className="text-whatsapp" />
+                            Rejoindre le groupe VIP
+                        </a>
+                    )}
+                    {pack.id === 'WINNER' && (
+                        <p className="text-sm text-ink-2 text-pretty">
+                            Numéros WhatsApp en plus : {winner.extraNumberSlots} emplacement{winner.extraNumberSlots > 1 ? 's' : ''}.{' '}
+                            <Link to="/numeros-supplementaires" className="font-semibold text-primary">Gérer mes numéros</Link>
+                        </p>
+                    )}
+                    <Link to="/ads-network" className="inline-flex items-center justify-center gap-1 py-1 text-sm font-semibold text-primary">
+                        Commencer à gagner
+                        <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
+                    </Link>
+                </div>
+            )}
+
+            {included && (
+                <p className="flex items-center justify-center gap-1.5 rounded-xl bg-surface py-3 text-sm font-medium text-ink-2 border border-border">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-success" />
+                    Inclus dans votre pack
+                </p>
+            )}
+        </article>
+    );
+}
+
+/** One option (Mise en avant), or two periods of the same one (Espace Pro monthly / yearly). */
+function AddonCard({ anchor, options, purchasing, locked, onBuy }: {
+    anchor: string;
+    options: AddonOffer[];
+    purchasing: PurchasablePlan | null;
+    locked: boolean;
+    onBuy: (plan: PurchasablePlan) => void;
+}) {
+    const [period, setPeriod] = useState<'monthly' | 'yearly'>('monthly');
+    const selected = options.find((o) => o.period === period) ?? options[0];
+    const title = selected.name.replace(/\s*\((mensuel|annuel)\)\s*$/i, '');
+    const activeUntil = selected.activeUntil ?? options.find((o) => o.activeUntil)?.activeUntil ?? null;
+    const discounted = selected.listPrice !== null && selected.listPrice > selected.price;
+
+    return (
+        <article
+            id={anchor}
+            aria-labelledby={`${anchor}-title`}
+            className={cn('scroll-mt-20 bg-surface border rounded-card p-4 flex flex-col gap-3', activeUntil ? 'border-success' : 'border-border')}
+        >
+            <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                    <h3 id={`${anchor}-title`} className="text-base font-bold text-ink">{title}</h3>
+                    {activeUntil && (
+                        <p className="mt-1 inline-flex items-center gap-1 rounded-pill bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">
+                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={13} />
+                            Actif jusqu'au {longDate(activeUntil)}
+                        </p>
+                    )}
+                </div>
+                <div className="shrink-0 text-right">
+                    <p className="text-lg font-bold text-ink tabular-nums leading-tight">{money(selected.price, selected.currency)}</p>
+                    <p className="text-[11px] text-ink-2">{selected.period === 'yearly' ? 'par an' : 'par mois'}</p>
+                    {discounted && (
+                        <p className="text-[11px] text-ink-2">
+                            au lieu de <span className="line-through">{money(selected.listPrice!, selected.currency)}</span>
+                        </p>
+                    )}
+                </div>
+            </div>
+
+            {options.length > 1 && (
+                <div role="group" aria-label="Durée" className="grid grid-cols-2 gap-1 rounded-tile bg-surface-2 p-1">
+                    {(['monthly', 'yearly'] as const).filter((p) => options.some((o) => o.period === p)).map((p) => (
+                        <button
+                            key={p}
+                            type="button"
+                            aria-pressed={period === p}
+                            onClick={() => setPeriod(p)}
+                            className={cn(
+                                'rounded-lg py-2 text-sm font-semibold transition-colors',
+                                period === p ? 'bg-surface text-ink border border-border' : 'text-ink-2',
+                            )}
+                        >
+                            {p === 'monthly' ? 'Mensuel' : 'Annuel'}
+                        </button>
+                    ))}
+                </div>
+            )}
+
+            <Features items={selected.features} />
+
+            {!selected.canBuy && selected.reason && (
+                <p className="flex items-start gap-1.5 text-sm text-ink-2">
+                    <HugeiconsIcon icon={LockIcon} size={15} className="mt-0.5 shrink-0 text-ink-3" />
+                    {selected.reason}
+                </p>
+            )}
+
+            <button
+                type="button"
+                onClick={() => onBuy(selected.id)}
+                disabled={locked || !selected.canBuy}
+                className={cn(
+                    btn,
+                    selected.canBuy ? 'bg-primary text-white hover:bg-primary-hover' : 'bg-surface-2 text-ink-2',
+                )}
+            >
+                {purchasing === selected.id
+                    ? REDIRECTING
+                    : `${activeUntil ? 'Prolonger' : 'Activer'} · ${money(selected.price, selected.currency)}`}
+            </button>
+        </article>
+    );
+}
 
 function Abonnement() {
-    const navigate = useNavigate();
     const reduceMotion = useReducedMotion();
-    const [purchasing, setPurchasing] = useState<string | null>(null);
+    const location = useLocation();
+    const queryClient = useQueryClient();
+    const { user, refreshUser } = useAuth();
+    const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>(() => defaultPaymentMethod(user?.country));
+    const [purchasing, setPurchasing] = useState<PurchasablePlan | null>(null);
     const [showNegativeBalanceModal, setShowNegativeBalanceModal] = useState(false);
     const [errorModal, setErrorModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
-    const { user } = useAuth();
 
     const balance = user?.balance || 0;
 
-    const {
-        data: plans,
-        loading: plansLoading,
-        error: plansError,
-        refetch: refetchPlans
-    } = useApiCache(
-        'subscription-plans',
-        async () => {
-            const response = await sbcApiService.getSubscriptionPlans();
-            const allPlans = handleApiResponse(response) || [];
-            // Registration plans only. RELANCE is a feature plan, sold on the Marketing page.
-            return allPlans.filter((plan: SubscriptionPlan) =>
-                plan.type === 'CLASSIQUE' || plan.type === 'CIBLE'
-            );
-        },
-        { staleTime: 300000 }
-    );
-
-    const {
-        data: currentSubscriptionData,
-        loading: subscriptionLoading,
-        refetch: refetchSubscription
-    } = useApiCache(
-        'current-subscription',
-        async () => {
-            try {
-                const response = await sbcApiService.getCurrentSubscription();
-                const result = handleApiResponse(response);
-                return result?.subscriptions || [];
-            } catch {
-                return [];
-            }
-        },
-        { staleTime: 120000 }
-    );
-
-    const loading = plansLoading || subscriptionLoading;
-    const error = plansError;
-    const activeSubscriptions: Subscription[] = currentSubscriptionData || [];
-
-    const hasClassicSub = activeSubscriptions.some(sub => sub.subscriptionType === 'CLASSIQUE' && sub.status === 'active');
-    const hasCibleSub = activeSubscriptions.some(sub => sub.subscriptionType === 'CIBLE' && sub.status === 'active');
-
-    const planList: SubscriptionPlan[] = plans || [];
-    const classicPrice = planList.find(p => p.type === 'CLASSIQUE')?.price;
-    const ciblePrice = planList.find(p => p.type === 'CIBLE')?.price;
-    const upgradePrice = classicPrice !== undefined && ciblePrice !== undefined ? ciblePrice - classicPrice : undefined;
-
-    // The pack the member holds. CIBLE includes CLASSIQUE, so it wins when both are active.
-    const activeType = hasCibleSub ? 'CIBLE' : hasClassicSub ? 'CLASSIQUE' : null;
-    const activeSub = activeSubscriptions.find(sub => sub.subscriptionType === activeType && sub.status === 'active');
-    const activeUntil = (sub: Subscription) => {
-        const end = new Date(sub.endDate);
-        // Lifetime packs are stored with a year-9999 end date.
-        return Number.isNaN(end.getTime()) || end.getFullYear() >= 9000
-            ? 'à vie'
-            : `jusqu'au ${end.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-    };
-    // The member's own pack comes first, so the page opens on what they have.
-    const orderedPlans = activeType
-        ? [...planList].sort((a, b) => Number(b.type === activeType) - Number(a.type === activeType))
-        : planList;
-
-    const fetchSubscriptionData = () => {
-        refetchPlans();
-        refetchSubscription();
-    };
+    const offersQuery = useQuery<SubscriptionOffers>({
+        queryKey: ['subscription-offers', paymentMethod],
+        queryFn: async () => handleApiResponse(await sbcApiService.getSubscriptionOffers(paymentMethod)),
+        staleTime: 60 * 1000,
+        // Switching FCFA <-> USD keeps the cards on screen while the new prices load.
+        placeholderData: keepPreviousData,
+        refetchOnWindowFocus: false, // the return-to-page handler below does it, with the status
+        retry: 1,
+    });
+    const offers = offersQuery.data;
+    const { refetch: refetchOffers } = offersQuery;
+    // Placeholder data carries the other currency: nothing can be bought until the right prices are in.
+    const pricesPending = offersQuery.isPlaceholderData;
 
     useEffect(() => {
-        if (balance < 0) {
-            setShowNegativeBalanceModal(true);
-        }
-    }, [balance, user?._id, user?.balance]);
+        if (balance < 0) setShowNegativeBalanceModal(true);
+    }, [balance]);
 
-    const openPayment = (sessionId: string) => {
-        const link = document.createElement('a');
-        link.href = sbcApiService.generatePaymentUrl(sessionId);
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    };
+    // The member comes back from the payment page (tab switch, back button,
+    // bfcache restore): fetch the packs and the paywall status again, so a pack
+    // that was just paid shows at once.
+    const onReturn = useCallback(() => {
+        refetchOffers();
+        queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
+        refreshUser?.().catch(() => undefined);
+    }, [refetchOffers, queryClient, refreshUser]);
+    // refreshUser changes identity on every AuthProvider render; the listeners
+    // below read the latest handler instead of re-subscribing each time.
+    const onReturnRef = useRef(onReturn);
+    onReturnRef.current = onReturn;
 
-    const handlePurchase = async (planType: string) => {
+    useEffect(() => {
+        let last = 0;
+        const handle = () => {
+            if (document.visibilityState === 'hidden') return;
+            // focus and visibilitychange arrive together; one refetch is enough.
+            if (Date.now() - last < 1500) return;
+            last = Date.now();
+            onReturnRef.current();
+        };
+        const onPageShow = (e: PageTransitionEvent) => {
+            // Restored from the back/forward cache with "Redirection…" still on the button.
+            if (e.persisted) setPurchasing(null);
+            handle();
+        };
+        window.addEventListener('focus', handle);
+        window.addEventListener('pageshow', onPageShow);
+        document.addEventListener('visibilitychange', handle);
+        return () => {
+            window.removeEventListener('focus', handle);
+            window.removeEventListener('pageshow', onPageShow);
+            document.removeEventListener('visibilitychange', handle);
+        };
+    }, []);
+
+    // /abonnement#pro (the Contacts banner) opens on the Espace Pro card.
+    const hasOffers = !!offers;
+    useEffect(() => {
+        if (!hasOffers || !location.hash) return;
+        const target = document.getElementById(location.hash.slice(1));
+        target?.scrollIntoView?.({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'start' });
+    }, [hasOffers, location.hash, reduceMotion]);
+
+    const handlePurchase = async (planType: PurchasablePlan) => {
+        setPurchasing(planType);
         try {
-            setPurchasing(planType);
-            const data = handleApiResponse(await sbcApiService.purchaseSubscription(planType));
+            const response = await sbcApiService.purchaseSubscription(planType, paymentMethod);
+            if (!response.isSuccessByStatusCode) {
+                // 409 (already owned) and 403 (a pack first) carry a French message for the member.
+                const serverMessage = [403, 409].includes(response.statusCode) ? response.body?.message : null;
+                const message = serverMessage
+                    || (response.statusCode === -1
+                        ? 'Connexion impossible. Vérifiez votre connexion internet, puis réessayez.'
+                        : START_FAILED);
+                setErrorModal({ show: true, message });
+                setPurchasing(null);
+                return;
+            }
+            const data = handleApiResponse(response);
             const sessionId = data?.paymentDetails?.sessionId;
-            if (sessionId) openPayment(sessionId);
-            else await fetchSubscriptionData();
-        } catch (err) {
-            setErrorModal({ show: true, message: err instanceof Error ? err.message : 'Le paiement n\'a pas abouti.' });
-        } finally {
+            if (sessionId) {
+                // Same tab: the member comes back here, and the page notices the payment.
+                redirectTo(sbcApiService.generatePaymentUrl(sessionId));
+                return; // keep "Redirection vers le paiement…" while the page changes
+            }
+            setPurchasing(null);
+            onReturn();
+        } catch {
+            setErrorModal({ show: true, message: START_FAILED });
             setPurchasing(null);
         }
     };
 
-    const handleUpgrade = async () => {
-        try {
-            setPurchasing('upgrade');
-            const data = handleApiResponse(await sbcApiService.upgradeSubscription());
-            const sessionId = data?.paymentDetails?.sessionId;
-            if (sessionId) openPayment(sessionId);
-            else await fetchSubscriptionData();
-        } catch (err) {
-            setErrorModal({ show: true, message: err instanceof Error ? err.message : 'La mise à niveau n\'a pas abouti.' });
-        } finally {
-            setPurchasing(null);
-        }
-    };
-
-    /** 'active' | 'included' (covered by CIBLE) | 'upgrade' | 'buy' */
-    const planState = (type: string) => {
-        if (type === 'CIBLE') return hasCibleSub ? 'active' : hasClassicSub ? 'upgrade' : 'buy';
-        return hasCibleSub ? 'included' : hasClassicSub ? 'active' : 'buy';
-    };
-
-    const primaryBtn = 'w-full inline-flex items-center justify-center gap-2 rounded-xl py-3 px-4 text-sm font-semibold transition-colors duration-200 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-60 disabled:cursor-not-allowed';
-
-    const renderAction = (plan: SubscriptionPlan) => {
-        const state = planState(plan.type);
-        const shortName = plan.type === 'CIBLE' ? 'Ciblé' : 'Classique';
-
-        if (state === 'active') {
-            return (
-                <button onClick={() => navigate('/ads-network')} className={cn(primaryBtn, 'bg-primary text-white hover:bg-primary-hover')}>
-                    Commencer à gagner avec mes statuts
-                    <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
-                </button>
-            );
-        }
-        if (state === 'included') {
-            return (
-                <p className="flex items-center justify-center gap-1.5 rounded-xl bg-surface-2 py-3 text-sm font-medium text-ink-2">
-                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} className="text-success" />
-                    Inclus dans votre Pack Ciblé
-                </p>
-            );
-        }
-        if (state === 'upgrade') {
-            const busy = purchasing === 'upgrade';
-            return (
-                <div className="flex flex-col gap-1.5">
-                    <button onClick={handleUpgrade} disabled={busy} className={cn(primaryBtn, 'bg-primary text-white hover:bg-primary-hover')}>
-                        {busy ? 'Redirection vers le paiement…' : `Passer au Ciblé${upgradePrice !== undefined ? ` · ${fcfa(upgradePrice)}` : ''}`}
-                    </button>
-                    <p className="text-center text-xs text-ink-2">Vous ne payez que la différence.</p>
-                </div>
-            );
-        }
-        const busy = purchasing === plan.type;
-        const featured = plan.type === 'CIBLE';
-        return (
-            <button
-                onClick={() => handlePurchase(plan.type)}
-                disabled={busy || purchasing !== null}
-                className={cn(
-                    primaryBtn,
-                    featured
-                        ? 'bg-primary text-white hover:bg-primary-hover'
-                        : 'bg-surface text-primary border border-primary hover:bg-primary-soft',
-                )}
-            >
-                {busy ? 'Redirection vers le paiement…' : `Choisir le ${shortName} · ${fcfa(plan.price)}`}
-            </button>
-        );
-    };
+    const packs = offers?.packs ?? [];
+    const ownedPack = packs.find((p) => p.state === 'owned');
+    const proOptions = (offers?.addons ?? []).filter((a) => a.type === 'PRO');
+    const highlightOptions = (offers?.addons ?? []).filter((a) => a.type === 'MISE_EN_AVANT');
+    const locked = purchasing !== null || pricesPending;
 
     const enter = (i: number) => reduceMotion
         ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.15 } }
-        : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.25, ease: [0.25, 1, 0.5, 1] as const, delay: i * 0.06 } };
+        : { initial: { opacity: 0, y: 12 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.25, ease: [0.25, 1, 0.5, 1] as const, delay: i * 0.05 } };
 
     return (
         <ProtectedRoute>
-            <div className="min-h-screen bg-bg px-4 pt-3 pb-10">
-                <div className="flex items-center mb-4">
-                    <BackButton />
-                    <h1 className="text-xl font-semibold text-ink text-center w-full">Abonnement</h1>
-                </div>
-
-                <header className="subscription-header mb-5">
-                    {!loading && activeType ? (
-                        <>
-                            <h2 className="text-2xl font-bold text-ink leading-tight text-balance">
-                                Votre {PLAN_COPY[activeType].title} est actif
-                            </h2>
-                            <p className="mt-2 text-sm text-ink-2 text-pretty">
-                                {activeType === 'CLASSIQUE'
-                                    ? `Passez au Pack Ciblé pour gagner jusqu'à ${rate(VIEW_RATE.CIBLE)} FCFA par vue et cibler vos contacts plus finement. Vous ne payez que la différence.`
-                                    : `Vous avez le pack le plus complet. Publiez les pubs des annonceurs en statut : chaque vue vous rapporte jusqu'à ${rate(VIEW_RATE.CIBLE)} FCFA.`}
-                            </p>
-                        </>
-                    ) : (
-                        <>
-                            <h2 className="text-2xl font-bold text-ink leading-tight text-balance">
-                                Payez une fois. Vos statuts WhatsApp remboursent le reste.
-                            </h2>
-                            <p className="mt-2 text-sm text-ink-2 text-pretty">
-                                Chaque pack est à vie et vous ouvre SBC Ads Network : publiez les pubs des
-                                annonceurs en statut, et chaque vue vous rapporte de l'argent.
-                            </p>
-                        </>
-                    )}
-                </header>
-
-                {loading ? (
-                    <div className="flex flex-col gap-4">
-                        <Skeleton height="h-80" rounded="rounded-card" />
-                        <Skeleton height="h-96" rounded="rounded-card" />
+            <div className="min-h-screen bg-bg px-4 pt-3 pb-24">
+                <div className="mx-auto w-full max-w-lg">
+                    <div className="flex items-center mb-4">
+                        <BackButton />
+                        <h1 className="text-xl font-semibold text-ink text-center w-full">Abonnement</h1>
                     </div>
-                ) : error ? (
-                    <div className="flex flex-col items-center text-center gap-3 bg-surface border border-border rounded-card px-4 py-10">
-                        <p className="text-base font-semibold text-ink">Impossible d'afficher les packs</p>
-                        <p className="text-sm text-ink-2 max-w-xs">Vérifiez votre connexion, puis réessayez.</p>
-                        <button onClick={fetchSubscriptionData} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors">
-                            Réessayer
-                        </button>
-                    </div>
-                ) : planList.length === 0 ? (
-                    <p className="bg-surface border border-border rounded-card px-4 py-10 text-center text-sm text-ink-2">
-                        Aucun pack n'est disponible pour le moment. Revenez un peu plus tard.
-                    </p>
-                ) : (
-                    <div className="flex flex-col gap-4">
-                        {orderedPlans.map((plan, index) => {
-                            const copy = PLAN_COPY[plan.type];
-                            const isCible = plan.type === 'CIBLE';
-                            const state = planState(plan.type);
-                            const viewRate = VIEW_RATE[plan.type];
-                            const trainings = copy?.extraTraining ? [...TRAININGS, copy.extraTraining] : TRAININGS;
 
-                            return (
-                                <motion.article
-                                    key={plan.id}
-                                    {...enter(index)}
-                                    aria-current={state === 'active' ? 'true' : undefined}
+                    <header className="subscription-header mb-4 flex flex-col gap-3">
+                        <div>
+                            <h2 className="text-2xl font-bold text-ink leading-tight text-balance">Choisissez votre pack</h2>
+                            <p className="mt-1.5 text-sm text-ink-2 text-pretty">
+                                Vous payez une seule fois, il est à vie.
+                            </p>
+                            {ownedPack && (
+                                <p className="mt-1.5 flex items-center gap-1.5 text-sm font-semibold text-success">
+                                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={15} className="shrink-0" />
+                                    Votre pack actuel : {ownedPack.name}
+                                </p>
+                            )}
+                        </div>
+
+                        <div role="group" aria-label="Moyen de paiement" className="grid grid-cols-2 gap-1 rounded-tile border border-border bg-surface p-1">
+                            {([
+                                { id: 'traditional', label: 'Mobile Money (FCFA)', icon: SmartPhone01Icon },
+                                { id: 'crypto', label: 'Crypto (USD)', icon: Bitcoin01Icon },
+                            ] as const).map((m) => (
+                                <button
+                                    key={m.id}
+                                    type="button"
+                                    aria-pressed={paymentMethod === m.id}
+                                    disabled={purchasing !== null}
+                                    onClick={() => setPaymentMethod(m.id)}
                                     className={cn(
-                                        'relative bg-surface border rounded-card p-4 flex flex-col gap-4 overflow-hidden',
-                                        isCible ? 'premium-plan' : 'classic-plan',
-                                        // A coloured border is state, which the flat rules allow.
-                                        state === 'active'
-                                            ? 'border-success'
-                                            : isCible && state !== 'included' ? 'border-primary' : 'border-border',
+                                        'inline-flex items-center justify-center gap-1.5 rounded-lg px-1 py-2 text-[13px] font-semibold transition-colors',
+                                        paymentMethod === m.id ? 'bg-primary text-white' : 'text-ink-2 hover:bg-surface-2',
                                     )}
                                 >
-                                    {state === 'active' && activeSub && (
-                                        <p className="-mx-4 -mt-4 flex items-center gap-2 bg-success px-4 py-2 text-sm font-semibold text-white">
-                                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={16} />
-                                            Votre pack actuel · actif {activeUntil(activeSub)}
-                                        </p>
+                                    <HugeiconsIcon icon={m.icon} size={16} className="shrink-0" />
+                                    {m.label}
+                                </button>
+                            ))}
+                        </div>
+                    </header>
+
+                    {offersQuery.isLoading ? (
+                        <div className="flex flex-col gap-3" aria-busy="true">
+                            <Skeleton height="h-56" rounded="rounded-card" />
+                            <Skeleton height="h-56" rounded="rounded-card" />
+                            <Skeleton height="h-56" rounded="rounded-card" />
+                        </div>
+                    ) : offersQuery.isError && !offers ? (
+                        <div className="flex flex-col items-center text-center gap-3 bg-surface border border-border rounded-card px-4 py-10">
+                            <p className="text-base font-semibold text-ink">Impossible d'afficher les packs</p>
+                            <p className="text-sm text-ink-2 max-w-xs">Vérifiez votre connexion, puis réessayez.</p>
+                            <button onClick={() => refetchOffers()} className="rounded-xl bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors">
+                                Réessayer
+                            </button>
+                        </div>
+                    ) : packs.length === 0 ? (
+                        <p className="bg-surface border border-border rounded-card px-4 py-10 text-center text-sm text-ink-2">
+                            Aucun pack n'est disponible pour le moment. Revenez un peu plus tard.
+                        </p>
+                    ) : (
+                        <div className={cn('flex flex-col gap-3 transition-opacity', pricesPending && 'opacity-60')}>
+                            {packs.map((pack, index) => (
+                                <motion.div key={pack.id} {...enter(index)}>
+                                    <PackCard
+                                        pack={pack}
+                                        winner={offers!.winner}
+                                        busy={purchasing === pack.id}
+                                        locked={locked}
+                                        onBuy={handlePurchase}
+                                    />
+                                </motion.div>
+                            ))}
+
+                            {(proOptions.length > 0 || highlightOptions.length > 0) && (
+                                <section aria-labelledby="options-title" className="subscription-options mt-4 flex flex-col gap-3">
+                                    <div>
+                                        <h2 id="options-title" className="text-lg font-bold text-ink">Options pour les membres</h2>
+                                        <p className="text-sm text-ink-2">Avec un pack, ajoutez ce qu'il vous faut, au mois ou à l'année.</p>
+                                    </div>
+                                    {proOptions.length > 0 && (
+                                        <AddonCard anchor="pro" options={proOptions} purchasing={purchasing} locked={locked} onBuy={handlePurchase} />
                                     )}
-
-                                    {/* Name, price, status */}
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-2 flex-wrap">
-                                                <h3 className="text-base font-bold text-ink">{copy?.title ?? plan.name}</h3>
-                                                {isCible && state === 'buy' && (
-                                                    <span className="rounded-pill bg-primary-soft px-2 py-0.5 text-[11px] font-semibold text-primary">
-                                                        Le plus rentable
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <p className="mt-0.5 text-sm text-ink-2 text-pretty">{copy?.pitch ?? plan.description}</p>
-                                        </div>
-                                        <div className="shrink-0 text-right">
-                                            <p className="text-xl font-bold text-ink tabular-nums">{plan.price.toLocaleString('fr-FR')}</p>
-                                            <p className="text-[11px] text-ink-2">{state === 'active' ? 'FCFA · payé' : 'FCFA · à vie'}</p>
-                                        </div>
-                                    </div>
-
-                                    {/* The earning feature leads every pack */}
-                                    {viewRate !== undefined && (
-                                        <section className="rounded-tile bg-success-soft p-3" aria-label="Gains sur vos statuts WhatsApp">
-                                            <div className="flex items-center gap-2">
-                                                <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-whatsapp text-white">
-                                                    <HugeiconsIcon icon={WhatsappIcon} size={15} />
-                                                </span>
-                                                <span className="text-sm font-semibold text-ink">Gagnez avec vos statuts WhatsApp</span>
-                                            </div>
-                                            <p className="mt-2 flex items-baseline gap-1.5">
-                                                <span className="text-sm text-ink-2">jusqu'à</span>
-                                                <span className="text-3xl font-bold text-success tabular-nums leading-none">{rate(viewRate)}</span>
-                                                <span className="text-sm font-semibold text-success">FCFA par vue</span>
-                                            </p>
-                                            <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-2">
-                                                <HugeiconsIcon icon={ChartIncreaseIcon} size={14} className="text-success shrink-0" />
-                                                <span>
-                                                    {EXAMPLE_VIEWS.toLocaleString('fr-FR')} vues sur vos statuts ={' '}
-                                                    <strong className="font-semibold text-ink">{fcfa(Math.round(EXAMPLE_VIEWS * viewRate))}</strong> pour vous
-                                                </span>
-                                            </p>
-                                        </section>
+                                    {highlightOptions.length > 0 && (
+                                        <AddonCard anchor="mise-en-avant" options={highlightOptions} purchasing={purchasing} locked={locked} onBuy={handlePurchase} />
                                     )}
+                                </section>
+                            )}
+                        </div>
+                    )}
+                </div>
 
-                                    {/* What else is inside */}
-                                    <div className="subscription-features flex flex-col gap-2.5">
-                                        {isCible && (
-                                            <p className="text-xs font-semibold text-ink-2">Tout le Pack Classique, et en plus :</p>
-                                        )}
-                                        <ul className="flex flex-col gap-2">
-                                            {(copy?.features ?? plan.features ?? []).map((feature) => (
-                                                <li key={feature} className="flex items-start gap-2 text-sm text-ink">
-                                                    <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-primary" />
-                                                    <span>{feature}</span>
-                                                </li>
-                                            ))}
-                                            <li className="flex items-start gap-2 text-sm text-ink">
-                                                <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-primary" />
-                                                <span>
-                                                    {trainings.length} formations incluses
-                                                    <span className="mt-1.5 flex flex-wrap gap-1.5">
-                                                        {trainings.map((t) => (
-                                                            <span
-                                                                key={t}
-                                                                className={cn(
-                                                                    'rounded-pill border px-2 py-0.5 text-[11px]',
-                                                                    t === copy?.extraTraining
-                                                                        ? 'border-primary bg-primary-soft font-semibold text-primary'
-                                                                        : 'border-border bg-surface-2 text-ink-2',
-                                                                )}
-                                                            >
-                                                                {t}
-                                                            </span>
-                                                        ))}
-                                                    </span>
-                                                </span>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    {renderAction(plan)}
-                                </motion.article>
-                            );
-                        })}
-
-                        {/* Winner — announced, not sold yet */}
-                        <motion.article
-                            {...enter(planList.length)}
-                            className="bg-surface-2 border border-border rounded-card p-4 flex flex-col gap-3"
-                            aria-disabled="true"
-                        >
-                            <div className="flex items-start justify-between gap-3">
-                                <div className="min-w-0">
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <HugeiconsIcon icon={Crown02Icon} size={18} className="text-accent" />
-                                        <h3 className="text-base font-bold text-ink">Pack Winner</h3>
-                                        <span className="inline-flex items-center gap-1 rounded-pill bg-accent-soft px-2 py-0.5 text-[11px] font-semibold text-ink">
-                                            <span className="size-1.5 rounded-pill bg-accent" aria-hidden />
-                                            Bientôt
-                                        </span>
-                                    </div>
-                                    <p className="mt-0.5 text-sm text-ink-2">Pour viser 1 million de FCFA en 3 mois.</p>
-                                </div>
-                                <div className="shrink-0 text-right">
-                                    <p className="text-xl font-bold text-ink-2 tabular-nums">15 000</p>
-                                    <p className="text-[11px] text-ink-2">FCFA · ou 32 $</p>
-                                </div>
-                            </div>
-                            <ul className="flex flex-col gap-1.5">
-                                {[
-                                    'Tout le Pack Ciblé',
-                                    'Méthode Atem : création de contenu, page de capture et page de vente',
-                                    'Relance automatique de vos prospects, à vie',
-                                    'Plus de 1 000 vues garanties sur vos statuts',
-                                ].map((feature) => (
-                                    <li key={feature} className="flex items-start gap-2 text-sm text-ink-2">
-                                        <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-ink-3" />
-                                        <span>{feature}</span>
-                                    </li>
-                                ))}
-                            </ul>
-                            <p className="flex items-center justify-center gap-1.5 rounded-xl border border-border bg-surface py-3 text-sm font-medium text-ink-2">
-                                <HugeiconsIcon icon={LockIcon} size={15} />
-                                Disponible prochainement
-                            </p>
-                        </motion.article>
-                    </div>
-                )}
                 <TourButton />
 
                 <NegativeBalanceNotification
@@ -466,6 +489,7 @@ function Abonnement() {
                             <motion.div
                                 role="alertdialog"
                                 aria-labelledby="abonnement-error-title"
+                                aria-describedby="abonnement-error-message"
                                 className="bg-surface rounded-card p-6 max-w-sm w-full border border-border text-center"
                                 initial={{ scale: 0.96, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
@@ -473,8 +497,8 @@ function Abonnement() {
                                 transition={{ duration: 0.18 }}
                                 onClick={(e) => e.stopPropagation()}
                             >
-                                <h3 id="abonnement-error-title" className="text-lg font-semibold text-ink mb-2">Paiement interrompu</h3>
-                                <p className="text-sm text-ink-2 mb-6">{errorModal.message}</p>
+                                <h3 id="abonnement-error-title" className="text-lg font-semibold text-ink mb-2">Le paiement n'a pas démarré</h3>
+                                <p id="abonnement-error-message" className="text-sm text-ink-2 mb-6">{errorModal.message}</p>
                                 <button
                                     onClick={() => setErrorModal({ show: false, message: '' })}
                                     className="w-full rounded-xl bg-primary py-2.5 px-4 text-sm font-semibold text-white hover:bg-primary-hover transition-colors"

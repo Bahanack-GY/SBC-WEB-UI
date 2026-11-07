@@ -70,18 +70,16 @@ class ApiCache {
 
 const globalCache = new ApiCache();
 
-// Global cache store for useApiCache
-const globalApiCache = new Map<string, { data: unknown, timestamp: number }>();
-
+/**
+ * Drops cached entries so the next useApiCache read fetches again. Clears the
+ * cache useApiCache actually reads (it used to clear a separate, unused map,
+ * so "invalidate" never invalidated anything).
+ */
 export const invalidateApiCache = (key?: string | string[]) => {
   if (key) {
-    if (Array.isArray(key)) {
-      key.forEach(k => globalApiCache.delete(k));
-    } else {
-      globalApiCache.delete(key);
-    }
+    (Array.isArray(key) ? key : [key]).forEach(k => globalCache.delete(k));
   } else {
-    globalApiCache.clear(); // Clears all entries if no key is provided
+    globalCache.clear(); // Clears all entries if no key is provided
   }
 };
 

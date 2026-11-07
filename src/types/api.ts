@@ -73,6 +73,68 @@ export interface SubscriptionPlan {
   type: string;
 }
 
+// ---- Packs and member options (GET /subscriptions/offers) ----
+
+export type PaymentMethod = 'traditional' | 'crypto';
+export type PackId = 'CLASSIQUE' | 'CIBLE' | 'WINNER';
+export type AddonId = 'PRO' | 'PRO_YEARLY' | 'MISE_EN_AVANT';
+export type PurchasablePlan = PackId | AddonId;
+
+export interface PackOffer {
+  id: PackId;
+  name: string;
+  /** Full price in `currency`. */
+  price: number;
+  currency: 'XAF' | 'USD';
+  /** owned: the member's pack · included: covered by a higher pack · upgrade: pays the difference. */
+  state: 'owned' | 'included' | 'upgrade' | 'available';
+  /** What this member pays now (full or upgrade price); null when owned or included. */
+  payPrice: number | null;
+  features: string[];
+}
+
+export interface AddonOffer {
+  id: AddonId;
+  type: 'PRO' | 'MISE_EN_AVANT';
+  name: string;
+  price: number;
+  /** Price before the discount (PRO_YEARLY: 12 months), else null. */
+  listPrice: number | null;
+  currency: 'XAF' | 'USD';
+  period: 'monthly' | 'yearly';
+  /** ISO date while this type is active. */
+  activeUntil: string | null;
+  canBuy: boolean;
+  /** Why the member cannot buy it yet (French), when !canBuy. */
+  reason: string | null;
+  features: string[];
+}
+
+export interface SubscriptionOffers {
+  paymentMethod: PaymentMethod;
+  currency: 'XAF' | 'USD';
+  active: string[];
+  packs: PackOffer[];
+  addons: AddonOffer[];
+  winner: { owned: boolean; vipGroupLink: string | null; extraNumberSlots: number };
+}
+
+// ---- Extra WhatsApp numbers (Pack Winner) ----
+
+export interface ExtraNumber {
+  _id: string;
+  /** International digits without "+", e.g. "237677123456". */
+  number: string;
+  addedAt: string;
+}
+
+export interface ExtraNumbers {
+  slots: number;
+  numbers: ExtraNumber[];
+  pricePerSlot: number;
+  currency: 'XAF';
+}
+
 export interface Subscription {
   _id: string;
   planId?: string;
