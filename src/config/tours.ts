@@ -171,23 +171,33 @@ export const adsPackTour: Step[] = [
 export const subscriptionTour: Step[] = [
   {
     target: '.subscription-header',
-    content: 'Choisissez l\'abonnement qui vous convient.',
+    content: 'Choisissez votre pack et votre moyen de paiement : Mobile Money (FCFA) ou crypto (USD).',
     placement: 'bottom',
     disableBeacon: true,
   },
   {
     target: '.classic-plan',
-    content: 'Plan Classique : accès aux fonctionnalités essentielles.',
+    content: 'Pack Classique : tout pour démarrer et gagner avec vos statuts.',
     placement: 'bottom',
   },
   {
     target: '.premium-plan',
-    content: 'Plan Premium : toutes les fonctionnalités avancées.',
+    content: 'Pack Ciblé : le meilleur tarif par vue et un ciblage précis de vos contacts.',
     placement: 'bottom',
   },
   {
+    target: '.winner-plan',
+    content: 'Pack Winner : le pack le plus complet. Si vous avez déjà un pack, vous ne payez que la différence.',
+    placement: 'top',
+  },
+  {
     target: '.subscription-features',
-    content: 'Découvrez les avantages de chaque plan.',
+    content: 'Ce que chaque pack vous apporte.',
+    placement: 'top',
+  },
+  {
+    target: '.subscription-options',
+    content: 'Options pour les membres : Espace Pro et Mise en avant, au mois ou à l\'année.',
     placement: 'top',
   }
 ];

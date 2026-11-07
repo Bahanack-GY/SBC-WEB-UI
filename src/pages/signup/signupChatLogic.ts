@@ -1,4 +1,4 @@
-import { allAfricanCountries, type CountryData } from '../../utils/countriesData';
+import { allCountries, countryForPhone, findAnyCountry, type CountryData } from '../../utils/countriesData';
 
 /**
  * Everything the old sign-up form and the profile-completion form asked,
@@ -33,14 +33,10 @@ export const EMPTY_ANSWERS: SignupAnswers = {
 };
 
 export const countryByValue = (value?: string): CountryData | undefined =>
-    allAfricanCountries.find((c) => c.value === value);
+    allCountries.find((c) => c.value === value);
 
 /** A country given as a value ("Cameroun") or an ISO code ("CM"). */
-export const findCountry = (raw?: string | null): CountryData | undefined => {
-    if (!raw) return undefined;
-    const v = raw.trim().toLowerCase();
-    return allAfricanCountries.find((c) => c.value.toLowerCase() === v || c.code.toLowerCase() === v);
-};
+export const findCountry = (raw?: string | null): CountryData | undefined => findAnyCountry(raw);
 
 const EMAIL = /\S+@\S+\.\S+$/;
 
@@ -74,8 +70,8 @@ export const parsePhone = (raw: string, dialCountry: string): { phone: string; d
     if (s.startsWith('00')) s = `+${s.slice(2)}`;
     if (s.startsWith('+')) {
         // Longest prefix first, so +2420… is Congo, not +24 something shorter.
-        const match = [...allAfricanCountries].sort((a, b) => b.phoneCode.length - a.phoneCode.length)
-            .find((c) => s.startsWith(c.phoneCode));
+        // Countries sharing a code (+1, +44…) keep the one already chosen.
+        const match = countryForPhone(s, dialCountry);
         if (!match) return { error: 'Je ne reconnais pas cet indicatif. Choisissez-le dans la liste puis tapez votre numéro.' };
         dial = match.value;
         s = s.slice(match.phoneCode.length);

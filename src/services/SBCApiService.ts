@@ -586,11 +586,24 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Purchase subscription
+   * Packs and member options with this member's state and prices, in FCFA
+   * (traditional) or USD (crypto). Upgrade prices are worked out server-side.
    */
-  async purchaseSubscription(planType: string): Promise<ApiResponse> {
+  async getSubscriptionOffers(paymentMethod: 'traditional' | 'crypto' = 'traditional'): Promise<ApiResponse> {
+    return await this.get('/subscriptions/offers', {
+      queryParameters: { paymentMethod },
+      skipDeduplication: true,
+    });
+  }
+
+  /**
+   * Purchase a pack or an option. A higher pack bought by a member who has a
+   * lower one is charged as an upgrade by the server. 409: already owned;
+   * 403: options need a pack first (French message).
+   */
+  async purchaseSubscription(planType: string, paymentMethod?: 'traditional' | 'crypto'): Promise<ApiResponse> {
     return await this.post('/subscriptions/purchase', {
-      body: { planType }
+      body: paymentMethod ? { planType, paymentMethod } : { planType }
     });
   }
 
@@ -628,6 +641,29 @@ export class SBCApiService extends ApiService {
     return await this.get(`/payments/intents/${sessionId}/status`, {
       requiresAuth: false
     });
+  }
+
+  // ==================== EXTRA WHATSAPP NUMBERS (Pack Winner) ====================
+
+  /** Slots and the numbers in them. Free slots = slots - numbers.length. */
+  async getExtraNumbers(): Promise<ApiResponse> {
+    return await this.get('/users/me/extra-numbers', { skipDeduplication: true });
+  }
+
+  /** Buys one more slot (500 FCFA); returns { sessionId } for the payment page. */
+  async purchaseExtraNumberSlot(paymentMethod?: 'traditional' | 'crypto'): Promise<ApiResponse> {
+    return await this.post('/users/me/extra-numbers/purchase', {
+      body: paymentMethod ? { paymentMethod } : {}
+    });
+  }
+
+  /** Adds a number to a free slot. `number`: international digits without "+". */
+  async addExtraNumber(number: string): Promise<ApiResponse> {
+    return await this.post('/users/me/extra-numbers', { body: { number } });
+  }
+
+  async deleteExtraNumber(id: string): Promise<ApiResponse> {
+    return await this.delete(`/users/me/extra-numbers/${encodeURIComponent(id)}`);
   }
 
   /**

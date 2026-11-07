@@ -8,12 +8,14 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
-import { 
-  countryOptions, 
-  africanCountryCodes, 
-  momoCorrespondents, 
+import {
+  allCountries,
+  worldCountryCodes,
+  DEFAULT_DIAL_CODE,
+  splitStoredPhone,
+  momoCorrespondents,
   getMomoOperatorDisplayName,
-  countrySupportsMomo 
+  countrySupportsMomo
 } from '../utils/countriesData';
 
 // Supported crypto currencies for withdrawal
@@ -108,7 +110,7 @@ function ModifierLeProfil() {
     notificationPreference: 'email' as 'email' | 'whatsapp',
   });
   // New state for the selected phone country code
-  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(africanCountryCodes[0]);
+  const [selectedPhoneCountryCode, setSelectedPhoneCountryCode] = useState(DEFAULT_DIAL_CODE);
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
@@ -120,12 +122,12 @@ function ModifierLeProfil() {
   useEffect(() => {
     if (user) {
       setFormData((prev) => {
-        const countryName = countryOptions.find((c: { value: string; code: string; }) => c.code === user.country)?.value || user.country || '';
+        const countryName = allCountries.find((c: { value: string; code: string; }) => c.code === user.country)?.value || user.country || '';
         const birthDate = user.birthDate ? new Date(user.birthDate).toISOString().split('T')[0] : '';
         const initialMomoOperator = user.momoOperator || '';
 
         // Determine the country code from the country name
-        const currentCountryCode = countryOptions.find((c: { value: string; }) => c.value === countryName)?.code;
+        const currentCountryCode = allCountries.find((c: { value: string; }) => c.value === countryName)?.code;
         const validOperatorsForCurrentCountry = currentCountryCode && momoCorrespondents[currentCountryCode]
           ? momoCorrespondents[currentCountryCode].operators
           : [];
@@ -135,40 +137,19 @@ function ModifierLeProfil() {
           ? initialMomoOperator
           : ''; // Clear if invalid or country has no operators
 
-        // New: Parse existing phone number to set selectedPhoneCountryCode and local phoneNumber
-        let localPhoneNumber = user.phoneNumber || '';
-        let matchedCode = africanCountryCodes[0]; // Default to the first code if no match
-
-        if (user.phoneNumber) {
-          // Normalize phone number - remove spaces, dashes, and handle + prefix
-          let normalizedPhone = user.phoneNumber.replace(/[\s\-()]/g, '');
-
-          // Sort country codes by length (longest first) to match correctly (e.g., +233 before +23)
-          const sortedCodes = [...africanCountryCodes].sort((a, b) => b.code.length - a.code.length);
-
-          for (const c of sortedCodes) {
-            const codeWithPlus = c.code; // e.g., "+237"
-            const codeWithoutPlus = c.code.replace('+', ''); // e.g., "237"
-
-            // Check if phone starts with +237 or 237
-            if (normalizedPhone.startsWith(codeWithPlus)) {
-              matchedCode = c;
-              localPhoneNumber = normalizedPhone.substring(codeWithPlus.length);
-              break;
-            } else if (normalizedPhone.startsWith(codeWithoutPlus)) {
-              matchedCode = c;
-              localPhoneNumber = normalizedPhone.substring(codeWithoutPlus.length);
-              break;
-            }
-          }
-        }
+        // Split the stored number into dial code + national part. Longest code
+        // first; the member's country settles shared codes (+1, +44…) and
+        // numbers stored without their code (older accounts).
+        const { dial: matchedCode, local: localPhoneNumber } = user.phoneNumber
+          ? splitStoredPhone(user.phoneNumber, user.country)
+          : { dial: DEFAULT_DIAL_CODE, local: '' };
         setSelectedPhoneCountryCode(matchedCode); // Update the separate state for country code
 
         // Parse MoMo number to strip country code (based on selected country)
         let localMomoNumber = user.momoNumber || '';
         if (user.momoNumber) {
           // Get the phone code for the user's country
-          const userCountryData = countryOptions.find((c: { value: string; code: string; }) => c.code === user.country || c.value === countryName);
+          const userCountryData = allCountries.find((c: { value: string; code: string; }) => c.code === user.country || c.value === countryName);
           const countryPhoneCode = userCountryData?.phoneCode || '';
 
           if (countryPhoneCode) {
@@ -216,7 +197,7 @@ function ModifierLeProfil() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === 'countryCodeSelect') { // Handle country code select for phone number
-      const code = africanCountryCodes.find(c => c.value === value);
+      const code = worldCountryCodes.find(c => c.value === value);
       if (code) {
         setSelectedPhoneCountryCode(code);
       }
@@ -312,13 +293,13 @@ function ModifierLeProfil() {
     setLoading(true);
     setFeedback(null);
     try {
-      const countryCode = countryOptions.find(c => c.value === formData.country)?.code || formData.country;
+      const countryCode = allCountries.find(c => c.value === formData.country)?.code || formData.country;
 
       // Normalize phone number - check if country code is already present
       const fullPhoneNumber = normalizePhoneNumber(formData.phoneNumber, selectedPhoneCountryCode.code);
 
       // Normalize MoMo number - check if country code is already present
-      const countryPhoneCode = countryOptions.find(c => c.value === formData.country)?.phoneCode || '';
+      const countryPhoneCode = allCountries.find(c => c.value === formData.country)?.phoneCode || '';
       const fullMomoNumber = formData.momoNumber
         ? normalizePhoneNumber(formData.momoNumber, countryPhoneCode)
         : '';
@@ -375,7 +356,7 @@ function ModifierLeProfil() {
 
   // New: Dynamically compute available MoMo operators based on selected country
   const availableMomoOperators = useMemo(() => {
-    const selectedCountryCode = countryOptions.find((c: { value: string; code: string; }) => c.value === formData.country)?.code;
+    const selectedCountryCode = allCountries.find((c: { value: string; code: string; }) => c.value === formData.country)?.code;
     if (selectedCountryCode && momoCorrespondents[selectedCountryCode]) {
       return [
         { value: '', label: 'Sélectionner un opérateur MoMo' }, // Default option
@@ -387,7 +368,7 @@ function ModifierLeProfil() {
     }
     // If no country selected or no operators for the country, provide only a default option
     return [{ value: '', label: 'Sélectionner un opérateur MoMo' }];
-  }, [formData.country, countryOptions]); // Re-run when country or country options change
+  }, [formData.country, allCountries]); // Re-run when country or country options change
 
   if (authLoading || !user) {
     return <div>Chargement du profil...</div>;
@@ -442,7 +423,7 @@ function ModifierLeProfil() {
                   value={selectedPhoneCountryCode.value}
                   onChange={handleChange}
                 >
-                  {africanCountryCodes.map((c) => (
+                  {worldCountryCodes.map((c) => (
                     <option key={c.value} value={c.value}>{c.label}</option>
                   ))}
                 </select>
@@ -501,7 +482,7 @@ function ModifierLeProfil() {
               <label className="block text-gray-700 mb-1">🌍 Pays</label>
               <select name="country" value={formData.country} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white">
                 <option value="">Sélectionner le pays</option>
-                {countryOptions.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
+                {allCountries.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
               </select>
             </div>
             <div>
@@ -515,14 +496,14 @@ function ModifierLeProfil() {
             <div className="bg-yellow-50 border border-border rounded-xl p-4">
               <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
                 💳 Mobile Money
-                {formData.country && !countrySupportsMomo(countryOptions.find(c => c.value === formData.country)?.code || '') && (
+                {formData.country && !countrySupportsMomo(allCountries.find(c => c.value === formData.country)?.code || '') && (
                   <span className="text-xs font-normal text-red-600 bg-red-100 px-2 py-1 rounded-full">
                     Non disponible
                   </span>
                 )}
               </h3>
               
-              {formData.country && countrySupportsMomo(countryOptions.find(c => c.value === formData.country)?.code || '') ? (
+              {formData.country && countrySupportsMomo(allCountries.find(c => c.value === formData.country)?.code || '') ? (
                 // Show MoMo fields for supported countries
                 <div className="space-y-4">
                   <div className="text-sm text-yellow-700 mb-4">
@@ -533,7 +514,7 @@ function ModifierLeProfil() {
                     <label className="block text-gray-700 mb-1">💳 Numéro MoMo</label>
                     <div className="relative flex items-center">
                       <span className="absolute left-3 text-gray-500 font-medium z-10">
-                        {countryOptions.find(c => c.value === formData.country)?.phoneCode || '+237'}
+                        {allCountries.find(c => c.value === formData.country)?.phoneCode || '+237'}
                       </span>
                       <input 
                         name="momoNumber" 

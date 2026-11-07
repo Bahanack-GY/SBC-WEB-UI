@@ -7,27 +7,19 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import { useAuth } from '../contexts/AuthContext';
+import { DEFAULT_DIAL_CODE, dialCodeOf, findAnyCountry, worldCountryCodes } from '../utils/countriesData';
 
-const countryCodes = [
-  { value: 'Cameroun', label: '🇨🇲 +237', code: '+237' },
-  { value: 'Bénin', label: '🇧🇯 +229', code: '+229' },
-  { value: 'Congo-Brazzaville', label: '🇨🇬 +242', code: '+242' },
-  { value: 'Congo-Kinshasa', label: '🇨🇩 +243', code: '+243' },
-  { value: 'Ghana', label: '🇬🇭 +233', code: '+233' },
-  { value: 'Côte d\'Ivoire', label: '🇨🇮 +225', code: '+225' },
-  { value: 'Sénégal', label: '🇸🇳 +221', code: '+221' },
-  { value: 'Togo', label: '🇹🇬 +228', code: '+228' },
-  { value: 'Burkina Faso', label: '🇧🇫 +226', code: '+226' },
-  { value: 'Mali', label: '🇲🇱 +223', code: '+223' },
-  { value: 'Niger', label: '🇳🇪 +227', code: '+227' },
-  { value: 'Guinée', label: '🇬🇳 +224', code: '+224' },
-  { value: 'Gabon', label: '🇬🇦 +241', code: '+241' },
-  { value: 'Kenya', label: '🇰🇪 +254', code: '+254' },
-];
+// Every country (members sign up from anywhere); opens on the member's own.
+const countryCodes = worldCountryCodes;
 
 function ChangePhoneNumber() {
   const [step, setStep] = useState<'request' | 'verify'>('request');
-  const [selectedCode, setSelectedCode] = useState(countryCodes[0]);
+  const { user } = useAuth();
+  const [selectedCode, setSelectedCode] = useState(() => {
+    const home = findAnyCountry(user?.country);
+    return home ? dialCodeOf(home) : DEFAULT_DIAL_CODE;
+  });
   const [newPhoneNumber, setNewPhoneNumber] = useState('');
   const [otpCode, setOtpCode] = useState('');
   const [loading, setLoading] = useState(false);
@@ -37,7 +29,7 @@ function ChangePhoneNumber() {
   const navigate = useNavigate();
 
   const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const code = countryCodes.find(c => c.value === e.target.value) || countryCodes[0];
+    const code = countryCodes.find(c => c.value === e.target.value) || DEFAULT_DIAL_CODE;
     setSelectedCode(code);
   };
 

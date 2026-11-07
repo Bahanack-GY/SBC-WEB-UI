@@ -8,7 +8,7 @@ import {
   predefinedInterestOptions,
   getInterestBaseValue,
 } from './ModifierLeProfil';
-import { countryOptions, regionsPerCountry } from '../utils/countriesData';
+import { allCountries, regionsPerCountry } from '../utils/countriesData';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 
 function CompleteProfile() {
@@ -25,7 +25,7 @@ function CompleteProfile() {
 
   // Get the user's country code for region lookup
   const userCountryCode = user?.country
-    ? countryOptions.find(c => c.code === user.country || c.value === user.country)?.code || ''
+    ? allCountries.find(c => c.code === user.country || c.value === user.country)?.code || ''
     : '';
   const availableRegions = regionsPerCountry[userCountryCode] || [];
 
