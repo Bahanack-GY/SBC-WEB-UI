@@ -231,4 +231,125 @@ describe('Abonnement', () => {
     expect(within(winner).getByText(/2 emplacements/)).toBeInTheDocument();
     expect(within(winner).getByRole('link', { name: 'Gérer mes numéros' })).toHaveAttribute('href', '/numeros-supplementaires');
   });
+
+  it('keeps the original pack content: pitch, earnings per view, features and formations', async () => {
+    renderPage(<Abonnement />, '/abonnement');
+
+    const classique = await screen.findByRole('article', { name: 'Pack Classique' });
+    const cible = screen.getByRole('article', { name: 'Pack Ciblé' });
+    const winner = screen.getByRole('article', { name: 'Pack Winner' });
+
+    // Classique and Ciblé: the old copy, not the server's list.
+    expect(within(classique).getByText('Tout pour démarrer et gagner dès vos premiers statuts.')).toBeInTheDocument();
+    expect(within(classique).getByText('Possibilité de gagner entre 5 000 et 10 000 FCFA par jour')).toBeInTheDocument();
+    expect(within(classique).getByText('Accès à la marketplace SBC')).toBeInTheDocument();
+    expect(within(classique).queryByText('Pack Classique : avantage 1')).not.toBeInTheDocument();
+    expect(within(cible).getByText('Le meilleur tarif par vue et un ciblage précis de vos contacts.')).toBeInTheDocument();
+    expect(within(cible).getByText('Tout le Pack Classique, et en plus :')).toBeInTheDocument();
+    expect(within(cible).getByText(/Ciblage avancé : pays, sexe, âge/)).toBeInTheDocument();
+    expect(within(cible).getByText('Commissions sur 3 niveaux')).toBeInTheDocument();
+    expect(screen.queryByText(/Plus de commissions/)).not.toBeInTheDocument();
+    // Winner: the server's list.
+    expect(within(winner).getByText('Pack Winner : avantage 1')).toBeInTheDocument();
+
+    // Earnings per view: 1,75 on Classique, 2 on Ciblé and Winner.
+    const earnings = (card: HTMLElement) => within(card).getByRole('region', { name: 'Gains sur vos statuts WhatsApp' });
+    expect(earnings(classique)).toHaveTextContent(/jusqu'à\s*1,75\s*FCFA par vue/);
+    expect(earnings(classique)).toHaveTextContent(/1\s000 vues sur vos statuts = 1\s750 FCFA pour vous/);
+    expect(earnings(cible)).toHaveTextContent(/jusqu'à\s*2\s*FCFA par vue/);
+    expect(earnings(winner)).toHaveTextContent(/2\s000 FCFA pour vous/);
+
+    // Formations: 5 on Classique, 6 on Ciblé and Winner with SBC IA Creator highlighted.
+    expect(within(classique).getByText('5 formations incluses')).toBeInTheDocument();
+    for (const t of ['Trading', 'Achat en Chine', 'Art oratoire', 'Marketing digital', 'Bots WhatsApp']) {
+      expect(within(classique).getByText(t)).toBeInTheDocument();
+      expect(within(cible).getByText(t)).toBeInTheDocument();
+      expect(within(winner).getByText(t)).toBeInTheDocument();
+    }
+    expect(within(classique).queryByText('SBC IA Creator')).not.toBeInTheDocument();
+    expect(within(cible).getByText('6 formations incluses')).toBeInTheDocument();
+    expect(within(cible).getByText('SBC IA Creator')).toHaveClass('text-primary');
+    expect(within(winner).getByText('6 formations incluses')).toBeInTheDocument();
+    expect(within(winner).getByText('SBC IA Creator')).toHaveClass('text-primary');
+  });
+
+  it('keeps packs covered by a higher pack short', async () => {
+    const winnerMember = classiqueMember();
+    winnerMember.packs = winnerMember.packs.map((p) =>
+      p.id === 'WINNER' ? { ...p, state: 'owned', payPrice: null } : { ...p, state: 'included', payPrice: null });
+    winnerMember.winner = { owned: true, vipGroupLink: null, extraNumberSlots: 3 };
+    api.getSubscriptionOffers.mockResolvedValue(ok(winnerMember));
+    renderPage(<Abonnement />, '/abonnement');
+
+    const classique = await screen.findByRole('article', { name: 'Pack Classique' });
+    expect(within(classique).getByText('Inclus dans votre pack')).toBeInTheDocument();
+    expect(within(classique).queryByText(/formations incluses/)).not.toBeInTheDocument();
+    expect(within(classique).queryByRole('region', { name: 'Gains sur vos statuts WhatsApp' })).not.toBeInTheDocument();
+    expect(within(screen.getByRole('article', { name: 'Pack Winner' })).getByText('6 formations incluses')).toBeInTheDocument();
+  });
+});
+
+describe('Votre page de vente', () => {
+  const winnerMember = () => {
+    const offers = classiqueMember();
+    offers.packs = offers.packs.map((p) =>
+      p.id === 'WINNER' ? { ...p, state: 'owned', payPrice: null } : { ...p, state: 'included', payPrice: null });
+    offers.winner = { owned: true, vipGroupLink: null, extraNumberSlots: 3 };
+    return offers;
+  };
+  const link = `${window.location.origin}/p/AWA237`;
+
+  it('is not shown without Pack Winner', async () => {
+    renderPage(<Abonnement />, '/abonnement');
+    await screen.findByRole('article', { name: 'Pack Winner' });
+    expect(screen.queryByRole('region', { name: 'Votre page de vente' })).not.toBeInTheDocument();
+  });
+
+  it('is not shown when the member has no referral code', async () => {
+    auth.user = { country: 'CM', balance: 0 };
+    api.getSubscriptionOffers.mockResolvedValue(ok(winnerMember()));
+    renderPage(<Abonnement />, '/abonnement');
+    await screen.findByRole('article', { name: 'Pack Winner' });
+    expect(screen.queryByRole('region', { name: 'Votre page de vente' })).not.toBeInTheDocument();
+  });
+
+  it('gives a Winner member their link, right after the Winner pack', async () => {
+    api.getSubscriptionOffers.mockResolvedValue(ok(winnerMember()));
+    renderPage(<Abonnement />, '/abonnement');
+
+    const card = await screen.findByRole('region', { name: 'Votre page de vente' });
+    const winner = screen.getByRole('article', { name: 'Pack Winner' });
+    // DOCUMENT_POSITION_FOLLOWING: the card comes after the Winner pack.
+    expect(winner.compareDocumentPosition(card) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(within(card).getByTestId('sales-page-link')).toHaveTextContent(link);
+    expect(within(card).getByRole('link', { name: /Voir ma page/ })).toHaveAttribute('href', link);
+  });
+
+  it('copies the link', async () => {
+    const user = userEvent.setup();
+    const writeText = vi.spyOn(navigator.clipboard, 'writeText');
+    api.getSubscriptionOffers.mockResolvedValue(ok(winnerMember()));
+    renderPage(<Abonnement />, '/abonnement');
+
+    const card = await screen.findByRole('region', { name: 'Votre page de vente' });
+    await user.click(within(card).getByRole('button', { name: 'Copier le lien' }));
+
+    expect(writeText).toHaveBeenCalledWith(link);
+    expect(await within(card).findByRole('button', { name: 'Lien copié' })).toBeInTheDocument();
+  });
+
+  it('shares on WhatsApp when the browser has no share sheet', async () => {
+    const open = vi.spyOn(window, 'open').mockReturnValue(null);
+    api.getSubscriptionOffers.mockResolvedValue(ok(winnerMember()));
+    renderPage(<Abonnement />, '/abonnement');
+
+    const card = await screen.findByRole('region', { name: 'Votre page de vente' });
+    await userEvent.click(within(card).getByRole('button', { name: 'Partager' }));
+
+    expect(open).toHaveBeenCalledWith(
+      `https://wa.me/?text=${encodeURIComponent(`Rejoignez-moi sur Sniper Business Center : ${link}`)}`,
+      '_blank',
+      'noopener,noreferrer',
+    );
+  });
 });

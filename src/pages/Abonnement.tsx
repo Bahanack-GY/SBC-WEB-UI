@@ -1,13 +1,17 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     ArrowRight01Icon,
+    ChartIncreaseIcon,
     CheckmarkCircle02Icon,
+    Copy01Icon,
     Crown02Icon,
+    LinkSquare02Icon,
     LockIcon,
+    Share08Icon,
     Tick02Icon,
     WhatsappIcon,
 } from '@hugeicons/core-free-icons';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
@@ -37,6 +41,45 @@ const PACK_BADGE: Partial<Record<PackId, { label: string; className: string }>> 
 };
 const MAX_FEATURES = 5;
 
+// ponytail: marketing rates shown on the cards, by plan. advertising-service does
+// NOT read the plan today — it pays every diffuseur DIFFUSEUR_RATES per campaign
+// day (1 + 0.5 + 0.25 = 1.75 FCFA max per view). Make the backend plan-aware
+// before promising CIBLE its 2 FCFA, and keep these two in sync.
+// Winner holds everything in Ciblé, so it shows Ciblé's rate.
+const VIEW_RATE: Record<PackId, number> = { CLASSIQUE: 1.75, CIBLE: 2, WINNER: 2 };
+const EXAMPLE_VIEWS = 1000;
+
+const TRAININGS = ['Trading', 'Achat en Chine', 'Art oratoire', 'Marketing digital', 'Bots WhatsApp'];
+
+/**
+ * The Classique and Ciblé cards say what they always said (Rufus, 2026-11-07:
+ * the packs must not change). Winner has no copy here: its list comes from the
+ * server, which carries the sales page and Mise en avant lines.
+ */
+const PLAN_COPY: Partial<Record<PackId, { title: string; pitch: string; features: string[]; extraTraining?: string }>> = {
+    CLASSIQUE: {
+        title: 'Pack Classique',
+        pitch: 'Tout pour démarrer et gagner dès vos premiers statuts.',
+        features: [
+            'Possibilité de gagner entre 5 000 et 10 000 FCFA par jour',
+            'Vente de produits digitaux',
+            'Contacts WhatsApp ciblés par pays',
+            'Accès à la marketplace SBC',
+        ],
+    },
+    CIBLE: {
+        title: 'Pack Ciblé',
+        pitch: 'Le meilleur tarif par vue et un ciblage précis de vos contacts.',
+        features: [
+            'Ciblage avancé : pays, sexe, âge, profession, ville et centres d\'intérêt',
+            'Commissions sur 3 niveaux',
+        ],
+        extraTraining: 'SBC IA Creator',
+    },
+};
+
+const rate = (n: number) => n.toLocaleString('fr-FR');
+
 const longDate = (iso: string) =>
     new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -58,6 +101,75 @@ function Features({ items }: { items: string[] }) {
     );
 }
 
+/** "Gagnez avec vos statuts WhatsApp": the earning feature leads every pack. */
+function EarningsBox({ viewRate }: { viewRate: number }) {
+    return (
+        <section className="rounded-tile bg-success-soft p-3" aria-label="Gains sur vos statuts WhatsApp">
+            <div className="flex items-center gap-2">
+                <span className="grid size-7 shrink-0 place-items-center rounded-pill bg-whatsapp text-white">
+                    <HugeiconsIcon icon={WhatsappIcon} size={15} />
+                </span>
+                <span className="text-sm font-semibold text-ink">Gagnez avec vos statuts WhatsApp</span>
+            </div>
+            <p className="mt-2 flex items-baseline gap-1.5">
+                <span className="text-sm text-ink-2">jusqu'à</span>
+                <span className="text-3xl font-bold text-success tabular-nums leading-none">{rate(viewRate)}</span>
+                <span className="text-sm font-semibold text-success">FCFA par vue</span>
+            </p>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-ink-2">
+                <HugeiconsIcon icon={ChartIncreaseIcon} size={14} className="text-success shrink-0" />
+                <span>
+                    {EXAMPLE_VIEWS.toLocaleString('fr-FR')} vues sur vos statuts ={' '}
+                    <strong className="font-semibold text-ink">{fcfa(Math.round(EXAMPLE_VIEWS * viewRate))}</strong> pour vous
+                </span>
+            </p>
+        </section>
+    );
+}
+
+/** The pack's list, ending with its trainings as chips. */
+function PackFeatures({ packId, features }: { packId: PackId; features: string[] }) {
+    // Winner includes Ciblé, so it carries Ciblé's extra training too.
+    const extraTraining = PLAN_COPY[packId === 'WINNER' ? 'CIBLE' : packId]?.extraTraining;
+    const trainings = extraTraining ? [...TRAININGS, extraTraining] : TRAININGS;
+    return (
+        <div className="subscription-features flex flex-col gap-2.5">
+            {packId === 'CIBLE' && (
+                <p className="text-xs font-semibold text-ink-2">Tout le Pack Classique, et en plus :</p>
+            )}
+            <ul className="flex flex-col gap-2">
+                {features.map((feature) => (
+                    <li key={feature} className="flex items-start gap-2 text-sm text-ink">
+                        <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-primary" />
+                        <span>{feature}</span>
+                    </li>
+                ))}
+                <li className="flex items-start gap-2 text-sm text-ink">
+                    <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-primary" />
+                    <span>
+                        {trainings.length} formations incluses
+                        <span className="mt-1.5 flex flex-wrap gap-1.5">
+                            {trainings.map((t) => (
+                                <span
+                                    key={t}
+                                    className={cn(
+                                        'rounded-pill border px-2 py-0.5 text-[11px]',
+                                        t === extraTraining
+                                            ? 'border-primary bg-primary-soft font-semibold text-primary'
+                                            : 'border-border bg-surface-2 text-ink-2',
+                                    )}
+                                >
+                                    {t}
+                                </span>
+                            ))}
+                        </span>
+                    </span>
+                </li>
+            </ul>
+        </div>
+    );
+}
+
 function PackCard({ pack, winner, busy, locked, onBuy }: {
     pack: PackOffer;
     winner: SubscriptionOffers['winner'];
@@ -70,6 +182,8 @@ function PackCard({ pack, winner, busy, locked, onBuy }: {
     const forSale = pack.state === 'available' || pack.state === 'upgrade';
     const badge = forSale ? PACK_BADGE[pack.id] : undefined;
     const pay = pack.payPrice ?? pack.price;
+    const copy = PLAN_COPY[pack.id];
+    const name = copy?.title ?? pack.name;
 
     return (
         <article
@@ -84,12 +198,15 @@ function PackCard({ pack, winner, busy, locked, onBuy }: {
             )}
         >
             <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex items-center gap-2 flex-wrap">
-                    {pack.id === 'WINNER' && <HugeiconsIcon icon={Crown02Icon} size={18} className="text-accent shrink-0" />}
-                    <h3 id={`pack-${pack.id}`} className={cn('text-base font-bold', included ? 'text-ink-2' : 'text-ink')}>{pack.name}</h3>
-                    {badge && (
-                        <span className={cn('rounded-pill px-2 py-0.5 text-[11px] font-semibold', badge.className)}>{badge.label}</span>
-                    )}
+                <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                        {pack.id === 'WINNER' && <HugeiconsIcon icon={Crown02Icon} size={18} className="text-accent shrink-0" />}
+                        <h3 id={`pack-${pack.id}`} className={cn('text-base font-bold', included ? 'text-ink-2' : 'text-ink')}>{name}</h3>
+                        {badge && (
+                            <span className={cn('rounded-pill px-2 py-0.5 text-[11px] font-semibold', badge.className)}>{badge.label}</span>
+                        )}
+                    </div>
+                    {copy && !included && <p className="mt-0.5 text-sm text-ink-2 text-pretty">{copy.pitch}</p>}
                 </div>
                 <div className="shrink-0 text-right">
                     <p className={cn('text-lg font-bold tabular-nums leading-tight', included ? 'text-ink-2' : 'text-ink')}>
@@ -106,7 +223,8 @@ function PackCard({ pack, winner, busy, locked, onBuy }: {
             )}
 
             {/* A pack covered by the member's own needs no sales pitch: keep it short. */}
-            {!included && <Features items={pack.features} />}
+            {!included && <EarningsBox viewRate={VIEW_RATE[pack.id]} />}
+            {!included && <PackFeatures packId={pack.id} features={copy?.features ?? pack.features} />}
 
             {forSale && (
                 <button
@@ -117,7 +235,7 @@ function PackCard({ pack, winner, busy, locked, onBuy }: {
                 >
                     {busy
                         ? REDIRECTING
-                        : `${pack.state === 'upgrade' ? 'Passer au' : 'Choisir le'} ${pack.name} · ${money(pay, pack.currency)}`}
+                        : `${pack.state === 'upgrade' ? 'Passer au' : 'Choisir le'} ${name} · ${money(pay, pack.currency)}`}
                 </button>
             )}
 
@@ -158,6 +276,82 @@ function PackCard({ pack, winner, busy, locked, onBuy }: {
                 </p>
             )}
         </article>
+    );
+}
+
+/** The Winner member's public sales page (/p/<referralCode>): their link to share with prospects. */
+function SalesPageCard({ referralCode }: { referralCode: string }) {
+    const url = `${window.location.origin}/p/${encodeURIComponent(referralCode)}`;
+    const [copy, setCopy] = useState<'copied' | 'failed' | null>(null);
+    const timer = useRef<ReturnType<typeof setTimeout>>();
+    useEffect(() => () => clearTimeout(timer.current), []);
+
+    const copyLink = async () => {
+        clearTimeout(timer.current);
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopy('copied');
+        } catch {
+            // No clipboard (old browser, http): the link stays on screen to copy by hand.
+            setCopy('failed');
+        }
+        timer.current = setTimeout(() => setCopy(null), 2500);
+    };
+
+    const share = async () => {
+        const text = 'Rejoignez-moi sur Sniper Business Center';
+        if (typeof navigator.share === 'function') {
+            try {
+                await navigator.share({ title: 'Sniper Business Center', text, url });
+            } catch { /* closed the share sheet */ }
+            return;
+        }
+        window.open(`https://wa.me/?text=${encodeURIComponent(`${text} : ${url}`)}`, '_blank', 'noopener,noreferrer');
+    };
+
+    return (
+        <section aria-labelledby="sales-page-title" className="bg-surface border border-border rounded-card p-4 flex flex-col gap-3">
+            <div>
+                <h3 id="sales-page-title" className="text-base font-bold text-ink">Votre page de vente</h3>
+                <p className="mt-1 text-sm text-ink-2 text-pretty">
+                    Partagez ce lien : vos prospects découvrent SBC et s'inscrivent directement sous vous.
+                </p>
+            </div>
+            <p className="rounded-tile bg-surface-2 px-3 py-2.5 text-sm font-medium text-ink break-all select-all" data-testid="sales-page-link">
+                {url}
+            </p>
+            <div className="grid grid-cols-2 gap-2">
+                <button
+                    type="button"
+                    onClick={copyLink}
+                    className={cn(btn, 'bg-surface text-ink border border-border hover:bg-surface-2')}
+                >
+                    <HugeiconsIcon icon={copy === 'copied' ? CheckmarkCircle02Icon : Copy01Icon} size={16} className={copy === 'copied' ? 'text-success' : undefined} />
+                    {copy === 'copied' ? 'Lien copié' : 'Copier le lien'}
+                </button>
+                <button
+                    type="button"
+                    onClick={share}
+                    className={cn(btn, 'bg-primary text-white hover:bg-primary-hover')}
+                >
+                    <HugeiconsIcon icon={Share08Icon} size={16} />
+                    Partager
+                </button>
+            </div>
+            <p role="status" className={cn('text-sm text-ink-2', copy !== 'failed' && 'sr-only')}>
+                {copy === 'copied' && 'Lien copié'}
+                {copy === 'failed' && 'Copie impossible : appuyez longuement sur le lien pour le copier.'}
+            </p>
+            <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="-mt-1 inline-flex items-center justify-center gap-1 py-1 text-sm font-semibold text-primary"
+            >
+                Voir ma page
+                <HugeiconsIcon icon={LinkSquare02Icon} size={16} />
+            </a>
+        </section>
     );
 }
 
@@ -356,6 +550,7 @@ function Abonnement() {
     const proOptions = (offers?.addons ?? []).filter((a) => a.type === 'PRO');
     const highlightOptions = (offers?.addons ?? []).filter((a) => a.type === 'MISE_EN_AVANT');
     const locked = purchasing !== null || pricesPending;
+    const salesPageCode = offers?.winner.owned ? user?.referralCode : undefined;
 
     const enter = (i: number) => reduceMotion
         ? { initial: { opacity: 0 }, animate: { opacity: 1 }, transition: { duration: 0.15 } }
@@ -427,15 +622,22 @@ function Abonnement() {
                     ) : (
                         <div className={cn('flex flex-col gap-3 transition-opacity', pricesPending && 'opacity-60')}>
                             {packs.map((pack, index) => (
-                                <motion.div key={pack.id} {...enter(index)}>
-                                    <PackCard
-                                        pack={pack}
-                                        winner={offers!.winner}
-                                        busy={purchasing === pack.id}
-                                        locked={locked}
-                                        onBuy={handlePurchase}
-                                    />
-                                </motion.div>
+                                <Fragment key={pack.id}>
+                                    <motion.div {...enter(index)}>
+                                        <PackCard
+                                            pack={pack}
+                                            winner={offers!.winner}
+                                            busy={purchasing === pack.id}
+                                            locked={locked}
+                                            onBuy={handlePurchase}
+                                        />
+                                    </motion.div>
+                                    {pack.id === 'WINNER' && salesPageCode && (
+                                        <motion.div {...enter(index + 1)}>
+                                            <SalesPageCard referralCode={salesPageCode} />
+                                        </motion.div>
+                                    )}
+                                </Fragment>
                             ))}
 
                             {(proOptions.length > 0 || highlightOptions.length > 0) && (

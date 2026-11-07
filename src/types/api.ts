@@ -129,10 +129,37 @@ export interface ExtraNumber {
 }
 
 export interface ExtraNumbers {
+  /** The account's own number, as stored (older accounts: without the dialling code). */
+  mainNumber: string;
+  /** The number prospects see on SBC Network and the sales page; null = the main number. */
+  featured: string | null;
   slots: number;
   numbers: ExtraNumber[];
   pricePerSlot: number;
   currency: 'XAF';
+}
+
+// ---- Pack Winner sales page (/p/:code), public ----
+
+export interface SalesPagePack {
+  id: PackId;
+  name: string;
+  price: number;
+  currency: 'XAF';
+  features: string[];
+}
+
+export interface SalesPage {
+  name: string;
+  firstName: string;
+  /** Absolute URL, or a same-origin path such as /api/users/avatar/<fileId>. */
+  avatarUrl: string | null;
+  /** International digits without "+", ready for wa.me. */
+  whatsappNumber: string | null;
+  /** ISO2. */
+  country: string | null;
+  referralCode: string;
+  packs: SalesPagePack[];
 }
 
 export interface Subscription {
