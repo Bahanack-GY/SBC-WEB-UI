@@ -405,7 +405,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         </span>
                         <div className="min-w-44 flex-1">
                             <p className="text-sm font-semibold text-ink text-pretty">Recevez les demandes de clients près de chez vous</p>
-                            <p className="text-xs text-ink-2">Espace Pro : 2 000 FCFA/mois ou 12 000 FCFA/an</p>
+                            <p className="text-xs text-ink-2">{'Espace Pro : 2\u00a0000\u00a0FCFA/mois ou 12\u00a0000\u00a0FCFA/an'}</p>
                         </div>
                         <Link
                             to="/abonnement#pro"

@@ -1,11 +1,9 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
     ArrowRight01Icon,
-    Bitcoin01Icon,
     CheckmarkCircle02Icon,
     Crown02Icon,
     LockIcon,
-    SmartPhone01Icon,
     Tick02Icon,
     WhatsappIcon,
 } from '@hugeicons/core-free-icons';
@@ -46,13 +44,13 @@ const btn = 'w-full inline-flex items-center justify-center gap-2 rounded-xl py-
 const REDIRECTING = 'Redirection vers le paiement…';
 const START_FAILED = 'Le paiement n\'a pas pu démarrer. Réessayez dans un instant.';
 
-function Features({ items, muted }: { items: string[]; muted?: boolean }) {
+function Features({ items }: { items: string[] }) {
     if (items.length === 0) return null;
     return (
         <ul className="subscription-features flex flex-col gap-1.5">
             {items.slice(0, MAX_FEATURES).map((feature) => (
-                <li key={feature} className={cn('flex items-start gap-2 text-sm', muted ? 'text-ink-2' : 'text-ink')}>
-                    <HugeiconsIcon icon={Tick02Icon} size={16} className={cn('mt-0.5 shrink-0', muted ? 'text-ink-3' : 'text-primary')} />
+                <li key={feature} className="flex items-start gap-2 text-sm text-ink">
+                    <HugeiconsIcon icon={Tick02Icon} size={16} className="mt-0.5 shrink-0 text-primary" />
                     <span>{feature}</span>
                 </li>
             ))}
@@ -107,7 +105,8 @@ function PackCard({ pack, winner, busy, locked, onBuy }: {
                 </p>
             )}
 
-            <Features items={pack.features} muted={included} />
+            {/* A pack covered by the member's own needs no sales pitch: keep it short. */}
+            {!included && <Features items={pack.features} />}
 
             {forSale && (
                 <button
@@ -183,15 +182,7 @@ function AddonCard({ anchor, options, purchasing, locked, onBuy }: {
             className={cn('scroll-mt-20 bg-surface border rounded-card p-4 flex flex-col gap-3', activeUntil ? 'border-success' : 'border-border')}
         >
             <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <h3 id={`${anchor}-title`} className="text-base font-bold text-ink">{title}</h3>
-                    {activeUntil && (
-                        <p className="mt-1 inline-flex items-center gap-1 rounded-pill bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">
-                            <HugeiconsIcon icon={CheckmarkCircle02Icon} size={13} />
-                            Actif jusqu'au {longDate(activeUntil)}
-                        </p>
-                    )}
-                </div>
+                <h3 id={`${anchor}-title`} className="min-w-0 text-base font-bold text-ink">{title}</h3>
                 <div className="shrink-0 text-right">
                     <p className="text-lg font-bold text-ink tabular-nums leading-tight">{money(selected.price, selected.currency)}</p>
                     <p className="text-[11px] text-ink-2">{selected.period === 'yearly' ? 'par an' : 'par mois'}</p>
@@ -202,6 +193,13 @@ function AddonCard({ anchor, options, purchasing, locked, onBuy }: {
                     )}
                 </div>
             </div>
+
+            {activeUntil && (
+                <p className="-mt-1 inline-flex items-center gap-1 self-start rounded-pill bg-success-soft px-2 py-0.5 text-xs font-semibold text-success">
+                    <HugeiconsIcon icon={CheckmarkCircle02Icon} size={13} />
+                    Actif jusqu'au {longDate(activeUntil)}
+                </p>
+            )}
 
             {options.length > 1 && (
                 <div role="group" aria-label="Durée" className="grid grid-cols-2 gap-1 rounded-tile bg-surface-2 p-1">
@@ -388,8 +386,8 @@ function Abonnement() {
 
                         <div role="group" aria-label="Moyen de paiement" className="grid grid-cols-2 gap-1 rounded-tile border border-border bg-surface p-1">
                             {([
-                                { id: 'traditional', label: 'Mobile Money (FCFA)', icon: SmartPhone01Icon },
-                                { id: 'crypto', label: 'Crypto (USD)', icon: Bitcoin01Icon },
+                                { id: 'traditional', label: 'Mobile Money (FCFA)' },
+                                { id: 'crypto', label: 'Crypto (USD)' },
                             ] as const).map((m) => (
                                 <button
                                     key={m.id}
@@ -398,11 +396,10 @@ function Abonnement() {
                                     disabled={purchasing !== null}
                                     onClick={() => setPaymentMethod(m.id)}
                                     className={cn(
-                                        'inline-flex items-center justify-center gap-1.5 rounded-lg px-1 py-2 text-[13px] font-semibold transition-colors',
+                                        'rounded-lg px-1 py-2 text-sm font-semibold transition-colors',
                                         paymentMethod === m.id ? 'bg-primary text-white' : 'text-ink-2 hover:bg-surface-2',
                                     )}
                                 >
-                                    <HugeiconsIcon icon={m.icon} size={16} className="shrink-0" />
                                     {m.label}
                                 </button>
                             ))}
