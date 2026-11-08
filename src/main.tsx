@@ -6,6 +6,10 @@ import App from './App.tsx'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import './i18n/config' // Initialize i18n
 import { purgeStaleCaches, registerAppServiceWorker } from './utils/cacheBuster'
+import { sweepExpiredStorage } from './utils/privacy'
+
+// Nothing the site keeps on the device may be older than 60 days (APDP).
+sweepExpiredStorage();
 
 // Best-effort: unregister leftover service workers from past deploys and clear
 // cache storage, so users always run the freshly-shipped bundles. Then register

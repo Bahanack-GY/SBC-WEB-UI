@@ -13,6 +13,8 @@ export default function PublicFooter() {
           <span>·</span>
           <Link to="/confidentialite" className="hover:text-primary">Confidentialité</Link>
           <span>·</span>
+          <Link to="/mentions-legales" className="hover:text-primary">Mentions légales</Link>
+          <span>·</span>
           <a href="mailto:reseautage.sbc@gmail.com" className="hover:text-primary">Contact</a>
         </div>
         <p className="text-[10px] text-gray-400/80">

@@ -97,6 +97,26 @@ The codebase includes `ApiTestComponent` and `LoginDebugComponent` for API endpo
 - Test files are excluded in `tsconfig.app.json` so `tsc -b` doesn't type-check them against
   the app config.
 
+### Personal data (APDP, Benin) — November 2026
+SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/APDP/DST/SC du
+27 août 2026) on conditions the app must keep meeting, for every member whatever the country:
+- **Consent.** Sign-up (chat and `/signup/formulaire`) requires two ticked boxes and sends
+  `consents: { privacy, dataTransfer }`. Existing members get a blocking window
+  (`components/privacy/PrivacyNotices.tsx`) until `user.consents` matches
+  `PRIVACY_POLICY_VERSION` in `utils/privacy.ts`. Bumping that constant (with the backend's)
+  asks everyone again. The window never covers the legal pages, sign-up, `/otp`, SSO, `/p/*`
+  or `/mes-donnees` (a member who refuses must be able to delete the account).
+- **Legal texts.** `/confidentialite` and `/mentions-legales` name the controller, the APDP
+  reference and the hosts (Contabo, Cloudflare R2). Change them when a processor changes.
+  Link the CGU with `components/common/TermsLink`: the official PDF from the settings
+  (`termsAndConditionsPdf`, uploaded by Rufus) when there is one, else `/conditions`.
+- **Rights.** `/mes-donnees`: data export, contact-file switch (`shareContactInfo`),
+  account deletion with password. Reachable without a subscription.
+- **Device storage.** No analytics or ad cookies, ever. The cookie notice comes back 60 days
+  after dismissal; `sweepExpiredStorage()` (main.tsx) wipes localStorage, except the token,
+  every 60 days; logout removes `PERSONAL_STORAGE_KEYS`. Never store a password, and add any
+  new personal localStorage key to that list.
+
 ### Internationalization
 Uses i18next with browser language detection and HTTP backend for translations.
 
