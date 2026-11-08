@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState, type ComponentProps, type ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowLeft01Icon, PencilEdit02Icon } from '@hugeicons/core-free-icons';
 import { useAuth } from '../../contexts/AuthContext';
@@ -13,10 +12,10 @@ import { allCountries, regionsPerCountry } from '../../utils/countriesData';
 import { professionOptions, predefinedInterestOptions, getInterestBaseValue } from '../ModifierLeProfil';
 import RecoveryCompletedNotification from '../../components/RecoveryCompletedNotification';
 import {
-    ChipsComposer, DateComposer, ListComposer, MultiComposer, OtpComposer, PasswordComposer, PhoneComposer, TextComposer,
+    ChipsComposer, ConsentComposer, DateComposer, ListComposer, MultiComposer, OtpComposer, PasswordComposer, PhoneComposer, TextComposer,
 } from './ChatComposers';
 import {
-    EMPTY_ANSWERS, clearDraft, countryByValue, displayPhone, findCountry, firstName, fullPhone, loadDraft, parsePhone, saveDraft,
+    EMPTY_ANSWERS, clearDraft, consentsOf, countryByValue, displayPhone, findCountry, firstName, fullPhone, loadDraft, parsePhone, saveDraft,
     validateBirthDate, validateConfirmation, validateEmail, validateName, validatePassword,
     type ProfileAnswers, type SignupAnswers,
 } from './signupChatLogic';
@@ -83,13 +82,6 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
     const started = useRef(false);
     const endRef = useRef<HTMLDivElement>(null);
 
-    const { data: settings } = useQuery({
-        queryKey: ['settings'],
-        queryFn: async () => handleApiResponse(await sbcApiService.getAppSettings()),
-        staleTime: 5 * 60_000, retry: 1,
-    });
-    const termsUrl = settings?.termsAndConditionsPdf?.fileId ? sbcApiService.generateSettingsFileUrl(settings.termsAndConditionsPdf.fileId) : undefined;
-
     useEffect(() => { endRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'end' }); }, [msgs, typing, step, quick]);
     useEffect(() => {
         if (resendIn <= 0) return;
@@ -141,7 +133,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             case 'confirm': await bot('Retapez-le pour être sûr qu’il n’y a pas de faute de frappe.'); break;
             case 'sponsor': await bot('Quel est le code de votre parrain ? Il figure dans le lien ou le message d’invitation reçu.'); break;
             case 'terms':
-                await bot(<>Dernière question : acceptez-vous les <TermsLink url={termsUrl} /> de SBC ?</>);
+                await bot(<>Dernière question : vos accords. Lisez les <TextLink to="/conditions">conditions d’utilisation</TextLink> et
+                    la <TextLink to="/confidentialite">politique de confidentialité</TextLink>, puis cochez les deux cases.</>);
                 break;
             case 'review': await showReview(); return;
             case 'sex': await bot('Vous êtes…'); break;
@@ -330,8 +323,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 markDone(s); await advance(); return;
             }
             case 'terms': {
-                me('J’accepte', s);
-                setA({ terms: true });
+                me('J’accepte les conditions, la politique de confidentialité et l’hébergement de mes données hors du Bénin', s);
+                setA({ terms: true, dataTransfer: true });
                 markDone(s); await ask('review'); return;
             }
             case 'otp': {
@@ -451,6 +444,13 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
         setQuick([]);
         me('Créer mon compte');
         const a = answersRef.current;
+        // Both agreements are required (APDP); a draft from an older build may lack the second.
+        if (!a.terms || !a.dataTransfer) {
+            doneRef.current.delete('terms');
+            setBusy(false);
+            await ask('terms');
+            return;
+        }
         try {
             const result = await register({
                 email: a.email,
@@ -459,6 +459,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 phoneNumber: fullPhone(a),
                 referrerCode: a.sponsor || undefined,
                 country: countryByValue(a.country)?.code || a.country,
+                consents: consentsOf(a),
             });
             pendingRef.current = { userId: result.userId, email: a.email, phone: displayPhone(a) };
             try { sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...pendingRef.current, name: a.name, country: a.country })); } catch { /* ignore */ }
@@ -562,7 +563,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
 
             const a = answersRef.current;
             const known: Step[] = [];
-            if (draft) for (const s of draft.done) if (SIGNUP.includes(s as Step)) known.push(s as Step);
+            // A draft from before the transfer agreement existed asks the agreements again.
+            if (draft) for (const s of draft.done) if (SIGNUP.includes(s as Step) && !(s === 'terms' && !a.dataTransfer)) known.push(s as Step);
             if (a.name && !known.includes('name')) known.push('name');
             if (a.country) known.push('country');
             if (a.phone) known.push('phone');
@@ -611,12 +613,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             composer = <TextComposer key="sponsor" label="Code parrain" placeholder="Code du parrain" autoCapitalize="none" onSubmit={(v) => answer('sponsor', v)} disabled={disabled} />;
             break;
         case 'terms':
-            composer = (
-                <div className="flex flex-wrap gap-2 justify-end">
-                    <a href={termsUrl || '/conditions'} target="_blank" rel="noopener noreferrer" className="rounded-pill border border-border bg-surface px-4 py-2.5 text-sm font-medium text-ink">Lire les conditions</a>
-                    <button type="button" disabled={disabled} onClick={() => answer('terms', 'yes')} className="rounded-pill bg-primary text-white px-5 py-2.5 text-sm font-semibold disabled:opacity-50">J’accepte</button>
-                </div>
-            );
+            composer = <ConsentComposer key="terms" onSubmit={() => answer('terms', 'yes')} disabled={disabled} />;
             break;
         case 'review':
             composer = (
@@ -748,7 +745,7 @@ function TypingDots() {
     );
 }
 
-/** The terms PDF from the settings, or the app's public terms page when none is uploaded. */
-function TermsLink({ url }: { url?: string }) {
-    return <a href={url || '/conditions'} target="_blank" rel="noopener noreferrer" className="text-primary underline font-medium">conditions d’utilisation</a>;
+/** A legal text, opened in a new tab so the conversation stays where it is. */
+function TextLink({ to, children }: { to: string; children: ReactNode }) {
+    return <a href={to} target="_blank" rel="noopener noreferrer" className="text-primary underline font-medium">{children}</a>;
 }

@@ -132,6 +132,7 @@ export default function PublicLanding() {
             </a>
             <Link to="/conditions" className="text-primary hover:underline">📄 Conditions générales d'utilisation</Link>
             <Link to="/confidentialite" className="text-primary hover:underline">📄 Politique de confidentialité</Link>
+            <Link to="/mentions-legales" className="text-primary hover:underline">📄 Mentions légales</Link>
           </div>
         </section>
 

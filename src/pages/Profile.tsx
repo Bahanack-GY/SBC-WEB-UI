@@ -1,12 +1,12 @@
 import { InstallAppCard } from '../components/pwa/InstallAppCard';
 import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, Notification01Icon, PencilEdit01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, Notification01Icon, PencilEdit01Icon, Shield01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import Skeleton from '../components/common/Skeleton';
 import { sbcApiService } from '../services/SBCApiService';
@@ -30,6 +30,8 @@ const baseActions: ActionItem[] = [
   // still changed from "Modifier le profil" (or /change-phone).
   { label: 'Ajouter un nouveau numéro', icon: <HugeiconsIcon icon={Call02Icon} className="text-primary" />, to: '/numeros-supplementaires' },
   { label: 'Modifier mon mot de passe', icon: <HugeiconsIcon icon={LockIcon} className="text-primary" />, to: '/change-password' },
+  // APDP: download, contact sharing, account deletion.
+  { label: 'Mes données personnelles', icon: <HugeiconsIcon icon={Shield01Icon} className="text-primary" />, to: '/mes-donnees' },
   { label: 'Notifications', icon: <HugeiconsIcon icon={Notification01Icon} className="text-primary" />, to: '/notifications' },
   { label: 'Mon Abonnement', icon: <HugeiconsIcon icon={CreditCardIcon} className="text-primary" />, to: '/changer-abonnement' },
   { label: 'Solde d\'Activation', icon: <HugeiconsIcon icon={GiftIcon} className="text-amber-500" />, to: '/activation-balance' },
@@ -79,9 +81,9 @@ function Profile() {
 
   // Build actions list dynamically based on Relance subscription
   const actions: ActionItem[] = [
-    ...baseActions.slice(0, 7), // Up to "Mes Contacts"
+    ...baseActions.slice(0, 8), // Up to "Solde d'Activation"
     { label: 'Relance', icon: <HugeiconsIcon icon={Mail01Icon} className="text-primary" />, to: '/relance' },
-    ...baseActions.slice(7), // Rest of the actions
+    ...baseActions.slice(8), // Rest of the actions
   ];
 
   // New states for the generic info/confirmation modal
@@ -417,7 +419,13 @@ function Profile() {
           </div>
         </motion.div>
         <TourButton />
-        <footer className="text-xs text-gray-400 mt-6 mb-2 text-center">Développé par simbtech</footer>
+        <footer className="text-xs text-gray-400 mt-6 mb-2 text-center space-y-1">
+          <p className="flex justify-center gap-3">
+            <Link to="/confidentialite" className="hover:text-primary underline">Politique de confidentialité</Link>
+            <Link to="/mentions-legales" className="hover:text-primary underline">Mentions légales</Link>
+          </p>
+          <p>Développé par simbtech</p>
+        </footer>
 
         {/* New: Change Referral Code Modal */}
         <AnimatePresence>

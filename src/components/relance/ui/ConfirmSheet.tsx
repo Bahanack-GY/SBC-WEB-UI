@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Sheet } from './Sheet';
 
 /**
@@ -5,7 +6,7 @@ import { Sheet } from './Sheet';
  * campaign on a single tap of "Annuler" — a word it also used for "close".
  */
 export function ConfirmSheet({
-  open, title, message, confirmLabel, danger, busy, onConfirm, onCancel,
+  open, title, message, confirmLabel, danger, busy, onConfirm, onCancel, children,
 }: {
   open: boolean;
   title: string;
@@ -15,6 +16,8 @@ export function ConfirmSheet({
   busy?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** Shown under the message, e.g. a password to type before a deletion. */
+  children?: ReactNode;
 }) {
   return (
     <Sheet
@@ -37,6 +40,7 @@ export function ConfirmSheet({
       }
     >
       <p className="text-sm text-ink-2">{message}</p>
+      {children}
     </Sheet>
   );
 }

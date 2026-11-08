@@ -47,3 +47,13 @@ describe('Profile: VIP group (Pack Winner)', () => {
     expect(api.getSubscriptionOffers).not.toHaveBeenCalled();
   });
 });
+
+describe('Profile: personal data (APDP)', () => {
+  it('offers "Mes données personnelles" and links to the privacy policy and legal notice', async () => {
+    auth.user = { ...auth.user, activeSubscriptions: ['CIBLE'] };
+    renderPage(<Profile />, '/profile');
+    expect(await screen.findByRole('button', { name: /Mes données personnelles/ })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Politique de confidentialité' })).toHaveAttribute('href', '/confidentialite');
+    expect(screen.getByRole('link', { name: 'Mentions légales' })).toHaveAttribute('href', '/mentions-legales');
+  });
+});

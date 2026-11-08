@@ -92,6 +92,38 @@ export function ListComposer({ label, options, placeholder = 'Rechercher…', on
     );
 }
 
+/**
+ * The two agreements the sign-up needs (APDP): the terms and privacy policy,
+ * and the hosting of data outside Benin. Both boxes must be ticked. The texts
+ * open in a new tab so the conversation stays where it is.
+ */
+export function ConsentComposer({ onSubmit, disabled }: { onSubmit: () => void; disabled?: boolean }) {
+    const [privacy, setPrivacy] = useState(false);
+    const [transfer, setTransfer] = useState(false);
+    const box = 'flex items-start gap-3 rounded-tile border border-border bg-bg px-3 py-2.5 text-sm text-ink cursor-pointer';
+    const tick = 'mt-0.5 size-5 shrink-0 accent-[#115CF6]';
+    const link = 'text-primary underline font-medium';
+    return (
+        <div className="space-y-2">
+            <label className={box}>
+                <input type="checkbox" className={tick} checked={privacy} onChange={(e) => setPrivacy(e.target.checked)} disabled={disabled} />
+                <span>
+                    J’accepte les <a href="/conditions" target="_blank" rel="noopener noreferrer" className={link}>conditions d’utilisation</a> et
+                    la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className={link}>politique de confidentialité</a>
+                </span>
+            </label>
+            <label className={box}>
+                <input type="checkbox" className={tick} checked={transfer} onChange={(e) => setTransfer(e.target.checked)} disabled={disabled} />
+                <span>J’accepte que mes données soient hébergées et traitées hors du Bénin (serveurs en Allemagne)</span>
+            </label>
+            <button type="button" disabled={disabled || !privacy || !transfer} onClick={onSubmit}
+                className="w-full h-12 rounded-pill bg-primary text-white font-semibold disabled:opacity-40">
+                J’accepte
+            </button>
+        </div>
+    );
+}
+
 /** A few quick replies (sex, language, yes/no). */
 export function ChipsComposer({ options, onSubmit, disabled }: { options: Option[]; onSubmit: (v: string) => void; disabled?: boolean }) {
     return (

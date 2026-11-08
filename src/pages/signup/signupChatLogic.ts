@@ -16,7 +16,10 @@ export interface SignupAnswers {
     email: string;
     password: string;
     sponsor: string;
+    /** Terms of use and privacy policy accepted. */
     terms: boolean;
+    /** Hosting and processing of the data outside Benin accepted (APDP). */
+    dataTransfer: boolean;
 }
 
 export interface ProfileAnswers {
@@ -29,8 +32,11 @@ export interface ProfileAnswers {
 }
 
 export const EMPTY_ANSWERS: SignupAnswers = {
-    name: '', country: '', dialCountry: '', phone: '', email: '', password: '', sponsor: '', terms: false,
+    name: '', country: '', dialCountry: '', phone: '', email: '', password: '', sponsor: '', terms: false, dataTransfer: false,
 };
+
+/** What the register call sends as `consents`. Both are needed to create the account. */
+export const consentsOf = (a: Pick<SignupAnswers, 'terms' | 'dataTransfer'>) => ({ privacy: a.terms, dataTransfer: a.dataTransfer });
 
 export const countryByValue = (value?: string): CountryData | undefined =>
     allCountries.find((c) => c.value === value);

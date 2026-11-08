@@ -4,7 +4,6 @@ import userEvent from '@testing-library/user-event';
 import { fail, ok, renderPage } from '../../test/api';
 
 const api = vi.hoisted(() => ({
-    getAppSettings: vi.fn(), generateSettingsFileUrl: vi.fn(() => 'https://files/terms.pdf'),
     checkUserExistence: vi.fn(), checkRecoveryRegistration: vi.fn(), parseConflictError: vi.fn(() => null),
     getRecoveryNotification: vi.fn(), getAffiliationInfo: vi.fn(), resendOtpEnhanced: vi.fn(),
 }));
@@ -33,7 +32,6 @@ beforeEach(() => {
     localStorage.clear();
     sessionStorage.clear();
     aff.affiliationCode = null;
-    api.getAppSettings.mockResolvedValue(ok({ termsAndConditionsPdf: { fileId: 'f1' } }));
     api.checkUserExistence.mockResolvedValue(ok({ exists: false }));
     api.checkRecoveryRegistration.mockResolvedValue(ok({ hasPendingRecoveries: false }));
     api.getRecoveryNotification.mockResolvedValue(ok({ hasRecoveries: false }));
@@ -51,6 +49,13 @@ async function answerSignup({ sponsor = true } = {}) {
     await say('Mot de passe', 'motdepasse123');
     await say('Confirmation du mot de passe', 'motdepasse123');
     if (sponsor) await say('Code parrain', 'AWA237');
+    await acceptBoth();
+}
+
+/** The two agreements of the last question, both required. */
+async function acceptBoth() {
+    await user.click(await screen.findByRole('checkbox', { name: /conditions d’utilisation et la politique de confidentialité/ }));
+    await user.click(screen.getByRole('checkbox', { name: /hébergées et traitées hors du Bénin/ }));
     await tap('J’accepte');
 }
 
@@ -65,6 +70,7 @@ describe('sign-up chat', () => {
         await waitFor(() => expect(auth.register).toHaveBeenCalledWith({
             email: 'marie.ngo@example.com', password: 'motdepasse123', name: 'Marie Claire Ngo',
             phoneNumber: '+237699123456', referrerCode: 'AWA237', country: 'CM',
+            consents: { privacy: true, dataTransfer: true },
         }));
         expect(await within(log()).findByText(/code de 6 caractères par e-mail/)).toBeInTheDocument();
         // The password never reaches storage.
@@ -125,6 +131,26 @@ describe('sign-up chat', () => {
         await answerSignup({ sponsor: false });
         await tap('Créer mon compte');
         await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({ referrerCode: 'awa237' })));
+    });
+
+    it('needs both agreements: the terms and privacy policy, and hosting outside Benin', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup');
+        await say('Nom complet', 'Awa Diallo');
+        await pick(/Cameroun/);
+        await say('Numéro WhatsApp', '699123456');
+        await say('Adresse e-mail', 'awa@example.com');
+        await say('Mot de passe', 'motdepasse123');
+        await say('Confirmation du mot de passe', 'motdepasse123');
+        await say('Code parrain', 'AWA237');
+        const privacy = await screen.findByRole('checkbox', { name: /conditions d’utilisation et la politique de confidentialité/ });
+        expect(within(privacy.closest('label')!).getByRole('link', { name: 'conditions d’utilisation' })).toHaveAttribute('href', '/conditions');
+        expect(within(privacy.closest('label')!).getByRole('link', { name: 'politique de confidentialité' })).toHaveAttribute('href', '/confidentialite');
+        const accept = screen.getByRole('button', { name: 'J’accepte' });
+        expect(accept).toBeDisabled();
+        await user.click(privacy);
+        expect(accept).toBeDisabled(); // one box is not enough
+        await user.click(screen.getByRole('checkbox', { name: /hébergées et traitées hors du Bénin \(serveurs en Allemagne\)/ }));
+        expect(accept).toBeEnabled();
     });
 
     it('asks the password again when the confirmation differs', async () => {

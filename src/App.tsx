@@ -50,6 +50,9 @@ import PublicLanding from './pages/PublicLanding'
 import SalesPage from './pages/SalesPage'
 import PublicTerms from './pages/PublicTerms'
 import PublicPrivacy from './pages/PublicPrivacy'
+import PublicLegal from './pages/PublicLegal'
+import MyData from './pages/MyData'
+import PrivacyNotices from './components/privacy/PrivacyNotices'
 import SsoAuthorize from './pages/SsoAuthorize'
 import { useQueryClient } from '@tanstack/react-query'
 import { TourProvider } from './components/common/TourProvider'
@@ -202,12 +205,12 @@ function AppContent() {
   const HEADERLESS = [
     '/splash-screen', '/connexion', '/signup', '/signup/formulaire', '/forgot-password', '/reset-password',
     '/reset-password-otp', '/verify-otp', '/verify-email-otp', '/otp', '/complete-profile',
-    '/a-propos', '/conditions', '/confidentialite', '/sso/authorize',
+    '/a-propos', '/conditions', '/confidentialite', '/mentions-legales', '/sso/authorize',
     '/withdrawal-otp-verification',
   ];
   const hideHeader = HEADERLESS.includes(location.pathname) || isSalesPage || isInChatConversation;
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation;
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation;
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -243,6 +246,7 @@ function AppContent() {
         <Route path="/p/:code" element={<SalesPage />} />
         <Route path="/conditions" element={<PublicTerms />} />
         <Route path="/confidentialite" element={<PublicPrivacy />} />
+        <Route path="/mentions-legales" element={<PublicLegal />} />
         <Route path="/sso/authorize" element={<SsoAuthorize />} />
 
         {/* Auth required — accessible to unactivated users so they can pay,
@@ -257,6 +261,10 @@ function AppContent() {
           {/* Extra WhatsApp numbers for the SBC contacts file (Pack Winner slots). */}
           <Route path="/numeros-supplementaires" element={<ExtraNumbers />} />
           <Route path="/withdrawal-otp-verification" element={<WithdrawalOtpVerification />} />
+          {/* Data rights (APDP): download, contact sharing, deletion. Open to
+              members without a subscription too, and to those who refuse the
+              consent window (it never covers this page). */}
+          <Route path="/mes-donnees" element={<MyData />} />
           {/* /transaction-confirmation is the post-payment landing page. The
               user just paid; their subscription may not have propagated yet
               (webhook delay) so we don't paywall them here. */}
@@ -334,7 +342,8 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideNav && <NavigationBar />}
-      {!hideNav && <InstallPrompt />}
+      {/* Consent window and cookie notice; the install prompt waits until neither shows. */}
+      <PrivacyNotices raised={!hideNav || isSalesPage} whenClear={!hideNav && <InstallPrompt />} />
     </div>
   );
 }

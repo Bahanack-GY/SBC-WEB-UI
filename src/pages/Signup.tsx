@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Call02Icon, Cancel01Icon, EyeIcon, User02Icon, ViewOffIcon } from '@hugeicons/core-free-icons';
+import { Call02Icon, EyeIcon, User02Icon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -8,7 +8,6 @@ import { useAffiliation } from '../contexts/AffiliationContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { ApiResponse } from '../services/ApiResponse';
-import { useQuery } from '@tanstack/react-query';
 import { clearSignupCache } from '../utils/signupHelpers';
 import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
 import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
@@ -24,7 +23,10 @@ interface SignupData {
   whatsapp: string;
   pays: string;
   parrain: string;
+  /** Terms of use and privacy policy accepted. */
   cgu: boolean;
+  /** Hosting and processing of the data outside Benin accepted (APDP). */
+  dataTransfer: boolean;
 }
 
 interface SignupErrors {
@@ -41,15 +43,6 @@ interface SignupErrors {
   parrain?: string;
 }
 
-interface SettingsData {
-  termsAndConditionsPdf?: {
-    fileId: string;
-    fileName: string;
-    mimeType: string;
-  };
-  [key: string]: unknown;
-}
-
 const initialData: SignupData = {
   nom: '',
   email: '',
@@ -59,6 +52,17 @@ const initialData: SignupData = {
   pays: '',
   parrain: '',
   cgu: false,
+  dataTransfer: false,
+};
+
+/**
+ * What the form keeps in localStorage between visits: never the passwords,
+ * and never the agreements (they are ticked again, knowingly).
+ */
+const draftOf = (data: SignupData, whatsapp: string) => {
+  const { password: _pw, confirmPassword: _confirm, cgu: _cgu, dataTransfer: _transfer, ...rest } = data;
+  void _pw; void _confirm; void _cgu; void _transfer;
+  return { ...rest, whatsapp };
 };
 
 
@@ -71,7 +75,6 @@ function Signup() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<SignupData>(initialData);
   const [errors, setErrors] = useState<SignupErrors>({});
-  const [showModal, setShowModal] = useState(false);
   const [selectedCode, setSelectedCode] = useState(DEFAULT_DIAL_CODE);
   const [loading, setLoading] = useState(false);
   const [checkingExistence, setCheckingExistence] = useState(false);
@@ -101,30 +104,6 @@ function Signup() {
   const { register } = useAuth();
   const { affiliationCode } = useAffiliation();
 
-  const { data: settingsData, isLoading: settingsLoading, error: settingsError } = useQuery<SettingsData>({
-    queryKey: ['settings'],
-    queryFn: async () => {
-      const response = await sbcApiService.getAppSettings();
-      return handleApiResponse(response);
-    },
-    staleTime: 5 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
-    refetchOnWindowFocus: false,
-    refetchOnMount: false,
-    retry: 2,
-  });
-
-  const termsAndConditionsUrl = settingsData?.termsAndConditionsPdf?.fileId
-    ? sbcApiService.generateSettingsFileUrl(settingsData.termsAndConditionsPdf.fileId)
-    : undefined;
-
-  const handleOpenTerms = () => {
-    if (termsAndConditionsUrl) {
-      window.open(termsAndConditionsUrl, '_blank');
-    } else {
-    }
-  };
-
   useEffect(() => {
     try {
       // Pre-fill from URL parameters (from recovery redirect)
@@ -139,7 +118,12 @@ function Signup() {
 
       if (savedData) {
         const parsedData: SignupData = JSON.parse(savedData);
-        dataToSet = { ...dataToSet, ...parsedData };
+        // Older builds saved the passwords here: drop them, and rewrite the draft without them.
+        const clean = draftOf({ ...initialData, ...parsedData }, parsedData.whatsapp ?? '');
+        if ('password' in parsedData || 'confirmPassword' in parsedData) {
+          localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(clean));
+        }
+        dataToSet = { ...dataToSet, ...clean };
       }
       
       // URL parameters override saved data
@@ -533,6 +517,7 @@ function Signup() {
     if (step === 1) {
       if (!data.whatsapp) { newErrors.whatsapp = 'Numéro WhatsApp requis'; valid = false; }
       if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
+      if (!data.cgu || !data.dataTransfer) { newErrors.cgu = 'Cochez les deux cases pour créer votre compte.'; valid = false; }
       if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
       else if (!isAffiliationCodeDisabled && !affiliateName) {
         newErrors.parrain = 'Code parrain invalide ou non vérifié.';
@@ -595,9 +580,7 @@ function Signup() {
     e.preventDefault();
     const isValid = await validateStep();
     if (isValid) {
-      const dataToSave = { ...data };
-      const fullWhatsapp = `${selectedCode.code}${data.whatsapp}`;
-      dataToSave.whatsapp = fullWhatsapp;
+      const dataToSave = draftOf(data, `${selectedCode.code}${data.whatsapp}`);
       try {
         localStorage.setItem(STORAGE_KEY_DATA, JSON.stringify(dataToSave));
       } catch (error) {
@@ -626,6 +609,7 @@ function Signup() {
           phoneNumber: `${selectedCode.code}${data.whatsapp}`,
           referrerCode: data.parrain || undefined,
           country: countryCode,
+          consents: { privacy: data.cgu, dataTransfer: data.dataTransfer },
         };
 
         const result = await register(userData);
@@ -795,10 +779,18 @@ function Signup() {
                 {affiliateName && !affiliateLoading && <div className="text-green-600 text-sm mt-1">Parrain: {affiliateName}</div>}
                 {errors.parrain && <div className="text-red-500 text-xs">{errors.parrain}</div>}
               </div>
-              <div className="flex items-center gap-2 mt-2">
-                <input type="checkbox" name="cgu" checked={data.cgu} onChange={handleChange} className="accent-[#115CF6]" />
-                <span>J'accepte les <button type="button" onClick={handleOpenTerms} className="text-primary underline bg-transparent">conditions d'utilisation</button></span>
-              </div>
+              <label className="flex items-start gap-2 mt-2 text-sm text-gray-700">
+                <input type="checkbox" name="cgu" checked={data.cgu} onChange={handleChange} className="mt-1 shrink-0 accent-[#115CF6]" />
+                <span>
+                  J'accepte les <a href="/conditions" target="_blank" rel="noopener noreferrer" className="text-primary underline">conditions d'utilisation</a> et
+                  la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-primary underline">politique de confidentialité</a>
+                </span>
+              </label>
+              <label className="flex items-start gap-2 text-sm text-gray-700">
+                <input type="checkbox" name="dataTransfer" checked={data.dataTransfer} onChange={handleChange} className="mt-1 shrink-0 accent-[#115CF6]" />
+                <span>J'accepte que mes données soient hébergées et traitées hors du Bénin (serveurs en Allemagne)</span>
+              </label>
+              {errors.cgu && <div className="text-red-500 text-xs">{errors.cgu}</div>}
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
             </>
           )}
@@ -817,7 +809,7 @@ function Signup() {
             {step === TOTAL_STEPS - 1 && (
               <button
                 onClick={handleRegister}
-                disabled={loading || checkingExistence || !data.cgu || affiliateLoading}
+                disabled={loading || checkingExistence || !data.cgu || !data.dataTransfer || affiliateLoading}
                 className="bg-primary hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
                 {loading ? 'Inscription...' : checkingExistence ? 'Vérification...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
@@ -836,28 +828,6 @@ function Signup() {
       <div className="w-full max-w-md px-4">
         <PublicFooter />
       </div>
-
-      {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 relative animate-fadeIn border border-border">
-            <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-2xl"><HugeiconsIcon icon={Cancel01Icon} /></button>
-            <h3 className="text-xl font-bold mb-4 text-center">Conditions d'utilisation</h3>
-            <div className="text-gray-700 text-sm max-h-[60vh] overflow-y-auto px-1">
-              {settingsLoading ? (
-                <div className="flex justify-center items-center py-8 text-gray-500">
-                  Chargement des conditions d'utilisation...
-                </div>
-              ) : settingsError ? (
-                <div className="text-red-500 text-center py-8">
-                  Erreur lors du chargement des conditions d'utilisation.
-                </div>
-              ) : (
-                <p>Veuillez cliquer sur le lien pour ouvrir les conditions d'utilisation.</p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Recovery Completed Notification */}
       {recoveryCompletedData && (
