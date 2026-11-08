@@ -62,7 +62,7 @@ export default function PublicLegal() {
       <p>
         SBC collecte les données nécessaires à votre compte et aux services que vous utilisez, avec votre
         consentement donné à l'inscription. Vos données sont hébergées hors du Bénin (en Allemagne et chez
-        Cloudflare), avec votre accord. Le détail (données collectées, finalités, destinataires, durée de
+        Cloudflare) ; pour les membres du Bénin, avec leur accord exprès. Le détail (données collectées, finalités, destinataires, durée de
         conservation) figure dans la <Link to="/confidentialite">politique de confidentialité</Link>.
       </p>
       <p>

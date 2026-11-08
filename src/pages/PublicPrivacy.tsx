@@ -68,8 +68,8 @@ export default function PublicPrivacy() {
       <H>5. Base légale</H>
       <p>
         Le traitement de vos données repose avant tout sur <strong>votre consentement</strong>, recueilli
-        lors de votre inscription (ou, pour les membres déjà inscrits, dans la fenêtre d'accord affichée
-        dans l'application). Nous enregistrons la date de votre accord et la version de la politique que
+        lors de votre inscription (ou, pour les membres du Bénin déjà inscrits, dans la fenêtre d'accord
+        affichée dans l'application). Nous enregistrons la date de votre accord et la version de la politique que
         vous avez acceptée. Il repose aussi sur l'exécution du service auquel vous avez souscrit, sur nos
         obligations légales et sur notre intérêt légitime à sécuriser le service.
       </p>
@@ -96,8 +96,8 @@ export default function PublicPrivacy() {
         les données nécessaires à leur service.
       </p>
       <p>
-        Ce transfert se fait <strong>avec votre consentement</strong>, donné librement à l'inscription ou
-        dans la fenêtre d'accord de l'application. Il est indispensable au fonctionnement de SBC : vous
+        Pour les membres résidant au Bénin, ce transfert se fait <strong>avec leur consentement</strong>,
+        donné librement à l'inscription ou dans la fenêtre d'accord de l'application. Il est indispensable au fonctionnement de SBC : vous
         pouvez retirer ce consentement à tout moment en supprimant votre compte, depuis la page <MyData />.
       </p>
 
