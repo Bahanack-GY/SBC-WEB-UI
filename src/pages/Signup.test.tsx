@@ -27,32 +27,55 @@ beforeEach(() => {
     auth.register.mockResolvedValue({ userId: 'u1' });
 });
 
-describe('sign-up form (/signup/formulaire)', () => {
-    it('never keeps the passwords in storage, needs both agreements, and sends them with the account', async () => {
-        renderPage(<Signup />, '/signup/formulaire');
-        await user.type(screen.getByPlaceholderText('Ex: Jean Paul'), 'Marie Ngo');
-        await user.type(screen.getByPlaceholderText('Ex: Jeanpierre@gmail.com'), 'marie@example.com');
-        await user.type(screen.getByPlaceholderText('Mot de passe'), 'motdepasse123');
-        await user.type(screen.getByPlaceholderText('Confirmer mot de passe'), 'motdepasse123');
-        await user.click(screen.getByRole('button', { name: 'Suivant' }));
+/** Step 1 of 2, then the number and the country of step 2. */
+async function fillUntilAgreements(country: string) {
+    await user.type(screen.getByPlaceholderText('Ex: Jean Paul'), 'Marie Ngo');
+    await user.type(screen.getByPlaceholderText('Ex: Jeanpierre@gmail.com'), 'marie@example.com');
+    await user.type(screen.getByPlaceholderText('Mot de passe'), 'motdepasse123');
+    await user.type(screen.getByPlaceholderText('Confirmer mot de passe'), 'motdepasse123');
+    await user.click(screen.getByRole('button', { name: 'Suivant' }));
+    await user.type(await screen.findByPlaceholderText('Ex: 675090755'), '699123456');
+    await user.selectOptions(screen.getByDisplayValue('Sélectionner le pays'), country);
+}
 
-        await user.type(await screen.findByPlaceholderText('Ex: 675090755'), '699123456');
+const transferBox = () => screen.queryByRole('checkbox', { name: /hors du Bénin \(serveurs en Allemagne\)/ });
+
+describe('sign-up form (/signup/formulaire)', () => {
+    it('never keeps the passwords in storage', async () => {
+        renderPage(<Signup />, '/signup/formulaire');
+        await fillUntilAgreements('Cameroun');
         // The draft for the next visit is written, without the passwords.
         expect(localStorage.getItem('signupFormData')).toContain('marie@example.com');
         expect(localStorage.getItem('signupFormData')).not.toContain('motdepasse123');
+    });
 
-        await user.selectOptions(screen.getByDisplayValue('Sélectionner le pays'), 'Cameroun');
+    it('outside Benin, asks only for the terms and privacy policy, and sends no hosting agreement', async () => {
+        renderPage(<Signup />, '/signup/formulaire');
+        await fillUntilAgreements('Cameroun');
+        const register = screen.getByRole('button', { name: "S'inscrire" });
+        expect(transferBox()).not.toBeInTheDocument();
+        await user.click(screen.getByRole('checkbox', { name: /conditions d'utilisation et la politique de confidentialité/ }));
+        await waitFor(() => expect(register).toBeEnabled());
+        await user.click(register);
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            email: 'marie@example.com', country: 'CM', consents: { privacy: true, dataTransfer: false },
+        })));
+    });
+
+    it('in Benin, needs both agreements and sends them with the account', async () => {
+        renderPage(<Signup />, '/signup/formulaire');
+        await fillUntilAgreements('Bénin');
         const register = screen.getByRole('button', { name: "S'inscrire" });
         await waitFor(() => expect(screen.getByRole('link', { name: "conditions d'utilisation" })).toHaveAttribute('href', 'https://media.test/documents/cgu.pdf'));
         expect(screen.getByRole('link', { name: 'politique de confidentialité' })).toHaveAttribute('href', '/confidentialite');
         await user.click(screen.getByRole('checkbox', { name: /conditions d'utilisation et la politique de confidentialité/ }));
         expect(register).toBeDisabled();
-        await user.click(screen.getByRole('checkbox', { name: /hors du Bénin \(serveurs en Allemagne\)/ }));
+        await user.click(transferBox()!);
         await waitFor(() => expect(register).toBeEnabled());
         await user.click(register);
 
         await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
-            email: 'marie@example.com', password: 'motdepasse123', referrerCode: 'awa237', country: 'CM',
+            email: 'marie@example.com', password: 'motdepasse123', referrerCode: 'awa237', country: 'BJ',
             consents: { privacy: true, dataTransfer: true },
         })));
     });
