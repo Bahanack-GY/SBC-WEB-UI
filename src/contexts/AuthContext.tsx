@@ -3,6 +3,7 @@ import { sbcApiService } from '../services/SBCApiService';
 import { clearAdsRolesCache } from '../hooks/useAdsRoles';
 import { handleApiResponse, setToken, removeToken, getToken } from '../utils/apiHelpers';
 import { invalidateApiCache } from '../hooks/useApiCache';
+import { clearPersonalStorage, type Consents } from '../utils/privacy';
 import type { ReactNode } from 'react';
 
 interface User {
@@ -21,6 +22,10 @@ interface User {
   usdBalance?: number;
   cryptoWalletAddress?: string;
   cryptoWalletCurrency?: string;
+  /** What the member accepted, and when (see utils/privacy). */
+  consents?: Consents;
+  /** Whether the member appears in the SBC contacts file. */
+  shareContactInfo?: boolean;
   [key: string]: any;
 }
 
@@ -195,6 +200,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Clear profile completion flags so new users get prompted
       localStorage.removeItem('profileCompletionDone');
       localStorage.removeItem('profileCompletionSkipped');
+
+      // Name, e-mail, balance, Mobile Money number and sign-up drafts copied
+      // to the device: none of it may outlive the session (APDP).
+      clearPersonalStorage();
 
       // Ads Network role cache. Left behind, the next account to log in on this
       // device is routed by the previous account's roles.

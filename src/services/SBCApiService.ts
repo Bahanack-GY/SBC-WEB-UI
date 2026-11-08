@@ -57,6 +57,8 @@ export class SBCApiService extends ApiService {
     lastName: string;
     phoneNumber?: string;
     referralCode?: string;
+    /** Both must be true: the sign-up refuses to go on without them (APDP). */
+    consents?: { privacy: boolean; dataTransfer: boolean };
   }): Promise<ApiResponse> {
     return await this.post('/users/register', {
       body: userData,
@@ -112,6 +114,23 @@ export class SBCApiService extends ApiService {
    */
   async updateUserProfile(updates: Record<string, any>): Promise<ApiResponse> {
     return await this.put('/users/me', { body: updates });
+  }
+
+  // ==================== PERSONAL DATA (APDP) ====================
+
+  /** Records that the member accepts the privacy policy and the transfer of data outside Benin. */
+  async recordConsents(consents: { privacy: true; dataTransfer: true }): Promise<ApiResponse> {
+    return await this.post('/users/me/consents', { body: consents });
+  }
+
+  /** Deletes the account for good. 400 with a French message when the password is wrong. */
+  async deleteMyAccount(password: string): Promise<ApiResponse> {
+    return await this.post('/users/me/delete-account', { body: { password } });
+  }
+
+  /** Everything SBC holds on the member, as a JSON file (fetched with the token, see MyData). */
+  getDataExportUrl(): string {
+    return `${this.baseUrl}/users/me/data-export`;
   }
 
   /**
