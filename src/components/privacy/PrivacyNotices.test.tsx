@@ -20,9 +20,10 @@ const user = userEvent.setup();
 const CURRENT = { privacy: { acceptedAt: '2026-11-08T10:00:00Z', version: '2026-11' }, dataTransfer: { acceptedAt: '2026-11-08T10:00:00Z', version: '2026-11' } };
 const DAY = 24 * 60 * 60 * 1000;
 
-const member = (consents?: unknown) => {
+/** A Benin member by default: the only members the consent window is for. */
+const member = (consents?: unknown, country = 'BJ') => {
     auth.isAuthenticated = true;
-    auth.user = { _id: 'u1', name: 'Awa', consents };
+    auth.user = { _id: 'u1', name: 'Awa', country, consents };
 };
 
 beforeEach(() => {
@@ -60,6 +61,14 @@ describe('consent window', () => {
         member({ ...CURRENT, privacy: { acceptedAt: '2026-01-01T00:00:00Z', version: '2026-01' } });
         renderPage(<PrivacyNotices raised />, '/');
         expect(await screen.findByRole('dialog', { name: 'Vos données personnelles' })).toBeInTheDocument();
+    });
+
+    it('never asks a member outside Benin, even without consents', async () => {
+        member(undefined, 'CM');
+        renderPage(<PrivacyNotices raised />, '/');
+        expect(await screen.findByRole('region', { name: 'Cookies' })).toBeInTheDocument();
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+        expect(auth.refreshUser).not.toHaveBeenCalled();
     });
 
     it('stays away when the consents are current, and shows the cookie notice instead', async () => {

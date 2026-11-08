@@ -1,4 +1,5 @@
 import { allCountries, countryForPhone, findAnyCountry, type CountryData } from '../../utils/countriesData';
+import { isBenin } from '../../utils/privacy';
 
 /**
  * Everything the old sign-up form and the profile-completion form asked,
@@ -35,8 +36,13 @@ export const EMPTY_ANSWERS: SignupAnswers = {
     name: '', country: '', dialCountry: '', phone: '', email: '', password: '', sponsor: '', terms: false, dataTransfer: false,
 };
 
-/** What the register call sends as `consents`. Both are needed to create the account. */
-export const consentsOf = (a: Pick<SignupAnswers, 'terms' | 'dataTransfer'>) => ({ privacy: a.terms, dataTransfer: a.dataTransfer });
+/**
+ * What the register call sends as `consents`. The hosting agreement is asked of
+ * Benin members only, so it is true only for them — even if a member accepted
+ * it as Benin and then changed country on the summary.
+ */
+export const consentsOf = (a: Pick<SignupAnswers, 'terms' | 'dataTransfer' | 'country'>) =>
+    ({ privacy: a.terms, dataTransfer: a.dataTransfer && isBenin(a.country) });
 
 export const countryByValue = (value?: string): CountryData | undefined =>
     allCountries.find((c) => c.value === value);

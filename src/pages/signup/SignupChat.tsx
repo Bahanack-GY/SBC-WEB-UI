@@ -12,6 +12,7 @@ import { allCountries, regionsPerCountry } from '../../utils/countriesData';
 import { professionOptions, predefinedInterestOptions, getInterestBaseValue } from '../ModifierLeProfil';
 import RecoveryCompletedNotification from '../../components/RecoveryCompletedNotification';
 import TermsLink from '../../components/common/TermsLink';
+import { isBenin } from '../../utils/privacy';
 import {
     ChipsComposer, ConsentComposer, DateComposer, ListComposer, MultiComposer, OtpComposer, PasswordComposer, PhoneComposer, TextComposer,
 } from './ChatComposers';
@@ -135,7 +136,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             case 'sponsor': await bot('Quel est le code de votre parrain ? Il figure dans le lien ou le message d’invitation reçu.'); break;
             case 'terms':
                 await bot(<>Dernière question : vos accords. Lisez les <TermsLink newTab className="text-primary underline font-medium">conditions d’utilisation</TermsLink> et
-                    la <TextLink to="/confidentialite">politique de confidentialité</TextLink>, puis cochez les deux cases.</>);
+                    la <TextLink to="/confidentialite">politique de confidentialité</TextLink>, puis {isBenin(a.country) ? 'cochez les deux cases' : 'cochez la case'}.</>);
                 break;
             case 'review': await showReview(); return;
             case 'sex': await bot('Vous êtes…'); break;
@@ -324,8 +325,11 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 markDone(s); await advance(); return;
             }
             case 'terms': {
-                me('J’accepte les conditions, la politique de confidentialité et l’hébergement de mes données hors du Bénin', s);
-                setA({ terms: true, dataTransfer: true });
+                const benin = isBenin(answersRef.current.country);
+                me(benin
+                    ? 'J’accepte les conditions, la politique de confidentialité et l’hébergement de mes données hors du Bénin'
+                    : 'J’accepte les conditions et la politique de confidentialité', s);
+                setA({ terms: true, dataTransfer: benin });
                 markDone(s); await ask('review'); return;
             }
             case 'otp': {
@@ -445,8 +449,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
         setQuick([]);
         me('Créer mon compte');
         const a = answersRef.current;
-        // Both agreements are required (APDP); a draft from an older build may lack the second.
-        if (!a.terms || !a.dataTransfer) {
+        // The agreements are required (APDP; the hosting one for Benin only). A draft from an older build may lack it.
+        if (!a.terms || (isBenin(a.country) && !a.dataTransfer)) {
             doneRef.current.delete('terms');
             setBusy(false);
             await ask('terms');
@@ -565,7 +569,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             const a = answersRef.current;
             const known: Step[] = [];
             // A draft from before the transfer agreement existed asks the agreements again.
-            if (draft) for (const s of draft.done) if (SIGNUP.includes(s as Step) && !(s === 'terms' && !a.dataTransfer)) known.push(s as Step);
+            if (draft) for (const s of draft.done) if (SIGNUP.includes(s as Step) && !(s === 'terms' && isBenin(a.country) && !a.dataTransfer)) known.push(s as Step);
             if (a.name && !known.includes('name')) known.push('name');
             if (a.country) known.push('country');
             if (a.phone) known.push('phone');
@@ -614,7 +618,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             composer = <TextComposer key="sponsor" label="Code parrain" placeholder="Code du parrain" autoCapitalize="none" onSubmit={(v) => answer('sponsor', v)} disabled={disabled} />;
             break;
         case 'terms':
-            composer = <ConsentComposer key="terms" onSubmit={() => answer('terms', 'yes')} disabled={disabled} />;
+            composer = <ConsentComposer key="terms" askTransfer={isBenin(answers.country)} onSubmit={() => answer('terms', 'yes')} disabled={disabled} />;
             break;
         case 'review':
             composer = (

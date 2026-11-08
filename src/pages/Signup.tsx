@@ -12,6 +12,7 @@ import { clearSignupCache } from '../utils/signupHelpers';
 import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
 import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
 import { allCountries, worldCountryCodes, DEFAULT_DIAL_CODE, splitStoredPhone } from '../utils/countriesData';
+import { isBenin } from '../utils/privacy';
 import PublicFooter from '../components/common/PublicFooter';
 import TermsLink from '../components/common/TermsLink';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
@@ -75,6 +76,8 @@ const TOTAL_STEPS = 2;
 function Signup() {
   const [step, setStep] = useState(0);
   const [data, setData] = useState<SignupData>(initialData);
+  // The hosting consent is asked of Benin members only (Rufus, 2026-11-08).
+  const beninSelected = isBenin(allCountries.find(c => c.value === data.pays)?.code ?? data.pays);
   const [errors, setErrors] = useState<SignupErrors>({});
   const [selectedCode, setSelectedCode] = useState(DEFAULT_DIAL_CODE);
   const [loading, setLoading] = useState(false);
@@ -518,7 +521,7 @@ function Signup() {
     if (step === 1) {
       if (!data.whatsapp) { newErrors.whatsapp = 'Numéro WhatsApp requis'; valid = false; }
       if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
-      if (!data.cgu || !data.dataTransfer) { newErrors.cgu = 'Cochez les deux cases pour créer votre compte.'; valid = false; }
+      if (!data.cgu || (beninSelected && !data.dataTransfer)) { newErrors.cgu = beninSelected ? 'Cochez les deux cases pour créer votre compte.' : 'Acceptez les conditions pour créer votre compte.'; valid = false; }
       if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
       else if (!isAffiliationCodeDisabled && !affiliateName) {
         newErrors.parrain = 'Code parrain invalide ou non vérifié.';
@@ -610,7 +613,7 @@ function Signup() {
           phoneNumber: `${selectedCode.code}${data.whatsapp}`,
           referrerCode: data.parrain || undefined,
           country: countryCode,
-          consents: { privacy: data.cgu, dataTransfer: data.dataTransfer },
+          consents: { privacy: data.cgu, dataTransfer: beninSelected && data.dataTransfer },
         };
 
         const result = await register(userData);
@@ -787,10 +790,12 @@ function Signup() {
                   la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-primary underline">politique de confidentialité</a>
                 </span>
               </label>
-              <label className="flex items-start gap-2 text-sm text-gray-700">
-                <input type="checkbox" name="dataTransfer" checked={data.dataTransfer} onChange={handleChange} className="mt-1 shrink-0 accent-[#115CF6]" />
-                <span>J'accepte que mes données soient hébergées et traitées hors du Bénin (serveurs en Allemagne)</span>
-              </label>
+              {beninSelected && (
+                <label className="flex items-start gap-2 text-sm text-gray-700">
+                  <input type="checkbox" name="dataTransfer" checked={data.dataTransfer} onChange={handleChange} className="mt-1 shrink-0 accent-[#115CF6]" />
+                  <span>J'accepte que mes données soient hébergées et traitées hors du Bénin (serveurs en Allemagne)</span>
+                </label>
+              )}
               {errors.cgu && <div className="text-red-500 text-xs">{errors.cgu}</div>}
               {errors.general && <div className="text-red-500 text-xs text-center mt-2">{errors.general}</div>}
             </>
@@ -810,7 +815,7 @@ function Signup() {
             {step === TOTAL_STEPS - 1 && (
               <button
                 onClick={handleRegister}
-                disabled={loading || checkingExistence || !data.cgu || !data.dataTransfer || affiliateLoading}
+                disabled={loading || checkingExistence || !data.cgu || (beninSelected && !data.dataTransfer) || affiliateLoading}
                 className="bg-primary hover:bg-blue-700 disabled:bg-blue-400 disabled:cursor-not-allowed text-white font-bold rounded-xl px-6 py-2 ml-auto"
               >
                 {loading ? 'Inscription...' : checkingExistence ? 'Vérification...' : (showRecoveryPreview ? 'S\'inscrire & Récupérer' : "S'inscrire")}
