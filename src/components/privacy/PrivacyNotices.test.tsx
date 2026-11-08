@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { fail, ok, renderPage } from '../../test/api';
 import { COOKIE_NOTICE_KEY, STORAGE_MAX_AGE_MS } from '../../utils/privacy';
 
-const api = vi.hoisted(() => ({ recordConsents: vi.fn() }));
+const api = vi.hoisted(() => ({ recordConsents: vi.fn(), getAppSettings: vi.fn(), generateSettingsFileUrl: vi.fn((id: string) => `https://media.test/${id}`) }));
 vi.mock('../../services/SBCApiService', () => ({ sbcApiService: api }));
 const auth = vi.hoisted(() => ({
     isAuthenticated: false,
@@ -32,6 +32,7 @@ beforeEach(() => {
     auth.refreshUser.mockResolvedValue(undefined);
     auth.logout.mockResolvedValue(undefined);
     api.recordConsents.mockResolvedValue(ok({ consents: CURRENT }));
+    api.getAppSettings.mockResolvedValue(ok({ termsAndConditionsPdf: { fileId: 'documents/cgu.pdf' } }));
 });
 
 describe('consent window', () => {
@@ -43,6 +44,7 @@ describe('consent window', () => {
         expect(dialog).toHaveTextContent('Pour continuer à utiliser SBC, nous avons besoin de votre accord');
         // The profile is reloaded once before asking: the login answer may lack the consents.
         expect(auth.refreshUser).toHaveBeenCalledTimes(1);
+        await waitFor(() => expect(screen.getByRole('link', { name: 'conditions d’utilisation' })).toHaveAttribute('href', 'https://media.test/documents/cgu.pdf'));
 
         const accept = screen.getByRole('button', { name: 'J’accepte' });
         await user.click(screen.getByRole('checkbox', { name: /conditions d’utilisation et la politique de confidentialité/ }));

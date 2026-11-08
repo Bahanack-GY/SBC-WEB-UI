@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import LegalPage, { LegalHeading as H } from '../components/common/LegalPage';
+import TermsLink from '../components/common/TermsLink';
 import { APDP_DELIBERATION } from '../utils/privacy';
 
 const EMAIL = 'reseautage.sbc@gmail.com';
@@ -90,7 +91,7 @@ export default function PublicLegal() {
 
       <H>8. Conditions d'utilisation</H>
       <p>
-        L'utilisation de SBC est soumise aux <Link to="/conditions">conditions générales d'utilisation</Link>.
+        L'utilisation de SBC est soumise aux <TermsLink>conditions générales d'utilisation</TermsLink>.
       </p>
 
       <H>9. Contact</H>

@@ -13,6 +13,7 @@ import { safeRecoveryApiCall, debounce } from '../utils/recoveryHelpers';
 import RecoveryCompletedNotification from '../components/RecoveryCompletedNotification';
 import { allCountries, worldCountryCodes, DEFAULT_DIAL_CODE, splitStoredPhone } from '../utils/countriesData';
 import PublicFooter from '../components/common/PublicFooter';
+import TermsLink from '../components/common/TermsLink';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 
 interface SignupData {
@@ -782,7 +783,7 @@ function Signup() {
               <label className="flex items-start gap-2 mt-2 text-sm text-gray-700">
                 <input type="checkbox" name="cgu" checked={data.cgu} onChange={handleChange} className="mt-1 shrink-0 accent-[#115CF6]" />
                 <span>
-                  J'accepte les <a href="/conditions" target="_blank" rel="noopener noreferrer" className="text-primary underline">conditions d'utilisation</a> et
+                  J'accepte les <TermsLink newTab className="text-primary underline">conditions d'utilisation</TermsLink> et
                   la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className="text-primary underline">politique de confidentialité</a>
                 </span>
               </label>

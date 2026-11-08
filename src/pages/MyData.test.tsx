@@ -4,7 +4,10 @@ import userEvent from '@testing-library/user-event';
 import { Route, Routes } from 'react-router-dom';
 import { fail, ok, renderPage } from '../test/api';
 
-const api = vi.hoisted(() => ({ deleteMyAccount: vi.fn(), getDataExportUrl: vi.fn(() => 'https://api.test/users/me/data-export') }));
+const api = vi.hoisted(() => ({
+    deleteMyAccount: vi.fn(), getDataExportUrl: vi.fn(() => 'https://api.test/users/me/data-export'),
+    getAppSettings: vi.fn(), generateSettingsFileUrl: vi.fn((id: string) => `https://media.test/${id}`),
+}));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 const auth = vi.hoisted(() => ({
     user: null as Record<string, unknown> | null,
@@ -36,6 +39,7 @@ beforeEach(() => {
     auth.updateProfile.mockResolvedValue(undefined);
     auth.logout.mockResolvedValue(undefined);
     api.deleteMyAccount.mockResolvedValue(ok(true));
+    api.getAppSettings.mockResolvedValue(ok({}));
 });
 afterEach(() => vi.unstubAllGlobals());
 

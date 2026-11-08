@@ -8,6 +8,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import BackButton from '../components/common/BackButton';
 import { ConfirmSheet } from '../components/relance/ui/ConfirmSheet';
+import TermsLink from '../components/common/TermsLink';
 import { Switch } from '../components/relance/ui/Switch';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -196,7 +197,7 @@ export default function MyData() {
                     <p className="flex flex-wrap gap-x-3 gap-y-1">
                         <Link to="/confidentialite" className="text-primary underline">Politique de confidentialité</Link>
                         <Link to="/mentions-legales" className="text-primary underline">Mentions légales</Link>
-                        <Link to="/conditions" className="text-primary underline">Conditions d’utilisation</Link>
+                        <TermsLink className="text-primary underline">Conditions d’utilisation</TermsLink>
                     </p>
                 </section>
             </div>

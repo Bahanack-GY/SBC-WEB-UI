@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
+import TermsLink from '../common/TermsLink';
 import { dismissCookieNotice, isConsentFreePath, isCookieNoticeDue, needsConsent } from '../../utils/privacy';
 
 /**
@@ -97,7 +98,7 @@ function ConsentWindow() {
 
                         <div className="mt-4 space-y-3">
                             <ConsentCheckbox checked={privacy} onChange={setPrivacy}>
-                                J’accepte les <Link to="/conditions" className="text-primary underline">conditions d’utilisation</Link> et
+                                J’accepte les <TermsLink className="text-primary underline">conditions d’utilisation</TermsLink> et
                                 la <Link to="/confidentialite" className="text-primary underline">politique de confidentialité</Link>
                             </ConsentCheckbox>
                             <ConsentCheckbox checked={transfer} onChange={setTransfer}>

@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event';
 import { ok, renderPage } from '../test/api';
 
 const api = vi.hoisted(() => ({
+    getAppSettings: vi.fn(), generateSettingsFileUrl: vi.fn((id: string) => `https://media.test/${id}`),
     getAffiliationInfo: vi.fn(), checkUserExistence: vi.fn(), checkRecoveryRegistration: vi.fn(),
     parseConflictError: vi.fn(() => null), getRecoveryNotification: vi.fn(),
 }));
@@ -18,6 +19,7 @@ const user = userEvent.setup();
 
 beforeEach(() => {
     localStorage.clear();
+    api.getAppSettings.mockResolvedValue(ok({ termsAndConditionsPdf: { fileId: 'documents/cgu.pdf' } }));
     api.getAffiliationInfo.mockResolvedValue(ok({ name: 'Awa Events' }));
     api.checkUserExistence.mockResolvedValue(ok({ exists: false }));
     api.checkRecoveryRegistration.mockResolvedValue(ok({ hasPendingRecoveries: false }));
@@ -41,6 +43,8 @@ describe('sign-up form (/signup/formulaire)', () => {
 
         await user.selectOptions(screen.getByDisplayValue('Sélectionner le pays'), 'Cameroun');
         const register = screen.getByRole('button', { name: "S'inscrire" });
+        await waitFor(() => expect(screen.getByRole('link', { name: "conditions d'utilisation" })).toHaveAttribute('href', 'https://media.test/documents/cgu.pdf'));
+        expect(screen.getByRole('link', { name: 'politique de confidentialité' })).toHaveAttribute('href', '/confidentialite');
         await user.click(screen.getByRole('checkbox', { name: /conditions d'utilisation et la politique de confidentialité/ }));
         expect(register).toBeDisabled();
         await user.click(screen.getByRole('checkbox', { name: /hors du Bénin \(serveurs en Allemagne\)/ }));

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowUp02Icon, EyeIcon, Search01Icon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { allCountries } from '../../utils/countriesData';
+import TermsLink from '../../components/common/TermsLink';
 
 /** The inputs a question can ask for. One is shown at a time, above the keyboard. */
 
@@ -108,7 +109,7 @@ export function ConsentComposer({ onSubmit, disabled }: { onSubmit: () => void; 
             <label className={box}>
                 <input type="checkbox" className={tick} checked={privacy} onChange={(e) => setPrivacy(e.target.checked)} disabled={disabled} />
                 <span>
-                    J’accepte les <a href="/conditions" target="_blank" rel="noopener noreferrer" className={link}>conditions d’utilisation</a> et
+                    J’accepte les <TermsLink newTab className={link}>conditions d’utilisation</TermsLink> et
                     la <a href="/confidentialite" target="_blank" rel="noopener noreferrer" className={link}>politique de confidentialité</a>
                 </span>
             </label>

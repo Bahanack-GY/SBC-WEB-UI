@@ -11,6 +11,7 @@ import { safeRecoveryApiCall } from '../../utils/recoveryHelpers';
 import { allCountries, regionsPerCountry } from '../../utils/countriesData';
 import { professionOptions, predefinedInterestOptions, getInterestBaseValue } from '../ModifierLeProfil';
 import RecoveryCompletedNotification from '../../components/RecoveryCompletedNotification';
+import TermsLink from '../../components/common/TermsLink';
 import {
     ChipsComposer, ConsentComposer, DateComposer, ListComposer, MultiComposer, OtpComposer, PasswordComposer, PhoneComposer, TextComposer,
 } from './ChatComposers';
@@ -133,7 +134,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             case 'confirm': await bot('Retapez-le pour être sûr qu’il n’y a pas de faute de frappe.'); break;
             case 'sponsor': await bot('Quel est le code de votre parrain ? Il figure dans le lien ou le message d’invitation reçu.'); break;
             case 'terms':
-                await bot(<>Dernière question : vos accords. Lisez les <TextLink to="/conditions">conditions d’utilisation</TextLink> et
+                await bot(<>Dernière question : vos accords. Lisez les <TermsLink newTab className="text-primary underline font-medium">conditions d’utilisation</TermsLink> et
                     la <TextLink to="/confidentialite">politique de confidentialité</TextLink>, puis cochez les deux cases.</>);
                 break;
             case 'review': await showReview(); return;

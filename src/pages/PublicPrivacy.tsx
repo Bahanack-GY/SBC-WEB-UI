@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import LegalPage, { LegalHeading as H } from '../components/common/LegalPage';
+import TermsLink from '../components/common/TermsLink';
 import { APDP_DELIBERATION } from '../utils/privacy';
 
 const EMAIL = 'reseautage.sbc@gmail.com';
@@ -82,7 +83,7 @@ export default function PublicPrivacy() {
         <li><strong>WhatsApp (Meta)</strong> : envoi de vos codes de connexion par WhatsApp quand vous choisissez ce canal.</li>
         <li><strong>Un opérateur d'envoi de SMS</strong>, pour les SMS de relance (Cameroun uniquement).</li>
         <li><strong>Le service de notifications de votre navigateur</strong> (Google, Apple ou Mozilla), si vous activez les notifications sur votre téléphone.</li>
-        <li><strong>Les membres de la communauté SBC</strong> : uniquement votre fiche de contact, dans le fichier de contacts SBC, conformément aux <Link to="/conditions">CGU</Link> et tant que le partage est activé.</li>
+        <li><strong>Les membres de la communauté SBC</strong> : uniquement votre fiche de contact, dans le fichier de contacts SBC, conformément aux <TermsLink>CGU</TermsLink> et tant que le partage est activé.</li>
         <li><strong>Les autorités</strong>, sur réquisition légale.</li>
       </ul>
       <p>Nous ne vendons jamais vos données.</p>
