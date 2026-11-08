@@ -4,6 +4,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, Notification01Icon, PencilEdit01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import ProtectedRoute from '../components/common/ProtectedRoute';
@@ -42,6 +43,15 @@ const baseActions: ActionItem[] = [
 
 function Profile() {
   const { user, logout, loading: authLoading, refreshUser } = useAuth();
+  // Pack Winner members get the VIP WhatsApp group (Rufus 2026-11-08). The link
+  // comes with the offers; the button shows once the link is configured.
+  const isWinner = Array.isArray(user?.activeSubscriptions) && user.activeSubscriptions.includes('WINNER');
+  const { data: vipGroupLink } = useQuery({
+    queryKey: ['vip-group-link', user?._id],
+    queryFn: async () => (handleApiResponse(await sbcApiService.getSubscriptionOffers('traditional')) as { winner?: { vipGroupLink?: string | null } })?.winner?.vipGroupLink ?? null,
+    enabled: isWinner,
+    staleTime: 10 * 60 * 1000,
+  });
   const { startTour, hasSeenTour } = useTour();
   const navigate = useNavigate();
   const [copied, setCopied] = useState<'code' | 'link' | null>(null);
@@ -351,6 +361,19 @@ function Profile() {
                 <HugeiconsIcon icon={PencilEdit01Icon} size={18} />
                 Changer mon code parrain
               </button>
+            </div>
+          )}
+          {isWinner && vipGroupLink && (
+            <div className="mt-3 mx-4">
+              <a
+                href={vipGroupLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-whatsapp w-full flex items-center justify-center gap-2 text-white rounded-xl px-4 py-3 transition-all font-bold"
+              >
+                <HugeiconsIcon icon={WhatsappIcon} size={18} />
+                Rejoindre le groupe VIP
+              </a>
             </div>
           )}
           <InstallAppCard className="mx-4 mt-4" />
