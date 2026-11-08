@@ -51,23 +51,33 @@ async function answerSignup({ sponsor = true } = {}) {
     await say('Mot de passe', 'motdepasse123');
     await say('Confirmation du mot de passe', 'motdepasse123');
     if (sponsor) await say('Code parrain', 'AWA237');
-    await acceptBoth();
+    await acceptTerms();
 }
 
-async function answerSignupUntilTerms() {
+/** Up to the agreements, for a member of `country` (Cameroon by default). */
+async function answerSignupUntilTerms({ country = /Cameroun/, phone = '699123456' }: { country?: RegExp; phone?: string } = {}) {
     await say('Nom complet', 'Awa Diallo');
-    await pick(/Cameroun/);
-    await say('Numéro WhatsApp', '699123456');
+    await pick(country);
+    await say('Numéro WhatsApp', phone);
     await say('Adresse e-mail', 'awa@example.com');
     await say('Mot de passe', 'motdepasse123');
     await say('Confirmation du mot de passe', 'motdepasse123');
     await say('Code parrain', 'AWA237');
 }
 
-/** The two agreements of the last question, both required. */
+const privacyBox = () => screen.findByRole('checkbox', { name: /conditions d’utilisation et la politique de confidentialité/ });
+const transferBox = () => screen.queryByRole('checkbox', { name: /hébergées et traitées hors du Bénin/ });
+
+/** Outside Benin the last question has one box: the terms and privacy policy. */
+async function acceptTerms() {
+    await user.click(await privacyBox());
+    await tap('J’accepte');
+}
+
+/** In Benin it has two, both required. */
 async function acceptBoth() {
-    await user.click(await screen.findByRole('checkbox', { name: /conditions d’utilisation et la politique de confidentialité/ }));
-    await user.click(screen.getByRole('checkbox', { name: /hébergées et traitées hors du Bénin/ }));
+    await user.click(await privacyBox());
+    await user.click(transferBox()!);
     await tap('J’accepte');
 }
 
@@ -82,7 +92,7 @@ describe('sign-up chat', () => {
         await waitFor(() => expect(auth.register).toHaveBeenCalledWith({
             email: 'marie.ngo@example.com', password: 'motdepasse123', name: 'Marie Claire Ngo',
             phoneNumber: '+237699123456', referrerCode: 'AWA237', country: 'CM',
-            consents: { privacy: true, dataTransfer: true },
+            consents: { privacy: true, dataTransfer: false },
         }));
         expect(await within(log()).findByText(/code de 6 caractères par e-mail/)).toBeInTheDocument();
         // The password never reaches storage.
@@ -145,16 +155,28 @@ describe('sign-up chat', () => {
         await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({ referrerCode: 'awa237' })));
     });
 
-    it('needs both agreements: the terms and privacy policy, and hosting outside Benin', async () => {
+    it('outside Benin, asks only for the terms and privacy policy, and sends no hosting agreement', async () => {
         renderPage(<SignupChat pace={0} />, '/signup');
-        await say('Nom complet', 'Awa Diallo');
-        await pick(/Cameroun/);
-        await say('Numéro WhatsApp', '699123456');
-        await say('Adresse e-mail', 'awa@example.com');
-        await say('Mot de passe', 'motdepasse123');
-        await say('Confirmation du mot de passe', 'motdepasse123');
-        await say('Code parrain', 'AWA237');
-        const privacy = await screen.findByRole('checkbox', { name: /conditions d’utilisation et la politique de confidentialité/ });
+        await answerSignupUntilTerms();
+        expect(await within(log()).findByText(/puis cochez la case\./)).toBeInTheDocument();
+        const privacy = await privacyBox();
+        expect(transferBox()).not.toBeInTheDocument();
+        const accept = screen.getByRole('button', { name: 'J’accepte' });
+        expect(accept).toBeDisabled();
+        await user.click(privacy);
+        expect(accept).toBeEnabled();
+        await user.click(accept);
+        await tap('Créer mon compte');
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            country: 'CM', consents: { privacy: true, dataTransfer: false },
+        })));
+    });
+
+    it('in Benin, needs both agreements: the terms and privacy policy, and hosting outside Benin', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup');
+        await answerSignupUntilTerms({ country: /Bénin/, phone: '97123456' });
+        expect(await within(log()).findByText(/puis cochez les deux cases\./)).toBeInTheDocument();
+        const privacy = await privacyBox();
         // The official CGU PDF from the settings, in a new tab.
         const cgu = within(privacy.closest('label')!).getByRole('link', { name: 'conditions d’utilisation' });
         await waitFor(() => expect(cgu).toHaveAttribute('href', 'https://media.test/documents/cgu.pdf'));
@@ -166,6 +188,41 @@ describe('sign-up chat', () => {
         expect(accept).toBeDisabled(); // one box is not enough
         await user.click(screen.getByRole('checkbox', { name: /hébergées et traitées hors du Bénin \(serveurs en Allemagne\)/ }));
         expect(accept).toBeEnabled();
+        await user.click(accept);
+        await tap('Créer mon compte');
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            phoneNumber: '+22997123456', country: 'BJ', consents: { privacy: true, dataTransfer: true },
+        })));
+    });
+
+    it('sends no hosting agreement when a member accepted it as Benin, then changed country', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup');
+        await answerSignupUntilTerms({ country: /Bénin/, phone: '97123456' });
+        await acceptBoth();
+        await tap(/^Pays/);
+        await pick(/Cameroun/);
+        await tap('Créer mon compte');
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            country: 'CM', consents: { privacy: true, dataTransfer: false },
+        })));
+    });
+
+    it('asks for the hosting agreement when a member who accepted outside Benin switches to Benin', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup');
+        await answerSignupUntilTerms();
+        await acceptTerms();
+        await tap(/^Pays/);
+        await pick(/Bénin/);
+        await tap('Créer mon compte');
+        // The account is not created yet: the hosting agreement is asked first.
+        expect(await within(log()).findByText(/puis cochez les deux cases\./)).toBeInTheDocument();
+        expect(auth.register).not.toHaveBeenCalled();
+        await acceptBoth();
+        // The first « Créer mon compte » is now a bubble of the conversation; the button is the last one.
+        await user.click((await screen.findAllByRole('button', { name: 'Créer mon compte' })).at(-1)!);
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            country: 'BJ', consents: { privacy: true, dataTransfer: true },
+        })));
     });
 
     it('links the /conditions page when no CGU PDF is configured', async () => {

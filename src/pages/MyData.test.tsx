@@ -51,6 +51,27 @@ describe('Mes données personnelles (/mes-donnees)', () => {
         expect(within(accords).getByText(/hors du Bénin/)).toBeInTheDocument();
     });
 
+    it('does not show the hosting agreement to a member outside Benin who never gave it', () => {
+        auth.user = { ...auth.user, country: 'CM', consents: { privacy: { acceptedAt: '2026-11-08T10:00:00Z', version: '2026-01' } } };
+        renderMyData();
+        const accords = screen.getByRole('region', { name: 'Vos accords' });
+        expect(within(accords).queryByText(/hors du Bénin/)).not.toBeInTheDocument();
+        // No consent window outside Benin, so no "new version" promise either.
+        expect(accords).not.toHaveTextContent('nouvelle version');
+    });
+
+    it('shows a Benin member the hosting agreement still to give', () => {
+        auth.user = { ...auth.user, country: 'BJ', consents: {} };
+        renderMyData();
+        expect(screen.getByRole('region', { name: 'Vos accords' })).toHaveTextContent(/hors du Bénin.*Pas encore accepté/);
+    });
+
+    it('sends a new WhatsApp number to the extra-numbers page (changing the main one is paid)', () => {
+        renderMyData();
+        expect(screen.getByRole('link', { name: 'Ajouter un nouveau numéro WhatsApp' })).toHaveAttribute('href', '/numeros-supplementaires');
+        expect(screen.queryByRole('link', { name: /Changer mon numéro/ })).not.toBeInTheDocument();
+    });
+
     it('deletes the account with the password, then logs out and goes to the login page', async () => {
         renderMyData();
         expect(screen.getByRole('region', { name: 'Supprimer mon compte' })).toHaveTextContent('Le solde de votre compte est perdu (2 500 FCFA)');

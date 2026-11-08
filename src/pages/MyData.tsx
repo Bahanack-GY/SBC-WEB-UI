@@ -13,7 +13,7 @@ import { Switch } from '../components/relance/ui/Switch';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { getToken, handleApiResponse } from '../utils/apiHelpers';
-import { PRIVACY_POLICY_VERSION, type ConsentRecord } from '../utils/privacy';
+import { PRIVACY_POLICY_VERSION, isBenin, type ConsentRecord } from '../utils/privacy';
 import { fcfa } from '../lib/utils';
 import { headerDrop, pageFade } from '../utils/motion';
 
@@ -102,6 +102,8 @@ export default function MyData() {
     };
 
     const consents = user?.consents;
+    // The consent window (and its new versions) is for Benin members only.
+    const benin = isBenin(user?.country);
     const balance = typeof user?.balance === 'number' && user.balance > 0 ? user.balance : 0;
 
     return (
@@ -121,8 +123,10 @@ export default function MyData() {
                 <Card title="Vos accords" icon={Shield01Icon}>
                     <ul className="space-y-2 text-sm">
                         <ConsentLine label="Conditions d’utilisation et politique de confidentialité" record={consents?.privacy}
-                            outdated={!!consents?.privacy && consents.privacy.version !== PRIVACY_POLICY_VERSION} />
-                        <ConsentLine label="Hébergement et traitement de mes données hors du Bénin (serveurs en Allemagne)" record={consents?.dataTransfer} />
+                            outdated={benin && !!consents?.privacy && consents.privacy.version !== PRIVACY_POLICY_VERSION} />
+                        {(benin || consents?.dataTransfer) && (
+                            <ConsentLine label="Hébergement et traitement de mes données hors du Bénin (serveurs en Allemagne)" record={consents?.dataTransfer} />
+                        )}
                     </ul>
                     <p className="mt-3 text-xs text-ink-3">
                         Pour retirer votre accord, supprimez votre compte (en bas de cette page).
@@ -148,7 +152,7 @@ export default function MyData() {
                     <div className="divide-y divide-border -my-1">
                         <RowLink to="/modifier-le-profil" icon={PencilEdit01Icon}>Modifier mon profil</RowLink>
                         <RowLink to="/modifier-email" icon={Mail01Icon}>Modifier mon email</RowLink>
-                        <RowLink to="/change-phone" icon={Call02Icon}>Changer mon numéro WhatsApp</RowLink>
+                        <RowLink to="/numeros-supplementaires" icon={Call02Icon}>Ajouter un nouveau numéro WhatsApp</RowLink>
                     </div>
                 </Card>
 
