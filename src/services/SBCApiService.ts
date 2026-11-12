@@ -1949,7 +1949,7 @@ export class SBCApiService extends ApiService {
 
   /**
    * Get activation pricing information
-   * Returns: pricing (CLASSIQUE, CIBLE, UPGRADE), minimumTransfers
+   * Returns: pricing (CLASSIQUE, CIBLE, UPGRADE, WINNER, WINNER_FROM_CLASSIQUE, WINNER_FROM_CIBLE), minimumTransfers
    */
   async getActivationPricing(): Promise<ApiResponse> {
     return await this.get('/activation-balance/pricing');
@@ -1992,12 +1992,12 @@ export class SBCApiService extends ApiService {
 
     // Map filter to subType parameter
     // activatable = users without subscription (subType=none)
-    // upgradable = users with CLASSIQUE only (subType=CLASSIQUE)
+    // upgradable = users whose pack can still go up: Classique, or Ciblé without Winner (subType=upgradable)
     // all = all users (no subType filter)
     if (filter === 'activatable') {
       params.subType = 'none';
     } else if (filter === 'upgradable') {
-      params.subType = 'CLASSIQUE';
+      params.subType = 'upgradable';
     }
 
     // Add search by name if provided (same as MesFilleuls.tsx line 150-152)
@@ -2017,19 +2017,23 @@ export class SBCApiService extends ApiService {
 
       const transformedReferrals = users
         .filter((user: any) => user && user._id) // Filter out null/undefined users
-        .map((user: any) => ({
-          _id: user._id,
-          name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur',
-          email: user.email,
-          phoneNumber: user.phoneNumber,
-          avatar: user.avatar,
-          referralLevel: user.referralLevel || user.level || 1,
-          hasActiveSubscription: (user.activeSubscriptions?.length > 0) || (user.activeSubscriptionTypes?.length > 0),
-          currentSubscriptionType: user.activeSubscriptionTypes?.[0] || user.activeSubscriptions?.[0] || null,
-          canUpgrade: (user.activeSubscriptionTypes?.includes('CLASSIQUE') || user.activeSubscriptions?.includes('CLASSIQUE')) &&
-                      !(user.activeSubscriptionTypes?.includes('CIBLE') || user.activeSubscriptions?.includes('CIBLE')),
-          createdAt: user.createdAt
-        }));
+        .map((user: any) => {
+          const types: string[] = user.activeSubscriptionTypes?.length ? user.activeSubscriptionTypes : (user.activeSubscriptions || []);
+          const hasPack = types.includes('CLASSIQUE') || types.includes('CIBLE');
+          return {
+            _id: user._id,
+            name: user.name || `${user.firstName || ''} ${user.lastName || ''}`.trim() || 'Utilisateur',
+            email: user.email,
+            phoneNumber: user.phoneNumber,
+            avatar: user.avatar,
+            referralLevel: user.referralLevel || user.level || 1,
+            hasActiveSubscription: types.length > 0,
+            currentSubscriptionType: ['WINNER', 'CIBLE', 'CLASSIQUE'].find(t => types.includes(t)) || null,
+            canUpgrade: types.includes('CLASSIQUE') && !types.includes('CIBLE'),
+            canUpgradeToWinner: hasPack && !types.includes('WINNER'),
+            createdAt: user.createdAt
+          };
+        });
 
       // Add transformed data inside response.body.data so handleApiResponse picks it up
       if (response.body.data) {
@@ -2057,9 +2061,9 @@ export class SBCApiService extends ApiService {
   /**
    * Sponsor a referral's activation
    * @param beneficiaryId - The user ID to sponsor
-   * @param subscriptionType - "CLASSIQUE" | "CIBLE" | "UPGRADE"
+   * @param subscriptionType - "CLASSIQUE" | "CIBLE" | "UPGRADE" | "WINNER" (Winner price follows the filleul's current pack)
    */
-  async sponsorReferralActivation(beneficiaryId: string, subscriptionType: 'CLASSIQUE' | 'CIBLE' | 'UPGRADE'): Promise<ApiResponse> {
+  async sponsorReferralActivation(beneficiaryId: string, subscriptionType: 'CLASSIQUE' | 'CIBLE' | 'UPGRADE' | 'WINNER'): Promise<ApiResponse> {
     return await this.post('/activation-balance/sponsor', {
       body: { beneficiaryId, subscriptionType }
     });
