@@ -733,7 +733,9 @@ function MesFilleuls() {
                                 key={idx}
                                 className={`text-xs px-2 py-1 rounded-full ${sub === 'CLASSIQUE'
                                   ? 'bg-blue-100 text-blue-800'
-                                  : 'bg-purple-100 text-purple-800'
+                                  : sub === 'WINNER'
+                                    ? 'bg-amber-100 text-amber-800'
+                                    : 'bg-purple-100 text-purple-800'
                                   }`}
                               >
                                 {sub}

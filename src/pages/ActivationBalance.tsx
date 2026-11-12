@@ -20,8 +20,10 @@ interface ActivationReferral {
   avatar?: string;
   referralLevel: 1 | 2 | 3;
   hasActiveSubscription: boolean;
-  currentSubscriptionType: 'CLASSIQUE' | 'CIBLE' | null;
+  currentSubscriptionType: 'CLASSIQUE' | 'CIBLE' | 'WINNER' | null;
   canUpgrade: boolean;
+  /** Has a pack (Classique or Ciblé) but not Pack Winner. */
+  canUpgradeToWinner: boolean;
   createdAt: string;
 }
 
@@ -47,10 +49,18 @@ interface ActivationPricing {
   CLASSIQUE: number;
   CIBLE: number;
   UPGRADE: number;
+  WINNER: number;
+  WINNER_FROM_CLASSIQUE: number;
+  WINNER_FROM_CIBLE: number;
 }
 
+const DEFAULT_PRICING: ActivationPricing = {
+  CLASSIQUE: 2150, CIBLE: 5300, UPGRADE: 3150,
+  WINNER: 15900, WINNER_FROM_CLASSIQUE: 13650, WINNER_FROM_CIBLE: 10600,
+};
+
 type FilterType = 'all' | 'activatable' | 'upgradable';
-type SubscriptionType = 'CLASSIQUE' | 'CIBLE' | 'UPGRADE';
+type SubscriptionType = 'CLASSIQUE' | 'CIBLE' | 'UPGRADE' | 'WINNER';
 
 function ActivationBalance() {
   const { user, refreshUser } = useAuth();
@@ -182,7 +192,7 @@ function ActivationBalance() {
     return () => observer.disconnect();
   }, [hasNextHistoryPage, isFetchingNextHistoryPage, fetchNextHistoryPage, historyData]);
 
-  const pricing: ActivationPricing = pricingData?.pricing || { CLASSIQUE: 2150, CIBLE: 5300, UPGRADE: 3150 };
+  const pricing: ActivationPricing = { ...DEFAULT_PRICING, ...pricingData?.pricing };
   const minimumTransfer = pricingData?.minimumTransfers?.toActivation || 100;
   const activationBalance = balanceData?.activationBalance || 0;
   const totalSponsored = balanceData?.totalSponsored || 0;
@@ -274,9 +284,21 @@ function ActivationBalance() {
                 <span className="text-gray-600">CIBLE</span>
                 <span className="font-semibold text-gray-900">{pricing.CIBLE.toLocaleString('fr-FR')} F</span>
               </div>
-              <div className="flex justify-between items-center py-2">
+              <div className="flex justify-between items-center py-2 border-b border-border">
                 <span className="text-gray-600">UPGRADE (CLASSIQUE → CIBLE)</span>
                 <span className="font-semibold text-gray-900">{pricing.UPGRADE.toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border">
+                <span className="text-gray-600">PACK WINNER</span>
+                <span className="font-semibold text-gray-900">{pricing.WINNER.toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between items-center py-2 border-b border-border">
+                <span className="text-gray-600">UPGRADE (CLASSIQUE → WINNER)</span>
+                <span className="font-semibold text-gray-900">{pricing.WINNER_FROM_CLASSIQUE.toLocaleString('fr-FR')} F</span>
+              </div>
+              <div className="flex justify-between items-center py-2">
+                <span className="text-gray-600">UPGRADE (CIBLE → WINNER)</span>
+                <span className="font-semibold text-gray-900">{pricing.WINNER_FROM_CIBLE.toLocaleString('fr-FR')} F</span>
               </div>
             </div>
           </div>
@@ -474,7 +496,7 @@ function ActivationBalance() {
                               <HugeiconsIcon icon={UserAdd01Icon} size={14} />
                               Activer
                             </button>
-                          ) : referral.canUpgrade ? (
+                          ) : referral.canUpgrade || referral.canUpgradeToWinner ? (
                             <button
                               onClick={() => handleSponsorClick(referral)}
                               className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex items-center gap-1"
@@ -553,13 +575,15 @@ function ActivationBalance() {
                           case 'sponsor_activation':
                             return {
                               title: item.metadata?.beneficiaryName || 'Sponsoring',
-                              subtitle: item.metadata?.subscriptionType || item.description || 'Activation sponsorisée',
+                              subtitle: (item.metadata?.subscriptionType === 'WINNER' ? 'PACK WINNER' : item.metadata?.subscriptionType) || item.description || 'Activation sponsorisée',
                               icon: '🎁',
-                              iconBgClass: item.metadata?.subscriptionType === 'UPGRADE'
-                                ? 'bg-orange-100'
-                                : item.metadata?.subscriptionType === 'CIBLE'
-                                  ? 'bg-blue-100'
-                                  : 'bg-green-100',
+                              iconBgClass: item.metadata?.subscriptionType === 'WINNER'
+                                ? 'bg-amber-100'
+                                : item.metadata?.subscriptionType === 'UPGRADE'
+                                  ? 'bg-orange-100'
+                                  : item.metadata?.subscriptionType === 'CIBLE'
+                                    ? 'bg-blue-100'
+                                    : 'bg-green-100',
                               iconTextClass: 'text-blue-700',
                               amountClass: 'text-orange-400',
                               amountPrefix: '-',
@@ -1103,22 +1127,28 @@ function SponsorConfirmationModal({ isOpen, onClose, referral, pricing, activati
   const getAvailableTypes = (): { type: SubscriptionType; price: number; label: string }[] => {
     if (!referral) return [];
 
-    if (referral.canUpgrade) {
-      return [{ type: 'UPGRADE', price: pricing.UPGRADE, label: 'Upgrade vers CIBLE' }];
-    }
-
     if (!referral.hasActiveSubscription) {
       return [
         { type: 'CLASSIQUE', price: pricing.CLASSIQUE, label: 'Abonnement CLASSIQUE' },
         { type: 'CIBLE', price: pricing.CIBLE, label: 'Abonnement CIBLE' },
+        { type: 'WINNER', price: pricing.WINNER, label: 'Pack Winner' },
       ];
     }
 
-    return [];
+    // The Winner price depends on the filleul's current pack.
+    const types: { type: SubscriptionType; price: number; label: string }[] = [];
+    if (referral.canUpgrade) {
+      types.push({ type: 'UPGRADE', price: pricing.UPGRADE, label: 'Upgrade vers CIBLE' });
+    }
+    if (referral.canUpgradeToWinner) {
+      const price = referral.currentSubscriptionType === 'CIBLE' ? pricing.WINNER_FROM_CIBLE : pricing.WINNER_FROM_CLASSIQUE;
+      types.push({ type: 'WINNER', price, label: 'Upgrade vers Pack Winner' });
+    }
+    return types;
   };
 
   const availableTypes = getAvailableTypes();
-  const selectedPrice = selectedType ? pricing[selectedType] : 0;
+  const selectedPrice = availableTypes.find(t => t.type === selectedType)?.price ?? 0;
   const canAfford = activationBalance >= selectedPrice;
 
   const handleSubmit = async () => {
