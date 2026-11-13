@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, Megaphone01Icon } from '@hugeicons/core-free-icons';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence, type PanInfo } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,7 @@ import splash3 from '../assets/img/splash-3.png';
 import splash4 from '../assets/img/splash-4.jpg';
 import logo from '../assets/img/logo-sbc.png';
 import PublicFooter from '../components/common/PublicFooter';
+import { ANNONCEUR_SIGNUP } from '../utils/annonceur';
 
 const slides = [
   {
@@ -228,6 +229,14 @@ function SplashScreen() {
             </>
           )}
 
+          {/* Advertisers need no pack (Rufus, 2026-11-13). Small, under the member actions. */}
+          <button
+            onClick={() => navigate(ANNONCEUR_SIGNUP)}
+            className="mx-auto flex items-center gap-1.5 text-sm text-gray-600 hover:text-primary"
+          >
+            <HugeiconsIcon icon={Megaphone01Icon} size={16} className="text-primary" />
+            Je suis annonceur : faire de la publicité
+          </button>
         </div>
 
         <PublicFooter />

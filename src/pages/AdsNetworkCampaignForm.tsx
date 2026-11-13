@@ -6,6 +6,8 @@ import { useQuery } from '@tanstack/react-query';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
 import { useAuth } from '../contexts/AuthContext';
+import { useIsMember } from '../hooks/useIsMember';
+import { ANNONCEUR_HOME } from '../utils/annonceur';
 import { motion } from 'motion/react';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
 
@@ -40,6 +42,9 @@ const COUNTRIES = [
  */
 function AdsNetworkCampaignForm() {
   const navigate = useNavigate();
+  // Without a pack, the way back is the advertiser space: the hub is for members.
+  const isMember = useIsMember();
+  const goBack = isMember ? undefined : () => navigate(ANNONCEUR_HOME);
   const [params] = useSearchParams();
   // Present when editing an existing campaign rather than creating one.
   const { id: editingId } = useParams<{ id: string }>();
@@ -303,7 +308,7 @@ function AdsNetworkCampaignForm() {
 
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-white p-4 pb-24">
-      <BackButton />
+      <BackButton onClick={goBack} />
 
       <div className="max-w-2xl mx-auto">
         <motion.div variants={headerDrop}>

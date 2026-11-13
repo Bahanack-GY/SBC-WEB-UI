@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../contexts/AuthContext';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
+import { ANNONCEUR_HOME, isAnnonceurAccount } from '../../utils/annonceur';
 
 /**
  * Subscription status hook — single source of truth used by RequireSubscription
@@ -127,9 +128,13 @@ export function RequireAuth() {
  *
  * Fail-closed: unknown / loading / errored subscription state sends the user
  * to /abonnement rather than rendering the protected content briefly.
+ *
+ * An account opened to advertise (signupIntent 'annonceur') goes to its
+ * advertiser space instead: it signed up to run a campaign, not to buy a pack.
+ * That space sits under RequireAuth, so this cannot loop.
  */
 export function RequireSubscription() {
-  const { isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading } = useAuth();
   const { isSubscribed, isLoading: subLoading } = useSubscriptionStatus();
   const location = useLocation();
 
@@ -154,7 +159,8 @@ export function RequireSubscription() {
   }
 
   if (!isSubscribed) {
-    return <Navigate to="/abonnement" replace state={{ from: location }} />;
+    const to = isAnnonceurAccount(user) ? ANNONCEUR_HOME : '/abonnement';
+    return <Navigate to={to} replace state={{ from: location }} />;
   }
 
   return <Outlet />;

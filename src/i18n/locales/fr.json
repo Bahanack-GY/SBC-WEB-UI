@@ -126,7 +126,9 @@
       "accountBlocked": "Votre compte a été bloqué",
       "tooManyAttempts": "Trop de tentatives. Veuillez réessayer plus tard.",
       "contactSupport": "Veuillez contacter le support",
-      "recoveryMessage": "Vos informations de compte ont été perdues, mais vos transactions peuvent être récupérées !"
+      "recoveryMessage": "Vos informations de compte ont été perdues, mais vos transactions peuvent être récupérées !",
+      "advertiserPrompt": "Vous voulez seulement faire de la publicité ?",
+      "advertiserLink": "Créer un compte annonceur"
     },
     "signup": {
       "title": "Créer un compte",

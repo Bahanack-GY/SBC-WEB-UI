@@ -126,7 +126,9 @@
       "accountBlocked": "Your account has been blocked",
       "tooManyAttempts": "Too many attempts. Please try again later.",
       "contactSupport": "Please contact support",
-      "recoveryMessage": "Your account information has been lost, but your transactions can be recovered!"
+      "recoveryMessage": "Your account information has been lost, but your transactions can be recovered!",
+      "advertiserPrompt": "Only want to advertise?",
+      "advertiserLink": "Create an advertiser account"
     },
     "signup": {
       "title": "Create an account",
