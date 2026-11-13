@@ -248,6 +248,21 @@ describe('sign-up chat', () => {
         expect(await screen.findByLabelText('Mot de passe')).toBeInTheDocument();
     });
 
+    it('still requires the parrain code without ?annonceur=1: no way to skip it', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup');
+        expect(await screen.findByText('Créer un compte')).toBeInTheDocument();
+        await say('Nom complet', 'Marie Claire Ngo');
+        await pick(/Cameroun/);
+        await say('Numéro WhatsApp', '699123456');
+        await say('Adresse e-mail', 'marie@example.com');
+        await say('Mot de passe', 'motdepasse123');
+        await say('Confirmation du mot de passe', 'motdepasse123');
+        expect(await within(log()).findByText(/Quel est le code de votre parrain/)).toBeInTheDocument();
+        await screen.findByLabelText('Code parrain');
+        expect(screen.queryByRole('button', { name: 'Je n’ai pas de code' })).not.toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Envoyer' })).toBeDisabled();
+    });
+
     it('says the code is wrong, not "wrong password", when verification fails', async () => {
         auth.verifyOtp.mockRejectedValueOnce(new Error('Mot de passe ou email incorrect'));
         renderPage(<SignupChat pace={0} />, '/signup');
@@ -255,5 +270,95 @@ describe('sign-up chat', () => {
         await tap('Créer mon compte');
         await say('Code de vérification', 'ABCDEF');
         expect(await within(log()).findByText(/Ce code ne correspond pas ou a expiré/)).toBeInTheDocument();
+    });
+});
+
+// Rufus (2026-11-13): an advertiser launches a campaign without buying the SBC pack.
+describe('advertiser sign-up (/signup?annonceur=1)', () => {
+    /** Up to the parrain question, which an advertiser may skip. */
+    async function answerUntilSponsor() {
+        await say('Nom complet', 'Awa Pub');
+        await pick(/Cameroun/);
+        await say('Numéro WhatsApp', '699123456');
+        await say('Adresse e-mail', 'awa.pub@gmail.com');
+        await say('Mot de passe', 'motdepasse123');
+        await say('Confirmation du mot de passe', 'motdepasse123');
+    }
+
+    it('says it is an advertiser account, lets the parrain be empty, and sends signupIntent', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup?annonceur=1');
+        expect(await screen.findByText('Créer un compte annonceur')).toBeInTheDocument();
+        expect(await within(log()).findByText(/sans acheter de pack SBC/)).toBeInTheDocument();
+        await answerUntilSponsor();
+        expect(await within(log()).findByText(/Un membre SBC vous a recommandé/)).toBeInTheDocument();
+        await tap('Je n’ai pas de code');
+        await acceptTerms();
+        expect(await within(log()).findByText('Aucun')).toBeInTheDocument(); // the parrain row of the summary
+        await tap('Créer mon compte');
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith({
+            email: 'awa.pub@gmail.com', password: 'motdepasse123', name: 'Awa Pub',
+            phoneNumber: '+237699123456', referrerCode: undefined, country: 'CM',
+            consents: { privacy: true, dataTransfer: false }, signupIntent: 'annonceur',
+        }));
+        // Kept for a reload during the code step (registering clears the URL).
+        expect(JSON.parse(sessionStorage.getItem('signupChatPending')!)).toMatchObject({ userId: 'u1', annonceur: true });
+
+        await say('Code de vérification', 'd4cqrl');
+        await waitFor(() => expect(auth.verifyOtp).toHaveBeenCalledWith('u1', 'd4cqrl'));
+        expect(await within(log()).findByText(/Votre compte annonceur est créé/)).toBeInTheDocument();
+        // No member profile questions: straight to the campaign.
+        expect(screen.queryByRole('button', { name: 'Oui, allons-y' })).not.toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Créer mon annonce' })).toBeInTheDocument();
+    });
+
+    it('keeps the parrain of an invitation link', async () => {
+        aff.affiliationCode = 'awa237';
+        renderPage(<SignupChat pace={0} />, '/signup?annonceur=1&affiliationCode=awa237');
+        expect(await within(log()).findByText('Vous avez été parrainé(e) par Awa Events 🎉')).toBeInTheDocument();
+        await answerUntilSponsor();
+        await acceptTerms();
+        await tap('Créer mon compte');
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            referrerCode: 'awa237', signupIntent: 'annonceur',
+        })));
+    });
+
+    it('still checks a code that is given, and uses it', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup?annonceur=1');
+        await answerUntilSponsor();
+        await say('Code parrain', 'FAUX99');
+        await waitFor(() => expect(api.getAffiliationInfo).toHaveBeenCalledWith('FAUX99'));
+        // Refused: asked again, and the way out is offered again.
+        expect(await screen.findByRole('button', { name: 'Je n’ai pas de code' })).toBeInTheDocument();
+        expect(within(log()).queryByText(/Votre parrain :/)).not.toBeInTheDocument();
+        await say('Code parrain', 'AWA237');
+        expect(await within(log()).findByText('Votre parrain : Awa Events ✅')).toBeInTheDocument();
+        await acceptTerms();
+        await tap('Créer mon compte');
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            referrerCode: 'AWA237', signupIntent: 'annonceur',
+        })));
+    });
+
+    it('offers « Je n’ai pas de code » again after a wrong code', async () => {
+        renderPage(<SignupChat pace={0} />, '/signup?annonceur=1');
+        await answerUntilSponsor();
+        await say('Code parrain', 'FAUX99');
+        await tap('Je n’ai pas de code');
+        await acceptTerms();
+        await tap('Créer mon compte');
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            referrerCode: undefined, signupIntent: 'annonceur',
+        })));
+    });
+
+    it('remembers the advertiser account through a reload at the code step', async () => {
+        sessionStorage.setItem('signupChatPending', JSON.stringify({
+            userId: 'u1', email: 'awa.pub@gmail.com', phone: '+237 699 123 456', name: 'Awa Pub', country: 'Cameroun', annonceur: true,
+        }));
+        renderPage(<SignupChat pace={0} />, '/signup'); // the query string is gone after registering
+        await say('Code de vérification', 'd4cqrl');
+        expect(await within(log()).findByText(/Votre compte annonceur est créé/)).toBeInTheDocument();
+        expect(await screen.findByRole('button', { name: 'Créer mon annonce' })).toBeInTheDocument();
     });
 });

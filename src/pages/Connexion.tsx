@@ -14,6 +14,7 @@ import { clearSignupCacheWithFeedback } from '../utils/signupHelpers';
 import { useTranslation } from 'react-i18next';
 import PublicFooter from '../components/common/PublicFooter';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
+import { ANNONCEUR_SIGNUP } from '../utils/annonceur';
 
 function Connexion() {
   const { t } = useTranslation();
@@ -211,6 +212,17 @@ function Connexion() {
             onClick={() => navigate('/signup')}
           >
             {t('common.signup')}
+          </button>
+        </div>
+        {/* Advertisers need no pack (Rufus, 2026-11-13). */}
+        <div className="text-center text-sm text-gray-500 mt-3">
+          {t('pages.connexion.advertiserPrompt')}{' '}
+          <button
+            type="button"
+            className="text-primary font-semibold hover:underline bg-transparent"
+            onClick={() => navigate(ANNONCEUR_SIGNUP)}
+          >
+            {t('pages.connexion.advertiserLink')}
           </button>
         </div>
       </motion.div>

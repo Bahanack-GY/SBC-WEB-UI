@@ -1,5 +1,5 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { Cancel01Icon, ChampionIcon, Cursor01Icon, EyeIcon, GiftIcon, LinkSquare01Icon, Loading03Icon, Megaphone01Icon, PlusSignIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
+import { Cancel01Icon, ChampionIcon, Cursor01Icon, EyeIcon, GiftIcon, LinkSquare01Icon, Loading03Icon, Logout01Icon, Megaphone01Icon, PlusSignIcon, UserGroupIcon } from '@hugeicons/core-free-icons';
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -10,6 +10,8 @@ import illustrationEmpty from '../assets/icon/ads-empty.jpg';
 import { sbcApiService } from '../services/SBCApiService';
 import { useAuth } from '../contexts/AuthContext';
 import PayChoiceSheet from '../components/ads/PayChoiceSheet';
+import { useIsMember } from '../hooks/useIsMember';
+import { isAnnonceurAccount } from '../utils/annonceur';
 
 type CampaignStatus =
   | 'draft' | 'pending_review' | 'approved' | 'paid' | 'rejected'
@@ -91,6 +93,12 @@ const remainingToPay = (c: Campaign) =>
  *
  * Each status carries its own action — pay an approved campaign, fix and resubmit
  * a rejected one — because "validée" with no button next to it reads as a dead end.
+ *
+ * Open without an SBC pack (Rufus, 2026-11-13). For an advertiser account
+ * without one, this page is home: the way back would lead to member pages they
+ * cannot open, so there is none. Anyone without a pack gets « Se déconnecter »
+ * (the profile page is for members); one who came from the packs page goes
+ * back there.
  */
 function AdsNetworkAnnonceur() {
   const navigate = useNavigate();
@@ -99,7 +107,9 @@ function AdsNetworkAnnonceur() {
   const [detail, setDetail] = useState<Campaign | null>(null);
   const [closing, setClosing] = useState<Campaign | null>(null);
   const [payChoice, setPayChoice] = useState<Campaign | null>(null);
-  const { user, refreshUser } = useAuth();
+  const { user, refreshUser, logout } = useAuth();
+  const isMember = useIsMember();
+  const [loggingOut, setLoggingOut] = useState(false);
   const [cancelling, setCancelling] = useState<Campaign | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const [replaceTarget, setReplaceTarget] = useState<Campaign | null>(null);
@@ -261,9 +271,32 @@ function AdsNetworkAnnonceur() {
     }
   };
 
+  const handleLogout = async () => {
+    setLoggingOut(true);
+    try {
+      await logout();
+    } finally {
+      window.location.replace('/connexion');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white p-4 pb-24">
-      <BackButton />
+      {isMember ? (
+        <BackButton />
+      ) : (
+        <div className="flex items-center justify-between gap-3">
+          {!isAnnonceurAccount(user) && <BackButton onClick={() => navigate('/abonnement')} />}
+          <button
+            onClick={handleLogout}
+            disabled={loggingOut}
+            className="ml-auto flex items-center gap-2 border border-border text-gray-700 rounded-xl px-3 py-2 text-sm font-medium disabled:text-gray-400"
+          >
+            <HugeiconsIcon icon={Logout01Icon} size={16} />
+            {loggingOut ? 'Déconnexion…' : 'Se déconnecter'}
+          </button>
+        </div>
+      )}
       <input ref={fileInput} type="file" accept="image/*,video/*" className="hidden" onChange={onReplacementPicked} />
 
       <div className="max-w-2xl mx-auto">

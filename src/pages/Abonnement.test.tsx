@@ -166,6 +166,21 @@ describe('Abonnement', () => {
     expect(within(pro).getByRole('button', { name: /^Activer · 4,80 \$$/ })).toBeDisabled();
   });
 
+  // Rufus (2026-11-13): an advertiser launches a campaign without buying a pack.
+  it('offers the advertiser space to someone without a pack, and not to a member', async () => {
+    auth.user = { country: 'FR', balance: 0 };
+    const view = renderPage(<Abonnement />, '/abonnement');
+    const link = await screen.findByRole('link', { name: /Vous voulez seulement faire de la publicité \?/ });
+    expect(link).toHaveAttribute('href', '/ads-network/annonceur');
+    expect(link).toHaveTextContent('Lancez une campagne sans acheter de pack.');
+    view.unmount();
+
+    auth.user = { country: 'CM', balance: 0 }; // a Classique member
+    renderPage(<Abonnement />, '/abonnement');
+    await screen.findByRole('article', { name: 'Pack Classique' });
+    expect(screen.queryByRole('link', { name: /faire de la publicité/ })).not.toBeInTheDocument();
+  });
+
   it('sells Espace Pro by the month or the year', async () => {
     renderPage(<Abonnement />, '/abonnement');
     const pro = await screen.findByRole('article', { name: 'Espace Pro' });

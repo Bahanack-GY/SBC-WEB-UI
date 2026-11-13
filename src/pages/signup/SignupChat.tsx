@@ -13,6 +13,7 @@ import { professionOptions, predefinedInterestOptions, getInterestBaseValue } fr
 import RecoveryCompletedNotification from '../../components/RecoveryCompletedNotification';
 import TermsLink from '../../components/common/TermsLink';
 import { isBenin } from '../../utils/privacy';
+import { ANNONCEUR_HOME, isAnnonceurSignup } from '../../utils/annonceur';
 import {
     ChipsComposer, ConsentComposer, DateComposer, ListComposer, MultiComposer, OtpComposer, PasswordComposer, PhoneComposer, TextComposer,
 } from './ChatComposers';
@@ -36,6 +37,11 @@ import {
  *    interests — any question can be skipped.
  * Any answer can be changed by tapping it until the account is created. A
  * reload resumes where it stopped (the password is never stored).
+ *
+ * /signup?annonceur=1 opens an advertiser account (Rufus, 2026-11-13): it runs
+ * campaigns without an SBC pack, so the parrain code is optional, the register
+ * call carries signupIntent 'annonceur', and after the code the person goes to
+ * the advertiser space (the profile questions are about the member area).
  */
 
 type Step =
@@ -49,6 +55,18 @@ const LABEL: Partial<Record<Step, string>> = {
     name: 'nom', country: 'pays', phone: 'numéro WhatsApp', email: 'e-mail', password: 'mot de passe', sponsor: 'code parrain',
 };
 const PENDING_KEY = 'signupChatPending';
+const NO_SPONSOR = 'Je n’ai pas de code';
+
+/** The account waiting for its code, kept in sessionStorage across a reload. */
+interface Pending { userId: string; email: string; phone: string; name?: string; country?: string; annonceur?: boolean }
+const readPending = (): Pending | null => {
+    try {
+        const raw = sessionStorage.getItem(PENDING_KEY);
+        return raw ? (JSON.parse(raw) as Pending) : null;
+    } catch {
+        return null;
+    }
+};
 const RESEND_COOLDOWN = 60;
 
 interface Msg { id: number; from: 'bot' | 'me'; content: ReactNode; step?: Step; tone?: 'error' | 'success' }
@@ -64,6 +82,9 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
     const location = useLocation();
     const { register, verifyOtp, updateProfile } = useAuth();
     const { affiliationCode } = useAffiliation();
+    // Read once: registering clears the URL's query string, so a reload during
+    // the code step finds the intent in the pending account instead.
+    const [annonceur] = useState(() => isAnnonceurSignup(location.search) || readPending()?.annonceur === true);
 
     const [msgs, setMsgs] = useState<Msg[]>([]);
     const [step, setStep] = useState<Step | null>(null);
@@ -133,7 +154,14 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             case 'email': await bot('Quelle est votre adresse e-mail ? Votre code de vérification y sera envoyé.'); break;
             case 'password': await bot('Choisissez un mot de passe (au moins 8 caractères).'); break;
             case 'confirm': await bot('Retapez-le pour être sûr qu’il n’y a pas de faute de frappe.'); break;
-            case 'sponsor': await bot('Quel est le code de votre parrain ? Il figure dans le lien ou le message d’invitation reçu.'); break;
+            case 'sponsor':
+                if (annonceur) {
+                    await bot(`Un membre SBC vous a recommandé ? Donnez son code. Sinon, touchez « ${NO_SPONSOR} ».`);
+                    offerNoSponsor();
+                } else {
+                    await bot('Quel est le code de votre parrain ? Il figure dans le lien ou le message d’invitation reçu.');
+                }
+                break;
             case 'terms':
                 await bot(<>Dernière question : vos accords. Lisez les <TermsLink newTab className="text-primary underline font-medium">conditions d’utilisation</TermsLink> et
                     la <TextLink to="/confidentialite">politique de confidentialité</TextLink>, puis {isBenin(a.country) ? 'cochez les deux cases' : 'cochez la case'}.</>);
@@ -160,7 +188,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             ['phone', 'WhatsApp', displayPhone(a)],
             ['email', 'E-mail', a.email],
             ['password', 'Mot de passe', '••••••••'],
-            ['sponsor', 'Parrain', sp?.name ? `${sp.name} (${sp.code})` : a.sponsor],
+            ['sponsor', 'Parrain', sp?.name ? `${sp.name} (${sp.code})` : a.sponsor || 'Aucun'],
         ];
         await bot(
             <div className="space-y-2">
@@ -314,12 +342,13 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 const code = v.trim();
                 try {
                     const info = handleApiResponse(await sbcApiService.getAffiliationInfo(code));
-                    if (!info?.name) { await error('Ce code parrain n’existe pas. Vérifiez-le auprès de la personne qui vous a invité(e).'); return; }
+                    if (!info?.name) { await error('Ce code parrain n’existe pas. Vérifiez-le auprès de la personne qui vous a invité(e).'); offerNoSponsor(); return; }
                     sponsorRef.current = { code, name: info.name, locked: false };
                     setA({ sponsor: code });
                     await bot({ content: `Votre parrain : ${info.name} ✅`, tone: 'success' });
                 } catch (e) {
                     await error(errText(e, 'Erreur lors de la vérification du code parrain.'));
+                    offerNoSponsor();
                     return;
                 }
                 markDone(s); await advance(); return;
@@ -351,6 +380,12 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 // SSO: back to the consent screen that sent the member here.
                 const sso = sessionStorage.getItem('sso_return_to');
                 if (sso) { sessionStorage.removeItem('sso_return_to'); window.location.replace(sso); return; }
+                if (annonceur) {
+                    await bot({ content: `Votre compte annonceur est créé 🎉 Bienvenue, ${firstName(answersRef.current.name) || 'et merci'} !`, tone: 'success' });
+                    await bot('Créez maintenant votre annonce : notre équipe la valide avant sa diffusion. Aucun pack SBC n’est demandé.');
+                    setStep('done');
+                    return;
+                }
                 await bot({ content: `Votre compte est créé 🎉 Bienvenue chez SBC, ${firstName(answersRef.current.name) || 'et merci'} !`, tone: 'success' });
                 await bot('Encore quelques questions, toutes facultatives, pour personnaliser votre expérience ?');
                 setStep('profileIntro');
@@ -388,6 +423,23 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             }
             default: return;
         }
+    };
+
+    /** Advertisers only: no parrain. A member's code still counts when given. */
+    const offerNoSponsor = () => {
+        if (annonceur) setQuick([{ label: NO_SPONSOR, run: () => void skipSponsor() }]);
+    };
+    const skipSponsor = async () => {
+        if (busy) return;
+        setBusy(true);
+        setQuick([]);
+        try {
+            me(NO_SPONSOR, 'sponsor');
+            sponsorRef.current = null;
+            setA({ sponsor: '' });
+            markDone('sponsor');
+            await advance();
+        } finally { setBusy(false); }
     };
 
     const skipProfile = async (s: Step) => {
@@ -465,9 +517,11 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 referrerCode: a.sponsor || undefined,
                 country: countryByValue(a.country)?.code || a.country,
                 consents: consentsOf(a),
+                ...(annonceur ? { signupIntent: 'annonceur' } : {}),
             });
             pendingRef.current = { userId: result.userId, email: a.email, phone: displayPhone(a) };
-            try { sessionStorage.setItem(PENDING_KEY, JSON.stringify({ ...pendingRef.current, name: a.name, country: a.country })); } catch { /* ignore */ }
+            const pending: Pending = { ...pendingRef.current, name: a.name, country: a.country, ...(annonceur ? { annonceur: true } : {}) };
+            try { sessionStorage.setItem(PENDING_KEY, JSON.stringify(pending)); } catch { /* ignore */ }
             clearSignupCache();
             clearDraft();
             // Old accounts found by e-mail/number are restored by the backend a moment after creation.
@@ -524,9 +578,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
         void (async () => {
             // A code was sent before a reload: carry on with it.
             try {
-                const raw = sessionStorage.getItem(PENDING_KEY);
-                if (raw) {
-                    const p = JSON.parse(raw);
+                const p = readPending();
+                if (p) {
                     pendingRef.current = { userId: p.userId, email: p.email, phone: p.phone };
                     setA({ ...EMPTY_ANSWERS, name: p.name ?? '', country: p.country ?? '', email: p.email });
                     await bot(<>Reprenons : entrez le code de 6 caractères envoyé par e-mail à <b>{p.email}</b>.</>);
@@ -575,10 +628,12 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             if (a.phone) known.push('phone');
             if (a.email) known.push('email');
             if (a.password) known.push('password', 'confirm');
-            if (a.sponsor && !sponsorRef.current?.locked && draft?.done.includes('sponsor')) known.push('sponsor');
+            if ((a.sponsor || annonceur) && !sponsorRef.current?.locked && draft?.done.includes('sponsor')) known.push('sponsor');
             known.forEach((s) => doneRef.current.add(s));
 
-            await bot('Bonjour 👋 Je suis l’assistant SBC. Je vais créer votre compte avec vous, en quelques questions.');
+            await bot(annonceur
+                ? 'Bonjour 👋 Je suis l’assistant SBC. Je vais créer avec vous votre compte annonceur, pour lancer une campagne de publicité sans acheter de pack SBC.'
+                : 'Bonjour 👋 Je suis l’assistant SBC. Je vais créer votre compte avec vous, en quelques questions.');
             if (sponsorRef.current?.locked) await bot({ content: `Vous avez été parrainé(e) par ${sponsorRef.current.name} 🎉`, tone: 'success' });
             if (draft && draft.done.length) {
                 await bot('Je reprends où nous en étions.');
@@ -665,8 +720,8 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
             break;
         case 'done':
             composer = (
-                <button type="button" onClick={() => navigate('/')} className="w-full h-12 rounded-pill bg-primary text-white font-semibold">
-                    Continuer
+                <button type="button" onClick={() => navigate(annonceur ? `${ANNONCEUR_HOME}/onboarding` : '/')} className="w-full h-12 rounded-pill bg-primary text-white font-semibold">
+                    {annonceur ? 'Créer mon annonce' : 'Continuer'}
                 </button>
             );
             break;
@@ -685,7 +740,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 </button>
                 <img src="/logo-sbc.png" alt="" className="size-9 rounded-full bg-white object-contain border border-border" />
                 <div className="min-w-0 flex-1">
-                    <h1 className="text-[15px] font-semibold text-ink leading-tight">Créer un compte</h1>
+                    <h1 className="text-[15px] font-semibold text-ink leading-tight">{annonceur ? 'Créer un compte annonceur' : 'Créer un compte'}</h1>
                     <p className="text-xs text-ink-3">{position ? `Question ${position} sur ${counted.length}` : typing ? 'écrit…' : 'Assistant SBC'}</p>
                 </div>
                 {!pendingRef.current && step !== 'profileIntro' && !PROFILE.includes(step as Step) && step !== 'done' && (
