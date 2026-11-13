@@ -68,6 +68,7 @@ import AdsNetworkAnnonceurOnboarding from './pages/AdsNetworkAnnonceurOnboarding
 import AdsNetworkAnnonceur from './pages/AdsNetworkAnnonceur'
 import AdsNetworkCampaignForm from './pages/AdsNetworkCampaignForm'
 import { RequireAuth, RequireSubscription, useSubscriptionStatus } from './components/common/RouteGuards'
+import { ANNONCEUR_HOME, isAnnonceurAccount } from './utils/annonceur'
 import SbcLove from './pages/SbcLove'
 import Events from './pages/Events'
 import EventDetail from './pages/EventDetail'
@@ -176,16 +177,18 @@ function AppContent() {
   // every subscriber off /abonnement made the page unreachable from the sidebar
   // and locked Classique members out of the upgrade to Ciblé.
   const wasSubscribed = useRef<boolean | null>(null);
+  const authIsAnnonceur = isAnnonceurAccount(authUser);
   useEffect(() => {
     if (!isAuthenticated || subscriptionLoading) return;
     const justActivated = wasSubscribed.current === false && isSubscribed;
     wasSubscribed.current = isSubscribed;
     if (location.pathname === '/connexion') {
-      window.location.replace(isSubscribed ? '/' : '/abonnement');
+      // An advertiser without a pack goes to their campaigns, not to the packs.
+      window.location.replace(isSubscribed ? '/' : authIsAnnonceur ? ANNONCEUR_HOME : '/abonnement');
     } else if (location.pathname === '/abonnement' && justActivated) {
       window.location.replace('/');
     }
-  }, [isAuthenticated, subscriptionLoading, isSubscribed, location.pathname]);
+  }, [isAuthenticated, subscriptionLoading, isSubscribed, location.pathname, authIsAnnonceur]);
 
   // Logout button for unsubscribed users (so they can switch accounts from
   // /abonnement). The paywall guard means anyone seeing this is logged in.
@@ -193,8 +196,13 @@ function AppContent() {
   // asking the optional profile questions, and the button would cover its header.
   // Pack Winner sales pages (/p/<code>) are public marketing pages, like /a-propos.
   const isSalesPage = location.pathname.startsWith('/p/');
+  // The advertiser pages are open without a pack. For someone without one, the
+  // member header leads only to pages they cannot open, so it is hidden there,
+  // and the advertiser dashboard carries its own « Se déconnecter ».
+  const isAdsPage = location.pathname.startsWith('/ads-network');
+  const nonMemberOnAds = isAdsPage && isAuthenticated && !subscriptionLoading && !isSubscribed;
 
-  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup' && !isSalesPage;
+  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup' && !isSalesPage && !isAdsPage;
 
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
@@ -208,7 +216,7 @@ function AppContent() {
     '/a-propos', '/conditions', '/confidentialite', '/mentions-legales', '/sso/authorize',
     '/withdrawal-otp-verification',
   ];
-  const hideHeader = HEADERLESS.includes(location.pathname) || isSalesPage || isInChatConversation;
+  const hideHeader = HEADERLESS.includes(location.pathname) || isSalesPage || isInChatConversation || nonMemberOnAds;
 
   const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation;
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
@@ -269,6 +277,17 @@ function AppContent() {
               user just paid; their subscription may not have propagated yet
               (webhook delay) so we don't paywall them here. */}
           <Route path="/transaction-confirmation" element={<TransactionConfirmation />} />
+          {/* The advertiser pages need a login, not a pack (Rufus, 2026-11-13:
+              requiring the pack was costing campaigns). The hub and the
+              diffuseur pages stay paywalled below: diffuseurs earn money, and
+              that is a member benefit. Same launch gate as the rest. */}
+          <Route element={<AdsLaunchGate />}>
+            <Route path="/ads-network/annonceur/onboarding" element={<AdsNetworkAnnonceurOnboarding />} />
+            <Route path="/ads-network/annonceur/nouvelle-campagne" element={<AdsNetworkCampaignForm />} />
+            {/* Same form, prefilled. What it lets you change depends on the status. */}
+            <Route path="/ads-network/annonceur/campagne/:id/modifier" element={<AdsNetworkCampaignForm />} />
+            <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
+          </Route>
         </Route>
 
         {/* Paywalled — must be logged in AND have an active subscription. */}
@@ -303,8 +322,8 @@ function AppContent() {
           {/* SBC Impact Challenge: vote for the entrepreneur of the month. The
               voting window and the ticket cap are enforced by tombola-service. */}
           <Route path="/impact-challenge" element={<ImpactChallenge />} />
-          {/* SBC Ads Network. Paywalled like the rest of the member area: both
-              roles pay out or spend money against an SBC account. */}
+          {/* SBC Ads Network. The hub and the diffuseur pages are paywalled
+              (diffuseurs are paid); the advertiser pages are not (RequireAuth). */}
           {/* Every Ads Network screen sits behind the launch gate — a
               bookmarked sub-page must not slip past it. */}
           {/* SBC Event — ticketing + resale */}
@@ -325,15 +344,11 @@ function AppContent() {
           <Route path="/events/:slug" element={<EventDetail />} />
           <Route path="/events/:slug/checkout" element={<EventCheckout />} />
 
+          {/* The advertiser pages are under RequireAuth above. */}
           <Route element={<AdsLaunchGate />}>
           <Route path="/ads-network" element={<AdsNetwork />} />
           <Route path="/ads-network/diffuseur/onboarding" element={<AdsNetworkDiffuseurOnboarding />} />
           <Route path="/ads-network/diffuseur" element={<AdsNetworkDiffuseur />} />
-          <Route path="/ads-network/annonceur/onboarding" element={<AdsNetworkAnnonceurOnboarding />} />
-          <Route path="/ads-network/annonceur/nouvelle-campagne" element={<AdsNetworkCampaignForm />} />
-          {/* Same form, prefilled. What it lets you change depends on the status. */}
-          <Route path="/ads-network/annonceur/campagne/:id/modifier" element={<AdsNetworkCampaignForm />} />
-          <Route path="/ads-network/annonceur" element={<AdsNetworkAnnonceur />} />
           </Route>
         </Route>
 

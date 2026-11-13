@@ -53,6 +53,15 @@ npm run preview
 - Subscription status checking with automatic redirects
 - Unsubscribed users redirected to `/abonnement`
 - Complex routing logic in `App.tsx` based on auth and subscription status
+- **Advertisers need no pack (Rufus, 2026-11-13).** The advertiser pages
+  (`/ads-network/annonceur`, `/onboarding`, `/nouvelle-campagne`, `/campagne/:id/modifier`)
+  are under `RequireAuth`, still behind `AdsLaunchGate`; the hub `/ads-network` and the
+  diffuseur pages stay paywalled. An account opened from `/signup?annonceur=1` (chat or
+  `/signup/formulaire?annonceur=1`) registers with `signupIntent: 'annonceur'` (parrain
+  optional) and `RequireSubscription` sends it, without a pack, to `/ads-network/annonceur`
+  instead of `/abonnement` (`utils/annonceur.ts`). On those pages a non-member
+  (`hooks/useIsMember`) gets no member header, back buttons that lead to
+  `/ads-network/annonceur`, and « Se déconnecter » on the dashboard.
 
 ### API Integration
 - Base URL proxy: `/api` → `https://sniperbuisnesscenter.com/api`
@@ -96,6 +105,11 @@ The codebase includes `ApiTestComponent` and `LoginDebugComponent` for API endpo
 - Animated content (wizard steps, sheets) mounts after a frame: use `findBy*`, not `getBy*`.
 - Test files are excluded in `tsconfig.app.json` so `tsc -b` doesn't type-check them against
   the app config.
+- Rendering the whole `App` (`src/App.test.tsx`): App clears the query cache when the user
+  changes, so a mocked `useAuth` that has the user *and* `loading: false` on the first render
+  cancels the pages' first queries (blank page). Render with `loading: true`, then rerender
+  with `false`, as AuthProvider does. Mock `AuthContext` whole, not with `importOriginal`:
+  it and `useAdsRoles` import each other.
 
 ### Personal data (APDP, Benin) — November 2026
 SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/APDP/DST/SC du

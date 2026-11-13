@@ -11,7 +11,8 @@ const api = vi.hoisted(() => ({
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 const auth = vi.hoisted(() => ({ register: vi.fn() }));
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => auth }));
-vi.mock('../contexts/AffiliationContext', () => ({ useAffiliation: () => ({ affiliationCode: 'awa237' }) }));
+const aff = vi.hoisted(() => ({ affiliationCode: 'awa237' as string | null }));
+vi.mock('../contexts/AffiliationContext', () => ({ useAffiliation: () => aff }));
 
 import Signup from './Signup';
 
@@ -19,6 +20,7 @@ const user = userEvent.setup();
 
 beforeEach(() => {
     localStorage.clear();
+    aff.affiliationCode = 'awa237';
     api.getAppSettings.mockResolvedValue(ok({ termsAndConditionsPdf: { fileId: 'documents/cgu.pdf' } }));
     api.getAffiliationInfo.mockResolvedValue(ok({ name: 'Awa Events' }));
     api.checkUserExistence.mockResolvedValue(ok({ exists: false }));
@@ -86,5 +88,36 @@ describe('sign-up form (/signup/formulaire)', () => {
         expect(screen.getByDisplayValue('old@example.com')).toBeInTheDocument();
         expect(localStorage.getItem('signupFormData')).not.toContain('secret123');
         expect(screen.getByPlaceholderText('Mot de passe')).toHaveValue('');
+    });
+});
+
+// Rufus (2026-11-13): an advertiser launches a campaign without buying the SBC pack.
+describe('sign-up form for an advertiser (/signup/formulaire?annonceur=1)', () => {
+    it('lets the parrain be empty and sends signupIntent', async () => {
+        aff.affiliationCode = null;
+        renderPage(<Signup />, '/signup/formulaire?annonceur=1');
+        expect(screen.getByRole('heading', { name: 'Créer un compte annonceur' })).toBeInTheDocument();
+        await fillUntilAgreements('Cameroun');
+        expect(screen.getByText(/Code parrain \(facultatif\)/)).toBeInTheDocument();
+        await user.click(screen.getByRole('checkbox', { name: /conditions d'utilisation et la politique de confidentialité/ }));
+        const register = screen.getByRole('button', { name: "S'inscrire" });
+        await waitFor(() => expect(register).toBeEnabled());
+        await user.click(register);
+        await waitFor(() => expect(auth.register).toHaveBeenCalledWith(expect.objectContaining({
+            email: 'marie@example.com', signupIntent: 'annonceur',
+        })));
+        expect(auth.register.mock.calls[0][0].referrerCode).toBeUndefined();
+    });
+
+    it('still refuses an empty parrain on the normal form', async () => {
+        aff.affiliationCode = null;
+        renderPage(<Signup />, '/signup/formulaire');
+        await fillUntilAgreements('Cameroun');
+        await user.click(screen.getByRole('checkbox', { name: /conditions d'utilisation et la politique de confidentialité/ }));
+        const register = screen.getByRole('button', { name: "S'inscrire" });
+        await waitFor(() => expect(register).toBeEnabled());
+        await user.click(register);
+        expect(await screen.findByText('Code parrain requis.')).toBeInTheDocument();
+        expect(auth.register).not.toHaveBeenCalled();
     });
 });

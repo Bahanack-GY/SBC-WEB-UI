@@ -7,6 +7,7 @@ import {
     Crown02Icon,
     LinkSquare02Icon,
     LockIcon,
+    Megaphone01Icon,
     Share08Icon,
     Tick02Icon,
     WhatsappIcon,
@@ -27,6 +28,7 @@ import TourButton from '../components/common/TourButton';
 import NegativeBalanceNotification from '../components/NegativeBalanceNotification';
 import { useAuth } from '../contexts/AuthContext';
 import { cn, fcfa } from '../lib/utils';
+import { ANNONCEUR_HOME } from '../utils/annonceur';
 
 /** "2 150 FCFA" or "4,80 $". */
 const money = (n: number, currency: string) =>
@@ -677,6 +679,26 @@ function Abonnement() {
                                     )}
                                 </Fragment>
                             ))}
+
+                            {/* Advertisers need no pack (Rufus, 2026-11-13): someone who only
+                                wants to advertise goes to the advertiser space instead. */}
+                            {!ownedPack && (
+                                <motion.div {...enter(packs.length)}>
+                                    <Link
+                                        to={ANNONCEUR_HOME}
+                                        className="flex items-center gap-3 bg-surface border border-border rounded-card p-4 hover:bg-surface-2 transition-colors"
+                                    >
+                                        <span className="shrink-0 size-10 grid place-items-center rounded-full bg-primary-soft text-primary">
+                                            <HugeiconsIcon icon={Megaphone01Icon} size={20} />
+                                        </span>
+                                        <span className="min-w-0 flex-1">
+                                            <span className="block text-sm font-semibold text-ink">Vous voulez seulement faire de la publicité ?</span>
+                                            <span className="block text-sm text-ink-2 text-pretty">Lancez une campagne sans acheter de pack.</span>
+                                        </span>
+                                        <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="shrink-0 text-ink-3" />
+                                    </Link>
+                                </motion.div>
+                            )}
 
                             {(proOptions.length > 0 || highlightOptions.length > 0) && (
                                 <section aria-labelledby="options-title" className="subscription-options mt-4 flex flex-col gap-3">

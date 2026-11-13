@@ -7,6 +7,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { motion } from 'motion/react';
+import { ANNONCEUR_HOME } from '../utils/annonceur';
 
 /**
  * Matches the server's per-account cooldown. "Renvoyer" used to have none —
@@ -31,7 +32,7 @@ function OTP() {
   const [showMethodModal, setShowMethodModal] = useState(false);
 
   // Get data from navigation state, including withdrawalId, amount, and currency
-  const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow, resendAfterSeconds } = location.state || {};
+  const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow, resendAfterSeconds, annonceur } = location.state || {};
 
   // A code was sent on the way here, so the cooldown starts now. Login passes the
   // server's own figure, which can be longer when it sent nothing new.
@@ -99,7 +100,9 @@ function OTP() {
           window.location.replace(ssoReturnTo);
           return;
         }
-        navigate('/');
+        // An advertiser account (sign-up form, ?annonceur=1) has no pack to buy:
+        // straight to the advertiser space.
+        navigate(annonceur ? ANNONCEUR_HOME : '/');
       } else {
         // Fallback for unknown contexts
         setError('Contexte de vérification OTP inconnu. Veuillez recommencer le processus.');

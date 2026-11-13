@@ -2,7 +2,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Call02Icon, EyeIcon, User02Icon, ViewOffIcon } from '@hugeicons/core-free-icons';
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'motion/react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useAffiliation } from '../contexts/AffiliationContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -16,6 +16,7 @@ import { isBenin } from '../utils/privacy';
 import PublicFooter from '../components/common/PublicFooter';
 import TermsLink from '../components/common/TermsLink';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
+import { isAnnonceurSignup } from '../utils/annonceur';
 
 interface SignupData {
   nom: string;
@@ -105,8 +106,12 @@ function Signup() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
   const { register } = useAuth();
   const { affiliationCode } = useAffiliation();
+  // /signup/formulaire?annonceur=1: an advertiser account, no pack and no parrain
+  // needed (Rufus, 2026-11-13). Read once: registering clears the query string.
+  const [annonceur] = useState(() => isAnnonceurSignup(location.search));
 
   useEffect(() => {
     try {
@@ -522,8 +527,9 @@ function Signup() {
       if (!data.whatsapp) { newErrors.whatsapp = 'Numéro WhatsApp requis'; valid = false; }
       if (!data.pays) { newErrors.pays = 'Pays requis'; valid = false; }
       if (!data.cgu || (beninSelected && !data.dataTransfer)) { newErrors.cgu = beninSelected ? 'Cochez les deux cases pour créer votre compte.' : 'Acceptez les conditions pour créer votre compte.'; valid = false; }
-      if (!data.parrain) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
-      else if (!isAffiliationCodeDisabled && !affiliateName) {
+      if (!data.parrain) {
+        if (!annonceur) { newErrors.parrain = 'Code parrain requis.'; valid = false; }
+      } else if (!isAffiliationCodeDisabled && !affiliateName) {
         newErrors.parrain = 'Code parrain invalide ou non vérifié.';
         valid = false;
       }
@@ -614,6 +620,7 @@ function Signup() {
           referrerCode: data.parrain || undefined,
           country: countryCode,
           consents: { privacy: data.cgu, dataTransfer: beninSelected && data.dataTransfer },
+          ...(annonceur ? { signupIntent: 'annonceur' } : {}),
         };
 
         const result = await register(userData);
@@ -630,7 +637,8 @@ function Signup() {
           state: {
             userId: result.userId,
             email: data.email,
-            fromRegistration: true
+            fromRegistration: true,
+            annonceur,
           }
         });
       } catch (error) {
@@ -665,9 +673,12 @@ function Signup() {
 
         <motion.div variants={headerDrop}>
           <div className="mb-4">{stepIcons[step]}</div>
-          <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">Créer un compte</h2>
+          <h2 className="text-2xl font-bold text-center text-gray-800 mb-2">{annonceur ? 'Créer un compte annonceur' : 'Créer un compte'}</h2>
+          {annonceur && (
+            <p className="text-center text-sm text-gray-600 mb-2">Pour lancer une campagne de publicité, sans acheter de pack SBC.</p>
+          )}
           <p className="text-center text-gray-500 mb-6">
-            {step === 0 ? 'Vos informations personnelles' : 'Contact et parrainage'}
+            {step === 0 ? 'Vos informations personnelles' : annonceur ? 'Contact' : 'Contact et parrainage'}
           </p>
         </motion.div>
 
@@ -770,12 +781,12 @@ function Signup() {
                 {errors.pays && <div className="text-red-500 text-xs">{errors.pays}</div>}
               </div>
               <div>
-                <label className="block text-gray-700 mb-1">🔗 Code parrain</label>
+                <label className="block text-gray-700 mb-1">🔗 Code parrain{annonceur && ' (facultatif)'}</label>
                 <input
                   name="parrain"
                   value={data.parrain}
                   onChange={handleChange}
-                  placeholder="Code du parrain"
+                  placeholder={annonceur ? 'Si un membre SBC vous a recommandé' : 'Code du parrain'}
                   className={`w-full border ${errors.parrain ? 'border-danger' : 'border-border'} rounded-xl px-4 py-2 focus:outline-none ${isAffiliationCodeDisabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
                   disabled={isAffiliationCodeDisabled}
                 />

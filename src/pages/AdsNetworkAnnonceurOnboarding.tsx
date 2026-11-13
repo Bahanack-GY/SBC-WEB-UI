@@ -9,6 +9,8 @@ import { AdsHero, AdsStep } from '../components/ads/AdsSteps';
 import heroAnnonceur from '../assets/icon/ads-annonceur.jpg';
 import illustrationReview from '../assets/icon/ads-review.jpg';
 import { useAdsRoles } from '../hooks/useAdsRoles';
+import { useIsMember } from '../hooks/useIsMember';
+import { ANNONCEUR_HOME } from '../utils/annonceur';
 import { sbcApiService } from '../services/SBCApiService';
 import { motion } from 'motion/react';
 import { pageFade, headerDrop, listContainer, listItem } from '../utils/motion';
@@ -25,6 +27,9 @@ const MIN_AMOUNT = 6000;
  */
 function AdsNetworkAnnonceurOnboarding() {
   const navigate = useNavigate();
+  // Without a pack, the way back is the advertiser space: the hub is for members.
+  const isMember = useIsMember();
+  const goBack = isMember ? undefined : () => navigate(ANNONCEUR_HOME);
   const { roles, isResolved } = useAdsRoles();
   const [amount, setAmount] = useState(String(MIN_AMOUNT));
 
@@ -64,7 +69,7 @@ function AdsNetworkAnnonceurOnboarding() {
 
   return (
     <motion.div variants={pageFade} initial="hidden" animate="show" className="min-h-screen bg-white p-4 pb-24">
-      <BackButton />
+      <BackButton onClick={goBack} />
 
       <div className="max-w-2xl mx-auto">
         <motion.div variants={headerDrop}>

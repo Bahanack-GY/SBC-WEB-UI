@@ -1,9 +1,10 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowLeft01Icon, Call02Icon, Facebook01Icon, InstagramIcon, Location01Icon, Mail01Icon, TelegramIcon, TiktokIcon, WhatsappIcon, YoutubeIcon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, ArrowRight01Icon, Call02Icon, Facebook01Icon, InstagramIcon, Location01Icon, Mail01Icon, TelegramIcon, TiktokIcon, WhatsappIcon, YoutubeIcon } from '@hugeicons/core-free-icons';
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import logo from '../assets/img/logo-sbc.png';
 import PublicFooter from '../components/common/PublicFooter';
+import { ANNONCEUR_SIGNUP } from '../utils/annonceur';
 
 export default function PublicLanding() {
   return (
@@ -151,6 +152,13 @@ export default function PublicLanding() {
             Créer un compte
           </Link>
         </div>
+        {/* Advertisers need no pack (Rufus, 2026-11-13). */}
+        <p className="-mt-6 mb-10 text-center text-sm text-gray-600">
+          Vous voulez seulement faire de la publicité ?{' '}
+          <Link to={ANNONCEUR_SIGNUP} className="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+            Lancer une campagne sans pack SBC <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+          </Link>
+        </p>
 
         <PublicFooter />
       </div>
