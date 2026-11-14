@@ -268,11 +268,13 @@ export class SBCApiService extends ApiService {
   // ==================== EMAIL MANAGEMENT ====================
 
   /**
-   * Request email change OTP
+   * Request email change OTP: the code goes to the NEW address. The server
+   * checks the password; a resend from the code screen sends none, which is
+   * accepted while the previous code for that address is still valid.
    */
-  async requestEmailChangeOtp(newEmail: string): Promise<ApiResponse> {
-    return await this.post('/users/request-email-change', {
-      body: { newEmail }
+  async requestEmailChangeOtp(newEmail: string, password?: string): Promise<ApiResponse> {
+    return await this.post('/users/request-change-email', {
+      body: password ? { newEmail, password } : { newEmail }
     });
   }
 

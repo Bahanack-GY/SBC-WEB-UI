@@ -5,6 +5,8 @@ import { motion, AnimatePresence } from 'motion/react';
 import Security from '../assets/icon/Data-security.png';
 import BackButton from '../components/common/BackButton';
 import { sbcApiService } from '../services/SBCApiService';
+import { handleApiResponse } from '../utils/apiHelpers';
+import { useAuth } from '../contexts/AuthContext';
 
 function VerifyEmailOtp() {
   const { otp, inputs, handleChange, handleKeyDown, handlePaste, code: otpCode } = useOtpInput();
@@ -14,6 +16,7 @@ function VerifyEmailOtp() {
   const [resendModal, setResendModal] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
   const location = useLocation();
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
   const params = new URLSearchParams(location.search);
   const email = params.get('email') || '';
 
@@ -32,7 +35,9 @@ function VerifyEmailOtp() {
     setLoading(true);
     setError('');
     try {
-      await sbcApiService.confirmEmailChange(email, otpCode);
+      // A refused code used to show « succès » too: the response was never checked.
+      handleApiResponse(await sbcApiService.confirmEmailChange(email, otpCode));
+      await refreshUser().catch(() => undefined);
       setShowSuccessModal(true);
       setTimeout(() => {
         navigate('/profile');
@@ -47,7 +52,7 @@ function VerifyEmailOtp() {
     setLoading(true);
     setError('');
     try {
-      await sbcApiService.requestEmailChangeOtp(email);
+      handleApiResponse(await sbcApiService.requestEmailChangeOtp(email));
       setResendModal({ show: true, message: 'Code renvoyé ! Veuillez vérifier votre email.' });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Échec du renvoi de l\'OTP');
