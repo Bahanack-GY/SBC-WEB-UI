@@ -5,7 +5,7 @@ import { useMutation } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { handleApiResponse } from '../utils/apiHelpers';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 
 function ChangeEmail() {
@@ -13,17 +13,14 @@ function ChangeEmail() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const navigate = useNavigate();
-    const { user } = useAuth();
     const mutation = useMutation({
-        mutationFn: async ({ email, password }: { email: string; password: string }) => {
-            // Step 1: Verify password by logging in with current user's email
-            if (!user?.email) throw new Error('Utilisateur non authentifié.');
-            await sbcApiService.loginUser(user.email, password); // Throws if password is wrong
-            // Step 2: Request email change OTP
-            return sbcApiService.requestEmailChangeOtp(email);
-        },
+        // The server checks the password and sends the code to the new address.
+        // (Checking the password by signing in again emailed a sign-in code to
+        // the OLD address, and that is the code people then typed.)
+        mutationFn: async ({ email, password }: { email: string; password: string }) =>
+            handleApiResponse(await sbcApiService.requestEmailChangeOtp(email, password)),
         onSuccess: () => {
-            navigate(`/verify-email-otp?email=${encodeURIComponent(newEmail)}`);
+            navigate(`/verify-email-otp?email=${encodeURIComponent(newEmail.trim().toLowerCase())}`);
         },
         onError: (err: unknown) => {
             if (err instanceof Error) {
@@ -43,7 +40,7 @@ function ChangeEmail() {
             setError('Veuillez entrer votre mot de passe.');
         } else {
             setError('');
-            mutation.mutate({ email: newEmail, password });
+            mutation.mutate({ email: newEmail.trim().toLowerCase(), password });
         }
     };
     return (
@@ -55,11 +52,6 @@ function ChangeEmail() {
                     </div>
                     <p className="text-center text-gray-800 font-semibold mb-2">Modifier mon email</p>
                 </motion.div>
-                {mutation.isError && (
-                    <div className="text-red-500 text-center mb-2">
-                        {(mutation.error as Error)?.message || "Erreur lors de l'envoi du code."}
-                    </div>
-                )}
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div>
                         <label className="block text-gray-700 text-sm mb-1">Nouvel email</label>
