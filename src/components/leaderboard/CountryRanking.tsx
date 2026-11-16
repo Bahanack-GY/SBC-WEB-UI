@@ -17,7 +17,7 @@ export const countryName = (code: string) => {
 };
 
 /**
- * Countries ranked by their affiliates' paid direct filleuls this month.
+ * Countries ranked by their affiliates' sales (paid direct filleuls) this month.
  * Each line is a button: choosing a country shows its own top 10 below.
  */
 function CountryRanking({ countries, selected, onSelect }: {
@@ -69,7 +69,7 @@ function CountryRanking({ countries, selected, onSelect }: {
                   <span className="text-sm font-semibold text-ink truncate">{countryName(c.country)}</span>
                   <span className="text-sm font-bold text-ink shrink-0 tabular-nums">
                     {c.referralCount.toLocaleString('fr-FR')}
-                    <span className="ml-1 text-[11px] font-normal text-ink-2">filleuls</span>
+                    <span className="ml-1 text-[11px] font-normal text-ink-2">vente{c.referralCount > 1 ? 's' : ''}</span>
                   </span>
                 </span>
 

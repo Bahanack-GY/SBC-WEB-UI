@@ -95,7 +95,7 @@ function Classement() {
               {HEADINGS[tab].title}
               <HugeiconsIcon icon={HEADINGS[tab].icon} size={20} className="text-accent" />
             </h1>
-            <p className="text-xs text-ink-2">Filleuls directs qui ont payé ce mois-ci</p>
+            <p className="text-xs text-ink-2">Ventes directes de ce mois-ci</p>
           </div>
         </div>
 
@@ -123,9 +123,9 @@ function Classement() {
           ) : (myFilleuls.data?.top.length ?? 0) === 0 ? (
             <div className="bg-surface border border-border rounded-card p-6 text-center flex flex-col items-center gap-2">
               <HugeiconsIcon icon={UserGroupIcon} size={32} className="text-ink-3" />
-              <p className="text-sm font-semibold text-ink">Aucun de vos filleuls n'a encore parrainé ce mois-ci</p>
+              <p className="text-sm font-semibold text-ink">Aucun de vos filleuls n'a encore fait de vente ce mois-ci</p>
               <p className="text-xs text-ink-2 max-w-xs text-pretty">
-                Dès qu'un filleul direct fait payer un de ses propres filleuls, il apparaît ici. Encouragez-les à partager leur lien.
+                Dès qu'un filleul direct fait sa première vente, il apparaît ici. Encouragez-les à partager leur lien.
               </p>
               <button
                 onClick={() => navigate('/filleuls')}
@@ -137,7 +137,7 @@ function Classement() {
           ) : (
             <>
               <p className="text-sm text-ink bg-primary-soft rounded-card p-3 text-pretty">
-                Vos filleuls directs les plus actifs ce mois, classés par leurs propres filleuls payés.{' '}
+                Vos filleuls directs les plus actifs ce mois, classés par leurs ventes.{' '}
                 <strong className="font-semibold tabular-nums">{myFilleuls.data!.totalRanked}</strong>{' '}
                 {myFilleuls.data!.totalRanked > 1 ? 'sont classés' : 'est classé'}.
               </p>
@@ -169,7 +169,7 @@ function Classement() {
               <p className="text-sm text-ink bg-accent-soft rounded-card p-3">
                 <span className="mr-1" aria-hidden>{flag(leader.country)}</span>
                 <strong className="font-semibold">{countryName(leader.country)}</strong> mène le classement ce mois
-                avec <strong className="font-semibold tabular-nums">{leader.referralCount.toLocaleString('fr-FR')}</strong> filleuls
+                avec <strong className="font-semibold tabular-nums">{leader.referralCount.toLocaleString('fr-FR')}</strong> vente{leader.referralCount > 1 ? 's' : ''}
                 {runnerUp && (
                   <>
                     , <span className="tabular-nums">{(leader.referralCount - runnerUp.referralCount).toLocaleString('fr-FR')}</span> de plus

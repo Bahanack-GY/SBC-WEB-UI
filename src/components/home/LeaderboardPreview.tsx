@@ -28,7 +28,7 @@ function LeaderboardPreview() {
           <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
         </Link>
       </div>
-      <p className="text-xs text-ink-3">Filleuls directs qui ont payé ce mois-ci</p>
+      <p className="text-xs text-ink-3">Ventes directes de ce mois-ci</p>
 
       {isLoading ? (
         <LeaderboardSkeleton rows={0} />
@@ -42,7 +42,7 @@ function LeaderboardPreview() {
           {me && !me.inTop && (
             <p className="mt-3 text-xs text-ink-2 bg-primary-soft rounded-card px-3 py-2 text-center">
               Votre position : <span className="font-bold text-primary">#{me.rank}</span>
-              {me.referralCount > 0 && ` · ${me.referralCount} filleul${me.referralCount > 1 ? 's' : ''} payé${me.referralCount > 1 ? 's' : ''}`}
+              {me.referralCount > 0 && ` · ${me.referralCount} vente${me.referralCount > 1 ? 's' : ''}`}
             </p>
           )}
         </>

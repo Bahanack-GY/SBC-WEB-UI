@@ -34,7 +34,7 @@ function LeaderboardRow({ entry, leaderCount, index }: {
               </span>
             )}
           </p>
-          <p className="text-sm font-semibold text-success shrink-0">{entry.referralCount} filleuls</p>
+          <p className="text-sm font-semibold text-success shrink-0">{entry.referralCount} vente{entry.referralCount > 1 ? 's' : ''}</p>
         </div>
 
         <div className="mt-1.5 h-1.5 rounded-pill bg-surface-2 overflow-hidden">
