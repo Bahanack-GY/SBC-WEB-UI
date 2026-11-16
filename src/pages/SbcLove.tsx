@@ -28,7 +28,10 @@ const TABS: { key: Tab; label: string }[] = [
  */
 function SbcLove() {
   // The page polls; the Home tile deliberately does not (see useLoveStatus).
-  const { data: status, isLoading: statusLoading } = useLoveStatus({ poll: true });
+  const { data: status, isLoading: statusLoading, isError: statusError, refetch: refetchStatus, isFetching: statusFetching } = useLoveStatus({ poll: true });
+  // No answer from sbclove-service is not "closed": saying so on a Wednesday at
+  // 18h is exactly what members reported when the service refused every token.
+  const statusFailed = !status && statusError;
 
   const { data: profile, isLoading: profileLoading } = useQuery<LoveProfile | null>({
     queryKey: ['sbclove-my-profile'],
@@ -63,14 +66,29 @@ function SbcLove() {
       subtitle="Une session par semaine, des rencontres sérieuses et modérées."
       illustration={sbcloveImg}
     >
-      <div
-        className={`flex items-center gap-2 rounded-card p-3 mb-4 text-sm ${
-          status?.isOpen ? 'bg-success-soft text-success' : 'bg-surface border border-border text-ink-2'
-        }`}
-      >
-        <HugeiconsIcon icon={Clock01Icon} size={18} />
-        {statusLoading ? 'Vérification de la session…' : loveWindowLabel(status)}
-      </div>
+      {statusFailed ? (
+        <div role="alert" className="flex items-center gap-2 rounded-card p-3 mb-4 text-sm bg-surface border border-border text-ink-2">
+          <HugeiconsIcon icon={Clock01Icon} size={18} className="shrink-0" />
+          <span className="flex-1">Impossible de vérifier la session pour le moment.</span>
+          <button
+            type="button"
+            onClick={() => refetchStatus()}
+            disabled={statusFetching}
+            className="shrink-0 rounded-pill bg-primary px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-60"
+          >
+            {statusFetching ? 'Vérification…' : 'Réessayer'}
+          </button>
+        </div>
+      ) : (
+        <div
+          className={`flex items-center gap-2 rounded-card p-3 mb-4 text-sm ${
+            status?.isOpen ? 'bg-success-soft text-success' : 'bg-surface border border-border text-ink-2'
+          }`}
+        >
+          <HugeiconsIcon icon={Clock01Icon} size={18} />
+          {statusLoading ? 'Vérification de la session…' : loveWindowLabel(status)}
+        </div>
+      )}
 
       <div className="flex gap-1 bg-surface-2 rounded-pill p-1 mb-4">
         {TABS.map((t) => (
@@ -87,7 +105,12 @@ function SbcLove() {
       </div>
 
       {tab === 'browse' && (
-        <LoveBrowse status={status} myProfile={profile ?? null} onGoToMatches={() => setTab('matches')} />
+        // Until the status is known the deck can be neither open nor closed.
+        status
+          ? <LoveBrowse status={status} myProfile={profile ?? null} onGoToMatches={() => setTab('matches')} />
+          : statusFailed
+            ? <p className="text-sm text-ink-3">Les profils s'afficheront dès que la session aura pu être vérifiée.</p>
+            : <p className="text-sm text-ink-3">Vérification de la session…</p>
       )}
       {tab === 'matches' && <LoveMatches />}
       {tab === 'profile' && (

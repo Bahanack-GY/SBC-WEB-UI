@@ -48,6 +48,22 @@ describe('Profile: VIP group (Pack Winner)', () => {
   });
 });
 
+describe('Profile: sales page link (Pack Winner)', () => {
+  it('gives a Winner member their sales page link in the account (Rufus, 2026-11-15)', async () => {
+    auth.user = { ...auth.user, activeSubscriptions: ['CIBLE', 'WINNER'] };
+    renderPage(<Profile />, '/profile');
+    expect(await screen.findByTestId('sales-page-link')).toHaveTextContent(`${window.location.origin}/p/code1`);
+    expect(screen.getByRole('link', { name: /Voir ma page/ })).toHaveAttribute('href', `${window.location.origin}/p/code1`);
+  });
+
+  it('shows no sales page to members without Pack Winner', async () => {
+    auth.user = { ...auth.user, activeSubscriptions: ['CIBLE'] };
+    renderPage(<Profile />, '/profile');
+    await waitFor(() => expect(screen.getByText(/Changer mon code parrain/)).toBeInTheDocument());
+    expect(screen.queryByTestId('sales-page-link')).not.toBeInTheDocument();
+  });
+});
+
 describe('Profile: personal data (APDP)', () => {
   it('offers "Mes données personnelles" and links to the privacy policy and legal notice', async () => {
     auth.user = { ...auth.user, activeSubscriptions: ['CIBLE'] };

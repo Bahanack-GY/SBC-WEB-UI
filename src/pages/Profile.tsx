@@ -1,4 +1,5 @@
 import { InstallAppCard } from '../components/pwa/InstallAppCard';
+import SalesPageCard from '../components/subscription/SalesPageCard';
 import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, Notification01Icon, PencilEdit01Icon, Shield01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
@@ -377,6 +378,9 @@ function Profile() {
                 Rejoindre le groupe VIP
               </a>
             </div>
+          )}
+          {isWinner && user?.referralCode && (
+            <SalesPageCard referralCode={user.referralCode} className="mx-4 mt-4" />
           )}
           <InstallAppCard className="mx-4 mt-4" />
           <div className="mt-4 divide-y divide-gray-100">
