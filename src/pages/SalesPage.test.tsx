@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { fireEvent, screen, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
 import { ok, fail, renderPage } from '../test/api';
 import type { SalesPage as SalesPageData } from '../types/api';
@@ -9,6 +9,8 @@ const api = vi.hoisted(() => ({
   generateThumbnailUrl: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
+const auth = vi.hoisted(() => ({ user: null as null | { referralCode?: string; activeSubscriptions?: string[] } }));
+vi.mock('../contexts/AuthContext', () => ({ useAuth: () => auth }));
 
 import SalesPage from './SalesPage';
 
@@ -36,6 +38,7 @@ const open = (code = 'AWA237') =>
   );
 
 beforeEach(() => {
+  auth.user = null;
   vi.clearAllMocks();
   document.title = 'SBC';
   api.getSalesPage.mockResolvedValue(ok(page()));
@@ -43,6 +46,28 @@ beforeEach(() => {
 });
 
 describe('Page de vente', () => {
+  it('lets a Winner member copy their own link instead of asking a WhatsApp question', async () => {
+    auth.user = { referralCode: 'ME123', activeSubscriptions: ['CLASSIQUE', 'CIBLE', 'WINNER'] };
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    open();
+
+    await screen.findByRole('heading', { level: 1 });
+    expect(screen.queryByRole('link', { name: /Poser une question sur WhatsApp/ })).not.toBeInTheDocument();
+    const button = screen.getByRole('button', { name: 'Copier mon lien de vente' });
+    fireEvent.click(button);
+    await screen.findByRole('button', { name: 'Lien copié' });
+    expect(writeText).toHaveBeenCalledWith(`${window.location.origin}/p/ME123`);
+  });
+
+  it('keeps the WhatsApp button for a member without the Winner pack', async () => {
+    auth.user = { referralCode: 'ME123', activeSubscriptions: ['CLASSIQUE', 'CIBLE'] };
+    open();
+
+    expect(await screen.findByRole('link', { name: /Poser une question sur WhatsApp/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Copier mon lien/ })).not.toBeInTheDocument();
+  });
+
   it('invites the prospect to sign up under the member', async () => {
     open();
 

@@ -1,6 +1,8 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
+    CheckmarkCircle02Icon,
     ContactBookIcon,
+    Copy01Icon,
     Crown02Icon,
     Money03Icon,
     Mortarboard01Icon,
@@ -8,7 +10,7 @@ import {
     UserGroupIcon,
     WhatsappIcon,
 } from '@hugeicons/core-free-icons';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { motion } from 'motion/react';
@@ -16,6 +18,7 @@ import logo from '../assets/img/logo-sbc.png';
 import Avatar from '../components/common/Avatar';
 import PublicFooter from '../components/common/PublicFooter';
 import Skeleton from '../components/common/Skeleton';
+import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import type { SalesPage as SalesPageData, SalesPagePack } from '../types/api';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -52,6 +55,38 @@ const BENEFITS = [
 ] as const;
 
 const primaryBtn = 'inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3.5 text-base font-semibold text-white transition-colors hover:bg-primary-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+
+const secondaryBtn = 'inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-ink transition-colors hover:bg-surface-2';
+
+/** Winner members see their own page: instead of asking themselves a question, they copy their link to share it. */
+function CopyLinkButton({ url }: { url: string }) {
+    const [state, setState] = useState<'copied' | 'failed' | null>(null);
+    const timer = useRef<ReturnType<typeof setTimeout>>();
+    useEffect(() => () => clearTimeout(timer.current), []);
+
+    const copy = async () => {
+        clearTimeout(timer.current);
+        try {
+            await navigator.clipboard.writeText(url);
+            setState('copied');
+        } catch {
+            setState('failed');
+        }
+        timer.current = setTimeout(() => setState(null), 2500);
+    };
+
+    return (
+        <>
+            <button type="button" onClick={copy} className={secondaryBtn}>
+                <HugeiconsIcon icon={state === 'copied' ? CheckmarkCircle02Icon : Copy01Icon} size={18} className={state === 'copied' ? 'text-success' : undefined} />
+                {state === 'copied' ? 'Lien copié' : 'Copier mon lien de vente'}
+            </button>
+            <p role="status" className={cn('text-center text-sm text-ink-2', state !== 'failed' && 'sr-only')}>
+                {state === 'failed' && 'Copie impossible : copiez le lien depuis la barre d\'adresse.'}
+            </p>
+        </>
+    );
+}
 
 function PageHeader() {
     return (
@@ -126,6 +161,7 @@ function Unavailable({ code, onRetry }: { code?: string; onRetry?: () => void })
 
 export default function SalesPage() {
     const { code } = useParams<{ code: string }>();
+    const { user } = useAuth();
 
     const query = useQuery<SalesPageData>({
         queryKey: ['sales-page', code],
@@ -177,6 +213,10 @@ export default function SalesPage() {
     const firstName = data.firstName.trim();
     const signupTo = signupPath(data.referralCode);
     const signupLabel = firstName ? `Je m'inscris avec ${firstName}` : 'Je m\'inscris';
+    const isWinner = Array.isArray(user?.activeSubscriptions) && user.activeSubscriptions.includes('WINNER');
+    const ownLink = isWinner && user?.referralCode
+        ? `${window.location.origin}/p/${encodeURIComponent(user.referralCode)}`
+        : null;
     const whatsapp = data.whatsappNumber?.replace(/\D/g, '');
     const whatsappHref = whatsapp
         ? `https://wa.me/${whatsapp}?text=${encodeURIComponent(
@@ -216,12 +256,14 @@ export default function SalesPage() {
                     </p>
                     <div className="mt-2 flex w-full flex-col gap-2">
                         <Link to={signupTo} className={primaryBtn}>{signupLabel}</Link>
-                        {whatsappHref && (
+                        {ownLink ? (
+                            <CopyLinkButton url={ownLink} />
+                        ) : whatsappHref && (
                             <a
                                 href={whatsappHref}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-surface px-4 py-3 text-sm font-semibold text-ink transition-colors hover:bg-surface-2"
+                                className={secondaryBtn}
                             >
                                 <HugeiconsIcon icon={WhatsappIcon} size={18} className="text-whatsapp" />
                                 Poser une question sur WhatsApp
