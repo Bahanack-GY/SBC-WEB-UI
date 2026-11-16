@@ -79,6 +79,21 @@ import MyTickets from './pages/MyTickets'
 import MyTicketScreen from './pages/MyTicketScreen'
 import OrganizerHub from './pages/OrganizerHub'
 import OrganizerEventForm from './pages/OrganizerEventForm'
+import AnimationHub from './pages/animation/AnimationHub'
+import ChallengeEditor from './pages/animation/ChallengeEditor'
+import RewardEditor from './pages/animation/RewardEditor'
+import TeamEvents from './pages/animation/TeamEvents'
+import ChallengePage from './pages/animation/ChallengePage'
+import CandidatePage from './pages/animation/CandidatePage'
+import RegisterChallenge from './pages/animation/RegisterChallenge'
+import LiveBoard from './pages/animation/LiveBoard'
+import ChallengeResults from './pages/animation/ChallengeResults'
+import VotePaymentStatus from './pages/animation/VotePaymentStatus'
+import MyChallenges from './pages/animation/MyChallenges'
+import JuryHome from './pages/animation/JuryHome'
+import JuryScoring from './pages/animation/JuryScoring'
+import AcceptInvite from './pages/animation/AcceptInvite'
+import DrawProof from './pages/animation/DrawProof'
 import OrganizerScanner from './pages/OrganizerScanner'
 import TicketResaleForm from './pages/TicketResaleForm'
 import ResaleMarket from './pages/ResaleMarket'
@@ -218,7 +233,7 @@ function AppContent() {
   ];
   const hideHeader = HEADERLESS.includes(location.pathname) || isSalesPage || isInChatConversation || nonMemberOnAds;
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation;
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -256,6 +271,12 @@ function AppContent() {
         <Route path="/confidentialite" element={<PublicPrivacy />} />
         <Route path="/mentions-legales" element={<PublicLegal />} />
         <Route path="/sso/authorize" element={<SsoAuthorize />} />
+        {/* SBC Event animation — read-only screens that must open without an
+            account: the live board on a venue's screen/projector, published
+            results, and the public proof of a random draw. */}
+        <Route path="/events/:slug/defis/:cslug/live" element={<LiveBoard />} />
+        <Route path="/events/:slug/defis/:cslug/resultats" element={<ChallengeResults />} />
+        <Route path="/events/tirages/:drawId" element={<DrawProof />} />
 
         {/* Auth required — accessible to unactivated users so they can pay,
             update their profile, etc. */}
@@ -341,6 +362,19 @@ function AppContent() {
           <Route path="/events/organizer/:id" element={<OrganizerEventForm />} />
           <Route path="/events/organizer/:id/participants" element={<EventParticipants />} />
           <Route path="/events/organizer/:id/scanner" element={<OrganizerScanner />} />
+          {/* SBC Event — Animation & Engagement (challenges, votes, rewards) */}
+          <Route path="/events/organizer/:id/animation" element={<AnimationHub />} />
+          <Route path="/events/organizer/:id/animation/defis/:cid" element={<ChallengeEditor />} />
+          <Route path="/events/organizer/:id/animation/recompenses/:rid" element={<RewardEditor />} />
+          <Route path="/events/equipe" element={<TeamEvents />} />
+          <Route path="/events/mes-defis" element={<MyChallenges />} />
+          <Route path="/events/votes/:txId" element={<VotePaymentStatus />} />
+          <Route path="/events/jury" element={<JuryHome />} />
+          <Route path="/events/jury/:cid" element={<JuryScoring />} />
+          <Route path="/events/invitation/:token" element={<AcceptInvite />} />
+          <Route path="/events/:slug/defis/:cslug" element={<ChallengePage />} />
+          <Route path="/events/:slug/defis/:cslug/candidats/:number" element={<CandidatePage />} />
+          <Route path="/events/:slug/defis/:cslug/participer" element={<RegisterChallenge />} />
           <Route path="/events/:slug" element={<EventDetail />} />
           <Route path="/events/:slug/checkout" element={<EventCheckout />} />
 
