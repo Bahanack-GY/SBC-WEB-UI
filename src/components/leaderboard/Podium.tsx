@@ -63,7 +63,7 @@ function Block({ entry, place }: { entry: LeaderboardEntry; place: number }) {
         <p className={cn('text-lg font-bold leading-tight', isWinner ? 'text-primary' : 'text-ink')}>
           {entry.referralCount}
         </p>
-        <p className="text-[11px] text-ink-3">filleuls</p>
+        <p className="text-[11px] text-ink-3">vente{entry.referralCount > 1 ? 's' : ''}</p>
         <p className="mt-1 text-[11px] font-semibold text-accent">{fcfa(entry.earnings)}</p>
         {tier && (
           <span className={cn('mt-1 inline-block text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-pill', tier.tint)}>
