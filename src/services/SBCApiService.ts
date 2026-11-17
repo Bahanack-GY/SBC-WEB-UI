@@ -686,6 +686,14 @@ export class SBCApiService extends ApiService {
     return await this.put('/users/me/extra-numbers/featured', { body: { number } });
   }
 
+  /**
+   * The Pack Winner member's canal de vente link ({ link: string | null }).
+   * SBC creates it on the canal backend; the app never calls that backend.
+   */
+  async getCanalDeVente(): Promise<ApiResponse> {
+    return await this.get('/users/me/canal-de-vente', { skipDeduplication: true });
+  }
+
   // ==================== PACK WINNER SALES PAGE (public) ====================
 
   /** A Winner member's sales page (/p/:code). 404 when the code is unknown or not a Winner. */
