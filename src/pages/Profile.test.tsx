@@ -9,6 +9,7 @@ const api = vi.hoisted(() => ({
   generateSettingsFileUrl: vi.fn(() => ''),
   generateThumbnailUrl: vi.fn(() => ''),
   updateUserProfile: vi.fn(),
+  getCanalDeVente: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 const auth = vi.hoisted(() => ({
@@ -24,11 +25,13 @@ vi.mock('../components/common/TourProvider', () => ({ useTour: () => ({ startTou
 import Profile from './Profile';
 
 const LINK = 'https://chat.whatsapp.com/vip-test';
+const CANAL = 'https://canaldevente.sniperbuisnesscenter.com/code1/237690000001';
 
 beforeEach(() => {
   vi.clearAllMocks();
   api.getMyAffiliator.mockResolvedValue(ok(null));
   api.getReferralStats.mockResolvedValue(ok({ directReferrals: 0, indirectReferrals: 0 }));
+  api.getCanalDeVente.mockResolvedValue(ok({ link: CANAL }));
   api.getSubscriptionOffers.mockResolvedValue(ok({ winner: { owned: true, vipGroupLink: LINK, extraNumberSlots: 3 } }));
 });
 
@@ -48,19 +51,20 @@ describe('Profile: VIP group (Pack Winner)', () => {
   });
 });
 
-describe('Profile: sales page link (Pack Winner)', () => {
-  it('gives a Winner member their sales page link in the account (Rufus, 2026-11-15)', async () => {
+describe('Profile: canal de vente (Pack Winner)', () => {
+  it('shows a Winner member their canal de vente link, and not the old sales page card', async () => {
     auth.user = { ...auth.user, activeSubscriptions: ['CIBLE', 'WINNER'] };
     renderPage(<Profile />, '/profile');
-    expect(await screen.findByTestId('sales-page-link')).toHaveTextContent(`${window.location.origin}/p/code1`);
-    expect(screen.getByRole('link', { name: /Voir ma page/ })).toHaveAttribute('href', `${window.location.origin}/p/code1`);
+    expect(await screen.findByTestId('canal-de-vente-link')).toHaveTextContent(CANAL);
+    expect(screen.queryByTestId('sales-page-link')).not.toBeInTheDocument();
   });
 
-  it('shows no sales page to members without Pack Winner', async () => {
+  it('shows no canal de vente to members without Pack Winner', async () => {
     auth.user = { ...auth.user, activeSubscriptions: ['CIBLE'] };
     renderPage(<Profile />, '/profile');
     await waitFor(() => expect(screen.getByText(/Changer mon code parrain/)).toBeInTheDocument());
-    expect(screen.queryByTestId('sales-page-link')).not.toBeInTheDocument();
+    expect(screen.queryByTestId('canal-de-vente-link')).not.toBeInTheDocument();
+    expect(api.getCanalDeVente).not.toHaveBeenCalled();
   });
 });
 

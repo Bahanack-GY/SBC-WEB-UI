@@ -1,5 +1,4 @@
 import { InstallAppCard } from '../components/pwa/InstallAppCard';
-import SalesPageCard from '../components/subscription/SalesPageCard';
 import CanalDeVenteCard from '../components/subscription/CanalDeVenteCard';
 import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -379,9 +378,6 @@ function Profile() {
                 Rejoindre le groupe VIP
               </a>
             </div>
-          )}
-          {isWinner && user?.referralCode && (
-            <SalesPageCard referralCode={user.referralCode} className="mx-4 mt-4" />
           )}
           {isWinner && <CanalDeVenteCard className="mx-4 mt-4" />}
           <InstallAppCard className="mx-4 mt-4" />
