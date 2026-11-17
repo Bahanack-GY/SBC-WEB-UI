@@ -44,6 +44,13 @@ export default function MyTickets() {
             </div>
 
             <div className="px-4 pb-8 flex flex-col gap-4">
+                <button
+                    onClick={() => navigate('/events/mes-defis')}
+                    className="self-start inline-flex items-center gap-1 text-sm font-semibold text-primary"
+                >
+                    Mes défis & votes
+                    <HugeiconsIcon icon={ArrowRight01Icon} size={14} />
+                </button>
                 <div role="tablist" aria-label="Billets" className="flex gap-1 bg-surface-2 rounded-pill p-1">
                     {([['upcoming', 'À venir'], ['past', 'Passés']] as const).map(([key, label]) => (
                         <button

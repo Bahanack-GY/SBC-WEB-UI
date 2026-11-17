@@ -146,6 +146,9 @@ export default function OrganizerHub() {
                         </div>
                     </>
                 )}
+
+                {/* Team members (manager, moderator, staff) need not be organizers themselves. */}
+                <button onClick={() => navigate('/events/equipe')} className="w-full bg-surface border border-border text-ink-2 font-semibold py-3 rounded-tile">Événements où je suis en équipe</button>
             </div>
         </div>
     );

@@ -636,16 +636,6 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Create payment intent
-   */
-  async createPaymentIntent(data: Record<string, any>): Promise<ApiResponse> {
-    return await this.post('/payments/intents', {
-      body: data,
-      requiresAuth: false
-    });
-  }
-
-  /**
    * Submit payment details
    */
   async submitPaymentDetails(sessionId: string, paymentData: Record<string, any>): Promise<ApiResponse> {
@@ -1572,6 +1562,14 @@ export class SBCApiService extends ApiService {
   /** Web push: forget this browser. POST /api/notifications/push/unsubscribe */
   async pushUnsubscribe(endpoint: string): Promise<ApiResponse> {
     return await this.post('/notifications/push/unsubscribe', { body: { endpoint } });
+  }
+
+  /**
+   * Relanced filleuls who paid, and the commissions that earned
+   * GET /api/relance/earnings
+   */
+  async relanceGetEarnings(): Promise<ApiResponse> {
+    return await this.get('/relance/earnings');
   }
 
   /**
