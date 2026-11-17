@@ -4,7 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { InformationCircleIcon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../../services/SBCApiService';
-import { SupportError, TICKET_CATEGORIES, idOf, supportErrorText, unwrap, type Ticket } from './support';
+import { SupportError, TICKET_CATEGORIES, TICKET_PRESETS, idOf, supportErrorText, unwrap, type Ticket } from './support';
 import { uploadAttachments } from './attachments';
 import AttachmentPicker from './AttachmentPicker';
 import { ErrorNote, HelpPage } from './ui';
@@ -16,24 +16,19 @@ const MESSAGE = { min: 20, max: 5000 };
 
 type Errors = Partial<Record<'category' | 'subject' | 'message', string>>;
 
-const PREFILL: Record<string, { subject: string; message?: (p: URLSearchParams) => string }> = {
-    activation: { subject: 'Mon compte n’est pas activé après paiement' },
-    withdrawal: {
-        subject: 'Question sur mon retrait',
-        message: (p) => (p.get('retrait') ? `Référence du retrait : ${p.get('retrait')}\n\n` : ''),
-    },
-    identity_verification: { subject: 'Je n’ai plus accès à mon email ou à mon téléphone' },
-};
 
 /** A new request to a human agent: category, subject, message, photos/PDF. */
 export default function HelpNewTicket() {
     const [params] = useSearchParams();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
-    const initialCategory = TICKET_CATEGORIES.some((c) => c.value === params.get('categorie')) ? params.get('categorie')! : '';
-    const [category, setCategory] = useState(initialCategory);
-    const [subject, setSubject] = useState(PREFILL[initialCategory]?.subject ?? '');
-    const [message, setMessage] = useState(PREFILL[initialCategory]?.message?.(params) ?? '');
+    // ?categorie= is a preset (activation, retrait, verification_identite) or a category key.
+    const asked = params.get('categorie') ?? '';
+    const preset = TICKET_PRESETS[asked];
+    const identity = !!preset?.identity;
+    const [category, setCategory] = useState(preset?.category ?? (TICKET_CATEGORIES.some((c) => c.value === asked) ? asked : ''));
+    const [subject, setSubject] = useState(preset?.subject ?? '');
+    const [message, setMessage] = useState(() => (params.get('retrait') ? `Référence du retrait : ${params.get('retrait')}\n\n` : ''));
     const [files, setFiles] = useState<File[]>([]);
     const [errors, setErrors] = useState<Errors>({});
     const [busy, setBusy] = useState<'upload' | 'create' | null>(null);
@@ -95,12 +90,14 @@ export default function HelpNewTicket() {
                     {errors.category && <p id="ticket-category-error" className="mt-1 text-xs text-danger">{errors.category}</p>}
                 </div>
 
-                {category === 'identity_verification' && (
+                {(identity || category === 'compte_acces') && (
                     <div className="flex items-start gap-2 rounded-tile bg-accent-soft p-3 text-xs text-ink-2">
                         <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-accent shrink-0" />
                         <p>
-                            Dites ce qui a changé (email, numéro, ou les deux) et le nouveau contact à utiliser. L’agent vous
-                            indiquera les justificatifs à fournir. Ne donnez jamais votre mot de passe ni un code reçu.
+                            {identity
+                                ? 'Dites ce qui a changé (email, numéro, ou les deux) et le nouveau contact à utiliser. L’agent vous indiquera les justificatifs à fournir. '
+                                : 'Pour changer vous-même votre email ou votre numéro, utilisez plutôt « Changer mon email ou téléphone » dans l’aide. '}
+                            Ne donnez jamais votre mot de passe ni un code reçu.
                         </p>
                     </div>
                 )}

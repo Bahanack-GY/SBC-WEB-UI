@@ -6,7 +6,7 @@ import { Attachment01Icon, SentIcon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../../services/SBCApiService';
 import { ConfirmSheet } from '../../components/relance/ui/ConfirmSheet';
 import {
-    SupportError, categoryLabel, dateTimeFr, idOf, isTicketClosed, messageAuthor, messageText, supportErrorText,
+    SupportError, categoryLabel, dateTimeFr, idOf, isTicketClosed, messageAuthor, messageAuthorName, messageText, supportErrorText,
     ticketRef, ticketStatus, unwrap, type Ticket, type TicketMessage,
 } from './support';
 import { uploadAttachments } from './attachments';
@@ -150,7 +150,7 @@ function Message({ m }: { m: TicketMessage }) {
         return <li className="text-center text-xs text-ink-3">{messageText(m)} {m.createdAt && `· ${dateTimeFr(m.createdAt)}`}</li>;
     }
     const mine = author === 'member';
-    const who = mine ? 'Vous' : author === 'assistant' ? 'Assistant' : m.authorName || 'Équipe SBC';
+    const who = mine ? 'Vous' : author === 'assistant' ? 'Assistant' : messageAuthorName(m) || 'Équipe SBC';
     return (
         <li className={cn('flex', mine ? 'justify-end' : 'justify-start')}>
             <div className={cn('max-w-[88%] rounded-card px-3 py-2', mine ? 'bg-primary-soft rounded-br-md' : 'bg-surface border border-border rounded-bl-md')}>

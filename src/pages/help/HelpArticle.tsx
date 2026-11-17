@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { AiChat02Icon, CustomerSupportIcon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../../services/SBCApiService';
-import { SupportError, supportErrorText, unwrap, type Article } from './support';
+import { SupportError, supportErrorText, unwrap, type Article, type ArticleMedia } from './support';
 import { Card, ErrorNote, HelpPage, RichText, Skeletons } from './ui';
 import { secondaryBtn } from './styles';
 
@@ -16,6 +16,10 @@ export default function HelpArticle() {
         staleTime: 5 * 60_000,
     });
     const a = article.data;
+    const media = a?.media ?? [];
+    const videos = [...(a?.videoUrl ? [{ type: 'video' as const, url: a.videoUrl }] : []), ...media.filter((m) => m.type === 'video')]
+        .filter((m): m is ArticleMedia & { title?: string } => /^https:\/\//.test(m.url));
+    const links = media.filter((m) => m.type !== 'video' && /^https:\/\//.test(m.url));
 
     return (
         <HelpPage title={a?.title ?? 'Article'}>
@@ -30,10 +34,22 @@ export default function HelpArticle() {
             ) : (
                 <Card>
                     <h2 className="text-base font-semibold text-ink mb-3">{a.title}</h2>
-                    {a.videoUrl && (
-                        <video src={a.videoUrl} controls preload="metadata" playsInline className="w-full rounded-tile mb-3 bg-ink" aria-label={`Vidéo : ${a.title}`} />
-                    )}
+                    {a.summary && <p className="text-sm font-medium text-ink mb-3">{a.summary}</p>}
+                    {videos.map((m) => (
+                        <video key={m.url} src={m.url} controls preload="metadata" playsInline className="w-full rounded-tile mb-3 bg-ink" aria-label={`Vidéo : ${m.title ?? a.title}`} />
+                    ))}
                     <RichText text={a.body ?? a.content ?? ''} />
+                    {links.length > 0 && (
+                        <ul className="mt-3 space-y-1">
+                            {links.map((m) => (
+                                <li key={m.url}>
+                                    <a href={m.url} target="_blank" rel="noopener noreferrer" className="text-sm text-primary underline">
+                                        {m.title ?? (m.type === 'pdf' ? 'Document PDF' : 'Lien utile')}
+                                    </a>
+                                </li>
+                            ))}
+                        </ul>
+                    )}
                 </Card>
             )}
             <div className="space-y-2">

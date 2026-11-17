@@ -42,7 +42,7 @@ export default function HelpContact() {
                 </p>
                 <div className="mt-3">
                     <RowLink
-                        to="/aide/demandes/nouvelle?categorie=identity_verification"
+                        to="/aide/demandes/nouvelle?categorie=verification_identite"
                         icon={UserIdVerificationIcon}
                         tint="bg-accent-soft text-accent"
                         title="Demander une vérification d’identité"

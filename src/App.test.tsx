@@ -168,10 +168,12 @@ describe('« Aide » (SBC Support)', () => {
 
     it('opens a request from its notification link', async () => {
         auth.user = member;
-        api.supportTicket.mockResolvedValue(ok({ _id: 'abc123', subject: 'Retrait bloqué', status: 'waiting_member', messages: [] }));
+        api.supportTicket.mockResolvedValue(ok({ _id: 'abc123', subject: 'Retrait bloqué', status: 'en_attente_membre', number: 'SUP-000123', messages: [{ _id: 'm1', author: { type: 'agent', name: 'Awa (SBC)' }, body: 'Pouvez-vous envoyer la capture ?', createdAt: '2026-11-17T09:00:00Z' }] }));
         renderApp('/aide/demandes/abc123');
         expect(await screen.findByRole('heading', { name: 'Retrait bloqué' })).toBeInTheDocument();
         expect(screen.getByText('Votre réponse est attendue')).toBeInTheDocument();
+        expect(screen.getByRole('heading', { level: 1, name: 'Demande SUP-000123' })).toBeInTheDocument();
+        expect(screen.getByText(/Awa \(SBC\)/)).toBeInTheDocument();
     });
 
     it('still needs a login', async () => {

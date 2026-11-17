@@ -32,7 +32,7 @@ const file = (name: string, type: string, size: number) => {
 const setup = () => userEvent.setup({ applyAccept: false });
 
 async function fillValid(user: ReturnType<typeof setup>) {
-    await user.selectOptions(screen.getByLabelText('Sujet'), 'payment');
+    await user.selectOptions(screen.getByLabelText('Sujet'), 'activation_paiement');
     await user.type(screen.getByLabelText('Titre'), 'Paiement débité deux fois');
     await user.type(screen.getByLabelText('Votre message'), 'J’ai été débité deux fois pour mon pack hier soir.');
 }
@@ -87,7 +87,7 @@ describe('New request', () => {
         expect(await screen.findByRole('heading', { name: 'Page de la demande' })).toBeInTheDocument();
         expect(api.supportUploadAttachment).toHaveBeenCalledTimes(1);
         expect(api.supportCreateTicket).toHaveBeenCalledWith({
-            category: 'payment',
+            category: 'activation_paiement',
             subject: 'Paiement débité deux fois',
             message: 'J’ai été débité deux fois pour mon pack hier soir.',
             attachmentIds: ['att1'],
@@ -104,8 +104,9 @@ describe('New request', () => {
     });
 
     it('opens on the identity check with its advice', () => {
-        renderForm('/aide/demandes/nouvelle?categorie=identity_verification');
-        expect(screen.getByLabelText('Sujet')).toHaveValue('identity_verification');
+        renderForm('/aide/demandes/nouvelle?categorie=verification_identite');
+        expect(screen.getByLabelText('Sujet')).toHaveValue('compte_acces');
+        expect(screen.getByLabelText('Titre')).toHaveValue('Je n’ai plus accès à mon email ou à mon téléphone');
         expect(screen.getByText(/Ne donnez jamais votre mot de passe/)).toBeInTheDocument();
     });
 });

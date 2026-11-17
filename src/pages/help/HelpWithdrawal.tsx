@@ -40,7 +40,7 @@ export default function HelpWithdrawal() {
                             <dt className="text-ink-3">Référence</dt><dd className="text-ink break-all">{w.transactionId}</dd>
                         </dl>
                     </Card>
-                    <Link to={`/aide/demandes/nouvelle?categorie=withdrawal&retrait=${encodeURIComponent(w.transactionId)}`} className={secondaryBtn}>
+                    <Link to={`/aide/demandes/nouvelle?categorie=retrait&retrait=${encodeURIComponent(w.transactionId)}`} className={secondaryBtn}>
                         <HugeiconsIcon icon={CustomerSupportIcon} size={18} /> Écrire à un agent à propos de ce retrait
                     </Link>
                 </>

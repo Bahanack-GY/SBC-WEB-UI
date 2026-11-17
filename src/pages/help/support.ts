@@ -55,16 +55,25 @@ export function supportErrorText(e: unknown, action: keyof typeof LIMIT_TEXT = '
 
 // ---------- shapes ----------
 
-export type ArticleRef = { slug: string; title: string; excerpt?: string };
+export type ArticleRef = { slug: string; title: string; excerpt?: string; summary?: string };
 export type KbCategory = { slug?: string; name?: string; title?: string; description?: string; articles?: ArticleRef[] };
-export type Article = { slug: string; title: string; body?: string; content?: string; videoUrl?: string; updatedAt?: string };
+export type ArticleMedia = { type: 'video' | 'pdf' | 'link'; url: string; title?: string };
+export type Article = {
+    slug: string; title: string; summary?: string; body?: string; content?: string;
+    media?: ArticleMedia[]; videoUrl?: string; updatedAt?: string;
+};
+/** support-service config/guides.ts */
+export type GuideAction = 'activation_check' | 'withdrawal_status' | 'ticket' | 'contact_change_self';
 export type GuideNode = {
     id?: string;
-    title?: string;
     label?: string;
-    answer?: string;
-    articleSlug?: string;
-    route?: AssistantRoute;
+    title?: string;
+    text?: string;
+    action?: GuideAction;
+    /** Ticket category for `action: 'ticket'`. */
+    category?: string;
+    /** Article slugs. */
+    articles?: string[];
     children?: GuideNode[];
 };
 
@@ -78,11 +87,12 @@ export type AssistantAnswer = {
     canEscalate: boolean;
 };
 
-export type Attachment = { id?: string; _id?: string; name?: string; filename?: string; mimeType?: string; size?: number; url?: string };
+export type Attachment = { id?: string; _id?: string; name?: string; filename?: string; mime?: string; mimeType?: string; size?: number; url?: string };
 export type TicketMessage = {
     _id?: string;
     id?: string;
-    author?: 'member' | 'agent' | 'system' | 'assistant' | string;
+    /** support-service: `{ type: 'member'|'agent'|'assistant'|'system', name }`. */
+    author?: string | { type?: string; name?: string | null };
     authorType?: string;
     authorName?: string;
     body?: string;
@@ -156,11 +166,17 @@ export const asList = <T,>(data: unknown, ...keys: string[]): T[] => {
     return [];
 };
 
-export const ticketRef = (t: Ticket) =>
-    t.reference ?? (t.number != null ? `#${t.number}` : idOf(t) ? `#${idOf(t).slice(-6).toUpperCase()}` : '');
+export const ticketRef = (t: Ticket) => {
+    if (t.reference) return t.reference;
+    if (t.number != null && t.number !== '') return /^\d+$/.test(String(t.number)) ? `#${t.number}` : String(t.number);
+    return idOf(t) ? `#${idOf(t).slice(-6).toUpperCase()}` : '';
+};
 
 export const messageText = (m: TicketMessage) => m.body ?? m.message ?? '';
-export const messageAuthor = (m: TicketMessage) => m.author ?? m.authorType ?? 'member';
+export const messageAuthor = (m: TicketMessage) =>
+    (typeof m.author === 'object' && m.author ? m.author.type : m.author) ?? m.authorType ?? 'member';
+export const messageAuthorName = (m: TicketMessage) =>
+    (typeof m.author === 'object' && m.author ? m.author.name : null) ?? m.authorName ?? null;
 
 export const isActivated = (s: ActivationStatus | null | undefined) =>
     !!s && (s.activated === true || s.subscription?.active === true || s.subscription?.status === 'active'
@@ -168,21 +184,39 @@ export const isActivated = (s: ActivationStatus | null | undefined) =>
 
 // ---------- wording ----------
 
+/** support-service TICKET_CATEGORIES keys, with the member's wording. */
 export const TICKET_CATEGORIES: { value: string; label: string }[] = [
-    { value: 'activation', label: 'Activation du compte' },
-    { value: 'withdrawal', label: 'Retrait' },
-    { value: 'payment', label: 'Paiement ou abonnement' },
-    { value: 'account', label: 'Mon compte' },
-    { value: 'identity_verification', label: 'Je n’ai plus accès à mon email ou mon téléphone' },
-    { value: 'ads', label: 'SBC Ads Network' },
-    { value: 'other', label: 'Autre question' },
+    { value: 'activation_paiement', label: 'Activation du compte, paiement' },
+    { value: 'retrait', label: 'Retrait' },
+    { value: 'compte_acces', label: 'Mon compte, accès, email ou téléphone' },
+    { value: 'commissions', label: 'Commissions, filleuls' },
+    { value: 'vues_whatsapp', label: 'Vues WhatsApp (Ads Network)' },
+    { value: 'technique', label: 'Problème technique dans l’app' },
+    { value: 'autre', label: 'Autre question' },
 ];
 export const categoryLabel = (c?: string) => TICKET_CATEGORIES.find((x) => x.value === c)?.label ?? 'Demande';
 
-/** Where an assistant `route` leads, and the category of a ticket opened from it. */
-export const ROUTE_TO_CATEGORY: Record<AssistantRoute, string> = { activation: 'activation', withdrawal: 'withdrawal', ticket: 'other' };
+/**
+ * Ready-made requests, opened with `?categorie=<preset>` from the other help
+ * screens. A plain category key works too.
+ */
+export const TICKET_PRESETS: Record<string, { category: string; subject: string; identity?: boolean }> = {
+    activation: { category: 'activation_paiement', subject: 'Mon compte n’est pas activé après paiement' },
+    retrait: { category: 'retrait', subject: 'Question sur mon retrait' },
+    verification_identite: { category: 'compte_acces', subject: 'Je n’ai plus accès à mon email ou à mon téléphone', identity: true },
+};
+
+/** The category of a ticket opened from an assistant `route`. */
+export const ROUTE_TO_CATEGORY: Record<AssistantRoute, string> = { activation: 'activation_paiement', withdrawal: 'retrait', ticket: 'autre' };
 
 const TICKET_STATUS: Record<string, { label: string; tone: Tone }> = {
+    // support-service TICKET_STATUSES
+    nouveau: { label: 'Envoyée', tone: 'info' },
+    ouvert: { label: 'En cours', tone: 'info' },
+    en_attente_membre: { label: 'Votre réponse est attendue', tone: 'warning' },
+    en_attente_interne: { label: 'En cours de vérification', tone: 'info' },
+    resolu: { label: 'Résolue', tone: 'success' },
+    ferme: { label: 'Fermée', tone: 'neutral' },
     new: { label: 'Envoyée', tone: 'info' },
     open: { label: 'Ouverte', tone: 'info' },
     assigned: { label: 'Prise en charge', tone: 'info' },
@@ -195,7 +229,7 @@ const TICKET_STATUS: Record<string, { label: string; tone: Tone }> = {
     closed: { label: 'Fermée', tone: 'neutral' },
 };
 export const ticketStatus = (s?: string) => TICKET_STATUS[s ?? ''] ?? { label: 'En cours', tone: 'info' as Tone };
-export const isTicketClosed = (s?: string) => s === 'closed';
+export const isTicketClosed = (s?: string) => s === 'ferme' || s === 'closed';
 
 export type Tone = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 
@@ -278,7 +312,18 @@ export function checkAttachment(file: File): string | null {
 export const formatSize = (bytes: number) =>
     bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} Ko` : `${(bytes / 1024 / 1024).toFixed(1).replace('.', ',')} Mo`;
 
-/** Where an assistant or guide `route` sends the member. */
+/** Where a guided-path leaf sends the member. */
+export function guideTarget(n: GuideNode): { to: string; label: string } | null {
+    switch (n.action) {
+        case 'activation_check': return ROUTE_TARGET.activation;
+        case 'withdrawal_status': return ROUTE_TARGET.withdrawal;
+        case 'contact_change_self': return { to: '/aide/contact', label: 'Changer mon email ou mon téléphone' };
+        case 'ticket': return { to: `/aide/demandes/nouvelle${n.category ? `?categorie=${encodeURIComponent(n.category)}` : ''}`, label: 'Écrire à un agent' };
+        default: return null;
+    }
+}
+
+/** Where an assistant `route` sends the member. */
 export const ROUTE_TARGET: Record<AssistantRoute, { to: string; label: string }> = {
     activation: { to: '/aide/activation', label: 'Vérifier mon paiement d’activation' },
     withdrawal: { to: '/aide/retraits', label: 'Voir l’état de mes retraits' },

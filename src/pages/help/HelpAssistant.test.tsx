@@ -76,7 +76,7 @@ describe('Assistant', () => {
         expect(within(dialog).getByRole('radio', { name: 'Retrait' })).toBeChecked();
         await user.click(within(dialog).getByRole('button', { name: 'Envoyer à un agent' }));
 
-        expect(api.supportEscalate).toHaveBeenCalledWith('c1', 'withdrawal');
+        expect(api.supportEscalate).toHaveBeenCalledWith('c1', 'retrait');
         expect(await screen.findByRole('heading', { name: 'Page de la demande' })).toBeInTheDocument();
     });
 

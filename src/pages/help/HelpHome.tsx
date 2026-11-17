@@ -8,11 +8,11 @@ import {
 } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../../services/SBCApiService';
 import {
-    ROUTE_TARGET, asList, isTicketClosed, unwrap,
+    asList, guideTarget, isTicketClosed, unwrap,
     type ArticleRef, type GuideNode, type KbCategory, type Ticket,
 } from './support';
 import { Card, HelpPage, RichText, RowLink } from './ui';
-import { inputCls, secondaryBtn } from './styles';
+import { inputCls, primaryBtn, secondaryBtn } from './styles';
 
 /** The paths most members need, shown first whatever the help centre holds. */
 const PATHS = [
@@ -94,7 +94,7 @@ export default function HelpHome() {
                         <ul className="space-y-2">
                             {(search.data ?? []).slice(0, 8).map((a) => (
                                 <li key={a.slug}>
-                                    <RowLink to={`/aide/articles/${encodeURIComponent(a.slug)}`} icon={BookOpen01Icon} tint="bg-surface-2 text-ink-2" title={a.title} subtitle={a.excerpt} />
+                                    <RowLink to={`/aide/articles/${encodeURIComponent(a.slug)}`} icon={BookOpen01Icon} tint="bg-surface-2 text-ink-2" title={a.title} subtitle={a.excerpt ?? a.summary} />
                                 </li>
                             ))}
                         </ul>
@@ -153,13 +153,15 @@ export default function HelpHome() {
     );
 }
 
-const nodeTitle = (n: GuideNode) => n.title ?? n.label ?? '';
+const nodeTitle = (n: GuideNode) => n.label ?? n.title ?? '';
 
 /** The guided FAQ: tap a question, then a more precise one, until an answer. */
 function GuideBrowser({ roots }: { roots: GuideNode[] }) {
     const [path, setPath] = useState<GuideNode[]>([]);
     const current = path[path.length - 1];
     const options = current ? current.children ?? [] : roots;
+    const target = current ? guideTarget(current) : null;
+    const articles = current?.articles ?? [];
 
     return (
         <Card title="Questions fréquentes" icon={MessageQuestionIcon}>
@@ -169,15 +171,15 @@ function GuideBrowser({ roots }: { roots: GuideNode[] }) {
                 </button>
             )}
             {current && <p className="text-sm font-semibold text-ink mb-2">{nodeTitle(current)}</p>}
-            {current?.answer && <RichText text={current.answer} />}
-            {current && (current.articleSlug || current.route) && (
+            {current?.text && <RichText text={current.text} />}
+            {(target || articles.length > 0) && (
                 <div className="mt-3 flex flex-col gap-2">
-                    {current.articleSlug && (
-                        <Link to={`/aide/articles/${encodeURIComponent(current.articleSlug)}`} className="text-sm font-semibold text-primary underline">Lire l’article complet</Link>
-                    )}
-                    {current.route && (
-                        <Link to={ROUTE_TARGET[current.route].to} className="text-sm font-semibold text-primary underline">{ROUTE_TARGET[current.route].label}</Link>
-                    )}
+                    {target && <Link to={target.to} className={primaryBtn}>{target.label}</Link>}
+                    {articles.map((slug, i) => (
+                        <Link key={slug} to={`/aide/articles/${encodeURIComponent(slug)}`} className="text-sm font-semibold text-primary underline">
+                            {articles.length > 1 ? `Lire l’article ${i + 1}` : 'Lire l’article complet'}
+                        </Link>
+                    ))}
                 </div>
             )}
             {options.length > 0 && (
@@ -192,7 +194,7 @@ function GuideBrowser({ roots }: { roots: GuideNode[] }) {
                     ))}
                 </ul>
             )}
-            {current && options.length === 0 && (
+            {current && options.length === 0 && current.action !== 'ticket' && (
                 <Link to={`/aide/assistant?q=${encodeURIComponent(nodeTitle(current))}`} className="mt-3 block text-sm text-ink-2 underline">
                     Ça ne répond pas à ma question
                 </Link>
