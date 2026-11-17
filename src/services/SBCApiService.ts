@@ -1522,6 +1522,16 @@ export class SBCApiService extends ApiService {
 
   // ===== Credit packs & balance (replaces monthly subscription) =====
 
+  /** The admin announcement to show this member as a pop-up now, or null. GET /api/notifications/announcements/next */
+  async nextAnnouncement(): Promise<ApiResponse> {
+    return await this.get('/notifications/announcements/next');
+  }
+
+  /** The member saw, closed or tapped the button of a pop-up announcement (each counts once). */
+  async announcementEvent(id: string, type: 'shown' | 'closed' | 'clicked'): Promise<ApiResponse> {
+    return await this.post(`/notifications/announcements/${encodeURIComponent(id)}/event`, { body: { type } });
+  }
+
   /** The bell: notifications, newest first. GET /api/notifications/inbox */
   async inboxList(before?: string): Promise<ApiResponse> {
     return await this.get('/notifications/inbox', { queryParameters: before ? { before } : {} });

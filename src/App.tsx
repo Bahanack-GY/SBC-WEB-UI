@@ -53,6 +53,7 @@ import PublicPrivacy from './pages/PublicPrivacy'
 import PublicLegal from './pages/PublicLegal'
 import MyData from './pages/MyData'
 import PrivacyNotices from './components/privacy/PrivacyNotices'
+import AnnouncementGate from './components/announcements/AnnouncementPopup'
 import SsoAuthorize from './pages/SsoAuthorize'
 import { useQueryClient } from '@tanstack/react-query'
 import { TourProvider } from './components/common/TourProvider'
@@ -391,8 +392,8 @@ function AppContent() {
         <Route path="*" element={<NotFound />} />
       </Routes>
       {!hideNav && <NavigationBar />}
-      {/* Consent window and cookie notice; the install prompt waits until neither shows. */}
-      <PrivacyNotices raised={!hideNav || isSalesPage} whenClear={!hideNav && <InstallPrompt />} />
+      {/* One at a time: consent window, cookie notice, the admin's pop-up announcement, then the install prompt. */}
+      <PrivacyNotices raised={!hideNav || isSalesPage} whenClear={!hideNav && <AnnouncementGate><InstallPrompt /></AnnouncementGate>} />
     </div>
   );
 }
