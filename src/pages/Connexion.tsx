@@ -225,6 +225,17 @@ function Connexion() {
             {t('pages.connexion.advertiserLink')}
           </button>
         </div>
+        {/* For people who cannot sign in: a request to the support without an account. */}
+        <div className="text-center text-sm text-gray-500 mt-3">
+          {t('pages.connexion.problemPrompt')}{' '}
+          <button
+            type="button"
+            className="text-primary font-semibold hover:underline bg-transparent"
+            onClick={() => navigate('/signaler-un-probleme')}
+          >
+            {t('pages.connexion.problemLink')}
+          </button>
+        </div>
       </motion.div>
 
       <div className="w-full max-w-md px-4">

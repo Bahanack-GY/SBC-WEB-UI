@@ -176,6 +176,15 @@ describe('« Aide » (SBC Support)', () => {
         expect(screen.getByText(/Awa \(SBC\)/)).toBeInTheDocument();
     });
 
+    it('« Signaler un problème » opens without a login, for people who cannot sign in', async () => {
+        auth.isAuthenticated = false;
+        auth.user = null;
+        renderApp('/signaler-un-probleme');
+        expect(await screen.findByRole('heading', { name: 'Signaler un problème' })).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'Vos coordonnées' })).toBeInTheDocument();
+        expect(screen.queryByText('En-tête membre')).toBeNull();
+    });
+
     it('still needs a login', async () => {
         auth.isAuthenticated = false;
         auth.user = null;

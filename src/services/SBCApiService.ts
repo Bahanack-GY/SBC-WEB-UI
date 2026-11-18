@@ -1,5 +1,8 @@
 import { ApiService } from './ApiService';
 import { ApiResponse } from './ApiResponse';
+
+/** Name, phone and email typed at the top of a support request. */
+export type SupportContact = { name: string; phone: string; email: string };
 // import { getPaymentUrl, getBaseUrl } from '../utils/apiHelpers';
 
 /**
@@ -1162,8 +1165,13 @@ export class SBCApiService extends ApiService {
     return await this.get('/support/me/tickets', { skipDeduplication: true });
   }
 
-  async supportCreateTicket(ticket: { category: string; subject: string; message: string; attachmentIds: string[] }): Promise<ApiResponse> {
+  async supportCreateTicket(ticket: { category: string; subject: string; message: string; attachmentIds: string[]; contact?: SupportContact }): Promise<ApiResponse> {
     return await this.post('/support/me/tickets', { body: ticket });
+  }
+
+  /** « Signaler un problème » without an account (support-service /public/tickets): answers `{ number }` only. */
+  async supportPublicTicket(report: { category: string; subject: string; message: string; contact: SupportContact; turnstileToken?: string; website?: string }): Promise<ApiResponse> {
+    return await this.post('/support/public/tickets', { body: report, requiresAuth: false });
   }
 
   async supportTicket(id: string): Promise<ApiResponse> {

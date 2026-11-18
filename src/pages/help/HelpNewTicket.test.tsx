@@ -7,8 +7,12 @@ import { fail, ok, renderPage } from '../../test/api';
 const api = vi.hoisted(() => ({
     supportUploadAttachment: vi.fn(),
     supportCreateTicket: vi.fn(),
+    supportPublicTicket: vi.fn(),
 }));
 vi.mock('../../services/SBCApiService', () => ({ sbcApiService: api }));
+const auth = vi.hoisted(() => ({ isAuthenticated: true, user: null as Record<string, unknown> | null }));
+vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => auth }));
+const MEMBER = { id: 'u1', name: 'Jean Kamga', phoneNumber: '+237675090755', email: 'jean@gmail.com' };
 
 import HelpNewTicket from './HelpNewTicket';
 
@@ -16,6 +20,7 @@ function renderForm(route = '/aide/demandes/nouvelle') {
     return renderPage(
         <Routes>
             <Route path="/aide/demandes/nouvelle" element={<HelpNewTicket />} />
+            <Route path="/signaler-un-probleme" element={<HelpNewTicket />} />
             <Route path="/aide/demandes/:id" element={<h1>Page de la demande</h1>} />
         </Routes>,
         route,
@@ -40,6 +45,9 @@ async function fillValid(user: ReturnType<typeof setup>) {
 beforeEach(() => {
     api.supportUploadAttachment.mockReset();
     api.supportCreateTicket.mockReset();
+    api.supportPublicTicket.mockReset();
+    auth.isAuthenticated = true;
+    auth.user = { ...MEMBER };
 });
 
 describe('New request', () => {
@@ -99,6 +107,7 @@ describe('New request', () => {
             subject: 'Paiement débité deux fois',
             message: 'J’ai été débité deux fois pour mon pack hier soir.',
             attachmentIds: ['att1'],
+            contact: { name: 'Jean Kamga', phone: '+237675090755', email: 'jean@gmail.com' },
         });
     });
 
@@ -116,5 +125,65 @@ describe('New request', () => {
         expect(screen.getByLabelText('Sujet')).toHaveValue('compte_acces');
         expect(screen.getByLabelText('Titre')).toHaveValue('Je n’ai plus accès à mon email ou à mon téléphone');
         expect(screen.getByText(/Ne donnez jamais votre mot de passe/)).toBeInTheDocument();
+    });
+
+    it('starts with the member’s name, phone and email from the account, which can be changed', async () => {
+        const user = setup();
+        api.supportCreateTicket.mockResolvedValue(ok({ _id: 't8', status: 'new' }));
+        renderForm();
+        expect(screen.getByRole('group', { name: 'Vos coordonnées' })).toBeInTheDocument();
+        expect(screen.getByLabelText('Nom complet')).toHaveValue('Jean Kamga');
+        expect(screen.getByLabelText('Téléphone')).toHaveValue('+237675090755');
+        expect(screen.getByLabelText('Email')).toHaveValue('jean@gmail.com');
+
+        await user.clear(screen.getByLabelText('Téléphone'));
+        await user.type(screen.getByLabelText('Téléphone'), '+237 6 99 00 11 22');
+        await fillValid(user);
+        await user.click(screen.getByRole('button', { name: 'Envoyer ma demande' }));
+        await screen.findByRole('heading', { name: 'Page de la demande' });
+        expect(api.supportCreateTicket.mock.calls[0][0].contact).toEqual({ name: 'Jean Kamga', phone: '+237 6 99 00 11 22', email: 'jean@gmail.com' });
+    });
+
+    it('refuses a contact email that is not valid', async () => {
+        const user = setup();
+        renderForm();
+        await user.clear(screen.getByLabelText('Email'));
+        await user.type(screen.getByLabelText('Email'), 'jean@gmail');
+        await fillValid(user);
+        await user.click(screen.getByRole('button', { name: 'Envoyer ma demande' }));
+        expect(screen.getByText('Cette adresse email n’est pas valide.')).toBeInTheDocument();
+        expect(api.supportCreateTicket).not.toHaveBeenCalled();
+    });
+
+    describe('without an account', () => {
+        beforeEach(() => { auth.isAuthenticated = false; auth.user = null; });
+
+        it('asks for name, phone and email, has no file picker, and confirms by email', async () => {
+            const user = setup();
+            api.supportPublicTicket.mockResolvedValue(ok({ number: 'SUP-000042' }));
+            renderForm('/signaler-un-probleme');
+            expect(screen.getByRole('heading', { name: 'Signaler un problème' })).toBeInTheDocument();
+            expect(screen.getByLabelText('Nom complet')).toHaveValue('');
+            expect(screen.queryByLabelText(/Ajouter une capture d’écran/)).toBeNull();
+
+            await fillValid(user);
+            await user.click(screen.getByRole('button', { name: 'Envoyer ma demande' }));
+            expect(screen.getByText('Indiquez votre nom.')).toBeInTheDocument();
+            expect(screen.getByText('Indiquez votre numéro de téléphone.')).toBeInTheDocument();
+            expect(screen.getByText(/Indiquez votre adresse email/)).toBeInTheDocument();
+            expect(api.supportPublicTicket).not.toHaveBeenCalled();
+
+            await user.type(screen.getByLabelText('Nom complet'), 'Awa Diallo');
+            await user.type(screen.getByLabelText('Téléphone'), '+237675090755');
+            await user.type(screen.getByLabelText('Email'), 'awa@gmail.com');
+            await user.click(screen.getByRole('button', { name: 'Envoyer ma demande' }));
+
+            expect(await screen.findByRole('status')).toHaveTextContent('SUP-000042');
+            expect(screen.getByRole('status')).toHaveTextContent('awa@gmail.com');
+            expect(api.supportPublicTicket).toHaveBeenCalledWith(expect.objectContaining({
+                category: 'activation_paiement', contact: { name: 'Awa Diallo', phone: '+237675090755', email: 'awa@gmail.com' }, website: '',
+            }));
+            expect(api.supportCreateTicket).not.toHaveBeenCalled();
+        });
     });
 });

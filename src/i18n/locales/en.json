@@ -128,7 +128,9 @@
       "contactSupport": "Please contact support",
       "recoveryMessage": "Your account information has been lost, but your transactions can be recovered!",
       "advertiserPrompt": "Only want to advertise?",
-      "advertiserLink": "Create an advertiser account"
+      "advertiserLink": "Create an advertiser account",
+      "problemPrompt": "Can’t sign in?",
+      "problemLink": "Report a problem"
     },
     "signup": {
       "title": "Create an account",
