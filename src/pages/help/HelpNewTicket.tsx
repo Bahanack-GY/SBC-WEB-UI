@@ -205,7 +205,7 @@ export default function HelpNewTicket() {
                     <div className="flex items-start gap-2 rounded-tile bg-accent-soft p-3 text-xs text-ink-2">
                         <HugeiconsIcon icon={InformationCircleIcon} size={18} className="text-accent shrink-0" />
                         <p>
-                            {identity
+                            {identity || guest
                                 ? 'Dites ce qui a changé (email, numéro, ou les deux) et le nouveau contact à utiliser. L’agent vous indiquera les justificatifs à fournir. '
                                 : 'Pour changer vous-même votre email ou votre numéro, utilisez plutôt « Changer mon email ou téléphone » dans l’aide. '}
                             Ne donnez jamais votre mot de passe ni un code reçu.
