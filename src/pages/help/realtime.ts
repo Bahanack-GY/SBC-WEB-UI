@@ -52,16 +52,19 @@ async function connect() {
             const s = parseSignal(payload, topic);
             if (s) onSignal(s);
         });
-        r.on(RoomEvent.Disconnected, () => { room = null; setConnected(false); schedule(); });
-        r.on(RoomEvent.Reconnecting, () => setConnected(false));
-        r.on(RoomEvent.Reconnected, () => setConnected(true));
-        await r.connect(t.url, t.token, { autoSubscribe: false });
-        if (users === 0) { await r.disconnect(); return; }
+        // Events from a room we already left (replaced or stopped) must not touch the current one.
+        r.on(RoomEvent.Disconnected, () => { if (room !== r) return; room = null; setConnected(false); schedule(); });
+        r.on(RoomEvent.Reconnecting, () => { if (room === r) setConnected(false); });
+        r.on(RoomEvent.Reconnected, () => { if (room === r) setConnected(true); });
         room = r;
+        await r.connect(t.url, t.token, { autoSubscribe: false });
+        if (room !== r) return; // stopped while connecting: the stop timer already called disconnect()
+        if (users === 0) { room = null; await r.disconnect(); return; }
         attempt = 0;
         setConnected(true);
         void client?.invalidateQueries({ queryKey: ['support'] }); // catch up on what happened before
     } catch {
+        room = null;
         setConnected(false);
         schedule();
     } finally {
