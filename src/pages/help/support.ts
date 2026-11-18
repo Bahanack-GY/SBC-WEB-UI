@@ -271,11 +271,16 @@ export function withdrawalStatus(w: Pick<Withdrawal, 'businessStatus' | 'status'
             text: 'L’annulation est demandée. Le montant reste réservé jusqu’à la confirmation de l’opérateur.' },
         CANCELLED: { label: 'Retrait annulé', tone: 'neutral',
             text: 'Ce retrait est annulé et le montant est revenu sur votre solde.' },
+        REJECTED: { label: 'Retrait refusé', tone: 'neutral',
+            text: 'L’équipe SBC n’a pas validé ce retrait. Rien n’a été envoyé et le montant est de nouveau disponible sur votre solde. Écrivez à un agent si vous ne comprenez pas pourquoi.' },
+        EXPIRED: { label: 'Retrait expiré', tone: 'neutral',
+            text: 'Ce retrait n’a pas été validé à temps. Rien n’a été envoyé et le montant est de nouveau disponible sur votre solde : vous pouvez refaire une demande.' },
         UNKNOWN: { label: 'Vérification en cours', tone: 'warning',
             text: 'L’opérateur ne nous a pas encore donné de réponse définitive. Votre argent n’est pas perdu : il reste réservé et un agent vérifie ce retrait. Vous n’avez rien à faire.' },
     };
-    const base = known[key] ?? { label: 'En cours', tone: 'info' as Tone,
-        text: 'Votre retrait est en cours de traitement. Vous recevrez une notification dès qu’il est terminé.' };
+    // An unknown status must never read as "on its way".
+    const base = known[key] ?? { label: 'Statut à vérifier', tone: 'warning' as Tone,
+        text: 'Nous n’avons pas pu lire le statut de ce retrait. Écrivez à un agent si vous avez un doute.' };
     return { label: w.statusLabel || base.label, text: w.explanation || base.text, tone: base.tone };
 }
 

@@ -30,9 +30,13 @@ describe('support helpers', () => {
     });
 
     it('explains every withdrawal business status', () => {
-        for (const s of ['REQUESTED', 'PENDING_APPROVAL', 'RESERVED', 'SUBMITTED', 'PENDING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED', 'UNKNOWN']) {
+        for (const s of ['REQUESTED', 'PENDING_APPROVAL', 'RESERVED', 'SUBMITTED', 'PENDING', 'SUCCEEDED', 'FAILED', 'CANCEL_REQUESTED', 'CANCELLED', 'REJECTED', 'EXPIRED', 'UNKNOWN']) {
             expect(withdrawalStatus({ businessStatus: s }).label).not.toBe('En cours');
         }
+        // A refused, expired or unrecognised withdrawal never reads as "in progress".
+        expect(withdrawalStatus({ businessStatus: 'REJECTED' }).label).toBe('Retrait refusé');
+        expect(withdrawalStatus({ businessStatus: 'EXPIRED' }).text).toMatch(/de nouveau disponible/);
+        expect(withdrawalStatus({ businessStatus: 'SOMETHING_NEW' }).label).toBe('Statut à vérifier');
         expect(withdrawalStatus({ businessStatus: 'UNKNOWN' }).text).toMatch(/n’est pas perdu/);
         expect(withdrawalStatus({ businessStatus: 'SUCCEEDED', statusLabel: 'Envoyé', explanation: 'Texte serveur' })).toMatchObject({ label: 'Envoyé', text: 'Texte serveur' });
     });
