@@ -18,7 +18,7 @@ function serve(answer: (url: string, method: string) => unknown) {
     vi.stubGlobal('fetch', vi.fn(async (input: RequestInfo | URL, init: RequestInit = {}) => {
         const url = String(input);
         const method = (init.method ?? 'GET').toUpperCase();
-        const key = new Headers(init.headers).get('x-support-guest-key');
+        const key = (new Headers(init.headers).get('authorization') ?? '').replace(/^SupportKey /, '') || null;
         calls.push({ url, method, key, body: typeof init.body === 'string' ? JSON.parse(init.body) : undefined });
         if (key !== KEY) return new Response(JSON.stringify({ success: false, message: 'Demande introuvable.' }), { status: 404 });
         return new Response(JSON.stringify({ success: true, data: answer(url, method) }), { status: 200, headers: { 'Content-Type': 'application/json' } });

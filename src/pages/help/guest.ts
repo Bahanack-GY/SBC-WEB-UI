@@ -35,7 +35,8 @@ async function call<T>(id: string, key: string, path: string, init: RequestInit 
     try {
         res = await fetch(`${getBaseUrl()}/support/public/tickets/${encodeURIComponent(id)}${path}`, {
             ...init,
-            headers: { 'x-support-guest-key': key, ...(init.body && !(init.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...(init.headers ?? {}) },
+            // Authorization is allowed by every CORS setup; a custom header would need the gateway's list.
+            headers: { Authorization: `SupportKey ${key}`, ...(init.body && !(init.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...(init.headers ?? {}) },
         });
     } catch {
         throw new SupportError('', 0);
