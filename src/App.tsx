@@ -119,7 +119,8 @@ function AppContent() {
   const { setAffiliationCode } = useAffiliation();
   const { isAuthenticated, loading: authLoading, logout, user: authUser } = useAuth();
   // Support session replay (OpenReplay): records while a member is signed in; off unless configured.
-  useSessionReplay(isAuthenticated ? authUser?.id : null);
+  // The profile comes back with `_id` (the typed `id` is often missing).
+  useSessionReplay(isAuthenticated ? (authUser?.id ?? authUser?._id) : null);
   const { isSubscribed, isLoading: subscriptionLoading } = useSubscriptionStatus();
   const queryClient = useQueryClient();
 
