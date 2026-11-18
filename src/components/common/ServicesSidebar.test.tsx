@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -53,6 +54,22 @@ describe('services menu', () => {
       renderPage(<ServicesSidebar open onClose={() => {}} />);
       await vi.waitFor(() => expect(api.supportTickets).toHaveBeenCalled());
       expect(screen.queryByText('Mes demandes')).toBeNull();
+    });
+
+    it('counts a reply that arrived since the menu was last opened', async () => {
+      localStorage.setItem('token', 't');
+      api.supportTickets.mockResolvedValueOnce(ok([{ id: 'a', status: 'ouvert' }])).mockResolvedValue(ok([{ id: 'a', status: 'en_attente_membre' }]));
+      function Harness() {
+        const [open, setOpen] = useState(true);
+        return <><button onClick={() => setOpen(true)}>Ouvrir</button><ServicesSidebar open={open} onClose={() => setOpen(false)} /></>;
+      }
+      const user = userEvent.setup();
+      renderPage(<Harness />);
+      await screen.findByRole('button', { name: /Mes demandes/ });
+      expect(screen.queryByLabelText(/attend votre réponse/)).toBeNull();
+      await user.click(screen.getByRole('button', { name: 'Fermer le menu' }));
+      await user.click(screen.getByRole('button', { name: 'Ouvrir' }));
+      expect(await screen.findByLabelText('1 demande attend votre réponse')).toHaveTextContent('1');
     });
   });
 });

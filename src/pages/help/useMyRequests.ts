@@ -9,7 +9,8 @@ export function useMyRequests(enabled = true) {
         queryKey: ['support', 'tickets'],
         queryFn: async () => asList<Ticket>(unwrap(await sbcApiService.supportTickets()), 'tickets'),
         enabled: enabled && isAuthenticated(),
-        staleTime: 30_000,
+        // Refreshed each time the menu opens: an agent may have replied since (shows the cached list meanwhile).
+        staleTime: 0,
         retry: false,
     });
     const list = q.data ?? [];
