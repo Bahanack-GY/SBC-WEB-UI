@@ -7,6 +7,7 @@ import {
   FavouriteIcon, Mail01Icon, Wallet01Icon, UserGroupIcon,
   ChampionIcon, CreditCardIcon, Coins01Icon, Message01Icon, User02Icon,
   HandshakeIcon, ArrowRight01Icon, StatusIcon, Ticket01Icon, BookOpen01Icon,
+  CustomerSupportIcon, Alert02Icon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
 import { InstallAppCard } from '../pwa/InstallAppCard';
@@ -53,6 +54,14 @@ const GROUPS: { title: string; items: Item[] }[] = [
       { label: "Solde d'activation", to: '/activation-balance', icon: Coins01Icon, tint: 'bg-accent-soft text-accent' },
       { label: 'Abonnement', to: '/abonnement', icon: CreditCardIcon, tint: 'bg-primary-soft text-primary' },
       { label: 'Mon profil', to: '/profile', icon: User02Icon, tint: 'bg-surface-2 text-ink-2' },
+    ],
+  },
+  {
+    // SBC Support: reachable from every page, a pack or not.
+    title: 'Aide',
+    items: [
+      { label: 'Aide et support', to: '/aide', icon: CustomerSupportIcon, tint: 'bg-primary-soft text-primary' },
+      { label: 'Signaler un problème', to: '/aide/demandes/nouvelle', icon: Alert02Icon, tint: 'bg-danger-soft text-danger' },
     ],
   },
 ];
