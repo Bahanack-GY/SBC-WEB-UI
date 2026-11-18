@@ -93,6 +93,8 @@ export const sweepExpiredStorage = (now = Date.now()) => {
 export const PERSONAL_STORAGE_KEYS = [
     'userId', 'userEmail', 'userName', 'balance', 'usdBalance', 'avatar', 'momo', 'momoCorrespondent',
     'signupFormData', 'signupFormStep', 'signupChatDraft',
+    // Keys of support requests sent without an account (pages/help/guest.ts): the email link reopens them.
+    'sbcSupportGuestRequests',
 ];
 
 export const clearPersonalStorage = () => {

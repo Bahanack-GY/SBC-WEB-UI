@@ -5,11 +5,11 @@ import { SupportError, supportErrorText, unwrap } from './support';
  * Uploads the files one by one and returns their ids. Throws a SupportError
  * whose message names the file that failed, ready to show.
  */
-export async function uploadAttachments(files: File[]): Promise<string[]> {
+export async function uploadAttachments(files: File[], upload?: (file: File) => Promise<{ id?: string; _id?: string }>): Promise<string[]> {
     const ids: string[] = [];
     for (const file of files) {
         try {
-            const data = unwrap<{ id?: string; _id?: string }>(await sbcApiService.supportUploadAttachment(file));
+            const data = upload ? await upload(file) : unwrap<{ id?: string; _id?: string }>(await sbcApiService.supportUploadAttachment(file));
             const id = data?.id ?? data?._id;
             if (!id) throw new SupportError('', 500);
             ids.push(id);

@@ -130,7 +130,8 @@
       "advertiserPrompt": "Only want to advertise?",
       "advertiserLink": "Create an advertiser account",
       "problemPrompt": "Can’t sign in?",
-      "problemLink": "Report a problem"
+      "problemLink": "Report a problem",
+      "resumeRequest": "Resume my request {{number}}"
     },
     "signup": {
       "title": "Create an account",

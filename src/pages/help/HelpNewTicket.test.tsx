@@ -21,6 +21,7 @@ function renderForm(route = '/aide/demandes/nouvelle') {
         <Routes>
             <Route path="/aide/demandes/nouvelle" element={<HelpNewTicket />} />
             <Route path="/signaler-un-probleme" element={<HelpNewTicket />} />
+            <Route path="/signaler-un-probleme/suivi/:id" element={<h1>Conversation sans compte</h1>} />
             <Route path="/aide/demandes/:id" element={<h1>Page de la demande</h1>} />
         </Routes>,
         route,
@@ -184,6 +185,20 @@ describe('New request', () => {
                 category: 'activation_paiement', contact: { name: 'Awa Diallo', phone: '+237675090755', email: 'awa@gmail.com' }, website: '',
             }));
             expect(api.supportCreateTicket).not.toHaveBeenCalled();
+        });
+
+        it('goes straight into the chat with the agent, and keeps the request’s key on this device', async () => {
+            const user = setup();
+            localStorage.removeItem('sbcSupportGuestRequests');
+            api.supportPublicTicket.mockResolvedValue(ok({ id: 'g1', number: 'SUP-000043', key: 'k'.repeat(43) }));
+            renderForm('/signaler-un-probleme');
+            await user.type(screen.getByLabelText('Nom complet'), 'Awa Diallo');
+            await user.type(screen.getByLabelText('Téléphone'), '+237675090755');
+            await user.type(screen.getByLabelText('Email'), 'awa@gmail.com');
+            await fillValid(user);
+            await user.click(screen.getByRole('button', { name: 'Envoyer ma demande' }));
+            expect(await screen.findByRole('heading', { name: 'Conversation sans compte' })).toBeInTheDocument();
+            expect(JSON.parse(localStorage.getItem('sbcSupportGuestRequests')!)[0]).toMatchObject({ id: 'g1', number: 'SUP-000043', key: 'k'.repeat(43) });
         });
     });
 });

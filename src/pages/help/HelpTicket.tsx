@@ -18,6 +18,7 @@ import { uploadAttachments } from './attachments';
 import { pageFade } from '../../utils/motion';
 import { cn } from '../../lib/utils';
 import { livePoll, useSupportLive } from './realtime';
+import { guestApi } from './guest';
 
 const MAX_REPLY = 5000;
 
@@ -36,14 +37,18 @@ const WALLPAPER = { backgroundColor: '#EFEAE2', backgroundImage: 'radial-gradien
  * the chat our members use every day: bubbles, times, ticks (sent, read by the
  * support), photos in the conversation, a message bar at the bottom.
  */
-export default function HelpTicket() {
+export default function HelpTicket({ guestKey }: {
+    /** A request sent without an account, opened with its key (GuestTicketPage). */
+    guestKey?: string;
+} = {}) {
     const { id = '' } = useParams();
     const queryClient = useQueryClient();
-    const key = useMemo(() => ['support', 'ticket', id], [id]);
-    const live = useSupportLive();
+    const key = useMemo(() => (guestKey ? ['support', 'guest', id] : ['support', 'ticket', id]), [id, guestKey]);
+    const live = useSupportLive(guestKey ? { ticketId: id, key: guestKey } : null);
     const q = useQuery({
         queryKey: key,
         queryFn: async () => {
+            if (guestKey) return guestApi.ticket(id, guestKey);
             const data = unwrap<Ticket & { ticket?: Ticket }>(await sbcApiService.supportTicket(id));
             return data?.ticket ?? data;
         },
@@ -76,8 +81,9 @@ export default function HelpTicket() {
     const deliver = async (p: Pending) => {
         setPending((ps) => ps.map((x) => (x.key === p.key ? { ...x, failed: undefined } : x)));
         try {
-            const attachmentIds = p.files.length ? await uploadAttachments(p.files) : [];
-            const data = unwrap<Ticket & { ticket?: Ticket }>(await sbcApiService.supportReply(id, { message: p.text || ATTACHMENT_ONLY_BODY, attachmentIds }));
+            const attachmentIds = p.files.length ? await uploadAttachments(p.files, guestKey ? (f) => guestApi.upload(id, guestKey, f) : undefined) : [];
+            const body = { message: p.text || ATTACHMENT_ONLY_BODY, attachmentIds };
+            const data: Ticket & { ticket?: Ticket } = guestKey ? await guestApi.reply(id, guestKey, body) : unwrap<Ticket & { ticket?: Ticket }>(await sbcApiService.supportReply(id, body));
             const fresh = data?.ticket ?? data;
             if (fresh && Array.isArray(fresh.messages)) queryClient.setQueryData(key, fresh);
             else await queryClient.invalidateQueries({ queryKey: key });
@@ -144,7 +150,8 @@ export default function HelpTicket() {
         setClosing(true);
         setCloseError(null);
         try {
-            unwrap(await sbcApiService.supportCloseTicket(id));
+            if (guestKey) await guestApi.close(id, guestKey);
+            else unwrap(await sbcApiService.supportCloseTicket(id));
             setConfirmClose(false);
             void queryClient.invalidateQueries({ queryKey: key });
             refreshList();
@@ -202,6 +209,7 @@ export default function HelpTicket() {
     return (
         <motion.div variants={pageFade} initial="hidden" animate="show" className="flex h-[100dvh] flex-col bg-bg">
             <ChatHeader
+                backTo={guestKey ? '/connexion' : '/aide/demandes'}
                 subtitle={t ? `${ticketRef(t)} · ${s.label}` : 'Ma demande'}
                 menu={t && !closed ? (
                     <HeaderMenu open={menuOpen} onOpenChange={setMenuOpen}>
@@ -262,7 +270,7 @@ export default function HelpTicket() {
             {t && (closed ? (
                 <div className="bg-[#F0F2F5] px-4 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] text-center text-sm text-ink-2">
                     Cette demande est fermée.{' '}
-                    <Link to="/aide/demandes/nouvelle" className="font-semibold text-primary underline">Créer une nouvelle demande</Link>
+                    <Link to={guestKey ? '/signaler-un-probleme' : '/aide/demandes/nouvelle'} className="font-semibold text-primary underline">Créer une nouvelle demande</Link>
                 </div>
             ) : (
                 <Composer
@@ -285,12 +293,12 @@ export default function HelpTicket() {
     );
 }
 
-function ChatHeader({ subtitle, menu }: { subtitle: string; menu: ReactNode }) {
+function ChatHeader({ subtitle, menu, backTo }: { subtitle: string; menu: ReactNode; backTo: string }) {
     const navigate = useNavigate();
     const goBack = () => {
         const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
         if (idx > 0) navigate(-1);
-        else navigate('/aide/demandes', { replace: true });
+        else navigate(backTo, { replace: true });
     };
     return (
         <header className="z-20 flex items-center gap-2 border-b border-border bg-surface px-2 py-2">

@@ -2,6 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { useQueryClient, type QueryClient } from '@tanstack/react-query';
 import { sbcApiService } from '../../services/SBCApiService';
 import { unwrap } from './support';
+import { guestApi } from './guest';
 
 /**
  * Live request updates through LiveKit (support-service realtime.service).
@@ -22,6 +23,10 @@ let attempt = 0;
 let room: { disconnect: () => Promise<void> } | null = null;
 let starting = false;
 let client: QueryClient | null = null;
+/** Where the token comes from: the member's account, or a request's key (no account). */
+type TokenSource = { id: string; get: () => Promise<TokenAnswer> };
+const memberSource: TokenSource = { id: 'member', get: async () => unwrap<TokenAnswer>(await sbcApiService.supportRealtimeToken()) };
+let source: TokenSource = memberSource;
 const listeners = new Set<() => void>();
 const setConnected = (v: boolean) => { if (v !== connected) { connected = v; listeners.forEach((l) => l()); } };
 
@@ -38,13 +43,14 @@ export function parseSignal(bytes: Uint8Array, topic?: string): { ticketId: stri
 const onSignal = (s: { ticketId: string }) => {
     void client?.invalidateQueries({ queryKey: ['support', 'ticket', s.ticketId] });
     void client?.invalidateQueries({ queryKey: ['support', 'tickets'] });
+    void client?.invalidateQueries({ queryKey: ['support', 'guest', s.ticketId] });
 };
 
 async function connect() {
     if (starting || room || users === 0) return;
     starting = true;
     try {
-        const t = unwrap<TokenAnswer>(await sbcApiService.supportRealtimeToken());
+        const t = await source.get();
         if (!t?.enabled || users === 0) return;
         const { Room, RoomEvent } = await import('livekit-client');
         const r = new Room({ adaptiveStream: false, dynacast: false });
@@ -82,10 +88,18 @@ function schedule() {
  * Call on each Aide page that shows requests. Returns whether the live
  * connection is up, so the page can poll slowly while it is.
  */
-export function useSupportLive(): boolean {
+export function useSupportLive(guest?: { ticketId: string; key: string } | null): boolean {
     const qc = useQueryClient();
+    const wanted = guest ? `guest:${guest.ticketId}` : 'member';
     useEffect(() => {
         client = qc;
+        if (source.id !== wanted) {
+            // Another source (account ↔ request key): leave the old room first.
+            void room?.disconnect();
+            room = null;
+            setConnected(false);
+            source = guest ? { id: wanted, get: () => guestApi.realtimeToken(guest.ticketId, guest.key) as Promise<TokenAnswer> } : memberSource;
+        }
         users++;
         clearTimeout(stopTimer);
         void connect();
@@ -100,7 +114,7 @@ export function useSupportLive(): boolean {
                 room = null;
             }, 3_000);
         };
-    }, [qc]);
+    }, [qc, wanted]); // eslint-disable-line react-hooks/exhaustive-deps
     return useSyncExternalStore((cb) => { listeners.add(cb); return () => listeners.delete(cb); }, () => connected, () => false);
 }
 

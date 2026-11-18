@@ -7,6 +7,7 @@ import { sbcApiService } from '../../services/SBCApiService';
 import { SupportError, TICKET_CATEGORIES, TICKET_PRESETS, idOf, supportErrorText, unwrap, type Ticket } from './support';
 import { uploadAttachments } from './attachments';
 import AttachmentPicker from './AttachmentPicker';
+import { rememberGuestRequest } from './guest';
 import { ErrorNote, HelpPage } from './ui';
 import { inputCls, primaryBtn } from './styles';
 import { cn } from '../../lib/utils';
@@ -109,9 +110,15 @@ export default function HelpNewTicket() {
             if (turnstileEnabled() && !robotToken) { setSubmitError('Patientez un instant : la vérification anti-robot n’est pas terminée.'); return; }
             try {
                 setBusy('create');
-                const done = unwrap<{ number?: string | null }>(await sbcApiService.supportPublicTicket({
+                const done = unwrap<{ id?: string; number?: string | null; key?: string }>(await sbcApiService.supportPublicTicket({
                     category, subject: subject.trim(), message: message.trim(), contact: who, turnstileToken: robotToken ?? undefined, website,
                 }));
+                if (done?.id && done.key) {
+                    // Straight into the chat with the agent, like a member.
+                    rememberGuestRequest({ id: done.id, number: done.number ?? '', key: done.key });
+                    navigate(`/signaler-un-probleme/suivi/${encodeURIComponent(done.id)}`, { replace: true });
+                    return;
+                }
                 setSentNumber(done?.number ?? '');
             } catch (err) {
                 setSubmitError(supportErrorText(err, 'ticket'));
@@ -174,7 +181,7 @@ export default function HelpNewTicket() {
         <HelpPage title={guest ? 'Signaler un problème' : 'Nouvelle demande'} back={guest ? '/connexion' : '/aide/demandes'}>
             <p className="text-sm text-ink-2">
                 {guest
-                    ? 'Vous n’arrivez pas à vous connecter ou à créer votre compte ? Décrivez le problème : un agent de l’équipe SBC vous répondra par email.'
+                    ? 'Vous n’arrivez pas à vous connecter ou à créer votre compte ? Décrivez le problème : vous discuterez ensuite directement avec un agent de l’équipe SBC.'
                     : 'Un agent de l’équipe SBC lit votre demande et vous répond ici. Vous recevez une notification à chaque réponse.'}
             </p>
             <form onSubmit={submit} noValidate className="space-y-4">
@@ -233,7 +240,7 @@ export default function HelpNewTicket() {
 
                 {guest ? (
                     <p className="rounded-tile bg-surface-2 p-3 text-xs text-ink-2">
-                        Sans compte, vous ne pouvez pas joindre de capture d’écran ici. Décrivez précisément le message que vous voyez ; l’agent vous dira comment lui envoyer une capture si besoin.
+                        Vous pourrez envoyer des captures d’écran dans la conversation avec l’agent, juste après l’envoi de cette demande.
                     </p>
                 ) : (
                     <AttachmentPicker files={files} onChange={setFiles} disabled={busy !== null} screenshotPrompt />
