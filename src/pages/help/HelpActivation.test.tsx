@@ -62,6 +62,25 @@ describe('Activation check', () => {
         expect(screen.getByRole('link', { name: 'Voir ma demande' })).toHaveAttribute('href', '/aide/demandes');
     });
 
+    it('non terminé: says no money could be taken, and opens a request only if the member says it was', async () => {
+        api.supportActivationStatus.mockResolvedValue(ok({ subscription: null, payins: [{ ...payin, gateway: 'none', status: 'PENDING_USER_INPUT' }] }));
+        api.supportActivationCheck
+            .mockResolvedValueOnce(ok({ result: 'not_finished', ticketId: null, canReportDebit: true }))
+            .mockResolvedValueOnce(ok({ result: 'not_finished', ticketId: 't7' }));
+        const status = await checkPayin();
+        expect(status).toHaveTextContent('Paiement non terminé');
+        expect(status).toHaveTextContent('aucun argent n’a pu être prélevé');
+        expect(status).not.toHaveTextContent('introuvable');
+        expect(screen.queryByText(/none/)).not.toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Payer mon pack' })).toHaveAttribute('href', '/abonnement');
+        expect(screen.queryByRole('link', { name: 'Voir ma demande' })).not.toBeInTheDocument();
+
+        await userEvent.setup().click(screen.getByRole('button', { name: 'De l’argent a quand même été débité' }));
+        expect(api.supportActivationCheck).toHaveBeenLastCalledWith({ sessionId: 's1', moneyDebited: true });
+        expect(await screen.findByText('Demande envoyée')).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: 'Voir ma demande' })).toHaveAttribute('href', '/aide/demandes/t7');
+    });
+
     it('échoué: offers to pay again', async () => {
         api.supportActivationCheck.mockResolvedValue(ok({ result: 'failed' }));
         const status = await checkPayin();

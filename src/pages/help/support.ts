@@ -131,7 +131,10 @@ export type ActivationStatus = {
     payins?: Payin[];
 };
 export type CheckResult = {
-    result: 'confirmed' | 'pending' | 'not_found' | 'failed' | 'provider_unavailable';
+    /** not_finished: the payment was never sent to an operator (abandoned checkout). */
+    result: 'confirmed' | 'pending' | 'not_found' | 'failed' | 'provider_unavailable' | 'not_finished';
+    /** not_finished only: the member can still say money left the account, which opens a request. */
+    canReportDebit?: boolean;
     ticketId?: string;
     ticket?: { _id?: string; id?: string };
     checkedAt?: string;

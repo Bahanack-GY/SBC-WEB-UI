@@ -14,7 +14,8 @@ import { Card, ErrorNote, HelpPage, Pill, Skeletons } from './ui';
 import { inputCls, primaryBtn, secondaryBtn, toneClass } from './styles';
 import { cn } from '../../lib/utils';
 
-type Outcome = { target: string; result?: CheckResult; error?: string };
+type Target = { sessionId?: string; reference?: string; moneyDebited?: boolean };
+type Outcome = { target: string; request: Target; result?: CheckResult; error?: string };
 
 const RESULT: Record<CheckResult['result'], { title: string; text: string; tone: Tone; icon: typeof Clock01Icon }> = {
     confirmed: {
@@ -36,6 +37,11 @@ const RESULT: Record<CheckResult['result'], { title: string; text: string; tone:
         title: 'Paiement échoué',
         text: 'L’opérateur indique que ce paiement n’a pas abouti : SBC n’a rien reçu. Vous pouvez payer de nouveau depuis la page Abonnement. Si votre compte Mobile Money a quand même été débité, écrivez à un agent.',
         tone: 'danger', icon: CancelCircleIcon,
+    },
+    not_finished: {
+        title: 'Paiement non terminé',
+        text: 'Ce paiement n’a jamais été validé chez un opérateur : aucun argent n’a pu être prélevé. Pour activer votre compte, payez à nouveau votre pack.',
+        tone: 'warning', icon: AlertCircleIcon,
     },
     provider_unavailable: {
         title: 'Vérification impossible pour le moment',
@@ -60,13 +66,13 @@ export default function HelpActivation() {
     const [checking, setChecking] = useState<string | null>(null);
     const [outcome, setOutcome] = useState<Outcome | null>(null);
 
-    const check = async (target: { sessionId?: string; reference?: string }) => {
+    const check = async (target: Target) => {
         const key = target.sessionId ?? `ref:${target.reference}`;
         setChecking(key);
-        setOutcome(null);
+        if (!target.moneyDebited) setOutcome(null);
         try {
             const result = unwrap<CheckResult>(await sbcApiService.supportActivationCheck(target));
-            setOutcome({ target: key, result });
+            setOutcome({ target: key, request: target, result });
             if (result.result === 'confirmed') {
                 // The paywall reads this query: let it see the new pack at once.
                 void queryClient.invalidateQueries({ queryKey: ['current-subscription'] });
@@ -74,7 +80,7 @@ export default function HelpActivation() {
             }
             if (result.ticketId || result.ticket) void queryClient.invalidateQueries({ queryKey: ['support', 'tickets'] });
         } catch (e) {
-            setOutcome({ target: key, error: supportErrorText(e, 'activation') });
+            setOutcome({ target: key, request: target, error: supportErrorText(e, 'activation') });
         } finally {
             setChecking(null);
         }
@@ -126,7 +132,7 @@ export default function HelpActivation() {
                                             <div className="flex items-start gap-2">
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-semibold text-ink">{money(p.amount, p.currency) || 'Paiement'}</p>
-                                                    <p className="text-xs text-ink-3">{[dateTimeFr(p.createdAt), p.gateway].filter(Boolean).join(' · ')}</p>
+                                                    <p className="text-xs text-ink-3">{[dateTimeFr(p.createdAt), p.gateway !== 'none' && p.gateway].filter(Boolean).join(' · ')}</p>
                                                 </div>
                                                 <Pill tone={s.tone}>{s.label}</Pill>
                                             </div>
@@ -134,7 +140,7 @@ export default function HelpActivation() {
                                                 className={secondaryBtn} aria-label={`Vérifier le paiement ${money(p.amount, p.currency)} du ${dateTimeFr(p.createdAt)}`}>
                                                 {checking === p.sessionId ? 'Vérification…' : 'Vérifier ce paiement'}
                                             </button>
-                                            {outcome?.target === p.sessionId && <OutcomeCard outcome={outcome} />}
+                                            {outcome?.target === p.sessionId && <OutcomeCard outcome={outcome} reporting={checking === outcome.target} onReportDebit={() => void check({ ...outcome.request, moneyDebited: true })} />}
                                         </li>
                                     );
                                 })}
@@ -156,7 +162,7 @@ export default function HelpActivation() {
                                 {checking?.startsWith('ref:') ? 'Vérification…' : 'Vérifier cette référence'}
                             </button>
                         </form>
-                        {outcome?.target.startsWith('ref:') && <div className="mt-3"><OutcomeCard outcome={outcome} /></div>}
+                        {outcome?.target.startsWith('ref:') && <div className="mt-3"><OutcomeCard outcome={outcome} reporting={checking === outcome.target} onReportDebit={() => void check({ ...outcome.request, moneyDebited: true })} /></div>}
                     </Card>
 
                     <p className="text-xs text-ink-3 text-center">
@@ -168,12 +174,16 @@ export default function HelpActivation() {
     );
 }
 
-function OutcomeCard({ outcome }: { outcome: Outcome }) {
+function OutcomeCard({ outcome, onReportDebit, reporting }: { outcome: Outcome; onReportDebit: () => void; reporting: boolean }) {
     if (outcome.error) return <ErrorNote>{outcome.error}</ErrorNote>;
     const r = outcome.result!;
-    const view = RESULT[r.result] ?? RESULT.pending;
     const ticketId = r.ticketId || idOf(r.ticket);
-    const hasTicket = r.result === 'not_found' || r.result === 'provider_unavailable';
+    // A never-finished payment the member says was debited anyway: a request is open.
+    const reported = r.result === 'not_finished' && !!ticketId;
+    const view = reported
+        ? { ...RESULT.not_finished, title: 'Demande envoyée', text: 'Merci. Un agent va vérifier auprès de l’opérateur et vous répond dans « Mes demandes ».', tone: 'info' as Tone }
+        : RESULT[r.result] ?? RESULT.pending;
+    const hasTicket = r.result === 'not_found' || r.result === 'provider_unavailable' || reported;
     return (
         <div role="status" className={cn('rounded-tile p-3 space-y-2', toneClass(view.tone))}>
             <p className="flex items-center gap-2 font-semibold">
@@ -185,6 +195,16 @@ function OutcomeCard({ outcome }: { outcome: Outcome }) {
                 <div className="flex flex-col gap-2">
                     <Link to="/abonnement" className={primaryBtn}>Payer de nouveau</Link>
                     <Link to="/aide/demandes/nouvelle?categorie=activation" className={secondaryBtn}>Écrire à un agent</Link>
+                </div>
+            )}
+            {r.result === 'not_finished' && !reported && (
+                <div className="flex flex-col gap-2">
+                    <Link to="/abonnement" className={primaryBtn}>Payer mon pack</Link>
+                    {r.canReportDebit !== false && (
+                        <button type="button" onClick={onReportDebit} disabled={reporting} className={secondaryBtn}>
+                            {reporting ? 'Envoi…' : 'De l’argent a quand même été débité'}
+                        </button>
+                    )}
                 </div>
             )}
             {hasTicket && (

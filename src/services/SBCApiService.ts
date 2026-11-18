@@ -1184,7 +1184,7 @@ export class SBCApiService extends ApiService {
   }
 
   /** Asks the payment provider again about one payment (by session id or by reference). */
-  async supportActivationCheck(target: { sessionId?: string; reference?: string }): Promise<ApiResponse> {
+  async supportActivationCheck(target: { sessionId?: string; reference?: string; moneyDebited?: boolean }): Promise<ApiResponse> {
     return await this.post('/support/me/activation/check', { body: target });
   }
 
