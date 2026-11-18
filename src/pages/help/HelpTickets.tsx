@@ -14,6 +14,9 @@ export default function HelpTickets() {
     const list = useQuery({
         queryKey: ['support', 'tickets'],
         queryFn: async () => asList<Ticket>(unwrap(await sbcApiService.supportTickets()), 'tickets'),
+        // A new agent reply changes a request's status here without a reload.
+        refetchInterval: 15_000,
+        refetchOnWindowFocus: true,
     });
     const tickets = [...(list.data ?? [])].sort((a, b) =>
         Number(isTicketClosed(a.status)) - Number(isTicketClosed(b.status))

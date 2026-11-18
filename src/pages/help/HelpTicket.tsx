@@ -28,8 +28,11 @@ export default function HelpTicket() {
             const data = unwrap<Ticket & { ticket?: Ticket }>(await sbcApiService.supportTicket(id));
             return data?.ticket ?? data;
         },
-        // New agent replies show up while the screen is open.
-        refetchInterval: 30_000,
+        // A conversation: the agent's replies show up within seconds while the
+        // screen is open and visible (polling pauses in a hidden tab, and a
+        // closed request stops it), and at once when the member comes back.
+        refetchInterval: (query) => (isTicketClosed((query.state.data as Ticket | undefined)?.status) ? false : 5_000),
+        refetchOnWindowFocus: true,
     });
     const t = q.data;
 
