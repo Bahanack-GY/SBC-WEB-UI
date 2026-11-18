@@ -111,6 +111,8 @@ export type Ticket = {
     createdAt?: string;
     updatedAt?: string;
     lastMessageAt?: string;
+    /** Last time an agent opened the request: the member's earlier messages are read. */
+    agentReadAt?: string | null;
     messages?: TicketMessage[];
 };
 

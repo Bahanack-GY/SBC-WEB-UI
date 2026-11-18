@@ -171,8 +171,8 @@ describe('« Aide » (SBC Support)', () => {
         api.supportTicket.mockResolvedValue(ok({ _id: 'abc123', subject: 'Retrait bloqué', status: 'en_attente_membre', number: 'SUP-000123', messages: [{ _id: 'm1', author: { type: 'agent', name: 'Awa (SBC)' }, body: 'Pouvez-vous envoyer la capture ?', createdAt: '2026-11-17T09:00:00Z' }] }));
         renderApp('/aide/demandes/abc123');
         expect(await screen.findByRole('heading', { name: 'Retrait bloqué' })).toBeInTheDocument();
-        expect(screen.getByText('Votre réponse est attendue')).toBeInTheDocument();
-        expect(screen.getByRole('heading', { level: 1, name: 'Demande SUP-000123' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { level: 1, name: 'Support SBC' })).toBeInTheDocument();
+        expect(screen.getByText('SUP-000123 · Votre réponse est attendue')).toBeInTheDocument();
         expect(screen.getByText(/Awa \(SBC\)/)).toBeInTheDocument();
     });
 

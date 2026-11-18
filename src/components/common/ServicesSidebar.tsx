@@ -7,12 +7,13 @@ import {
   FavouriteIcon, Mail01Icon, Wallet01Icon, UserGroupIcon,
   ChampionIcon, CreditCardIcon, Coins01Icon, Message01Icon, User02Icon,
   HandshakeIcon, ArrowRight01Icon, StatusIcon, Ticket01Icon, BookOpen01Icon,
-  CustomerSupportIcon, Alert02Icon,
+  CustomerSupportIcon, Alert02Icon, BubbleChatIcon,
 } from '@hugeicons/core-free-icons';
 import { cn } from '../../lib/utils';
 import { InstallAppCard } from '../pwa/InstallAppCard';
+import { useMyRequests } from '../../pages/help/useMyRequests';
 
-type Item = { label: string; to: string; icon: typeof Home01Icon; tint: string };
+type Item = { label: string; to: string; icon: typeof Home01Icon; tint: string; badge?: number; badgeLabel?: string };
 
 /**
  * Every entry points at a route that exists in App.tsx — verified, because a
@@ -69,6 +70,16 @@ const GROUPS: { title: string; items: Item[] }[] = [
 function ServicesSidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
   const navigate = useNavigate();
   const location = useLocation();
+  // « Mes demandes » appears once the member has written to the support, with the number
+  // of requests waiting for their reply (like unread chats).
+  const requests = useMyRequests(open);
+  const groups = requests.count === 0 ? GROUPS : GROUPS.map((g) => g.title !== 'Aide' ? g : {
+    ...g,
+    items: [g.items[0], {
+      label: 'Mes demandes', to: '/aide/demandes', icon: BubbleChatIcon, tint: 'bg-success-soft text-success',
+      badge: requests.waiting, badgeLabel: requests.waiting === 1 ? '1 demande attend votre réponse' : `${requests.waiting} demandes attendent votre réponse`,
+    }, ...g.items.slice(1)],
+  });
 
   // Esc closes, and the page behind must not scroll while the drawer is open.
   useEffect(() => {
@@ -143,7 +154,7 @@ function ServicesSidebar({ open, onClose }: { open: boolean; onClose: () => void
                 <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-ink-3" />
               </button>
 
-              {GROUPS.map((group, gi) => (
+              {groups.map((group, gi) => (
                 <div key={group.title} className="mb-3">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-ink-3 px-2.5 mb-1.5">
                     {group.title}
@@ -173,7 +184,11 @@ function ServicesSidebar({ open, onClose }: { open: boolean; onClose: () => void
                             <span className={cn('text-sm flex-1 truncate', active ? 'font-bold text-primary' : 'font-medium text-ink')}>
                               {item.label}
                             </span>
-                            {active && <span className="size-1.5 rounded-pill bg-primary shrink-0" aria-hidden />}
+                            {item.badge ? (
+                              <span aria-label={item.badgeLabel} className="min-w-5 h-5 px-1.5 grid place-items-center rounded-pill bg-success text-[11px] font-bold text-white shrink-0">
+                                {item.badge}
+                              </span>
+                            ) : active && <span className="size-1.5 rounded-pill bg-primary shrink-0" aria-hidden />}
                           </button>
                         </motion.li>
                       );
