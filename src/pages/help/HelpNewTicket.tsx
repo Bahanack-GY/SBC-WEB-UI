@@ -120,7 +120,7 @@ export default function HelpNewTicket() {
                     {errors.message && <p id="ticket-message-error" className="mt-1 text-xs text-danger">{errors.message}</p>}
                 </div>
 
-                <AttachmentPicker files={files} onChange={setFiles} disabled={busy !== null} />
+                <AttachmentPicker files={files} onChange={setFiles} disabled={busy !== null} screenshotPrompt />
 
                 {submitError && <ErrorNote>{submitError}</ErrorNote>}
 

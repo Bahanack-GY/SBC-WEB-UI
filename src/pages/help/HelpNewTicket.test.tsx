@@ -43,6 +43,14 @@ beforeEach(() => {
 });
 
 describe('New request', () => {
+    it('asks for a screenshot, and « Signaler un problème » from the packs page comes pre-filled', async () => {
+        renderForm('/aide/demandes/nouvelle?categorie=probleme_pack');
+        expect(screen.getByText('Ajoutez-y une capture d’écran')).toBeInTheDocument();
+        expect(screen.getByLabelText(/Ajouter une capture d’écran/)).toBeInTheDocument();
+        expect(screen.getByLabelText('Sujet')).toHaveValue('activation_paiement');
+        expect(screen.getByLabelText('Titre')).toHaveValue('Problème avec le choix ou le paiement de mon pack');
+    });
+
     it('refuses an empty form and says what is missing', async () => {
         const user = setup();
         renderForm();
@@ -57,7 +65,7 @@ describe('New request', () => {
     it('rejects a file that is not an image or a PDF', async () => {
         const user = setup();
         renderForm();
-        await user.upload(screen.getByLabelText(/Joindre une photo ou un PDF/), file('notes.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 2000));
+        await user.upload(screen.getByLabelText(/Ajouter une capture d’écran/), file('notes.docx', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 2000));
         expect(screen.getByRole('alert')).toHaveTextContent('« notes.docx » n’est pas accepté');
         expect(screen.queryByRole('list', { name: 'Fichiers joints' })).not.toBeInTheDocument();
     });
@@ -65,7 +73,7 @@ describe('New request', () => {
     it('rejects a file over 10 MB and keeps the good ones', async () => {
         const user = setup();
         renderForm();
-        await user.upload(screen.getByLabelText(/Joindre une photo ou un PDF/), [
+        await user.upload(screen.getByLabelText(/Ajouter une capture d’écran/), [
             file('releve.pdf', 'application/pdf', 11 * 1024 * 1024),
             file('capture.png', 'image/png', 300 * 1024),
         ]);
@@ -81,7 +89,7 @@ describe('New request', () => {
         api.supportCreateTicket.mockResolvedValue(ok({ _id: 't7', status: 'new' }));
         renderForm();
         await fillValid(user);
-        await user.upload(screen.getByLabelText(/Joindre une photo ou un PDF/), file('capture.jpg', 'image/jpeg', 500 * 1024));
+        await user.upload(screen.getByLabelText(/Ajouter une capture d’écran/), file('capture.jpg', 'image/jpeg', 500 * 1024));
         await user.click(screen.getByRole('button', { name: 'Envoyer ma demande' }));
 
         expect(await screen.findByRole('heading', { name: 'Page de la demande' })).toBeInTheDocument();

@@ -210,6 +210,8 @@ export const TICKET_PRESETS: Record<string, { category: string; subject: string;
     activation: { category: 'activation_paiement', subject: 'Mon compte n’est pas activé après paiement' },
     retrait: { category: 'retrait', subject: 'Question sur mon retrait' },
     verification_identite: { category: 'compte_acces', subject: 'Je n’ai plus accès à mon email ou à mon téléphone', identity: true },
+    // « Signaler un problème » on the packs page (/abonnement).
+    probleme_pack: { category: 'activation_paiement', subject: 'Problème avec le choix ou le paiement de mon pack' },
 };
 
 /** The category of a ticket opened from an assistant `route`. */

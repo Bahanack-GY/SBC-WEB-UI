@@ -1,5 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
+    Alert02Icon,
     ArrowRight01Icon,
     ChartIncreaseIcon,
     CheckmarkCircle02Icon,
@@ -581,6 +582,14 @@ function Abonnement() {
                             </span>
                         </span>
                         <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="shrink-0 text-ink-3" />
+                    </Link>
+                    {/* A problem on this page (a pack that won't pay, a wrong price, an error):
+                        straight to a request, with a screenshot. */}
+                    <Link
+                        to="/aide/demandes/nouvelle?categorie=probleme_pack"
+                        className="-mt-3 mb-5 flex items-center justify-center gap-2 rounded-pill py-2 text-sm font-semibold text-primary hover:bg-primary-soft"
+                    >
+                        <HugeiconsIcon icon={Alert02Icon} size={18} /> Signaler un problème
                     </Link>
 
                     {offersQuery.isLoading ? (

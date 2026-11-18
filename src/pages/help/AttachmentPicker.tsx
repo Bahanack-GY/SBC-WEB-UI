@@ -7,7 +7,11 @@ import { ATTACHMENT_ACCEPT, MAX_ATTACHMENTS, checkAttachment, formatSize } from 
  * Photos and PDFs to join to a request. Each file is checked here (type, 10 MB)
  * before anything is sent; the server checks again.
  */
-export default function AttachmentPicker({ files, onChange, disabled }: { files: File[]; onChange: (files: File[]) => void; disabled?: boolean }) {
+export default function AttachmentPicker({ files, onChange, disabled, screenshotPrompt }: {
+    files: File[]; onChange: (files: File[]) => void; disabled?: boolean;
+    /** New request: ask plainly for a screenshot of what the member sees. */
+    screenshotPrompt?: boolean;
+}) {
     const inputRef = useRef<HTMLInputElement>(null);
     const inputId = useId();
     const [errors, setErrors] = useState<string[]>([]);
@@ -28,13 +32,21 @@ export default function AttachmentPicker({ files, onChange, disabled }: { files:
     };
 
     return (
-        <div>
+        <div className={screenshotPrompt ? 'rounded-card border border-dashed border-primary/50 bg-primary-soft/40 p-3' : undefined}>
+            {screenshotPrompt && (
+                <>
+                    <p className="text-sm font-semibold text-ink">Ajoutez-y une capture d’écran</p>
+                    <p className="mt-0.5 mb-2 text-xs text-ink-2">
+                        Une capture de ce que vous voyez (message d’erreur, paiement, retrait, SMS de l’opérateur) aide l’agent à vous répondre plus vite.
+                    </p>
+                </>
+            )}
             <input ref={inputRef} id={inputId} type="file" accept={ATTACHMENT_ACCEPT} multiple className="sr-only"
                 disabled={disabled || files.length >= MAX_ATTACHMENTS} onChange={(e) => add(e.target.files)}
                 aria-describedby={`${inputId}-hint`} />
             <label htmlFor={inputId}
                 className="inline-flex items-center gap-2 h-10 px-3 rounded-pill border border-border bg-surface text-sm font-semibold text-ink cursor-pointer has-[:disabled]:opacity-50">
-                <HugeiconsIcon icon={Attachment01Icon} size={18} /> Joindre une photo ou un PDF
+                <HugeiconsIcon icon={screenshotPrompt ? Image01Icon : Attachment01Icon} size={18} /> {screenshotPrompt ? 'Ajouter une capture d’écran' : 'Joindre une photo ou un PDF'}
             </label>
             <p id={`${inputId}-hint`} className="mt-1 text-xs text-ink-3">JPG, PNG, WebP, HEIC ou PDF · 10 Mo au maximum · {MAX_ATTACHMENTS} fichiers au plus</p>
             {errors.length > 0 && (
