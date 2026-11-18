@@ -13,6 +13,7 @@ import {
 } from './support';
 import { Card, HelpPage, RichText, RowLink } from './ui';
 import { inputCls, primaryBtn, secondaryBtn } from './styles';
+import { useSupportLive } from './realtime';
 
 /** The paths most members need, shown first whatever the help centre holds. */
 const PATHS = [
@@ -36,6 +37,7 @@ function useDebounced<T>(value: T, ms: number) {
  * own requests and the guided FAQ. Reachable without an active pack.
  */
 export default function HelpHome() {
+    useSupportLive(); // the open-requests count follows live updates
     const navigate = useNavigate();
     const [q, setQ] = useState('');
     const term = useDebounced(q.trim(), 300);

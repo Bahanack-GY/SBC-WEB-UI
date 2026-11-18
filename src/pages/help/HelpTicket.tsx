@@ -14,6 +14,7 @@ import AttachmentPicker from './AttachmentPicker';
 import { ErrorNote, HelpPage, Pill, Skeletons } from './ui';
 import { inputCls, primaryBtn, secondaryBtn } from './styles';
 import { cn } from '../../lib/utils';
+import { livePoll, useSupportLive } from './realtime';
 
 const MAX_REPLY = 5000;
 
@@ -22,16 +23,17 @@ export default function HelpTicket() {
     const { id = '' } = useParams();
     const queryClient = useQueryClient();
     const key = ['support', 'ticket', id];
+    const live = useSupportLive();
     const q = useQuery({
         queryKey: key,
         queryFn: async () => {
             const data = unwrap<Ticket & { ticket?: Ticket }>(await sbcApiService.supportTicket(id));
             return data?.ticket ?? data;
         },
-        // A conversation: the agent's replies show up within seconds while the
-        // screen is open and visible (polling pauses in a hidden tab, and a
-        // closed request stops it), and at once when the member comes back.
-        refetchInterval: (query) => (isTicketClosed((query.state.data as Ticket | undefined)?.status) ? false : 5_000),
+        // A LiveKit signal reloads it as soon as the agent replies. Polling is the
+        // fallback: every 5 s without the connection (paused in a hidden tab,
+        // stopped once closed), and at once when the member comes back.
+        refetchInterval: (query) => (isTicketClosed((query.state.data as Ticket | undefined)?.status) ? false : livePoll(live, 5_000)),
         refetchOnWindowFocus: true,
     });
     const t = q.data;

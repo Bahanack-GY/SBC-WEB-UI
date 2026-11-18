@@ -8,14 +8,16 @@ import {
 } from './support';
 import { ErrorNote, HelpPage, Pill, Skeletons } from './ui';
 import { primaryBtn } from './styles';
+import { livePoll, useSupportLive } from './realtime';
 
 /** « Mes demandes »: the member's tickets, open ones first. */
 export default function HelpTickets() {
+    const live = useSupportLive();
     const list = useQuery({
         queryKey: ['support', 'tickets'],
         queryFn: async () => asList<Ticket>(unwrap(await sbcApiService.supportTickets()), 'tickets'),
         // A new agent reply changes a request's status here without a reload.
-        refetchInterval: 15_000,
+        refetchInterval: livePoll(live, 15_000),
         refetchOnWindowFocus: true,
     });
     const tickets = [...(list.data ?? [])].sort((a, b) =>

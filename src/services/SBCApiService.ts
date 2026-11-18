@@ -1153,6 +1153,11 @@ export class SBCApiService extends ApiService {
     return await this.post(`/support/me/assistant/${encodeURIComponent(conversationId)}/escalate`, { body: { category } });
   }
 
+  /** Listen-only LiveKit token for live request updates ({ enabled: false } when the server has no LiveKit). */
+  async supportRealtimeToken(): Promise<ApiResponse> {
+    return await this.get('/support/me/realtime/token', { skipDeduplication: true });
+  }
+
   async supportTickets(): Promise<ApiResponse> {
     return await this.get('/support/me/tickets', { skipDeduplication: true });
   }
