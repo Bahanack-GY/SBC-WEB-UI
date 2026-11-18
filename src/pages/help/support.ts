@@ -138,7 +138,10 @@ export type CheckResult = {
 };
 
 export type Withdrawal = {
-    transactionId: string;
+    /** The withdrawal reference: support-service sends it as `id` (CONTRACT §3.2). */
+    id?: string;
+    /** Older name of the same reference, read only as a fallback. */
+    transactionId?: string;
     amount?: number;
     currency?: string;
     status?: string;
@@ -283,6 +286,9 @@ export function withdrawalStatus(w: Pick<Withdrawal, 'businessStatus' | 'status'
         text: 'Nous n’avons pas pu lire le statut de ce retrait. Écrivez à un agent si vous avez un doute.' };
     return { label: w.statusLabel || base.label, text: w.explanation || base.text, tone: base.tone };
 }
+
+/** The withdrawal's reference, whichever name the server used. */
+export const withdrawalRef = (w: Pick<Withdrawal, 'id' | 'transactionId'>) => w.id || w.transactionId || '';
 
 export const money = (amount?: number, currency?: string) =>
     typeof amount === 'number' ? `${amount.toLocaleString('fr-FR')} ${!currency || currency === 'XAF' || currency === 'XOF' ? 'FCFA' : currency}` : '';

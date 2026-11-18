@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowRight01Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../../services/SBCApiService';
-import { asList, dateTimeFr, money, supportErrorText, unwrap, withdrawalStatus, type Withdrawal } from './support';
+import { asList, dateTimeFr, money, supportErrorText, unwrap, withdrawalRef, withdrawalStatus, type Withdrawal } from './support';
 import { ErrorNote, HelpPage, Pill, Skeletons } from './ui';
 
 /** « Mon retrait est bloqué »: each withdrawal with its real status, in plain French. */
@@ -35,8 +35,8 @@ export default function HelpWithdrawals() {
                     {(list.data ?? []).map((w) => {
                         const s = withdrawalStatus(w);
                         return (
-                            <li key={w.transactionId}>
-                                <Link to={`/aide/retraits/${encodeURIComponent(w.transactionId)}`}
+                            <li key={withdrawalRef(w)}>
+                                <Link to={`/aide/retraits/${encodeURIComponent(withdrawalRef(w))}`}
                                     className="block p-3 rounded-card bg-surface border border-border">
                                     <span className="flex items-start gap-2">
                                         <span className="flex-1 min-w-0">

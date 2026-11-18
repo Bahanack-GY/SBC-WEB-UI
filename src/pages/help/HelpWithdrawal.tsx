@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CustomerSupportIcon } from '@hugeicons/core-free-icons';
 import { sbcApiService } from '../../services/SBCApiService';
-import { SupportError, dateTimeFr, money, supportErrorText, unwrap, withdrawalStatus, type Withdrawal } from './support';
+import { SupportError, dateTimeFr, money, supportErrorText, unwrap, withdrawalRef, withdrawalStatus, type Withdrawal } from './support';
 import { Card, ErrorNote, HelpPage, Pill, Skeletons } from './ui';
 import { secondaryBtn } from './styles';
 
@@ -37,10 +37,10 @@ export default function HelpWithdrawal() {
                             <dt className="text-ink-3">Demandé le</dt><dd className="text-ink">{dateTimeFr(w.createdAt) || '—'}</dd>
                             {w.updatedAt && <><dt className="text-ink-3">Mis à jour le</dt><dd className="text-ink">{dateTimeFr(w.updatedAt)}</dd></>}
                             {w.method && <><dt className="text-ink-3">Moyen</dt><dd className="text-ink">{w.method}</dd></>}
-                            <dt className="text-ink-3">Référence</dt><dd className="text-ink break-all">{w.transactionId}</dd>
+                            <dt className="text-ink-3">Référence</dt><dd className="text-ink break-all">{withdrawalRef(w)}</dd>
                         </dl>
                     </Card>
-                    <Link to={`/aide/demandes/nouvelle?categorie=retrait&retrait=${encodeURIComponent(w.transactionId)}`} className={secondaryBtn}>
+                    <Link to={`/aide/demandes/nouvelle?categorie=retrait&retrait=${encodeURIComponent(withdrawalRef(w))}`} className={secondaryBtn}>
                         <HugeiconsIcon icon={CustomerSupportIcon} size={18} /> Écrire à un agent à propos de ce retrait
                     </Link>
                 </>
