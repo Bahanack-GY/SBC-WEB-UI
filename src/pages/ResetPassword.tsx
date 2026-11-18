@@ -102,7 +102,7 @@ function ResetPassword() {
                 <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                     <div>
                         <label className="block text-gray-700 text-sm mb-1 font-medium">Nouveau mot de passe</label>
-                        <input
+                        <input data-openreplay-hidden=""
                             type="password"
                             value={newPassword}
                             onChange={e => {
@@ -117,7 +117,7 @@ function ResetPassword() {
                     
                     <div>
                         <label className="block text-gray-700 text-sm mb-1 font-medium">Confirmer le mot de passe</label>
-                        <input
+                        <input data-openreplay-hidden=""
                             type="password"
                             value={confirmPassword}
                             onChange={e => {

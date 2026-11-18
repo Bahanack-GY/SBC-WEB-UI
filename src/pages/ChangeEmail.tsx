@@ -65,7 +65,7 @@ function ChangeEmail() {
                     </div>
                     <div>
                         <label className="block text-gray-700 text-sm mb-1">Mot de passe</label>
-                        <input
+                        <input data-openreplay-hidden=""
                             type="password"
                             value={password}
                             onChange={e => setPassword(e.target.value)}

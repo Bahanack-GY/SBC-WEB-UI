@@ -85,7 +85,8 @@ export default function PublicLegal() {
       <H>7. Cookies</H>
       <p>
         SBC n'utilise pas de cookies publicitaires ni de mesure d'audience. Le site garde seulement sur
-        votre appareil ce qu'il faut pour fonctionner, 60 jours au plus.{' '}
+        votre appareil ce qu'il faut pour fonctionner, 60 jours au plus. Pour aider le support,
+        l'application enregistre ce que vous y faites (jamais vos mots de passe ni vos codes).{' '}
         <Link to="/confidentialite#cookies">En savoir plus</Link>.
       </p>
 

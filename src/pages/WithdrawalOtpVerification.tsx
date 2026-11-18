@@ -214,7 +214,7 @@ const WithdrawalOtpVerification: React.FC = () => {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   6-Digit Verification Code
                 </label>
-                <input
+                <input data-openreplay-hidden=""
                   type="text"
                   value={otpCode}
                   onChange={(e) => {

@@ -154,7 +154,8 @@ function CookieBanner({ raised, onDismiss }: { raised: boolean; onDismiss: () =>
             className={`fixed inset-x-3 z-40 mx-auto max-w-lg bg-surface border border-border rounded-card p-3 ${raised ? 'bottom-24' : 'bottom-[calc(0.75rem+env(safe-area-inset-bottom))]'}`}>
             <p className="text-xs text-ink-2">
                 SBC n’utilise pas de cookies publicitaires ni de mesure d’audience. Le site garde seulement sur votre
-                appareil ce qu’il faut pour fonctionner (connexion, langue, préférences), 60 jours au plus.
+                appareil ce qu’il faut pour fonctionner (connexion, langue, préférences), 60 jours au plus. Pour
+                aider le support, l’app enregistre ce que vous y faites, jamais vos mots de passe ni vos codes.
             </p>
             <div className="mt-2 flex items-center justify-end gap-2">
                 <Link to="/confidentialite#cookies" className="rounded-pill px-3 py-2 text-sm font-semibold text-primary">En savoir plus</Link>

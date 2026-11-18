@@ -212,7 +212,7 @@ function OTP() {
           )}
           <div className="flex justify-center gap-2 my-4">
             {otp.map((val, i) => (
-              <input
+              <input data-openreplay-hidden=""
                 key={i}
                 ref={el => { inputs.current[i] = el; }}
                 type="text"

@@ -132,6 +132,15 @@ SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/A
   (`termsAndConditionsPdf`, uploaded by Rufus) when there is one, else `/conditions`.
 - **Rights.** `/mes-donnees`: data export, contact-file switch (`shareContactInfo`),
   account deletion with password. Reachable without a subscription.
+- **Session replay for support (2026-11-18).** `services/sessionReplay.ts` records every signed-in
+  member with a self-hosted OpenReplay (`VITE_OPENREPLAY_PROJECT_KEY` + `VITE_OPENREPLAY_INGEST`
+  at build time; off without them) and sends the session with each support request. Names,
+  emails and phone numbers stay visible; **passwords and one-time codes are never recorded**:
+  every such `<input>` carries `data-openreplay-hidden=""` (the tracker itself only hides
+  `type="password"`, which the eye icon turns into text). `sessionReplay.test.ts` fails if a
+  password/code input lacks it. Disclosed in `/confidentialite#enregistrement`, the cookie
+  notice and `/mentions-legales`; text to be validated by Rufus. Server side: server
+  `docs/support/OPENREPLAY.md`.
 - **Device storage.** No analytics or ad cookies, ever. The cookie notice comes back 60 days
   after dismissal; `sweepExpiredStorage()` (main.tsx) wipes localStorage, except the token,
   every 60 days; logout removes `PERSONAL_STORAGE_KEYS`. Never store a password, and add any
