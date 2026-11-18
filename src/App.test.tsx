@@ -190,4 +190,14 @@ describe('« Aide » (SBC Support)', () => {
         expect(await screen.findByRole('heading', { name: 'Aide' })).toBeInTheDocument();
         expect(screen.getByText('En-tête membre')).toBeInTheDocument();
     });
+
+    it('a request’s conversation takes the whole screen, like a chat (no member header)', async () => {
+        auth.user = member;
+        withPack();
+        api.supportTicket.mockResolvedValue(ok({ _id: 'abc123', subject: 'Retrait bloqué', status: 'ouvert', number: 'SUP-000123', messages: [] }));
+        renderApp('/aide/demandes/abc123');
+        expect(await screen.findByRole('heading', { level: 1, name: 'Support SBC' })).toBeInTheDocument();
+        expect(await screen.findByRole('textbox', { name: 'Message' })).toBeInTheDocument();
+        expect(screen.queryByText('En-tête membre')).toBeNull();
+    });
 });
