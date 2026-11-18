@@ -36,7 +36,7 @@ export const allAfricanCountries: CountryData[] = [
   { value: 'Côte d\'Ivoire', label: '🇨🇮 Côte d\'Ivoire', code: 'CI', flag: '🇨🇮', phoneCode: '+225', currency: 'XOF', supportsMomo: true },
   { value: 'Gambie', label: '🇬🇲 Gambie', code: 'GM', flag: '🇬🇲', phoneCode: '+220', currency: 'GMD', supportsMomo: false },
   { value: 'Ghana', label: '🇬🇭 Ghana', code: 'GH', flag: '🇬🇭', phoneCode: '+233', currency: 'GHS', supportsMomo: true },
-  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN', flag: '🇬🇳', phoneCode: '+224', currency: 'GNF', supportsMomo: false },
+  { value: 'Guinée', label: '🇬🇳 Guinée', code: 'GN', flag: '🇬🇳', phoneCode: '+224', currency: 'GNF', supportsMomo: true },
   { value: 'Guinée-Bissau', label: '🇬🇼 Guinée-Bissau', code: 'GW', flag: '🇬🇼', phoneCode: '+245', currency: 'XOF', supportsMomo: false },
   { value: 'Libéria', label: '🇱🇷 Libéria', code: 'LR', flag: '🇱🇷', phoneCode: '+231', currency: 'LRD', supportsMomo: false },
   { value: 'Mali', label: '🇲🇱 Mali', code: 'ML', flag: '🇲🇱', phoneCode: '+223', currency: 'XOF', supportsMomo: true },
@@ -50,7 +50,7 @@ export const allAfricanCountries: CountryData[] = [
   // Central Africa
   { value: 'Cameroun', label: '🇨🇲 Cameroun', code: 'CM', flag: '🇨🇲', phoneCode: '+237', currency: 'XAF', supportsMomo: true },
   { value: 'République Centrafricaine', label: '🇨🇫 République Centrafricaine', code: 'CF', flag: '🇨🇫', phoneCode: '+236', currency: 'XAF', supportsMomo: false },
-  { value: 'Tchad', label: '🇹🇩 Tchad', code: 'TD', flag: '🇹🇩', phoneCode: '+235', currency: 'XAF', supportsMomo: false },
+  { value: 'Tchad', label: '🇹🇩 Tchad', code: 'TD', flag: '🇹🇩', phoneCode: '+235', currency: 'XAF', supportsMomo: true },
   { value: 'Congo-Brazzaville', label: '🇨🇬 Congo-Brazzaville', code: 'CG', flag: '🇨🇬', phoneCode: '+242', currency: 'XAF', supportsMomo: true },
   { value: 'Congo-Kinshasa', label: '🇨🇩 Congo-Kinshasa (RDC)', code: 'CD', flag: '🇨🇩', phoneCode: '+243', currency: 'CDF', supportsMomo: true },
   { value: 'Guinée Équatoriale', label: '🇬🇶 Guinée Équatoriale', code: 'GQ', flag: '🇬🇶', phoneCode: '+240', currency: 'XAF', supportsMomo: false },
