@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
@@ -17,6 +17,7 @@ const api = vi.hoisted(() => {
         getAdsLaunchState: vi.fn(),
         getMyAdsCampaigns: vi.fn(),
         getMyDiffuseurProfile: vi.fn(),
+        supportTicket: vi.fn(),
     };
     // Every other call the rendered pages make answers an empty success.
     const fallback = new Map<string, ReturnType<typeof vi.fn>>();
@@ -145,5 +146,67 @@ describe('advertiser pages for a paying member', () => {
         expect(await screen.findByRole('heading', { name: 'Espace annonceur' })).toBeInTheDocument();
         expect(screen.getByText('En-tête membre')).toBeInTheDocument();
         expect(screen.queryByRole('button', { name: /Se déconnecter/ })).not.toBeInTheDocument();
+    });
+});
+
+describe('« Aide » (SBC Support)', () => {
+    it('opens for a member without a pack, without the member header or the floating logout', async () => {
+        auth.user = member;
+        renderApp('/aide');
+        expect(await screen.findByRole('heading', { name: 'Aide' })).toBeInTheDocument();
+        expect(screen.getByRole('link', { name: /Mon compte n’est pas activé/ })).toHaveAttribute('href', '/aide/activation');
+        // Once the subscription answer is in.
+        await waitFor(() => expect(screen.queryByText('En-tête membre')).not.toBeInTheDocument());
+        expect(screen.queryByRole('button', { name: /Se déconnecter/ })).not.toBeInTheDocument();
+    });
+
+    it('opens the activation check without a pack', async () => {
+        auth.user = member;
+        renderApp('/aide/activation');
+        expect(await screen.findByRole('heading', { name: 'Activation de mon compte' })).toBeInTheDocument();
+    });
+
+    it('opens a request from its notification link', async () => {
+        auth.user = member;
+        api.supportTicket.mockResolvedValue(ok({ _id: 'abc123', subject: 'Retrait bloqué', status: 'en_attente_membre', number: 'SUP-000123', messages: [{ _id: 'm1', author: { type: 'agent', name: 'Awa (SBC)' }, body: 'Pouvez-vous envoyer la capture ?', createdAt: '2026-11-17T09:00:00Z' }] }));
+        renderApp('/aide/demandes/abc123');
+        expect(await screen.findByRole('heading', { name: 'Retrait bloqué' })).toBeInTheDocument();
+        expect(screen.getByRole('heading', { level: 1, name: 'Support SBC' })).toBeInTheDocument();
+        expect(screen.getByText('SUP-000123 · Votre réponse est attendue')).toBeInTheDocument();
+        expect(screen.getByText(/Awa \(SBC\)/)).toBeInTheDocument();
+    });
+
+    it('« Signaler un problème » opens without a login, for people who cannot sign in', async () => {
+        auth.isAuthenticated = false;
+        auth.user = null;
+        renderApp('/signaler-un-probleme');
+        expect(await screen.findByRole('heading', { name: 'Signaler un problème' })).toBeInTheDocument();
+        expect(screen.getByRole('group', { name: 'Vos coordonnées' })).toBeInTheDocument();
+        expect(screen.queryByText('En-tête membre')).toBeNull();
+    });
+
+    it('still needs a login', async () => {
+        auth.isAuthenticated = false;
+        auth.user = null;
+        renderApp('/aide');
+        expect(screen.queryByRole('heading', { name: 'Aide' })).not.toBeInTheDocument();
+    });
+
+    it('keeps the member header for a member with a pack', async () => {
+        auth.user = member;
+        withPack();
+        renderApp('/aide');
+        expect(await screen.findByRole('heading', { name: 'Aide' })).toBeInTheDocument();
+        expect(screen.getByText('En-tête membre')).toBeInTheDocument();
+    });
+
+    it('a request’s conversation takes the whole screen, like a chat (no member header)', async () => {
+        auth.user = member;
+        withPack();
+        api.supportTicket.mockResolvedValue(ok({ _id: 'abc123', subject: 'Retrait bloqué', status: 'ouvert', number: 'SUP-000123', messages: [] }));
+        renderApp('/aide/demandes/abc123');
+        expect(await screen.findByRole('heading', { level: 1, name: 'Support SBC' })).toBeInTheDocument();
+        expect(await screen.findByRole('textbox', { name: 'Message' })).toBeInTheDocument();
+        expect(screen.queryByText('En-tête membre')).toBeNull();
     });
 });

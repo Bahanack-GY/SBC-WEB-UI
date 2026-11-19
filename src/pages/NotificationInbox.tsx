@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useInfiniteQuery, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
-  Cancel01Icon, CreditCardIcon, GiftIcon, Mail01Icon, Megaphone01Icon, MoneyReceive02Icon,
+  Cancel01Icon, CreditCardIcon, CustomerSupportIcon, GiftIcon, Mail01Icon, Megaphone01Icon, MoneyReceive02Icon,
   Notification01Icon, Settings02Icon, Ticket01Icon, UserAdd01Icon,
 } from '@hugeicons/core-free-icons';
 import BackButton from '../components/common/BackButton';
@@ -28,6 +28,8 @@ const ICONS: Record<string, { icon: typeof Notification01Icon; tone: string }> =
   tombola: { icon: GiftIcon, tone: 'bg-accent-soft text-accent' },
   ads: { icon: Megaphone01Icon, tone: 'bg-accent-soft text-accent' },
   subscription: { icon: CreditCardIcon, tone: 'bg-primary-soft text-primary' },
+  // SBC Support replies; their url is the request (/aide/demandes/:id).
+  support: { icon: CustomerSupportIcon, tone: 'bg-primary-soft text-primary' },
 };
 const iconFor = (c: string) => ICONS[c] ?? { icon: Notification01Icon, tone: 'bg-surface-2 text-ink-2' };
 

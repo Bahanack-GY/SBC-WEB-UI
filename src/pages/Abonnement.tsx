@@ -1,9 +1,11 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
+    Alert02Icon,
     ArrowRight01Icon,
     ChartIncreaseIcon,
     CheckmarkCircle02Icon,
     Crown02Icon,
+    CustomerSupportIcon,
     LockIcon,
     Megaphone01Icon,
     Tick02Icon,
@@ -561,6 +563,34 @@ function Abonnement() {
                             ))}
                         </div>
                     </header>
+
+                    {/* SBC Support: a member who paid and is still not activated
+                        checks the payment here, without a pack. */}
+                    <Link
+                        to={ownedPack ? '/aide' : '/aide/activation'}
+                        className="mb-5 flex items-center gap-3 rounded-card border border-border bg-surface p-3"
+                    >
+                        <span className="size-10 shrink-0 grid place-items-center rounded-pill bg-primary-soft text-primary">
+                            <HugeiconsIcon icon={CustomerSupportIcon} size={20} />
+                        </span>
+                        <span className="flex-1 min-w-0">
+                            <span className="block text-sm font-semibold text-ink">
+                                {ownedPack ? 'Aide' : 'Déjà payé, mais compte pas activé ?'}
+                            </span>
+                            <span className="block text-xs text-ink-2">
+                                {ownedPack ? 'Questions, retraits, demandes à un agent' : 'Vérifiez votre paiement ou écrivez à un agent'}
+                            </span>
+                        </span>
+                        <HugeiconsIcon icon={ArrowRight01Icon} size={18} className="shrink-0 text-ink-3" />
+                    </Link>
+                    {/* A problem on this page (a pack that won't pay, a wrong price, an error):
+                        straight to a request, with a screenshot. */}
+                    <Link
+                        to="/aide/demandes/nouvelle?categorie=probleme_pack"
+                        className="-mt-3 mb-5 flex items-center justify-center gap-2 rounded-pill py-2 text-sm font-semibold text-primary hover:bg-primary-soft"
+                    >
+                        <HugeiconsIcon icon={Alert02Icon} size={18} /> Signaler un problème
+                    </Link>
 
                     {offersQuery.isLoading ? (
                         <div className="flex flex-col gap-3" aria-busy="true">
