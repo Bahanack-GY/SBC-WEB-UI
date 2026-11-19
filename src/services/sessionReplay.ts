@@ -12,11 +12,51 @@ import type TrackerAPI from '@openreplay/tracker';
  *   `data-openreplay-hidden` (stable even when the eye icon turns a password into
  *   plain text), and `isSecretField` catches any field that was not marked.
  *   `sessionReplay.test.ts` fails if a password or code field is added without it.
- * - No request or response bodies, no headers.
+ * - Backend errors are in the replay: every API call is listed (method, address,
+ *   status, timing); a FAILED call (status 0 or >= 400) keeps its response body (the
+ *   server's error message, cut to 4 KB) and is logged as a `backend_error` event
+ *   (an « issue » for 5xx and unreachable server), searchable in OpenReplay. Request
+ *   bodies are never kept (passwords and codes travel in them), nor any header but
+ *   `x-request-id` (to find the server's log line).
  * - When a member opens a support request, `currentReplay()` is sent with it.
  */
 
 type Tracker = Pick<TrackerAPI, 'start' | 'stop' | 'getSessionID' | 'getSessionURL'>;
+
+/** What the tracker hands the network sanitizer for each fetch/XHR. */
+type NetData = { readonly status: number; readonly method: string; url: string; request: { body: string | null; headers: Record<string, string> }; response: { body: unknown; headers: Record<string, string> } };
+export type BackendError = { method: string; path: string; status: number; message: string | null; code: string | null; requestId: string | null };
+
+const MAX_ERROR_BODY = 4000;
+
+/**
+ * Network sanitizer: keeps what helps understand a backend error, drops the rest.
+ * `report` is called for each failed call to our API.
+ */
+export function sanitizeNetwork<T extends NetData>(d: T, report?: (e: BackendError) => void): T {
+    const failed = d.status === 0 || d.status >= 400;
+    const headers = d.response?.headers ?? {};
+    const requestId = Object.entries(headers).find(([k]) => k.toLowerCase() === 'x-request-id')?.[1] ?? null;
+    let body: unknown = failed ? d.response?.body ?? null : null;
+    if (body != null && typeof body !== 'string') { try { body = JSON.stringify(body); } catch { body = null; } }
+    if (typeof body === 'string' && body.length > MAX_ERROR_BODY) body = `${body.slice(0, MAX_ERROR_BODY)}…`;
+    d.request = { body: null, headers: {} };
+    d.response = { body, headers: requestId ? { 'x-request-id': requestId } : {} };
+    if (failed && report) {
+        let path = '';
+        try { path = new URL(d.url, window.location.origin).pathname; } catch { path = ''; }
+        if (path.includes('/api/')) {
+            let message: string | null = null, code: string | null = null;
+            try {
+                const j = typeof body === 'string' ? JSON.parse(body) : null;
+                message = typeof j?.message === 'string' ? j.message : typeof j?.error === 'string' ? j.error : null;
+                code = typeof j?.code === 'string' ? j.code : null;
+            } catch { message = typeof body === 'string' ? body.slice(0, 300) : null; }
+            report({ method: d.method, path, status: d.status, message, code, requestId });
+        }
+    }
+    return d;
+}
 type Factory = () => Promise<Tracker>;
 
 const env = import.meta.env as Record<string, string | boolean | undefined>;
@@ -37,7 +77,7 @@ export function isSecretField(node: Element): boolean {
 
 let factory: Factory = async () => {
     const { default: OpenReplay, SanitizeLevel } = await import('@openreplay/tracker');
-    return new OpenReplay({
+    const t: TrackerAPI = new OpenReplay({
         projectKey: PROJECT_KEY,
         ingestPoint: INGEST,
         // Visible: names, emails, phone numbers, amounts (on screen and in fields).
@@ -49,10 +89,17 @@ let factory: Factory = async () => {
         obscureInputDates: false,
         // Never: passwords and codes. Hidden beats every other setting.
         domSanitizer: (node: Element) => (isSecretField(node) ? SanitizeLevel.Hidden : SanitizeLevel.Plain),
-        network: { capturePayload: false, ignoreHeaders: true, failuresOnly: false, sessionTokenHeader: false, captureInIframes: false },
+        network: {
+            capturePayload: true, // trimmed by sanitizeNetwork: only failed responses keep a body
+            ignoreHeaders: ['Cookie', 'Set-Cookie', 'Authorization'],
+            failuresOnly: false, sessionTokenHeader: false, captureInIframes: false,
+            // An « issue » for server errors and an unreachable server; an event for the others.
+            sanitizer: (d) => sanitizeNetwork(d, (e) => t.event('backend_error', e, e.status === 0 || e.status >= 500)),
+        },
         // Local http dev only; production is https.
         __DISABLE_SECURE_MODE: Boolean(import.meta.env.DEV),
     });
+    return t;
 };
 
 let tracker: Tracker | null = null;
