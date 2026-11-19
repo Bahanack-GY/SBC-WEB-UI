@@ -112,11 +112,15 @@ import HelpTickets from './pages/help/HelpTickets'
 import HelpNewTicket from './pages/help/HelpNewTicket'
 import HelpTicket from './pages/help/HelpTicket'
 import GuestTicketPage from './pages/help/GuestTicketPage'
+import { useSessionReplay } from './services/sessionReplay'
 
 function AppContent() {
   const location = useLocation();
   const { setAffiliationCode } = useAffiliation();
   const { isAuthenticated, loading: authLoading, logout, user: authUser } = useAuth();
+  // Support session replay (OpenReplay): records while a member is signed in; off unless configured.
+  // The profile comes back with `_id` (the typed `id` is often missing).
+  useSessionReplay(isAuthenticated ? (authUser?.id ?? authUser?._id) : null);
   const { isSubscribed, isLoading: subscriptionLoading } = useSubscriptionStatus();
   const queryClient = useQueryClient();
 

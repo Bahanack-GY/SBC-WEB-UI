@@ -106,6 +106,17 @@ export default function PublicPrivacy() {
         SBC <strong>n'utilise aucun cookie publicitaire ni de mesure d'audience</strong>, et aucun outil
         de statistiques.
       </p>
+      <p id="enregistrement">
+        <strong>Enregistrement des sessions pour le support.</strong> Quand vous êtes connecté, l'application
+        enregistre ce que vous y voyez et y faites (pages ouvertes, clics, champs remplis), pour qu'un agent
+        du support puisse revoir le problème que vous lui signalez sans vous demander de tout expliquer.
+        Vos nom, email et numéro de téléphone peuvent apparaître dans ces enregistrements ;{' '}
+        <strong>vos mots de passe et vos codes de vérification ne sont jamais enregistrés</strong>, et le
+        contenu des échanges avec nos serveurs non plus. Les enregistrements sont gardés sur les serveurs
+        de SBC (Contabo, Allemagne), avec les autres données, et seuls les agents du support y ont accès ;
+        chaque consultation est notée dans un journal. Ils sont supprimés automatiquement après une durée
+        limitée.
+      </p>
       <p>
         Le site garde seulement sur votre appareil (dans la mémoire du navigateur) ce qu'il faut pour
         fonctionner : votre session de connexion, votre langue, vos préférences d'affichage et les
