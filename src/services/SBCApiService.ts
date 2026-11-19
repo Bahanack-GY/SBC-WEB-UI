@@ -811,7 +811,29 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Update momo details
+   * Mobile Money number that receives withdrawals, step 1 (Security plan
+   * Phase 0): the password, then a code is emailed to the account address.
+   * Resend: same number and operator, no password, while the code is live.
+   */
+  async requestMomoChange(momoNumber: string, momoOperator: string, password?: string): Promise<ApiResponse> {
+    return await this.post('/users/me/momo/request-change', {
+      body: password ? { momoNumber, momoOperator, password } : { momoNumber, momoOperator }
+    });
+  }
+
+  /**
+   * Step 2: the emailed code. Replacing a number blocks withdrawals for 48 h
+   * (`data.withdrawalsLockedUntil`); a first number does not.
+   */
+  async confirmMomoChange(momoNumber: string, momoOperator: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/momo/confirm-change', {
+      body: { momoNumber, momoOperator, code }
+    });
+  }
+
+  /**
+   * @deprecated The profile save no longer changes the MoMo details (409
+   * MOMO_CHANGE_NEEDS_CODE): use requestMomoChange / confirmMomoChange.
    */
   async updateMomoDetails(momoNumber: string, momoOperator: string): Promise<ApiResponse> {
     return await this.put('/users/me', {

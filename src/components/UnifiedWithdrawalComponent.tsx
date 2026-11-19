@@ -7,6 +7,7 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
 import { countrySupportsMomo, getCountryByCode } from '../utils/countriesData';
 import { isOngoingWithdrawal, canCancelWithdrawal, getStatusDescription } from '../utils/transactionHelpers';
+import MomoChangeSheet from './wallet/MomoChangeSheet';
 
 interface PendingWithdrawal {
   _id: string;
@@ -88,9 +89,8 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   const [success, setSuccess] = useState('');
   const [isInitiating, setIsInitiating] = useState(false); // Prevent double-clicks
 
-  // Mobile money states
-  const [momoNumber, setMomoNumber] = useState('');
-  const [momoOperator, setMomoOperator] = useState('');
+  // The MoMo number is set or changed with the password + emailed code (MomoChangeSheet).
+  const [momoSheetOpen, setMomoSheetOpen] = useState(false);
 
   // Crypto states
   const [cryptoAddress, setCryptoAddress] = useState('');
@@ -159,8 +159,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
 
       // Load saved user data
       if (user) {
-        setMomoNumber(user.momoNumber || '');
-        setMomoOperator(user.momoOperator || '');
         setCryptoAddress(user.cryptoWalletAddress || '');
         setCryptoCurrency(user.cryptoWalletCurrency || 'BTC');
       }
@@ -186,7 +184,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     
     // Check if user has required configuration
     if (type === 'mobile_money' && (!user?.momoNumber || !user?.momoOperator)) {
-      setStep('configure');
+      setMomoSheetOpen(true);
     } else if (type === 'crypto' && (!user?.cryptoWalletAddress || !user?.cryptoWalletCurrency)) {
       setStep('configure');
     } else {
@@ -201,13 +199,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     setError('');
 
     try {
-      if (selectedType === 'mobile_money') {
-        if (!momoNumber || !momoOperator) {
-          setError('Please fill in all mobile money details');
-          return;
-        }
-        await sbcApiService.updateMomoDetails(momoNumber, momoOperator);
-      } else if (selectedType === 'crypto') {
+      if (selectedType === 'crypto') {
         if (!cryptoAddress || !cryptoCurrency) {
           setError('Please fill in all crypto wallet details');
           return;
@@ -470,48 +462,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 <h4 className="font-semibold text-gray-900">{selectedTypeInfo.name} Setup</h4>
               </div>
 
-              {selectedType === 'mobile_money' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mobile Money Number
-                    </label>
-                    <input
-                      type="text"
-                      value={momoNumber}
-                      onChange={(e) => setMomoNumber(e.target.value)}
-                      placeholder="e.g., 237675080477"
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Include country code (e.g., 237 for Cameroon)
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mobile Money Operator
-                    </label>
-                    <select
-                      value={momoOperator}
-                      onChange={(e) => setMomoOperator(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Operator</option>
-                      <option value="MTN">MTN</option>
-                      <option value="ORANGE">Orange</option>
-                      <option value="MOOV">Moov</option>
-                      <option value="WAVE">Wave</option>
-                      <option value="FREE">Free</option>
-                      <option value="TMONEY">T-Money</option>
-                      <option value="FLOOZ">Flooz</option>
-                      <option value="MPESA">M-Pesa</option>
-                      <option value="AIRTEL">Airtel</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
               {selectedType === 'crypto' && (
                 <>
                   <div>
@@ -757,6 +707,22 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           )}
         </div>
       </div>
+      <MomoChangeSheet
+        open={momoSheetOpen}
+        onClose={() => setMomoSheetOpen(false)}
+        onDone={({ lockedUntil }) => {
+          void refreshUser();
+          setSelectedType('mobile_money');
+          if (lockedUntil) {
+            setError('Votre numéro est enregistré. Les retraits sont bloqués 48 h après un changement de numéro.');
+          } else {
+            setStep('amount');
+          }
+        }}
+        countryCode={user?.country || ''}
+        currentNumber={user?.momoNumber}
+        currentOperator={user?.momoOperator}
+      />
     </div>
   );
 };

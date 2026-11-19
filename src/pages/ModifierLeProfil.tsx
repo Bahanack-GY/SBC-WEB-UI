@@ -1,13 +1,14 @@
 import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Call02Icon, FloppyDiskIcon, Loading03Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
+import MomoChangeSheet from '../components/wallet/MomoChangeSheet';
 import {
   allCountries,
   worldCountryCodes,
@@ -117,6 +118,7 @@ function ModifierLeProfil() {
   const [displayedInterests, setDisplayedInterests] = useState<string[]>(predefinedInterestOptions);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showModal, setShowModal] = useState(false);
+  const [momoSheetOpen, setMomoSheetOpen] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   useEffect(() => {
@@ -293,27 +295,18 @@ function ModifierLeProfil() {
     setLoading(true);
     setFeedback(null);
     try {
-      const countryCode = allCountries.find(c => c.value === formData.country)?.code || formData.country;
-
       // Normalize phone number - check if country code is already present
       const fullPhoneNumber = normalizePhoneNumber(formData.phoneNumber, selectedPhoneCountryCode.code);
 
-      // Normalize MoMo number - check if country code is already present
-      const countryPhoneCode = allCountries.find(c => c.value === formData.country)?.phoneCode || '';
-      const fullMomoNumber = formData.momoNumber
-        ? normalizePhoneNumber(formData.momoNumber, countryPhoneCode)
-        : '';
-
+      // The country (support changes it) and the MoMo details (password +
+      // emailed code, MomoChangeSheet) are not part of this save.
       const updates: Record<string, unknown> = {
         name: formData.name,
         city: formData.city,
-        country: countryCode,
         profession: formData.profession ? removeAccents(formData.profession) : '',
         interests: formData.interests.map(i => removeAccents(i)),
         birthDate: formData.birthDate,
         sex: formData.sex,
-        momoNumber: fullMomoNumber, // Use the normalized MoMo number
-        momoOperator: formData.momoOperator,
         whatsappGroupLink: formData.whatsappGroupLink.trim(),
         notificationPreference: formData.notificationPreference,
       };
@@ -354,21 +347,6 @@ function ModifierLeProfil() {
     }
   };
 
-  // New: Dynamically compute available MoMo operators based on selected country
-  const availableMomoOperators = useMemo(() => {
-    const selectedCountryCode = allCountries.find((c: { value: string; code: string; }) => c.value === formData.country)?.code;
-    if (selectedCountryCode && momoCorrespondents[selectedCountryCode]) {
-      return [
-        { value: '', label: 'Sélectionner un opérateur MoMo' }, // Default option
-        ...momoCorrespondents[selectedCountryCode].operators.map(opValue => ({
-          value: opValue,
-          label: getMomoOperatorDisplayName(opValue)
-        }))
-      ];
-    }
-    // If no country selected or no operators for the country, provide only a default option
-    return [{ value: '', label: 'Sélectionner un opérateur MoMo' }];
-  }, [formData.country, allCountries]); // Re-run when country or country options change
 
   if (authLoading || !user) {
     return <div>Chargement du profil...</div>;
@@ -480,10 +458,12 @@ function ModifierLeProfil() {
             </div>
             <div>
               <label className="block text-gray-700 mb-1">🌍 Pays</label>
-              <select name="country" value={formData.country} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white">
-                <option value="">Sélectionner le pays</option>
-                {allCountries.map((c) => <option key={c.value} value={c.value}>{c.label}</option>)}
-              </select>
+              <div className="w-full border border-border rounded-xl px-4 py-2 bg-gray-50 text-gray-700">
+                {allCountries.find(c => c.value === formData.country)?.label || formData.country || '—'}
+              </div>
+              <p className="text-xs text-gray-500 mt-1">
+                Le pays du compte ne se change pas ici : faites la demande au support (menu Aide).
+              </p>
             </div>
             <div>
               <label className="block text-gray-700 mb-1">💼 Profession</label>
@@ -510,32 +490,21 @@ function ModifierLeProfil() {
                     💡 Mobile Money disponible pour votre pays : {formData.country}
                   </div>
                   
-                  <div>
-                    <label className="block text-gray-700 mb-1">💳 Numéro MoMo</label>
-                    <div className="relative flex items-center">
-                      <span className="absolute left-3 text-gray-500 font-medium z-10">
-                        {allCountries.find(c => c.value === formData.country)?.phoneCode || '+237'}
-                      </span>
-                      <input 
-                        name="momoNumber" 
-                        value={formData.momoNumber} 
-                        onChange={handleChange} 
-                        className="w-full border border-border rounded-xl px-4 py-2 pl-16 focus:outline-none" 
-                        placeholder="675080477" 
-                      />
+                  <div className="flex items-center justify-between gap-3 bg-white border border-border rounded-xl px-4 py-3">
+                    <div className="min-w-0">
+                      <div className="text-sm text-gray-500">Numéro qui reçoit vos retraits</div>
+                      <div className="font-medium text-gray-900 truncate">
+                        {user.momoNumber
+                          ? `${allCountries.find(c => c.value === formData.country)?.phoneCode || ''} ${formData.momoNumber} · ${getMomoOperatorDisplayName(user.momoOperator || '')}`
+                          : 'Aucun numéro'}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-500 mt-1">
-                      💡 Le code pays est automatiquement ajouté selon votre pays sélectionné
-                    </div>
+                    <button type="button" onClick={() => setMomoSheetOpen(true)} className="shrink-0 bg-primary text-white text-sm rounded-xl px-3 py-2">
+                      {user.momoNumber ? 'Changer' : 'Ajouter'}
+                    </button>
                   </div>
-                  
-                  <div>
-                    <label className="block text-gray-700 mb-1">📱 Opérateur MoMo</label>
-                    <select name="momoOperator" value={formData.momoOperator} onChange={handleChange} className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white">
-                      {availableMomoOperators.map((option) => (
-                        <option key={option.value} value={option.value}>{option.label}</option>
-                      ))}
-                    </select>
+                  <div className="text-xs text-gray-500">
+                    🔒 Le changement se confirme avec votre mot de passe et un code envoyé par e-mail ; les retraits sont ensuite bloqués 48 h.
                   </div>
                 </div>
               ) : (
@@ -717,6 +686,14 @@ function ModifierLeProfil() {
           )}
         </motion.div>
       </div>
+      <MomoChangeSheet
+        open={momoSheetOpen}
+        onClose={() => setMomoSheetOpen(false)}
+        onDone={() => { void refreshUser(); }}
+        countryCode={allCountries.find(c => c.value === formData.country)?.code || user.country || ''}
+        currentNumber={user.momoNumber}
+        currentOperator={user.momoOperator}
+      />
     </ProtectedRoute>
   );
 }
