@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import type TrackerAPI from '@openreplay/tracker';
+import { setReplayProvider } from './clientErrors';
 
 /**
  * Session replay (self-hosted OpenReplay) so that support can see what a member
@@ -94,7 +95,7 @@ let factory: Factory = async () => {
             ignoreHeaders: ['Cookie', 'Set-Cookie', 'Authorization'],
             failuresOnly: false, sessionTokenHeader: false, captureInIframes: false,
             // An « issue » for server errors and an unreachable server; an event for the others.
-            sanitizer: (d) => sanitizeNetwork(d, (e) => t.event('backend_error', e, e.status === 0 || e.status >= 500)),
+            sanitizer: (d) => sanitizeNetwork(d, (e) => { if (firstThisMinute(e)) t.event('backend_error', e, e.status === 0 || e.status >= 500); }),
         },
         // Local http dev only; production is https.
         __DISABLE_SECURE_MODE: Boolean(import.meta.env.DEV),
@@ -104,6 +105,15 @@ let factory: Factory = async () => {
 
 let tracker: Tracker | null = null;
 let recordingFor: string | null = null;
+
+/** A page retrying every 5 s must show one error a minute in the replay, not twelve. */
+const lastEvent = new Map<string, number>();
+export function firstThisMinute(e: BackendError, now = Date.now()): boolean {
+    const key = `${e.method} ${e.path} ${e.status}`;
+    if (now - (lastEvent.get(key) ?? -Infinity) < 60_000) return false;
+    lastEvent.set(key, now);
+    return true;
+}
 
 export const sessionReplayConfigured = () => Boolean(PROJECT_KEY && INGEST);
 
@@ -115,6 +125,8 @@ export async function startSessionReplay(userId: string, configured = sessionRep
         tracker ??= await factory();
         recordingFor = userId;
         await tracker.start({ userID: userId });
+        // The support analytics' error reports link to this session.
+        setReplayProvider(currentReplay);
     } catch {
         recordingFor = null;
     }
@@ -124,6 +136,7 @@ export async function startSessionReplay(userId: string, configured = sessionRep
 export function stopSessionReplay(): void {
     if (!tracker || !recordingFor) return;
     recordingFor = null;
+    setReplayProvider(null);
     try { tracker.stop(); } catch { /* ignore */ }
 }
 

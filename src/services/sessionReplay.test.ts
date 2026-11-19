@@ -1,7 +1,7 @@
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { currentReplay, isSecretField, sanitizeNetwork, setSessionReplayFactoryForTests, startSessionReplay, stopSessionReplay, type BackendError } from './sessionReplay';
+import { currentReplay, firstThisMinute, isSecretField, sanitizeNetwork, setSessionReplayFactoryForTests, startSessionReplay, stopSessionReplay, type BackendError } from './sessionReplay';
 
 const field = (html: string) => {
     const d = document.createElement('div');
@@ -120,6 +120,16 @@ describe('backend errors in the replay', () => {
         sanitizeNetwork(call(404, 'https://challenges.cloudflare.com/turnstile/x', 'nope'), (e) => seen.push(e));
         expect(seen.map((e) => [e.status, e.path])).toEqual([[0, '/api/support/me/tickets'], [502, '/api/x']]);
         expect((long.response.body as string).length).toBe(4001);
+    });
+});
+
+describe('one backend error event a minute', () => {
+    it('a page retrying every 5 s logs the same error once a minute', () => {
+        const e = { method: 'GET', path: '/api/support/me/tickets/:id', status: 404, message: null, code: null, requestId: null };
+        expect(firstThisMinute(e, 1_000)).toBe(true);
+        expect(firstThisMinute(e, 6_000)).toBe(false);
+        expect(firstThisMinute({ ...e, status: 500 }, 6_000)).toBe(true);
+        expect(firstThisMinute(e, 61_001)).toBe(true);
     });
 });
 
