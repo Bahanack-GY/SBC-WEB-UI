@@ -17,7 +17,7 @@ interface Props {
 /**
  * Setting or changing the crypto wallet that receives crypto withdrawals
  * (Security plan Phase 0, same rule as the Mobile Money number): the account
- * password, then the code emailed to the account address. Replacing a wallet
+ * password, then the code sent (e-mail or WhatsApp, the member's code channel) to the account address. Replacing a wallet
  * blocks withdrawals for 48 h; the window says so before and after.
  */
 export default function CryptoWalletChangeSheet({ open, onClose, onDone, currentAddress, currentCurrency }: Props) {
@@ -58,7 +58,7 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
     setBusy(true);
     try {
       const data = handleApiResponse(await sbcApiService.requestCryptoWalletChange(currency, wallet, resend ? undefined : password));
-      setSentTo(data?.sentTo || 'votre adresse e-mail');
+      setSentTo(data?.sentTo || 'votre e-mail ou votre WhatsApp');
       setStep('code');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Le code n’a pas pu être envoyé. Réessayez.');
@@ -70,7 +70,7 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
   const confirm = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    if (code.trim().length < 4) return setError('Entrez le code reçu par e-mail.');
+    if (code.trim().length < 4) return setError('Entrez le code de confirmation reçu.');
     const wallet = normalized() || address.trim();
     setBusy(true);
     try {
@@ -134,7 +134,7 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
             {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
             <button type="submit" disabled={busy} className="w-full bg-primary text-white rounded-xl py-3 font-medium flex items-center justify-center gap-2 disabled:opacity-60">
               {busy ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={LockPasswordIcon} size={18} />}
-              Recevoir le code par e-mail
+              Recevoir le code
             </button>
           </form>
         )}
@@ -146,7 +146,7 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
               <span className="font-mono">{shortAddress(normalized() || address.trim())}</span>.
             </p>
             <input
-              aria-label="Code reçu par e-mail"
+              aria-label="Code de confirmation"
               autoComplete="one-time-code"
               maxLength={8}
               value={code}
