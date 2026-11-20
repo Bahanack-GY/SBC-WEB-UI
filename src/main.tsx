@@ -8,11 +8,15 @@ import './i18n/config' // Initialize i18n
 import { purgeStaleCaches, registerAppServiceWorker } from './utils/cacheBuster'
 import { sweepExpiredStorage } from './utils/privacy'
 import { installClientErrorReporting } from './services/clientErrors'
+import { installDeviceSignals } from './utils/deviceSignals'
 
 // Nothing the site keeps on the device may be older than 60 days (APDP).
 sweepExpiredStorage();
 // Failed API calls → support analytics (signed-in members only).
 installClientErrorReporting();
+
+// Security plan Phase 1: our API calls say which browser (random ID) and client they come from.
+installDeviceSignals();
 
 // Best-effort: unregister leftover service workers from past deploys and clear
 // cache storage, so users always run the freshly-shipped bundles. Then register

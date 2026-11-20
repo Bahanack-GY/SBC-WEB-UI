@@ -7,6 +7,10 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
 import { countrySupportsMomo, getCountryByCode } from '../utils/countriesData';
 import { isOngoingWithdrawal, canCancelWithdrawal, getStatusDescription } from '../utils/transactionHelpers';
+import AuthenticatorCodeField, { codeLooksComplete } from './security/AuthenticatorCodeField';
+import AuthenticatorRequiredNotice from './security/AuthenticatorRequiredNotice';
+import MomoChangeSheet from './wallet/MomoChangeSheet';
+import CryptoWalletChangeSheet from './wallet/CryptoWalletChangeSheet';
 
 interface PendingWithdrawal {
   _id: string;
@@ -82,19 +86,20 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   const { user, refreshUser } = useAuth();
   const [selectedType, setSelectedType] = useState<'mobile_money' | 'crypto' | null>(null);
   const [amount, setAmount] = useState('');
-  const [step, setStep] = useState<'select' | 'configure' | 'amount' | 'success' | 'pending'>('select');
+  const [step, setStep] = useState<'select' | 'amount' | 'success' | 'pending' | 'confirm' | 'authenticator'>('select');
+  // Security plan Phase 3: the withdrawal is confirmed with the authenticator app's code.
+  const [confirmTx, setConfirmTx] = useState<{ transactionId: string; amount: number; currency: string } | null>(null);
+  const [confirmCode, setConfirmCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isInitiating, setIsInitiating] = useState(false); // Prevent double-clicks
 
-  // Mobile money states
-  const [momoNumber, setMomoNumber] = useState('');
-  const [momoOperator, setMomoOperator] = useState('');
+  // The MoMo number is set or changed with the password + authenticator code (MomoChangeSheet).
+  const [momoSheetOpen, setMomoSheetOpen] = useState(false);
 
-  // Crypto states
-  const [cryptoAddress, setCryptoAddress] = useState('');
-  const [cryptoCurrency, setCryptoCurrency] = useState('BTC');
+  // The crypto wallet too (CryptoWalletChangeSheet).
+  const [cryptoSheetOpen, setCryptoSheetOpen] = useState(false);
 
   // OTP states
   const [transactionId, setTransactionId] = useState('');
@@ -157,14 +162,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
       setIsInitiating(false);
       setPendingWithdrawal(null);
 
-      // Load saved user data
-      if (user) {
-        setMomoNumber(user.momoNumber || '');
-        setMomoOperator(user.momoOperator || '');
-        setCryptoAddress(user.cryptoWalletAddress || '');
-        setCryptoCurrency(user.cryptoWalletCurrency || 'BTC');
-      }
-
       // Check for pending withdrawals first
       checkPendingWithdrawals().then(hasPending => {
         if (!hasPending) {
@@ -186,45 +183,11 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     
     // Check if user has required configuration
     if (type === 'mobile_money' && (!user?.momoNumber || !user?.momoOperator)) {
-      setStep('configure');
+      setMomoSheetOpen(true);
     } else if (type === 'crypto' && (!user?.cryptoWalletAddress || !user?.cryptoWalletCurrency)) {
-      setStep('configure');
+      setCryptoSheetOpen(true);
     } else {
       setStep('amount');
-    }
-  };
-
-  const handleConfigurationSave = async () => {
-    if (!selectedType) return;
-
-    setLoading(true);
-    setError('');
-
-    try {
-      if (selectedType === 'mobile_money') {
-        if (!momoNumber || !momoOperator) {
-          setError('Please fill in all mobile money details');
-          return;
-        }
-        await sbcApiService.updateMomoDetails(momoNumber, momoOperator);
-      } else if (selectedType === 'crypto') {
-        if (!cryptoAddress || !cryptoCurrency) {
-          setError('Please fill in all crypto wallet details');
-          return;
-        }
-        await sbcApiService.updateCryptoWallet({
-          cryptoWalletAddress: cryptoAddress,
-          cryptoWalletCurrency: cryptoCurrency
-        });
-      }
-
-      await refreshUser();
-      setStep('amount');
-      setSuccess('Configuration saved successfully!');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save configuration');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -275,11 +238,22 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         selectedType
       );
 
+      if (response.body?.code === 'AUTHENTICATOR_REQUIRED') {
+        setStep('authenticator');
+        setIsInitiating(false);
+        return;
+      }
       const data = handleApiResponse(response);
 
       if (data && data.transactionId) {
         // Check if OTP verification is required
-        if (data.status === 'pending_otp_verification') {
+        if (data.status === 'pending_otp_verification' && data.confirmWith === 'authenticator') {
+          const withdrawalType = availableWithdrawalTypes.find(t => t.id === selectedType)!;
+          setConfirmTx({ transactionId: data.transactionId, amount: parseFloat(amount), currency: withdrawalType.currency });
+          setConfirmCode('');
+          setStep('confirm');
+          setIsInitiating(false);
+        } else if (data.status === 'pending_otp_verification') {
           const withdrawalType = availableWithdrawalTypes.find(t => t.id === selectedType)!;
           navigate('/otp', {
             state: {
@@ -307,12 +281,26 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   };
 
   // Handle navigation to OTP page for pending withdrawal
-  const handleContinuePendingWithdrawal = () => {
+  const handleContinuePendingWithdrawal = async () => {
     if (!pendingWithdrawal) return;
 
     const txId = pendingWithdrawal.transactionId || pendingWithdrawal._id;
 
     if (pendingWithdrawal.status === 'pending_otp_verification') {
+      // With the authenticator app set up, the code comes from it (no e-mail).
+      let viaApp = false;
+      try {
+        viaApp = !!handleApiResponse(await sbcApiService.getAuthenticatorStatus())?.enabled;
+      } catch {
+        viaApp = false;
+      }
+      if (viaApp) {
+        setConfirmTx({ transactionId: txId, amount: pendingWithdrawal.amount, currency: pendingWithdrawal.currency });
+        setConfirmCode('');
+        setError('');
+        setStep('confirm');
+        return;
+      }
       navigate('/otp', {
         state: {
           withdrawalId: txId,
@@ -322,6 +310,29 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         }
       });
       onClose();
+    }
+  };
+
+  // Confirm the withdrawal with the authenticator app's code (or a backup code)
+  const handleConfirmWithdrawal = async () => {
+    if (!confirmTx || loading) return;
+    if (!codeLooksComplete(confirmCode)) {
+      setError('Entrez le code à 6 chiffres de l’application d’authentification.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      handleApiResponse(await sbcApiService.verifyWithdrawal({ transactionId: confirmTx.transactionId, verificationCode: confirmCode.trim() }));
+      navigate('/transaction-confirmation', {
+        state: { transactionId: confirmTx.transactionId, withdrawalAmount: confirmTx.amount, withdrawalCurrency: confirmTx.currency }
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Le retrait n’a pas pu être confirmé.');
+      setConfirmCode('');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -383,10 +394,11 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h3 className="text-xl font-bold text-gray-900">
             {step === 'select' && 'Select Withdrawal Type'}
-            {step === 'configure' && `Configure ${selectedTypeInfo?.name}`}
             {step === 'amount' && `${selectedTypeInfo?.name} Withdrawal`}
             {step === 'success' && 'Success!'}
             {step === 'pending' && 'Retrait en cours'}
+            {step === 'confirm' && 'Confirmer le retrait'}
+            {step === 'authenticator' && 'Sécurité du compte'}
           </h3>
           <button
             onClick={handleCancel}
@@ -459,103 +471,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Step 2: Configuration */}
-          {step === 'configure' && selectedTypeInfo && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="text-blue-600">{selectedTypeInfo.icon}</div>
-                <h4 className="font-semibold text-gray-900">{selectedTypeInfo.name} Setup</h4>
-              </div>
-
-              {selectedType === 'mobile_money' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mobile Money Number
-                    </label>
-                    <input
-                      type="text"
-                      value={momoNumber}
-                      onChange={(e) => setMomoNumber(e.target.value)}
-                      placeholder="e.g., 237675080477"
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Include country code (e.g., 237 for Cameroon)
-                    </p>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Mobile Money Operator
-                    </label>
-                    <select
-                      value={momoOperator}
-                      onChange={(e) => setMomoOperator(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Operator</option>
-                      <option value="MTN">MTN</option>
-                      <option value="ORANGE">Orange</option>
-                      <option value="MOOV">Moov</option>
-                      <option value="WAVE">Wave</option>
-                      <option value="FREE">Free</option>
-                      <option value="TMONEY">T-Money</option>
-                      <option value="FLOOZ">Flooz</option>
-                      <option value="MPESA">M-Pesa</option>
-                      <option value="AIRTEL">Airtel</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              {selectedType === 'crypto' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Crypto Wallet Address
-                    </label>
-                    <input
-                      type="text"
-                      value={cryptoAddress}
-                      onChange={(e) => setCryptoAddress(e.target.value)}
-                      placeholder="Enter your wallet address"
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cryptocurrency
-                    </label>
-                    <select
-                      value={cryptoCurrency}
-                      onChange={(e) => setCryptoCurrency(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="BTC">Bitcoin</option>
-                      <option value="LTC">Litecoin</option>
-                      <option value="XRP">Ripple</option>
-                      <option value="TRX">TRON</option>
-                      <option value="USDTSOL">USDT (Solana)</option>
-                      <option value="USDTBSC">USDT (BSC-BEP20)</option>
-                      <option value="BNBBSC">BNB (BSC-BEP20)</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              <button
-                onClick={handleConfigurationSave}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              >
-                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-2" /> : null}
-                Save Configuration
-              </button>
             </div>
           )}
 
@@ -666,7 +581,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 {/* Continue to OTP - only if pending OTP verification */}
                 {pendingWithdrawal.status === 'pending_otp_verification' && (
                   <button
-                    onClick={handleContinuePendingWithdrawal}
+                    onClick={() => void handleContinuePendingWithdrawal()}
                     disabled={loading}
                     className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-semibold"
                   >
@@ -714,6 +629,24 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           )}
 
           {/* Step 5: Success */}
+          {step === 'authenticator' && (
+            <AuthenticatorRequiredNotice action="retirer de l’argent" onReady={() => setStep('amount')} />
+          )}
+
+          {step === 'confirm' && confirmTx && (
+            <form onSubmit={e => { e.preventDefault(); void handleConfirmWithdrawal(); }} className="space-y-4">
+              <p className="text-sm text-gray-700">
+                Retrait de <strong>{confirmTx.amount} {confirmTx.currency}</strong>. Pour le confirmer, tapez le code affiché par
+                votre application d’authentification.
+              </p>
+              <AuthenticatorCodeField id="withdrawal-code" value={confirmCode} onChange={setConfirmCode} />
+              {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+              <button type="submit" disabled={loading} className="w-full bg-primary text-white rounded-xl py-3 font-medium disabled:opacity-60">
+                {loading ? 'Vérification…' : 'Confirmer le retrait'}
+              </button>
+            </form>
+          )}
+
           {step === 'success' && (
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -757,6 +690,37 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           )}
         </div>
       </div>
+      <MomoChangeSheet
+        open={momoSheetOpen}
+        onClose={() => setMomoSheetOpen(false)}
+        onDone={({ lockedUntil }) => {
+          void refreshUser();
+          setSelectedType('mobile_money');
+          if (lockedUntil) {
+            setError('Votre numéro est enregistré. Les retraits sont bloqués 48 h après un changement de numéro.');
+          } else {
+            setStep('amount');
+          }
+        }}
+        countryCode={user?.country || ''}
+        currentNumber={user?.momoNumber}
+        currentOperator={user?.momoOperator}
+      />
+      <CryptoWalletChangeSheet
+        open={cryptoSheetOpen}
+        onClose={() => setCryptoSheetOpen(false)}
+        onDone={({ lockedUntil }) => {
+          void refreshUser();
+          setSelectedType('crypto');
+          if (lockedUntil) {
+            setError('Votre portefeuille est enregistré. Les retraits sont bloqués 48 h après un changement de portefeuille.');
+          } else {
+            setStep('amount');
+          }
+        }}
+        currentAddress={user?.cryptoWalletAddress}
+        currentCurrency={user?.cryptoWalletCurrency}
+      />
     </div>
   );
 };

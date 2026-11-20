@@ -814,7 +814,20 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Update momo details
+   * Sets or changes the Mobile Money number that receives withdrawals: the
+   * account password + a code from the authenticator app (or a backup code).
+   * 403 `code: AUTHENTICATOR_REQUIRED` when none is set up yet. Replacing a
+   * number blocks withdrawals 48 h (`data.withdrawalsLockedUntil`).
+   */
+  async changeMomo(momoNumber: string, momoOperator: string, password: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/momo/change', {
+      body: { momoNumber, momoOperator, password, code }
+    });
+  }
+
+  /**
+   * @deprecated The profile save no longer changes the MoMo details (409
+   * MOMO_CHANGE_NEEDS_CODE): use changeMomo.
    */
   async updateMomoDetails(momoNumber: string, momoOperator: string): Promise<ApiResponse> {
     return await this.put('/users/me', {
@@ -1353,7 +1366,39 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Update user's crypto wallet information
+   * Sets or changes the wallet that receives crypto withdrawals: password +
+   * authenticator code (or a backup code), like changeMomo.
+   */
+  async changeCryptoWallet(cryptoWalletCurrency: string, cryptoWalletAddress: string, password: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/crypto/wallet/change', {
+      body: { cryptoWalletCurrency, cryptoWalletAddress, password, code }
+    });
+  }
+
+  /** Authenticator app status: { enabled, enrolledAt, backupCodesRemaining, lockedUntil }. */
+  async getAuthenticatorStatus(): Promise<ApiResponse> {
+    return await this.get('/users/me/authenticator');
+  }
+
+  /** Setup step 1: the account password → a code to the account's e-mail (no password: resend). */
+  async requestAuthenticatorSetup(password?: string): Promise<ApiResponse> {
+    return await this.post('/users/me/authenticator/setup/request', { body: password ? { password } : {} });
+  }
+
+  /** Setup step 2: the code received → { qrDataUrl, secret, otpauthUrl }. */
+  async startAuthenticatorSetup(code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/authenticator/setup/start', { body: { code } });
+  }
+
+  /** Setup step 3: the first code shown by the app → { backupCodes } (shown once). */
+  async confirmAuthenticatorSetup(code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/authenticator/setup/confirm', { body: { code } });
+  }
+
+  /**
+   * @deprecated The server now only accepts the wallet already saved here
+   * (409 CRYPTO_CHANGE_NEEDS_CODE otherwise): use requestCryptoWalletChange /
+   * confirmCryptoWalletChange (CryptoWalletChangeSheet).
    */
   async updateCryptoWallet(walletData: {
     cryptoWalletAddress: string;
