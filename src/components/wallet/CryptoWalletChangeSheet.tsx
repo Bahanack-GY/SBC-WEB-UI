@@ -1,6 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, Loading03Icon, LockPasswordIcon, Tick02Icon } from '@hugeicons/core-free-icons';
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { sbcApiService } from '../../services/SBCApiService';
 import { cryptoCurrencyName, normalizeCryptoAddress, supportedCryptoCurrencies } from '../../utils/cryptoWallet';
 import AuthenticatorCodeField, { codeLooksComplete } from '../security/AuthenticatorCodeField';
@@ -36,8 +36,13 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
   const [error, setError] = useState('');
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
 
+  // Reset only when the sheet opens: after a save the parent reloads the member,
+  // which changes the current details, and must not wipe the success screen.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (!open) return;
+    const opening = open && !wasOpen.current;
+    wasOpen.current = open;
+    if (!opening) return;
     setDone(false);
     setCurrency(currentCurrency && supportedCryptoCurrencies.some(c => c.code === currentCurrency) ? currentCurrency : '');
     setAddress('');
