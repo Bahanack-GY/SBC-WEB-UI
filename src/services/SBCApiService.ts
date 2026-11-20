@@ -811,29 +811,20 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Mobile Money number that receives withdrawals, step 1 (Security plan
-   * Phase 0): the password, then a code is emailed to the account address.
-   * Resend: same number and operator, no password, while the code is live.
+   * Sets or changes the Mobile Money number that receives withdrawals: the
+   * account password + a code from the authenticator app (or a backup code).
+   * 403 `code: AUTHENTICATOR_REQUIRED` when none is set up yet. Replacing a
+   * number blocks withdrawals 48 h (`data.withdrawalsLockedUntil`).
    */
-  async requestMomoChange(momoNumber: string, momoOperator: string, password?: string): Promise<ApiResponse> {
-    return await this.post('/users/me/momo/request-change', {
-      body: password ? { momoNumber, momoOperator, password } : { momoNumber, momoOperator }
-    });
-  }
-
-  /**
-   * Step 2: the emailed code. Replacing a number blocks withdrawals for 48 h
-   * (`data.withdrawalsLockedUntil`); a first number does not.
-   */
-  async confirmMomoChange(momoNumber: string, momoOperator: string, code: string): Promise<ApiResponse> {
-    return await this.post('/users/me/momo/confirm-change', {
-      body: { momoNumber, momoOperator, code }
+  async changeMomo(momoNumber: string, momoOperator: string, password: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/momo/change', {
+      body: { momoNumber, momoOperator, password, code }
     });
   }
 
   /**
    * @deprecated The profile save no longer changes the MoMo details (409
-   * MOMO_CHANGE_NEEDS_CODE): use requestMomoChange / confirmMomoChange.
+   * MOMO_CHANGE_NEEDS_CODE): use changeMomo.
    */
   async updateMomoDetails(momoNumber: string, momoOperator: string): Promise<ApiResponse> {
     return await this.put('/users/me', {
@@ -1295,24 +1286,33 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Setting or changing the crypto wallet, step 1: the account password, then a
-   * code to the account email. Without a password, resends the code for the
-   * same wallet.
+   * Sets or changes the wallet that receives crypto withdrawals: password +
+   * authenticator code (or a backup code), like changeMomo.
    */
-  async requestCryptoWalletChange(cryptoWalletCurrency: string, cryptoWalletAddress: string, password?: string): Promise<ApiResponse> {
-    return await this.post('/users/crypto/wallet/request-change', {
-      body: password ? { cryptoWalletCurrency, cryptoWalletAddress, password } : { cryptoWalletCurrency, cryptoWalletAddress }
+  async changeCryptoWallet(cryptoWalletCurrency: string, cryptoWalletAddress: string, password: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/crypto/wallet/change', {
+      body: { cryptoWalletCurrency, cryptoWalletAddress, password, code }
     });
   }
 
-  /**
-   * Step 2: the emailed code. Replacing a wallet blocks withdrawals 48 h
-   * (`withdrawalsLockedUntil` in the answer).
-   */
-  async confirmCryptoWalletChange(cryptoWalletCurrency: string, cryptoWalletAddress: string, code: string): Promise<ApiResponse> {
-    return await this.post('/users/crypto/wallet/confirm-change', {
-      body: { cryptoWalletCurrency, cryptoWalletAddress, code }
-    });
+  /** Authenticator app status: { enabled, enrolledAt, backupCodesRemaining, lockedUntil }. */
+  async getAuthenticatorStatus(): Promise<ApiResponse> {
+    return await this.get('/users/me/authenticator');
+  }
+
+  /** Setup step 1: the account password → a code to the account's e-mail (no password: resend). */
+  async requestAuthenticatorSetup(password?: string): Promise<ApiResponse> {
+    return await this.post('/users/me/authenticator/setup/request', { body: password ? { password } : {} });
+  }
+
+  /** Setup step 2: the code received → { qrDataUrl, secret, otpauthUrl }. */
+  async startAuthenticatorSetup(code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/authenticator/setup/start', { body: { code } });
+  }
+
+  /** Setup step 3: the first code shown by the app → { backupCodes } (shown once). */
+  async confirmAuthenticatorSetup(code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/authenticator/setup/confirm', { body: { code } });
   }
 
   /**

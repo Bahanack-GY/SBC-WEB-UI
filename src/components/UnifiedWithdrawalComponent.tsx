@@ -7,6 +7,8 @@ import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
 import { countrySupportsMomo, getCountryByCode } from '../utils/countriesData';
 import { isOngoingWithdrawal, canCancelWithdrawal, getStatusDescription } from '../utils/transactionHelpers';
+import AuthenticatorCodeField, { codeLooksComplete } from './security/AuthenticatorCodeField';
+import AuthenticatorRequiredNotice from './security/AuthenticatorRequiredNotice';
 import MomoChangeSheet from './wallet/MomoChangeSheet';
 import CryptoWalletChangeSheet from './wallet/CryptoWalletChangeSheet';
 
@@ -84,13 +86,16 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   const { user, refreshUser } = useAuth();
   const [selectedType, setSelectedType] = useState<'mobile_money' | 'crypto' | null>(null);
   const [amount, setAmount] = useState('');
-  const [step, setStep] = useState<'select' | 'amount' | 'success' | 'pending'>('select');
+  const [step, setStep] = useState<'select' | 'amount' | 'success' | 'pending' | 'confirm' | 'authenticator'>('select');
+  // Security plan Phase 3: the withdrawal is confirmed with the authenticator app's code.
+  const [confirmTx, setConfirmTx] = useState<{ transactionId: string; amount: number; currency: string } | null>(null);
+  const [confirmCode, setConfirmCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [isInitiating, setIsInitiating] = useState(false); // Prevent double-clicks
 
-  // The MoMo number is set or changed with the password + emailed code (MomoChangeSheet).
+  // The MoMo number is set or changed with the password + authenticator code (MomoChangeSheet).
   const [momoSheetOpen, setMomoSheetOpen] = useState(false);
 
   // The crypto wallet too (CryptoWalletChangeSheet).
@@ -233,11 +238,22 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         selectedType
       );
 
+      if (response.body?.code === 'AUTHENTICATOR_REQUIRED') {
+        setStep('authenticator');
+        setIsInitiating(false);
+        return;
+      }
       const data = handleApiResponse(response);
 
       if (data && data.transactionId) {
         // Check if OTP verification is required
-        if (data.status === 'pending_otp_verification') {
+        if (data.status === 'pending_otp_verification' && data.confirmWith === 'authenticator') {
+          const withdrawalType = availableWithdrawalTypes.find(t => t.id === selectedType)!;
+          setConfirmTx({ transactionId: data.transactionId, amount: parseFloat(amount), currency: withdrawalType.currency });
+          setConfirmCode('');
+          setStep('confirm');
+          setIsInitiating(false);
+        } else if (data.status === 'pending_otp_verification') {
           const withdrawalType = availableWithdrawalTypes.find(t => t.id === selectedType)!;
           navigate('/otp', {
             state: {
@@ -265,12 +281,26 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   };
 
   // Handle navigation to OTP page for pending withdrawal
-  const handleContinuePendingWithdrawal = () => {
+  const handleContinuePendingWithdrawal = async () => {
     if (!pendingWithdrawal) return;
 
     const txId = pendingWithdrawal.transactionId || pendingWithdrawal._id;
 
     if (pendingWithdrawal.status === 'pending_otp_verification') {
+      // With the authenticator app set up, the code comes from it (no e-mail).
+      let viaApp = false;
+      try {
+        viaApp = !!handleApiResponse(await sbcApiService.getAuthenticatorStatus())?.enabled;
+      } catch {
+        viaApp = false;
+      }
+      if (viaApp) {
+        setConfirmTx({ transactionId: txId, amount: pendingWithdrawal.amount, currency: pendingWithdrawal.currency });
+        setConfirmCode('');
+        setError('');
+        setStep('confirm');
+        return;
+      }
       navigate('/otp', {
         state: {
           withdrawalId: txId,
@@ -280,6 +310,29 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         }
       });
       onClose();
+    }
+  };
+
+  // Confirm the withdrawal with the authenticator app's code (or a backup code)
+  const handleConfirmWithdrawal = async () => {
+    if (!confirmTx || loading) return;
+    if (!codeLooksComplete(confirmCode)) {
+      setError('Entrez le code à 6 chiffres de l’application d’authentification.');
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      handleApiResponse(await sbcApiService.verifyWithdrawal({ transactionId: confirmTx.transactionId, verificationCode: confirmCode.trim() }));
+      navigate('/transaction-confirmation', {
+        state: { transactionId: confirmTx.transactionId, withdrawalAmount: confirmTx.amount, withdrawalCurrency: confirmTx.currency }
+      });
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Le retrait n’a pas pu être confirmé.');
+      setConfirmCode('');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -344,6 +397,8 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
             {step === 'amount' && `${selectedTypeInfo?.name} Withdrawal`}
             {step === 'success' && 'Success!'}
             {step === 'pending' && 'Retrait en cours'}
+            {step === 'confirm' && 'Confirmer le retrait'}
+            {step === 'authenticator' && 'Sécurité du compte'}
           </h3>
           <button
             onClick={handleCancel}
@@ -526,7 +581,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                 {/* Continue to OTP - only if pending OTP verification */}
                 {pendingWithdrawal.status === 'pending_otp_verification' && (
                   <button
-                    onClick={handleContinuePendingWithdrawal}
+                    onClick={() => void handleContinuePendingWithdrawal()}
                     disabled={loading}
                     className="w-full bg-green-600 text-white py-3 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center font-semibold"
                   >
@@ -574,6 +629,24 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           )}
 
           {/* Step 5: Success */}
+          {step === 'authenticator' && (
+            <AuthenticatorRequiredNotice action="retirer de l’argent" onReady={() => setStep('amount')} />
+          )}
+
+          {step === 'confirm' && confirmTx && (
+            <form onSubmit={e => { e.preventDefault(); void handleConfirmWithdrawal(); }} className="space-y-4">
+              <p className="text-sm text-gray-700">
+                Retrait de <strong>{confirmTx.amount} {confirmTx.currency}</strong>. Pour le confirmer, tapez le code affiché par
+                votre application d’authentification.
+              </p>
+              <AuthenticatorCodeField id="withdrawal-code" value={confirmCode} onChange={setConfirmCode} />
+              {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+              <button type="submit" disabled={loading} className="w-full bg-primary text-white rounded-xl py-3 font-medium disabled:opacity-60">
+                {loading ? 'Vérification…' : 'Confirmer le retrait'}
+              </button>
+            </form>
+          )}
+
           {step === 'success' && (
             <div className="text-center space-y-4">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
