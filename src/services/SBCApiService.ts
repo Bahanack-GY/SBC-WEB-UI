@@ -811,7 +811,29 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Update momo details
+   * Mobile Money number that receives withdrawals, step 1 (Security plan
+   * Phase 0): the password, then a code is emailed to the account address.
+   * Resend: same number and operator, no password, while the code is live.
+   */
+  async requestMomoChange(momoNumber: string, momoOperator: string, password?: string): Promise<ApiResponse> {
+    return await this.post('/users/me/momo/request-change', {
+      body: password ? { momoNumber, momoOperator, password } : { momoNumber, momoOperator }
+    });
+  }
+
+  /**
+   * Step 2: the emailed code. Replacing a number blocks withdrawals for 48 h
+   * (`data.withdrawalsLockedUntil`); a first number does not.
+   */
+  async confirmMomoChange(momoNumber: string, momoOperator: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/momo/confirm-change', {
+      body: { momoNumber, momoOperator, code }
+    });
+  }
+
+  /**
+   * @deprecated The profile save no longer changes the MoMo details (409
+   * MOMO_CHANGE_NEEDS_CODE): use requestMomoChange / confirmMomoChange.
    */
   async updateMomoDetails(momoNumber: string, momoOperator: string): Promise<ApiResponse> {
     return await this.put('/users/me', {
@@ -1273,7 +1295,30 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Update user's crypto wallet information
+   * Setting or changing the crypto wallet, step 1: the account password, then a
+   * code to the account email. Without a password, resends the code for the
+   * same wallet.
+   */
+  async requestCryptoWalletChange(cryptoWalletCurrency: string, cryptoWalletAddress: string, password?: string): Promise<ApiResponse> {
+    return await this.post('/users/crypto/wallet/request-change', {
+      body: password ? { cryptoWalletCurrency, cryptoWalletAddress, password } : { cryptoWalletCurrency, cryptoWalletAddress }
+    });
+  }
+
+  /**
+   * Step 2: the emailed code. Replacing a wallet blocks withdrawals 48 h
+   * (`withdrawalsLockedUntil` in the answer).
+   */
+  async confirmCryptoWalletChange(cryptoWalletCurrency: string, cryptoWalletAddress: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/crypto/wallet/confirm-change', {
+      body: { cryptoWalletCurrency, cryptoWalletAddress, code }
+    });
+  }
+
+  /**
+   * @deprecated The server now only accepts the wallet already saved here
+   * (409 CRYPTO_CHANGE_NEEDS_CODE otherwise): use requestCryptoWalletChange /
+   * confirmCryptoWalletChange (CryptoWalletChangeSheet).
    */
   async updateCryptoWallet(walletData: {
     cryptoWalletAddress: string;
