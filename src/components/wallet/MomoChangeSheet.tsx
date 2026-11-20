@@ -25,7 +25,7 @@ const nationalPart = (stored: string | undefined, dial: string): string => {
 
 /**
  * Changing (or setting) the Mobile Money number that receives withdrawals
- * (Security plan Phase 0): the account password, then the code emailed to the
+ * (Security plan Phase 0): the account password, then the code sent (e-mail or WhatsApp, the member's code channel) to the
  * account address. Replacing a number blocks withdrawals for 48 h; the
  * window says so before and after.
  */
@@ -73,7 +73,7 @@ export default function MomoChangeSheet({ open, onClose, onDone, countryCode, cu
     setBusy(true);
     try {
       const data = handleApiResponse(await sbcApiService.requestMomoChange(fullNumber(), operator, resend ? undefined : password));
-      setSentTo(data?.sentTo || 'votre adresse e-mail');
+      setSentTo(data?.sentTo || 'votre e-mail ou votre WhatsApp');
       setStep('code');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Le code n’a pas pu être envoyé. Réessayez.');
@@ -85,7 +85,7 @@ export default function MomoChangeSheet({ open, onClose, onDone, countryCode, cu
   const confirm = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    if (code.trim().length < 4) return setError('Entrez le code reçu par e-mail.');
+    if (code.trim().length < 4) return setError('Entrez le code de confirmation reçu.');
     setBusy(true);
     try {
       const data = handleApiResponse(await sbcApiService.confirmMomoChange(fullNumber(), operator, code.trim()));
@@ -142,7 +142,7 @@ export default function MomoChangeSheet({ open, onClose, onDone, countryCode, cu
             {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
             <button type="submit" disabled={busy} className="w-full bg-primary text-white rounded-xl py-3 font-medium flex items-center justify-center gap-2 disabled:opacity-60">
               {busy ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={LockPasswordIcon} size={18} />}
-              Recevoir le code par e-mail
+              Recevoir le code
             </button>
           </form>
         )}
@@ -153,7 +153,7 @@ export default function MomoChangeSheet({ open, onClose, onDone, countryCode, cu
               Un code a été envoyé à <strong>{sentTo}</strong>. Entrez-le pour confirmer le numéro {dial} {number.replace(/\D/g, '')} ({getMomoOperatorDisplayName(operator)}).
             </p>
             <input
-              aria-label="Code reçu par e-mail"
+              aria-label="Code de confirmation"
               autoComplete="one-time-code"
               maxLength={8}
               value={code}

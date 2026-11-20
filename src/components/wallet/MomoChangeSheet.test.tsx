@@ -45,7 +45,7 @@ describe('Changer de numéro Mobile Money', () => {
     await userEvent.click(screen.getByRole('button', { name: /Renvoyer le code/ }));
     expect(api.requestMomoChange).toHaveBeenLastCalledWith('237699998877', 'ORANGE_CMR', undefined);
 
-    await userEvent.type(screen.getByLabelText('Code reçu par e-mail'), 'AB3CD4');
+    await userEvent.type(screen.getByLabelText('Code de confirmation'), 'AB3CD4');
     await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
     expect(api.confirmMomoChange).toHaveBeenCalledWith('237699998877', 'ORANGE_CMR', 'AB3CD4');
     expect(await screen.findByText(/Les retraits sont bloqués jusqu’au/)).toBeInTheDocument();
@@ -65,16 +65,28 @@ describe('Changer de numéro Mobile Money', () => {
     await userEvent.selectOptions(screen.getByLabelText('Opérateur'), 'ORANGE_CMR');
     await userEvent.type(screen.getByLabelText('Mot de passe du compte'), 'Secret123!');
     await userEvent.click(screen.getByRole('button', { name: /Recevoir le code/ }));
-    await userEvent.type(await screen.findByLabelText('Code reçu par e-mail'), 'ZZZZZZ');
+    await userEvent.type(await screen.findByLabelText('Code de confirmation'), 'ZZZZZZ');
     await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Code invalide ou expiré');
 
-    await userEvent.clear(screen.getByLabelText('Code reçu par e-mail'));
-    await userEvent.type(screen.getByLabelText('Code reçu par e-mail'), 'AB3CD4');
+    await userEvent.clear(screen.getByLabelText('Code de confirmation'));
+    await userEvent.type(screen.getByLabelText('Code de confirmation'), 'AB3CD4');
     await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
     expect(await screen.findByText(/numéro Mobile Money est enregistré/)).toBeInTheDocument();
     expect(screen.queryByText(/bloqués jusqu’au/)).not.toBeInTheDocument();
     expect(onDone).toHaveBeenCalledWith(expect.objectContaining({ lockedUntil: null }));
+  });
+
+  it('the code may come by WhatsApp: the sheet never says e-mail, it says where the code went', async () => {
+    api.requestMomoChange.mockResolvedValue(ok({ sentTo: 'WhatsApp +237 •••• 122 et o***@gmail.com' }));
+    open();
+    expect(screen.queryByText(/e-mail/i)).not.toBeInTheDocument();
+    await userEvent.type(screen.getByLabelText('Numéro Mobile Money'), '699990000');
+    await userEvent.selectOptions(screen.getByLabelText('Opérateur'), 'ORANGE_CMR');
+    await userEvent.type(screen.getByLabelText('Mot de passe du compte'), 'Secret123!');
+    await userEvent.click(screen.getByRole('button', { name: 'Recevoir le code' }));
+    expect(await screen.findByText('WhatsApp +237 •••• 122 et o***@gmail.com')).toBeInTheDocument();
+    expect(screen.getByLabelText('Code de confirmation')).toBeInTheDocument();
   });
 
   it('only offers the operators of the account’s country', async () => {

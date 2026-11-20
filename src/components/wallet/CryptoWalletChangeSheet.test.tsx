@@ -48,7 +48,7 @@ describe('Changer de portefeuille crypto', () => {
     await userEvent.click(screen.getByRole('button', { name: /Renvoyer le code/ }));
     expect(api.requestCryptoWalletChange).toHaveBeenLastCalledWith('USDTBSC', NEW, undefined);
 
-    await userEvent.type(screen.getByLabelText('Code reçu par e-mail'), 'AB3CD4');
+    await userEvent.type(screen.getByLabelText('Code de confirmation'), 'AB3CD4');
     await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
     expect(api.confirmCryptoWalletChange).toHaveBeenCalledWith('USDTBSC', NEW, 'AB3CD4');
     expect(await screen.findByText(/Les retraits sont bloqués jusqu’au/)).toBeInTheDocument();
@@ -77,12 +77,12 @@ describe('Changer de portefeuille crypto', () => {
     await userEvent.type(screen.getByLabelText('Adresse du portefeuille'), TRX);
     await userEvent.type(screen.getByLabelText('Mot de passe du compte'), 'Secret123!');
     await userEvent.click(screen.getByRole('button', { name: /Recevoir le code/ }));
-    await userEvent.type(await screen.findByLabelText('Code reçu par e-mail'), 'ZZZZZZ');
+    await userEvent.type(await screen.findByLabelText('Code de confirmation'), 'ZZZZZZ');
     await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Code invalide ou expiré');
 
-    await userEvent.clear(screen.getByLabelText('Code reçu par e-mail'));
-    await userEvent.type(screen.getByLabelText('Code reçu par e-mail'), 'AB3CD4');
+    await userEvent.clear(screen.getByLabelText('Code de confirmation'));
+    await userEvent.type(screen.getByLabelText('Code de confirmation'), 'AB3CD4');
     await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
     expect(await screen.findByText(/portefeuille crypto est enregistré/)).toBeInTheDocument();
     expect(screen.queryByText(/bloqués jusqu’au/)).not.toBeInTheDocument();

@@ -483,7 +483,7 @@ function ModifierLeProfil() {
                     </button>
                   </div>
                   <div className="text-xs text-gray-500">
-                    🔒 Le changement se confirme avec votre mot de passe et un code envoyé par e-mail ; les retraits sont ensuite bloqués 48 h.
+                    🔒 Le changement se confirme avec votre mot de passe et un code de confirmation ; les retraits sont ensuite bloqués 48 h.
                   </div>
                 </div>
               ) : (
@@ -537,7 +537,7 @@ function ModifierLeProfil() {
                   </button>
                 </div>
                 <div className="text-xs text-gray-500">
-                  🔒 Le changement se confirme avec votre mot de passe et un code envoyé par e-mail ; les retraits sont ensuite bloqués 48 h.
+                  🔒 Le changement se confirme avec votre mot de passe et un code de confirmation ; les retraits sont ensuite bloqués 48 h.
                 </div>
               </div>
             </div>
