@@ -2,8 +2,10 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, Loading03Icon, LockPasswordIcon, Tick02Icon } from '@hugeicons/core-free-icons';
 import { useEffect, useState, type FormEvent } from 'react';
 import { sbcApiService } from '../../services/SBCApiService';
-import { handleApiResponse } from '../../utils/apiHelpers';
-import { cryptoCurrencyName, normalizeCryptoAddress, shortAddress, supportedCryptoCurrencies } from '../../utils/cryptoWallet';
+import { cryptoCurrencyName, normalizeCryptoAddress, supportedCryptoCurrencies } from '../../utils/cryptoWallet';
+import AuthenticatorCodeField, { codeLooksComplete } from '../security/AuthenticatorCodeField';
+import AuthenticatorRequiredNotice from '../security/AuthenticatorRequiredNotice';
+import { AuthenticatorRequired, unwrap, useAuthenticatorStatus } from '../security/authenticator';
 
 interface Props {
   open: boolean;
@@ -16,26 +18,27 @@ interface Props {
 
 /**
  * Setting or changing the crypto wallet that receives crypto withdrawals
- * (Security plan Phase 0, same rule as the Mobile Money number): the account
- * password, then the code sent (e-mail or WhatsApp, the member's code channel) to the account address. Replacing a wallet
- * blocks withdrawals for 48 h; the window says so before and after.
+ * (Security plan Phase 0 + 3, same rule as the Mobile Money number): the
+ * account password and the code from the authenticator app (or a backup
+ * code). A member without the app is asked to set it up first. Replacing a
+ * wallet blocks withdrawals for 48 h; the window says so before and after.
  */
 export default function CryptoWalletChangeSheet({ open, onClose, onDone, currentAddress, currentCurrency }: Props) {
   const hasWallet = !!currentAddress;
+  const { status, error: statusError, refresh } = useAuthenticatorStatus(open);
 
-  const [step, setStep] = useState<'details' | 'code' | 'done'>('details');
+  const [done, setDone] = useState(false);
   const [currency, setCurrency] = useState('');
   const [address, setAddress] = useState('');
   const [password, setPassword] = useState('');
   const [code, setCode] = useState('');
-  const [sentTo, setSentTo] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
-    setStep('details');
+    setDone(false);
     setCurrency(currentCurrency && supportedCryptoCurrencies.some(c => c.code === currentCurrency) ? currentCurrency : '');
     setAddress('');
     setPassword('');
@@ -46,41 +49,28 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
 
   if (!open) return null;
 
-  const normalized = () => normalizeCryptoAddress(address, currency);
-
-  const request = async (e?: FormEvent, resend = false) => {
-    e?.preventDefault();
-    setError('');
-    if (!currency) return setError('Choisissez la cryptomonnaie.');
-    const wallet = normalized();
-    if (!wallet) return setError(`Cette adresse n’est pas une adresse ${cryptoCurrencyName(currency)} valide. Vérifiez-la : une erreur ferait perdre l’argent.`);
-    if (!resend && !password) return setError('Entrez le mot de passe de votre compte.');
-    setBusy(true);
-    try {
-      const data = handleApiResponse(await sbcApiService.requestCryptoWalletChange(currency, wallet, resend ? undefined : password));
-      setSentTo(data?.sentTo || 'votre e-mail ou votre WhatsApp');
-      setStep('code');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Le code n’a pas pu être envoyé. Réessayez.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const confirm = async (e: FormEvent) => {
+  const submit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
-    if (code.trim().length < 4) return setError('Entrez le code de confirmation reçu.');
-    const wallet = normalized() || address.trim();
+    if (!currency) return setError('Choisissez la cryptomonnaie.');
+    const wallet = normalizeCryptoAddress(address, currency);
+    if (!wallet) return setError(`Cette adresse n’est pas une adresse ${cryptoCurrencyName(currency)} valide. Vérifiez-la : une erreur ferait perdre l’argent.`);
+    if (!password) return setError('Entrez le mot de passe de votre compte.');
+    if (!codeLooksComplete(code)) return setError('Entrez le code à 6 chiffres de l’application d’authentification.');
     setBusy(true);
     try {
-      const data = handleApiResponse(await sbcApiService.confirmCryptoWalletChange(currency, wallet, code.trim()));
+      const data = unwrap(await sbcApiService.changeCryptoWallet(currency, wallet, password, code.trim()));
       const until = data?.withdrawalsLockedUntil || null;
       setLockedUntil(until);
-      setStep('done');
+      setDone(true);
       onDone({ cryptoWalletAddress: data?.cryptoWalletAddress || wallet, cryptoWalletCurrency: data?.cryptoWalletCurrency || currency, lockedUntil: until });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Le changement n’a pas pu être enregistré. Réessayez.');
+      if (err instanceof AuthenticatorRequired) {
+        void refresh();
+      } else {
+        setError(err instanceof Error ? err.message : 'Le changement n’a pas pu être enregistré. Réessayez.');
+        setCode('');
+      }
     } finally {
       setBusy(false);
     }
@@ -100,8 +90,18 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
           </button>
         </div>
 
-        {step === 'details' && (
-          <form onSubmit={e => void request(e)} className="space-y-4">
+        {!done && !status && (
+          statusError
+            ? <p className="text-sm text-red-600" role="alert">{statusError}</p>
+            : <div className="flex justify-center py-8"><HugeiconsIcon icon={Loading03Icon} className="animate-spin text-primary" size={24} /></div>
+        )}
+
+        {!done && status && !status.enabled && (
+          <AuthenticatorRequiredNotice action="changer votre portefeuille crypto" onReady={() => void refresh()} />
+        )}
+
+        {!done && status?.enabled && (
+          <form onSubmit={e => void submit(e)} className="space-y-4">
             {hasWallet && (
               <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-xl p-3">
                 Pour protéger votre argent, les retraits seront bloqués pendant 48 h après le changement, et un e-mail vous préviendra.
@@ -131,43 +131,16 @@ export default function CryptoWalletChangeSheet({ open, onClose, onDone, current
               <label className="block text-gray-700 text-sm mb-1" htmlFor="crypto-password">Mot de passe du compte</label>
               <input id="crypto-password" type="password" autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} className={input} data-openreplay-hidden="" />
             </div>
+            <AuthenticatorCodeField id="crypto-code" value={code} onChange={setCode} />
             {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
             <button type="submit" disabled={busy} className="w-full bg-primary text-white rounded-xl py-3 font-medium flex items-center justify-center gap-2 disabled:opacity-60">
               {busy ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin" size={18} /> : <HugeiconsIcon icon={LockPasswordIcon} size={18} />}
-              Recevoir le code
-            </button>
-          </form>
-        )}
-
-        {step === 'code' && (
-          <form onSubmit={e => void confirm(e)} className="space-y-4">
-            <p className="text-sm text-gray-700">
-              Un code a été envoyé à <strong>{sentTo}</strong>. Entrez-le pour confirmer le portefeuille {cryptoCurrencyName(currency)}{' '}
-              <span className="font-mono">{shortAddress(normalized() || address.trim())}</span>.
-            </p>
-            <input
-              aria-label="Code de confirmation"
-              autoComplete="one-time-code"
-              maxLength={8}
-              value={code}
-              onChange={e => setCode(e.target.value)}
-              className={`${input} text-center font-mono tracking-[0.3em] text-lg`}
-              placeholder="Code"
-              data-openreplay-hidden=""
-            />
-            {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
-            <button type="submit" disabled={busy} className="w-full bg-primary text-white rounded-xl py-3 font-medium flex items-center justify-center gap-2 disabled:opacity-60">
-              {busy && <HugeiconsIcon icon={Loading03Icon} className="animate-spin" size={18} />}
               Confirmer
             </button>
-            <div className="flex justify-between text-sm">
-              <button type="button" className="text-gray-600 underline" onClick={() => { setStep('details'); setError(''); }}>Modifier l’adresse</button>
-              <button type="button" className="text-primary underline disabled:opacity-60" disabled={busy} onClick={() => void request(undefined, true)}>Renvoyer le code</button>
-            </div>
           </form>
         )}
 
-        {step === 'done' && (
+        {done && (
           <div className="space-y-4 text-center">
             <div className="mx-auto w-12 h-12 rounded-full bg-green-100 text-green-700 flex items-center justify-center">
               <HugeiconsIcon icon={Tick02Icon} size={24} />

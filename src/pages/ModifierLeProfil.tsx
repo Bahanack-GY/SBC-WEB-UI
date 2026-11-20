@@ -10,6 +10,7 @@ import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import MomoChangeSheet from '../components/wallet/MomoChangeSheet';
 import CryptoWalletChangeSheet from '../components/wallet/CryptoWalletChangeSheet';
+import AuthenticatorCard from '../components/security/AuthenticatorCard';
 import { cryptoCurrencyName, shortAddress } from '../utils/cryptoWallet';
 import {
   allCountries,
@@ -109,7 +110,7 @@ function ModifierLeProfil() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showModal, setShowModal] = useState(false);
   const [momoSheetOpen, setMomoSheetOpen] = useState(false);
-  // The crypto wallet too: password + emailed code (CryptoWalletChangeSheet).
+  // The crypto wallet too: password + authenticator code (CryptoWalletChangeSheet).
   const [cryptoSheetOpen, setCryptoSheetOpen] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
@@ -451,6 +452,7 @@ function ModifierLeProfil() {
                 {professionOptions.map((p) => <option key={p} value={p}>{p}</option>)}
               </select>
             </div>
+            <AuthenticatorCard />
             {/* Mobile Money Section with Country Restrictions */}
             <div className="bg-yellow-50 border border-border rounded-xl p-4">
               <h3 className="text-lg font-semibold text-yellow-800 mb-3 flex items-center gap-2">
@@ -483,7 +485,7 @@ function ModifierLeProfil() {
                     </button>
                   </div>
                   <div className="text-xs text-gray-500">
-                    🔒 Le changement se confirme avec votre mot de passe et un code de confirmation ; les retraits sont ensuite bloqués 48 h.
+                    🔒 Le changement se confirme avec votre mot de passe et le code de l’application d’authentification ; les retraits sont ensuite bloqués 48 h.
                   </div>
                 </div>
               ) : (
@@ -537,7 +539,7 @@ function ModifierLeProfil() {
                   </button>
                 </div>
                 <div className="text-xs text-gray-500">
-                  🔒 Le changement se confirme avec votre mot de passe et un code de confirmation ; les retraits sont ensuite bloqués 48 h.
+                  🔒 Le changement se confirme avec votre mot de passe et le code de l’application d’authentification ; les retraits sont ensuite bloqués 48 h.
                 </div>
               </div>
             </div>
