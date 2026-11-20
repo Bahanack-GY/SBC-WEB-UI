@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { countrySupportsMomo, getCountryByCode } from '../utils/countriesData';
 import { isOngoingWithdrawal, canCancelWithdrawal, getStatusDescription } from '../utils/transactionHelpers';
 import MomoChangeSheet from './wallet/MomoChangeSheet';
+import CryptoWalletChangeSheet from './wallet/CryptoWalletChangeSheet';
 
 interface PendingWithdrawal {
   _id: string;
@@ -83,7 +84,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   const { user, refreshUser } = useAuth();
   const [selectedType, setSelectedType] = useState<'mobile_money' | 'crypto' | null>(null);
   const [amount, setAmount] = useState('');
-  const [step, setStep] = useState<'select' | 'configure' | 'amount' | 'success' | 'pending'>('select');
+  const [step, setStep] = useState<'select' | 'amount' | 'success' | 'pending'>('select');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -92,9 +93,8 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   // The MoMo number is set or changed with the password + emailed code (MomoChangeSheet).
   const [momoSheetOpen, setMomoSheetOpen] = useState(false);
 
-  // Crypto states
-  const [cryptoAddress, setCryptoAddress] = useState('');
-  const [cryptoCurrency, setCryptoCurrency] = useState('BTC');
+  // The crypto wallet too (CryptoWalletChangeSheet).
+  const [cryptoSheetOpen, setCryptoSheetOpen] = useState(false);
 
   // OTP states
   const [transactionId, setTransactionId] = useState('');
@@ -157,12 +157,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
       setIsInitiating(false);
       setPendingWithdrawal(null);
 
-      // Load saved user data
-      if (user) {
-        setCryptoAddress(user.cryptoWalletAddress || '');
-        setCryptoCurrency(user.cryptoWalletCurrency || 'BTC');
-      }
-
       // Check for pending withdrawals first
       checkPendingWithdrawals().then(hasPending => {
         if (!hasPending) {
@@ -186,37 +180,9 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     if (type === 'mobile_money' && (!user?.momoNumber || !user?.momoOperator)) {
       setMomoSheetOpen(true);
     } else if (type === 'crypto' && (!user?.cryptoWalletAddress || !user?.cryptoWalletCurrency)) {
-      setStep('configure');
+      setCryptoSheetOpen(true);
     } else {
       setStep('amount');
-    }
-  };
-
-  const handleConfigurationSave = async () => {
-    if (!selectedType) return;
-
-    setLoading(true);
-    setError('');
-
-    try {
-      if (selectedType === 'crypto') {
-        if (!cryptoAddress || !cryptoCurrency) {
-          setError('Please fill in all crypto wallet details');
-          return;
-        }
-        await sbcApiService.updateCryptoWallet({
-          cryptoWalletAddress: cryptoAddress,
-          cryptoWalletCurrency: cryptoCurrency
-        });
-      }
-
-      await refreshUser();
-      setStep('amount');
-      setSuccess('Configuration saved successfully!');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save configuration');
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -375,7 +341,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         <div className="flex items-center justify-between p-6 border-b border-border">
           <h3 className="text-xl font-bold text-gray-900">
             {step === 'select' && 'Select Withdrawal Type'}
-            {step === 'configure' && `Configure ${selectedTypeInfo?.name}`}
             {step === 'amount' && `${selectedTypeInfo?.name} Withdrawal`}
             {step === 'success' && 'Success!'}
             {step === 'pending' && 'Retrait en cours'}
@@ -451,61 +416,6 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Step 2: Configuration */}
-          {step === 'configure' && selectedTypeInfo && (
-            <div className="space-y-4">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="text-blue-600">{selectedTypeInfo.icon}</div>
-                <h4 className="font-semibold text-gray-900">{selectedTypeInfo.name} Setup</h4>
-              </div>
-
-              {selectedType === 'crypto' && (
-                <>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Crypto Wallet Address
-                    </label>
-                    <input
-                      type="text"
-                      value={cryptoAddress}
-                      onChange={(e) => setCryptoAddress(e.target.value)}
-                      placeholder="Enter your wallet address"
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Cryptocurrency
-                    </label>
-                    <select
-                      value={cryptoCurrency}
-                      onChange={(e) => setCryptoCurrency(e.target.value)}
-                      className="w-full px-3 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="BTC">Bitcoin</option>
-                      <option value="LTC">Litecoin</option>
-                      <option value="XRP">Ripple</option>
-                      <option value="TRX">TRON</option>
-                      <option value="USDTSOL">USDT (Solana)</option>
-                      <option value="USDTBSC">USDT (BSC-BEP20)</option>
-                      <option value="BNBBSC">BNB (BSC-BEP20)</option>
-                    </select>
-                  </div>
-                </>
-              )}
-
-              <button
-                onClick={handleConfigurationSave}
-                disabled={loading}
-                className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-              >
-                {loading ? <HugeiconsIcon icon={Loading03Icon} className="animate-spin mr-2" /> : null}
-                Save Configuration
-              </button>
             </div>
           )}
 
@@ -722,6 +632,21 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         countryCode={user?.country || ''}
         currentNumber={user?.momoNumber}
         currentOperator={user?.momoOperator}
+      />
+      <CryptoWalletChangeSheet
+        open={cryptoSheetOpen}
+        onClose={() => setCryptoSheetOpen(false)}
+        onDone={({ lockedUntil }) => {
+          void refreshUser();
+          setSelectedType('crypto');
+          if (lockedUntil) {
+            setError('Votre portefeuille est enregistré. Les retraits sont bloqués 48 h après un changement de portefeuille.');
+          } else {
+            setStep('amount');
+          }
+        }}
+        currentAddress={user?.cryptoWalletAddress}
+        currentCurrency={user?.cryptoWalletCurrency}
       />
     </div>
   );
