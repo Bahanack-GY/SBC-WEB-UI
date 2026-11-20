@@ -1,6 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Cancel01Icon, Loading03Icon, LockPasswordIcon, Tick02Icon } from '@hugeicons/core-free-icons';
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { sbcApiService } from '../../services/SBCApiService';
 import { getCountryByCode, getMomoOperatorDisplayName, momoCorrespondents } from '../../utils/countriesData';
 import AuthenticatorCodeField, { codeLooksComplete } from '../security/AuthenticatorCodeField';
@@ -48,8 +48,13 @@ export default function MomoChangeSheet({ open, onClose, onDone, countryCode, cu
   const [error, setError] = useState('');
   const [lockedUntil, setLockedUntil] = useState<string | null>(null);
 
+  // Reset only when the sheet opens: after a save the parent reloads the member,
+  // which changes the current details, and must not wipe the success screen.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (!open) return;
+    const opening = open && !wasOpen.current;
+    wasOpen.current = open;
+    if (!opening) return;
     setDone(false);
     setNumber(nationalPart(currentNumber, dial));
     setOperator(currentOperator && operators.includes(currentOperator) ? currentOperator : '');

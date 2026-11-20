@@ -1,6 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState } from 'react';
 import { ok, fail, renderPage } from '../../test/api';
 
 const api = vi.hoisted(() => ({
@@ -81,6 +82,28 @@ describe('Changer de numéro Mobile Money', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Configurer maintenant' }));
     expect(await screen.findByLabelText('Mot de passe du compte')).toBeInTheDocument();
     expect(screen.getByText(/Google Authenticator/, { selector: 'strong' })).toBeInTheDocument();
+  });
+
+  it('keeps the success screen when the parent reloads the member after the save', async () => {
+    api.getAuthenticatorStatus.mockResolvedValue(enabled);
+    api.changeMomo.mockResolvedValue(ok({ momoNumber: '237699998877', momoOperator: 'ORANGE_CMR', withdrawalsLockedUntil: '2026-11-21T22:00:00.000Z' }));
+    function Profile() {
+      const [current, setCurrent] = useState({ n: '237677001122', o: 'MTN_MOMO_CMR' });
+      return <MomoChangeSheet open onClose={() => undefined} countryCode="CM" currentNumber={current.n} currentOperator={current.o}
+        onDone={r => setCurrent({ n: r.momoNumber, o: r.momoOperator })} />;
+    }
+    renderPage(<Profile />);
+    const number = await screen.findByLabelText('Numéro Mobile Money');
+    await userEvent.clear(number);
+    await userEvent.type(number, '699998877');
+    await userEvent.selectOptions(screen.getByLabelText('Opérateur'), 'ORANGE_CMR');
+    await userEvent.type(screen.getByLabelText('Mot de passe du compte'), 'Secret123!');
+    await userEvent.type(screen.getByLabelText('Code de l’application d’authentification'), '123456');
+    await userEvent.click(screen.getByRole('button', { name: 'Confirmer' }));
+    expect(await screen.findByText(/numéro Mobile Money est enregistré/)).toBeInTheDocument();
+    await new Promise(r => setTimeout(r, 50));
+    expect(screen.getByText(/Les retraits sont bloqués jusqu’au/)).toBeInTheDocument();
+    expect(screen.queryByLabelText('Numéro Mobile Money')).not.toBeInTheDocument();
   });
 
   it('only offers the operators of the account’s country', async () => {
