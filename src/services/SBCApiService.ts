@@ -1295,7 +1295,30 @@ export class SBCApiService extends ApiService {
   }
 
   /**
-   * Update user's crypto wallet information
+   * Setting or changing the crypto wallet, step 1: the account password, then a
+   * code to the account email. Without a password, resends the code for the
+   * same wallet.
+   */
+  async requestCryptoWalletChange(cryptoWalletCurrency: string, cryptoWalletAddress: string, password?: string): Promise<ApiResponse> {
+    return await this.post('/users/crypto/wallet/request-change', {
+      body: password ? { cryptoWalletCurrency, cryptoWalletAddress, password } : { cryptoWalletCurrency, cryptoWalletAddress }
+    });
+  }
+
+  /**
+   * Step 2: the emailed code. Replacing a wallet blocks withdrawals 48 h
+   * (`withdrawalsLockedUntil` in the answer).
+   */
+  async confirmCryptoWalletChange(cryptoWalletCurrency: string, cryptoWalletAddress: string, code: string): Promise<ApiResponse> {
+    return await this.post('/users/crypto/wallet/confirm-change', {
+      body: { cryptoWalletCurrency, cryptoWalletAddress, code }
+    });
+  }
+
+  /**
+   * @deprecated The server now only accepts the wallet already saved here
+   * (409 CRYPTO_CHANGE_NEEDS_CODE otherwise): use requestCryptoWalletChange /
+   * confirmCryptoWalletChange (CryptoWalletChangeSheet).
    */
   async updateCryptoWallet(walletData: {
     cryptoWalletAddress: string;

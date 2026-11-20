@@ -9,6 +9,8 @@ import { handleApiResponse, removeAccents } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import MomoChangeSheet from '../components/wallet/MomoChangeSheet';
+import CryptoWalletChangeSheet from '../components/wallet/CryptoWalletChangeSheet';
+import { cryptoCurrencyName, shortAddress } from '../utils/cryptoWallet';
 import {
   allCountries,
   worldCountryCodes,
@@ -20,16 +22,6 @@ import {
 } from '../utils/countriesData';
 
 // Supported crypto currencies for withdrawal
-export const supportedCryptoCurrencies = [
-  { code: 'BTC', name: 'Bitcoin' },
-  { code: 'LTC', name: 'Litecoin' },
-  { code: 'XRP', name: 'Ripple' },
-  { code: 'TRX', name: 'TRON' },
-  { code: 'USDTSOL', name: 'USDT (Solana)' },
-  { code: 'USDTBSC', name: 'USDT (BSC-BEP20)' },
-  { code: 'BNBBSC', name: 'BNB (BSC-BEP20)' },
-];
-
 export const professionOptions = [
   'Étudiant(e)', 'Sans emploi',
   'Médecin', 'Infirmier/Infirmière', 'Pharmacien', 'Chirurgien', 'Psychologue', 'Dentiste', 'Kinésithérapeute',
@@ -105,8 +97,6 @@ function ModifierLeProfil() {
     momoNumber: '',
     momoOperator: '',
     whatsappGroupLink: '',
-    cryptoWalletAddress: '',
-    cryptoWalletCurrency: '',
     referralCode: '',
     notificationPreference: 'email' as 'email' | 'whatsapp',
   });
@@ -119,6 +109,8 @@ function ModifierLeProfil() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showModal, setShowModal] = useState(false);
   const [momoSheetOpen, setMomoSheetOpen] = useState(false);
+  // The crypto wallet too: password + emailed code (CryptoWalletChangeSheet).
+  const [cryptoSheetOpen, setCryptoSheetOpen] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
 
   useEffect(() => {
@@ -182,8 +174,6 @@ function ModifierLeProfil() {
           momoNumber: localMomoNumber, // Set the local part of the MoMo number (without country code)
           momoOperator: momoOperatorToSet,
           whatsappGroupLink: user.whatsappGroupLink || '',
-          cryptoWalletAddress: user.cryptoWalletAddress || '',
-          cryptoWalletCurrency: user.cryptoWalletCurrency || '',
           referralCode: user.referralCode || '',
           notificationPreference: user.notificationPreference || 'email',
         };
@@ -298,8 +288,9 @@ function ModifierLeProfil() {
       // Normalize phone number - check if country code is already present
       const fullPhoneNumber = normalizePhoneNumber(formData.phoneNumber, selectedPhoneCountryCode.code);
 
-      // The country (support changes it) and the MoMo details (password +
-      // emailed code, MomoChangeSheet) are not part of this save.
+      // The country (support changes it), the MoMo details and the crypto
+      // wallet (password + emailed code, MomoChangeSheet /
+      // CryptoWalletChangeSheet) are not part of this save.
       const updates: Record<string, unknown> = {
         name: formData.name,
         city: formData.city,
@@ -324,19 +315,7 @@ function ModifierLeProfil() {
 
       // Update regular profile
       await sbcApiService.updateUserProfile(updates);
-      
-      // Update crypto wallet separately if provided
-      if (formData.cryptoWalletAddress && formData.cryptoWalletCurrency) {
-        try {
-          await sbcApiService.updateCryptoWallet({
-            cryptoWalletAddress: formData.cryptoWalletAddress,
-            cryptoWalletCurrency: formData.cryptoWalletCurrency
-          });
-        } catch (cryptoError) {
-          // Don't fail the entire update if crypto wallet update fails
-        }
-      }
-      
+
       await refreshUser(); // Refresh user in context
       setFeedback({ type: 'success', message: 'Profil sauvegardé avec succès!' });
     } catch (error) {
@@ -543,51 +522,23 @@ function ModifierLeProfil() {
                 💡 Les retraits crypto sont disponibles pour <strong>tous les pays africains</strong>. Configurez votre portefeuille pour effectuer des retraits en USD.
               </div>
               
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-gray-700 mb-1">🪙 Cryptomonnaie préférée</label>
-                  <select 
-                    name="cryptoWalletCurrency" 
-                    value={formData.cryptoWalletCurrency} 
-                    onChange={handleChange} 
-                    className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none bg-white"
-                  >
-                    <option value="">Sélectionner une cryptomonnaie</option>
-                    {supportedCryptoCurrencies.map((crypto) => (
-                      <option key={crypto.code} value={crypto.code}>
-                        {crypto.name} ({crypto.code})
-                      </option>
-                    ))}
-                  </select>
-                  <div className="text-xs text-gray-500 mt-1">
-                    🔹 Choisissez la cryptomonnaie dans laquelle vous souhaitez recevoir vos retraits USD
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-gray-700 mb-1">📋 Adresse du portefeuille</label>
-                  <input 
-                    name="cryptoWalletAddress" 
-                    value={formData.cryptoWalletAddress} 
-                    onChange={handleChange} 
-                    className="w-full border border-border rounded-xl px-4 py-2 focus:outline-none font-mono text-sm" 
-                    placeholder={formData.cryptoWalletCurrency ? `Adresse ${formData.cryptoWalletCurrency}` : "Sélectionnez d'abord une cryptomonnaie"}
-                    disabled={!formData.cryptoWalletCurrency}
-                  />
-                  <div className="text-xs text-gray-500 mt-1">
-                    ⚠️ Vérifiez bien votre adresse. Les transactions crypto sont irréversibles.
-                  </div>
-                </div>
-                
-                {formData.cryptoWalletAddress && formData.cryptoWalletCurrency && (
-                  <div className="bg-green-50 border border-border rounded-lg p-3">
-                    <div className="text-sm text-green-800 font-medium mb-1">✅ Configuration actuelle:</div>
-                    <div className="text-xs text-green-700">
-                      <div><strong>Crypto:</strong> {supportedCryptoCurrencies.find(c => c.code === formData.cryptoWalletCurrency)?.name}</div>
-                      <div><strong>Adresse:</strong> {formData.cryptoWalletAddress.substring(0, 10)}...{formData.cryptoWalletAddress.substring(formData.cryptoWalletAddress.length - 6)}</div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-3 bg-white border border-border rounded-xl px-4 py-3">
+                  <div className="min-w-0">
+                    <div className="text-sm text-gray-500">Portefeuille qui reçoit vos retraits crypto</div>
+                    <div className="font-medium text-gray-900 truncate">
+                      {user.cryptoWalletAddress
+                        ? <>{cryptoCurrencyName(user.cryptoWalletCurrency)} · <span className="font-mono text-sm">{shortAddress(user.cryptoWalletAddress)}</span></>
+                        : 'Aucun portefeuille'}
                     </div>
                   </div>
-                )}
+                  <button type="button" onClick={() => setCryptoSheetOpen(true)} className="shrink-0 bg-primary text-white text-sm rounded-xl px-3 py-2">
+                    {user.cryptoWalletAddress ? 'Changer' : 'Ajouter'}
+                  </button>
+                </div>
+                <div className="text-xs text-gray-500">
+                  🔒 Le changement se confirme avec votre mot de passe et un code envoyé par e-mail ; les retraits sont ensuite bloqués 48 h.
+                </div>
               </div>
             </div>
             
@@ -693,6 +644,13 @@ function ModifierLeProfil() {
         countryCode={allCountries.find(c => c.value === formData.country)?.code || user.country || ''}
         currentNumber={user.momoNumber}
         currentOperator={user.momoOperator}
+      />
+      <CryptoWalletChangeSheet
+        open={cryptoSheetOpen}
+        onClose={() => setCryptoSheetOpen(false)}
+        onDone={() => { void refreshUser(); }}
+        currentAddress={user.cryptoWalletAddress}
+        currentCurrency={user.cryptoWalletCurrency}
       />
     </ProtectedRoute>
   );
