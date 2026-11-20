@@ -59,9 +59,12 @@ export default function HelpNewTicket() {
     const asked = params.get('categorie') ?? '';
     const preset = TICKET_PRESETS[asked];
     const identity = !!preset?.identity;
-    const [category, setCategory] = useState(preset?.category ?? (TICKET_CATEGORIES.some((c) => c.value === asked) ? asked : ''));
-    const [subject, setSubject] = useState(preset?.subject ?? '');
-    const [message, setMessage] = useState(() => (params.get('retrait') ? `Référence du retrait : ${params.get('retrait')}\n\n` : ''));
+    // ?paiement=<reference> comes from the payment page's « Contacter le support » button.
+    const paymentRef = (params.get('paiement') ?? '').replace(/[^A-Za-z0-9_-]/g, '').slice(0, 64);
+    const [category, setCategory] = useState(preset?.category ?? (TICKET_CATEGORIES.some((c) => c.value === asked) ? asked : (paymentRef ? 'activation_paiement' : '')));
+    const [subject, setSubject] = useState(preset?.subject ?? (paymentRef ? 'Mon paiement n’a pas abouti' : ''));
+    const [message, setMessage] = useState(() => (params.get('retrait') ? `Référence du retrait : ${params.get('retrait')}\n\n`
+        : paymentRef ? `Référence du paiement : ${paymentRef}\n\n` : ''));
     const [files, setFiles] = useState<File[]>([]);
     const [errors, setErrors] = useState<Errors>({});
     const [busy, setBusy] = useState<'upload' | 'create' | null>(null);

@@ -52,6 +52,13 @@ beforeEach(() => {
 });
 
 describe('New request', () => {
+    it('comes pre-filled from the payment page with the payment reference (cleaned)', async () => {
+        renderForm('/aide/demandes/nouvelle?paiement=VZEJd2Rm65Gz%3Cb%3E');
+        expect(screen.getByLabelText('Sujet')).toHaveValue('activation_paiement');
+        expect(screen.getByLabelText('Titre')).toHaveValue('Mon paiement n’a pas abouti');
+        expect((screen.getByLabelText('Votre message') as HTMLTextAreaElement).value).toBe('Référence du paiement : VZEJd2Rm65Gzb\n\n');
+    });
+
     it('asks for a screenshot, and « Signaler un problème » from the packs page comes pre-filled', async () => {
         renderForm('/aide/demandes/nouvelle?categorie=probleme_pack');
         expect(screen.getByText('Ajoutez-y une capture d’écran')).toBeInTheDocument();
