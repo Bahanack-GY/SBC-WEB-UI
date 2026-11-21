@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { sbcApiService } from '../services/SBCApiService';
 import { clearAdsRolesCache } from '../hooks/useAdsRoles';
 import { handleApiResponse, setToken, removeToken, getToken } from '../utils/apiHelpers';
+import { adoptSignInKey, clearSessionKey, prepareSignInKey } from '../utils/requestSigning';
 import { invalidateApiCache } from '../hooks/useApiCache';
 import { clearPersonalStorage, type Consents } from '../utils/privacy';
 import type { ReactNode } from 'react';
@@ -192,6 +193,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } finally {
       // Always clear local state
       removeToken();
+      void clearSessionKey();
       setUser(null);
 
       // Clear sessionStorage to reset modal display logic for next login
@@ -224,12 +226,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const verifyOtp = useCallback(async (userId: string, otp: string): Promise<void> => {
     try {
-      const response = await sbcApiService.verifyOtp(userId, otp);
+      const devicePublicKey = await prepareSignInKey();
+      const response = await sbcApiService.verifyOtp(userId, otp, devicePublicKey);
       const data = handleApiResponse(response);
 
       // Store authentication data as per documentation
       if (data.token) {
         setToken(data.token);
+        await adoptSignInKey(data.token);
         localStorage.setItem('userId', data.user?.id || userId);
         localStorage.setItem('userEmail', data.user?.email || '');
         localStorage.setItem('userName', data.user?.name || `${data.user?.firstName || ''} ${data.user?.lastName || ''}`.trim());
