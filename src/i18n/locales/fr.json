@@ -128,7 +128,10 @@
       "contactSupport": "Veuillez contacter le support",
       "recoveryMessage": "Vos informations de compte ont été perdues, mais vos transactions peuvent être récupérées !",
       "advertiserPrompt": "Vous voulez seulement faire de la publicité ?",
-      "advertiserLink": "Créer un compte annonceur"
+      "advertiserLink": "Créer un compte annonceur",
+      "problemPrompt": "Vous n’arrivez pas à vous connecter ?",
+      "problemLink": "Signaler un problème",
+      "resumeRequest": "Reprendre ma demande {{number}}"
     },
     "signup": {
       "title": "Créer un compte",

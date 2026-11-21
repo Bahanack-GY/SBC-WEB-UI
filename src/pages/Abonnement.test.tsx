@@ -93,6 +93,11 @@ beforeEach(() => {
 });
 
 describe('Abonnement', () => {
+  it('offers « Signaler un problème », which opens a request about the packs page', async () => {
+    renderPage(<Abonnement />, '/abonnement');
+    expect(await screen.findByRole('link', { name: /Signaler un problème/ })).toHaveAttribute('href', '/aide/demandes/nouvelle?categorie=probleme_pack');
+  });
+
   it('shows the three packs in order, with the member’s pack and the upgrade prices', async () => {
     renderPage(<Abonnement />, '/abonnement');
 

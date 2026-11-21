@@ -62,6 +62,11 @@ npm run preview
   instead of `/abonnement` (`utils/annonceur.ts`). On those pages a non-member
   (`hooks/useIsMember`) gets no member header, back buttons that lead to
   `/ads-network/annonceur`, and « Se déconnecter » on the dashboard.
+- **« Aide » (SBC Support) needs a login, not a pack.** `/aide/*` (`src/pages/help/`) sits
+  under `RequireAuth`: a member whose account is not activated must be able to check a
+  payment or write to an agent. Like the advertiser pages, a non-member gets no member
+  header there and no floating « Se déconnecter ». API: support-service `/api/support/me/*`
+  (contract: `server/docs/support/CONTRACT.md` §3.2); methods `support*` in `SBCApiService`.
 
 ### API Integration
 - Base URL proxy: `/api` → `https://sniperbuisnesscenter.com/api`

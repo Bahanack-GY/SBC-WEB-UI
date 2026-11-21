@@ -15,6 +15,7 @@ import { useTranslation } from 'react-i18next';
 import PublicFooter from '../components/common/PublicFooter';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 import { ANNONCEUR_SIGNUP } from '../utils/annonceur';
+import { guestRequests } from './help/guest';
 
 function Connexion() {
   const { t } = useTranslation();
@@ -27,6 +28,8 @@ function Connexion() {
   const [recoveryInfo, setRecoveryInfo] = useState<any>(null);
   const [showNegativeBalanceNotification, setShowNegativeBalanceNotification] = useState(false);
   const navigate = useNavigate();
+  // A request sent here without an account: its chat can be reopened from this device.
+  const [resumable] = useState(() => guestRequests()[0] ?? null);
   const { login } = useAuth();
 
   const validate = () => {
@@ -224,6 +227,28 @@ function Connexion() {
           >
             {t('pages.connexion.advertiserLink')}
           </button>
+        </div>
+        {/* For people who cannot sign in: a request to the support without an account. */}
+        <div className="text-center text-sm text-gray-500 mt-3">
+          {t('pages.connexion.problemPrompt')}{' '}
+          <button
+            type="button"
+            className="text-primary font-semibold hover:underline bg-transparent"
+            onClick={() => navigate('/signaler-un-probleme')}
+          >
+            {t('pages.connexion.problemLink')}
+          </button>
+          {resumable && (
+            <div className="mt-2">
+              <button
+                type="button"
+                className="text-primary font-semibold hover:underline bg-transparent"
+                onClick={() => navigate(`/signaler-un-probleme/suivi/${encodeURIComponent(resumable.id)}`)}
+              >
+                {t('pages.connexion.resumeRequest', { number: resumable.number || '' }).trim()}
+              </button>
+            </div>
+          )}
         </div>
       </motion.div>
 

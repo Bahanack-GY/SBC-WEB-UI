@@ -2,7 +2,7 @@ import { InstallAppCard } from '../components/pwa/InstallAppCard';
 import CanalDeVenteCard from '../components/subscription/CanalDeVenteCard';
 import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, Notification01Icon, PencilEdit01Icon, Shield01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, Briefcase01Icon, Call02Icon, Copy01Icon, CreditCardIcon, CustomerSupportIcon, GiftIcon, HelpCircleIcon, Link01Icon, Loading03Icon, LockIcon, Mail01Icon, Notification01Icon, PencilEdit01Icon, Shield01Icon, Ticket01Icon, UserCheck01Icon, UserGroupIcon, WhatsappIcon } from '@hugeicons/core-free-icons';
 import { motion, AnimatePresence } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -41,6 +41,8 @@ const baseActions: ActionItem[] = [
   { label: 'Mes filleuls', icon: <HugeiconsIcon icon={UserGroupIcon} className="text-primary" />, to: '/filleuls' },
   { label: 'Mon Parrain', icon: <HugeiconsIcon icon={UserCheck01Icon} className="text-primary" />, to: '/parrain' },
   { label: 'Espace partenaire', icon: <HugeiconsIcon icon={Briefcase01Icon} className="text-primary" />, to: '/partenaire' },
+  // SBC Support: FAQ, assistant, activation and withdrawal checks, requests to an agent.
+  { label: 'Aide et support', icon: <HugeiconsIcon icon={CustomerSupportIcon} className="text-primary" />, to: '/aide' },
   { label: 'Rejoindre la communauté', icon: <HugeiconsIcon icon={WhatsappIcon} className="text-green-500" />, to: 'https://www.whatsapp.com/channel/0029Vav3mvCElah05C8QuT03', external: true },
 ];
 

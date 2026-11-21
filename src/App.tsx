@@ -101,6 +101,17 @@ import OrganizerFinances from './pages/OrganizerFinances'
 import OpenDispute from './pages/OpenDispute'
 import MyDisputes from './pages/MyDisputes'
 import ImpactChallenge from './pages/ImpactChallenge'
+import HelpHome from './pages/help/HelpHome'
+import HelpAssistant from './pages/help/HelpAssistant'
+import HelpArticle from './pages/help/HelpArticle'
+import HelpActivation from './pages/help/HelpActivation'
+import HelpWithdrawals from './pages/help/HelpWithdrawals'
+import HelpWithdrawal from './pages/help/HelpWithdrawal'
+import HelpContact from './pages/help/HelpContact'
+import HelpTickets from './pages/help/HelpTickets'
+import HelpNewTicket from './pages/help/HelpNewTicket'
+import HelpTicket from './pages/help/HelpTicket'
+import GuestTicketPage from './pages/help/GuestTicketPage'
 
 function AppContent() {
   const location = useLocation();
@@ -216,8 +227,13 @@ function AppContent() {
   // and the advertiser dashboard carries its own « Se déconnecter ».
   const isAdsPage = location.pathname.startsWith('/ads-network');
   const nonMemberOnAds = isAdsPage && isAuthenticated && !subscriptionLoading && !isSubscribed;
+  // « Aide » is open without a pack (a member whose account is not activated
+  // needs it most). Same rule as the advertiser pages: no member header for
+  // someone without a pack, and its own back buttons instead of « Se déconnecter ».
+  const isHelpPage = location.pathname === '/aide' || location.pathname.startsWith('/aide/');
+  const nonMemberOnHelp = isHelpPage && isAuthenticated && !subscriptionLoading && !isSubscribed;
 
-  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup' && !isSalesPage && !isAdsPage;
+  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup' && !isSalesPage && !isAdsPage && !isHelpPage;
 
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
@@ -229,11 +245,13 @@ function AppContent() {
     '/splash-screen', '/connexion', '/signup', '/signup/formulaire', '/forgot-password', '/reset-password',
     '/reset-password-otp', '/verify-otp', '/verify-email-otp', '/otp', '/complete-profile',
     '/a-propos', '/conditions', '/confidentialite', '/mentions-legales', '/sso/authorize',
-    '/withdrawal-otp-verification',
+    '/withdrawal-otp-verification', '/signaler-un-probleme',
   ];
-  const hideHeader = HEADERLESS.includes(location.pathname) || isSalesPage || isInChatConversation || nonMemberOnAds;
+  // A support request is a chat (WhatsApp-like): it owns the whole screen too.
+  const isInSupportChat = (/^\/aide\/demandes\/[^/]+$/.test(location.pathname) && location.pathname !== '/aide/demandes/nouvelle') || location.pathname.startsWith('/signaler-un-probleme/suivi/');
+  const hideHeader = HEADERLESS.includes(location.pathname) || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp;
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname.startsWith('/signaler-un-probleme') || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || isHelpPage || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -270,6 +288,9 @@ function AppContent() {
         <Route path="/conditions" element={<PublicTerms />} />
         <Route path="/confidentialite" element={<PublicPrivacy />} />
         <Route path="/mentions-legales" element={<PublicLegal />} />
+        {/* « Signaler un problème » without an account (people who cannot sign in); prefilled when signed in. */}
+        <Route path="/signaler-un-probleme" element={<HelpNewTicket />} />
+        <Route path="/signaler-un-probleme/suivi/:id" element={<GuestTicketPage />} />
         <Route path="/sso/authorize" element={<SsoAuthorize />} />
         {/* SBC Event animation — read-only screens that must open without an
             account: the live board on a venue's screen/projector, published
@@ -298,6 +319,19 @@ function AppContent() {
               user just paid; their subscription may not have propagated yet
               (webhook delay) so we don't paywall them here. */}
           <Route path="/transaction-confirmation" element={<TransactionConfirmation />} />
+          {/* SBC Support « Aide »: FAQ, assistant, activation check, withdrawal
+              status, requests to an agent. Under RequireAuth only — a member
+              whose account is not activated must be able to ask for help. */}
+          <Route path="/aide" element={<HelpHome />} />
+          <Route path="/aide/assistant" element={<HelpAssistant />} />
+          <Route path="/aide/articles/:slug" element={<HelpArticle />} />
+          <Route path="/aide/activation" element={<HelpActivation />} />
+          <Route path="/aide/retraits" element={<HelpWithdrawals />} />
+          <Route path="/aide/retraits/:id" element={<HelpWithdrawal />} />
+          <Route path="/aide/contact" element={<HelpContact />} />
+          <Route path="/aide/demandes" element={<HelpTickets />} />
+          <Route path="/aide/demandes/nouvelle" element={<HelpNewTicket />} />
+          <Route path="/aide/demandes/:id" element={<HelpTicket />} />
           {/* The advertiser pages need a login, not a pack (Rufus, 2026-11-13:
               requiring the pack was costing campaigns). The hub and the
               diffuseur pages stay paywalled below: diffuseurs earn money, and

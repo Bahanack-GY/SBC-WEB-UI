@@ -1,5 +1,8 @@
 import { ApiService } from './ApiService';
 import { ApiResponse } from './ApiResponse';
+
+/** Name, phone and email typed at the top of a support request. */
+export type SupportContact = { name: string; phone: string; email: string };
 // import { getPaymentUrl, getBaseUrl } from '../utils/apiHelpers';
 
 /**
@@ -1126,20 +1129,97 @@ export class SBCApiService extends ApiService {
     return await this.put(`/advertising/ads/${advertisementId}`, { body: updates });
   }
 
-  // ==================== SUPPORT ====================
+  // ==================== SUPPORT (« Aide », support-service /api/support/me/*) ====================
+  // Member side of SBC Support. Every route is scoped to the signed-in member
+  // by the server; none needs a subscription (a member whose account is not
+  // activated must reach them). Shapes: src/pages/help/support.ts.
 
-  /**
-   * Get FAQs
-   */
-  async getFaqs(): Promise<ApiResponse> {
-    return await this.get('/support/faq', { requiresAuth: false });
+  /** Published help-centre categories. */
+  async supportKbCategories(): Promise<ApiResponse> {
+    return await this.get('/support/me/kb/categories');
+  }
+
+  /** Full-text search over published articles. */
+  async supportKbSearch(q: string): Promise<ApiResponse> {
+    return await this.get('/support/me/kb/search', { queryParameters: { q } });
+  }
+
+  /** One published article. */
+  async supportKbArticle(slug: string): Promise<ApiResponse> {
+    return await this.get(`/support/me/kb/articles/${encodeURIComponent(slug)}`);
+  }
+
+  /** The guided-paths tree (FAQ flows). */
+  async supportGuides(): Promise<ApiResponse> {
+    return await this.get('/support/me/guides');
   }
 
   /**
-   * Submit support ticket
+   * Asks the assistant. `level: 'ai'` is sent when the member said the first
+   * (FAQ) answer did not help, so the server may answer with the AI.
    */
-  async submitSupportTicket(ticketData: Record<string, any>): Promise<ApiResponse> {
-    return await this.post('/support/tickets', { body: ticketData });
+  async supportAsk(question: string, conversationId?: string, level?: 'ai'): Promise<ApiResponse> {
+    return await this.post('/support/me/assistant/ask', {
+      body: { question, ...(conversationId ? { conversationId } : {}), ...(level ? { level } : {}) },
+    });
+  }
+
+  /** Hands the conversation to a human: creates a ticket with it attached. */
+  async supportEscalate(conversationId: string, category: string): Promise<ApiResponse> {
+    return await this.post(`/support/me/assistant/${encodeURIComponent(conversationId)}/escalate`, { body: { category } });
+  }
+
+  /** Listen-only LiveKit token for live request updates ({ enabled: false } when the server has no LiveKit). */
+  async supportRealtimeToken(): Promise<ApiResponse> {
+    return await this.get('/support/me/realtime/token', { skipDeduplication: true });
+  }
+
+  async supportTickets(): Promise<ApiResponse> {
+    return await this.get('/support/me/tickets', { skipDeduplication: true });
+  }
+
+  async supportCreateTicket(ticket: { category: string; subject: string; message: string; attachmentIds: string[]; contact?: SupportContact }): Promise<ApiResponse> {
+    return await this.post('/support/me/tickets', { body: ticket });
+  }
+
+  /** « Signaler un problème » without an account (support-service /public/tickets): answers `{ number }` only. */
+  async supportPublicTicket(report: { category: string; subject: string; message: string; contact: SupportContact; turnstileToken?: string; website?: string }): Promise<ApiResponse> {
+    return await this.post('/support/public/tickets', { body: report, requiresAuth: false });
+  }
+
+  async supportTicket(id: string): Promise<ApiResponse> {
+    return await this.get(`/support/me/tickets/${encodeURIComponent(id)}`, { skipDeduplication: true });
+  }
+
+  async supportReply(id: string, reply: { message: string; attachmentIds: string[] }): Promise<ApiResponse> {
+    return await this.post(`/support/me/tickets/${encodeURIComponent(id)}/messages`, { body: reply });
+  }
+
+  async supportCloseTicket(id: string): Promise<ApiResponse> {
+    return await this.post(`/support/me/tickets/${encodeURIComponent(id)}/close`);
+  }
+
+  /** One image or PDF (≤ 10 MB, checked again by the server) → `{ id }`. */
+  async supportUploadAttachment(file: File): Promise<ApiResponse> {
+    return await this.uploadFiles({ endpoint: '/support/me/attachments', files: [file], fieldName: 'file' });
+  }
+
+  /** The member's recent payments and subscription state. */
+  async supportActivationStatus(): Promise<ApiResponse> {
+    return await this.get('/support/me/activation/status', { skipDeduplication: true });
+  }
+
+  /** Asks the payment provider again about one payment (by session id or by reference). */
+  async supportActivationCheck(target: { sessionId?: string; reference?: string; moneyDebited?: boolean }): Promise<ApiResponse> {
+    return await this.post('/support/me/activation/check', { body: target });
+  }
+
+  async supportWithdrawals(): Promise<ApiResponse> {
+    return await this.get('/support/me/withdrawals');
+  }
+
+  async supportWithdrawal(id: string): Promise<ApiResponse> {
+    return await this.get(`/support/me/withdrawals/${encodeURIComponent(id)}`);
   }
 
   // ==================== FILE MANAGEMENT ====================
