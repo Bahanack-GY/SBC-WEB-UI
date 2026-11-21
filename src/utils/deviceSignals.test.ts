@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { DEVICE_ID_KEY, deviceId, installDeviceSignals, isOwnApi } from './deviceSignals';
+import { DEVICE_ID_KEY, clientKind, deviceId, installDeviceSignals, isOwnApi } from './deviceSignals';
 
 describe('device signals (Security plan Phase 1)', () => {
   const realFetch = window.fetch;
@@ -30,6 +30,19 @@ describe('device signals (Security plan Phase 1)', () => {
     expect(calls[0].headers.get('X-SBC-Client')).toBe('web');
     expect(calls[0].headers.get('Authorization')).toBe('Bearer t');
     expect(calls[1].headers.get('X-SBC-Client')).toBe('web');
+  });
+
+  it('says app when SBC runs from the home screen (Phase 11 web/app split)', async () => {
+    const realMatch = window.matchMedia;
+    window.matchMedia = ((q: string) => ({ matches: q === '(display-mode: standalone)', media: q, addEventListener() {}, removeEventListener() {} })) as unknown as typeof window.matchMedia;
+    try {
+      expect(clientKind()).toBe('app');
+      await window.fetch('/api/users/register', { method: 'POST' });
+      expect(calls[0].headers.get('X-SBC-Client')).toBe('app');
+    } finally {
+      window.matchMedia = realMatch;
+    }
+    expect(clientKind()).toBe('web');
   });
 
   it('never adds them to other sites (no CORS preflight elsewhere)', async () => {
