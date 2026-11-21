@@ -1,7 +1,8 @@
 /**
  * Security plan Phase 1 (signals): every call to our own API carries
  *   X-SBC-Device  a random ID for this browser (no personal data in it), and
- *   X-SBC-Client  'web'.
+ *   X-SBC-Client  'app' when SBC runs from the home screen (installed), else 'web'
+ *                 (Phase 11 splits the activity figures by it).
  * The server keeps them only for members who accepted the privacy policy that
  * announces it. The ID lives in localStorage, so the 60-day storage sweep
  * (`sweepExpiredStorage`) renews it, in line with the APDP 60-day rule; logout
@@ -34,6 +35,18 @@ export function deviceId(): string | null {
   }
 }
 
+/** 'app' when SBC was opened from the home screen (installed PWA), else 'web'. */
+export function clientKind(): 'app' | 'web' {
+  try {
+    const standalone = typeof window.matchMedia === 'function'
+      && (window.matchMedia('(display-mode: standalone)').matches || window.matchMedia('(display-mode: fullscreen)').matches);
+    const iosStandalone = (navigator as Navigator & { standalone?: boolean }).standalone === true;
+    return standalone || iosStandalone ? 'app' : 'web';
+  } catch {
+    return 'web';
+  }
+}
+
 /** Whether a request goes to our own API (same origin, /api/…). */
 export function isOwnApi(url: string, origin: string = window.location.origin): boolean {
   try {
@@ -55,7 +68,7 @@ export function installDeviceSignals(): void {
         const headers = new Headers(init?.headers ?? (input instanceof Request ? input.headers : undefined));
         const id = deviceId();
         if (id && !headers.has('X-SBC-Device')) headers.set('X-SBC-Device', id);
-        if (!headers.has('X-SBC-Client')) headers.set('X-SBC-Client', 'web');
+        if (!headers.has('X-SBC-Client')) headers.set('X-SBC-Client', clientKind());
         return original(input, { ...init, headers });
       }
     } catch {
