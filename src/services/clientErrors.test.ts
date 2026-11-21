@@ -47,8 +47,9 @@ describe('reporting the failed API calls', () => {
         installClientErrorReporting();
         const r = await window.fetch('http://localhost:3000/api/payments/intents?amount=5000', { method: 'POST', body: '{"password":"x"}' });
         expect(r.status).toBe(503); // the app still gets its answer
-        await new Promise((res) => setTimeout(res, 0));
-        await flushClientErrors();
+        // The report is queued once the error body is read (res.clone().json()), which can take
+        // more than one tick on CI's Node: wait for it instead of a fixed tick.
+        await vi.waitFor(async () => { await flushClientErrors(); expect(sent.length).toBeGreaterThan(0); }, { timeout: 2000, interval: 20 });
         expect(sent[0].body.errors).toEqual([{ method: 'POST', path: '/api/payments/intents', status: 503, code: 'PROVIDER_DOWN', message: 'Le prestataire ne répond pas' }]);
     });
 });
