@@ -8,6 +8,8 @@
  * (`sweepExpiredStorage`) renews it, in line with the APDP 60-day rule; logout
  * keeps it (a device is not a person).
  */
+import { noteServerDate, signatureFor } from './requestSigning';
+
 export const DEVICE_ID_KEY = 'sbc_device_id';
 
 const randomId = (): string => {
@@ -57,10 +59,18 @@ export function isOwnApi(url: string, origin: string = window.location.origin): 
   }
 }
 
-/** Adds the two headers to calls to our own API. Installed once, in main.tsx. */
+/** Signing waits at most this long; past it the request goes unsigned. */
+const SIGN_BUDGET_MS = 300;
+
+/**
+ * Adds the two headers to calls to our own API, and (Security plan Phase 9)
+ * the request signature (utils/requestSigning.ts). Installed once, in main.tsx.
+ */
 export function installDeviceSignals(): void {
   if (typeof window === 'undefined' || (window.fetch as { __sbcSignals?: boolean }).__sbcSignals) return;
   const original = window.fetch.bind(window);
+  const send = (input: RequestInfo | URL, init: RequestInit) =>
+    original(input, init).then(res => { noteServerDate(res.headers.get('date')); return res; });
   const wrapped = ((input: RequestInfo | URL, init?: RequestInit) => {
     try {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
@@ -69,7 +79,17 @@ export function installDeviceSignals(): void {
         const id = deviceId();
         if (id && !headers.has('X-SBC-Device')) headers.set('X-SBC-Device', id);
         if (!headers.has('X-SBC-Client')) headers.set('X-SBC-Client', clientKind());
-        return original(input, { ...init, headers });
+        // A keepalive call (page closing) goes at once: waiting to sign could lose it.
+        if (init?.keepalive) return original(input, { ...init, headers });
+        const method = init?.method ?? (input instanceof Request ? input.method : 'GET');
+        const body = init?.body ?? (input instanceof Request && !/^(GET|HEAD)$/i.test(method) ? new Blob() : undefined);
+        const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), SIGN_BUDGET_MS));
+        return Promise.race([signatureFor(method, url, headers.get('Authorization'), body), timeout])
+          .catch(() => null)
+          .then(sig => {
+            if (sig && !headers.has('X-SBC-Signature')) headers.set('X-SBC-Signature', sig);
+            return send(input, { ...init, headers });
+          });
       }
     } catch {
       /* never block a request for a signal */

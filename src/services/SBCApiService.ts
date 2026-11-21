@@ -72,9 +72,10 @@ export class SBCApiService extends ApiService {
   /**
    * Verify OTP for registration/login
    */
-  async verifyOtp(userId: string, otp: string): Promise<ApiResponse> {
+  async verifyOtp(userId: string, otp: string, devicePublicKey?: string | null): Promise<ApiResponse> {
     return await this.post('/users/verify-otp', {
-      body: { userId, otpCode: otp },
+      // Security plan Phase 9: this browser's signing key, bound to the token the server issues.
+      body: devicePublicKey ? { userId, otpCode: otp, devicePublicKey } : { userId, otpCode: otp },
       requiresAuth: false
     });
   }
