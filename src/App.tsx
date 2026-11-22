@@ -112,6 +112,7 @@ import HelpTickets from './pages/help/HelpTickets'
 import HelpNewTicket from './pages/help/HelpNewTicket'
 import HelpTicket from './pages/help/HelpTicket'
 import GuestTicketPage from './pages/help/GuestTicketPage'
+import { prepareRobotAnswer, shouldPrepareOn } from './utils/robotCheck'
 
 function AppContent() {
   const location = useLocation();
@@ -119,6 +120,12 @@ function AppContent() {
   const { isAuthenticated, loading: authLoading, logout, user: authUser } = useAuth();
   const { isSubscribed, isLoading: subscriptionLoading } = useSubscriptionStatus();
   const queryClient = useQueryClient();
+
+  // Anti-robot check (utils/robotCheck.ts): solve one answer ahead on the pages that lead to a
+  // sensitive action, so signing in, a withdrawal or a change does not wait for it.
+  useEffect(() => {
+    if (shouldPrepareOn(location.pathname)) prepareRobotAnswer();
+  }, [location.pathname]);
 
   // Drop all React Query cache when the authenticated user changes (login,
   // logout, account switch). Without this, the previous user's "active"
