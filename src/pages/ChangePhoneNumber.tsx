@@ -9,6 +9,8 @@ import BackButton from '../components/common/BackButton';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
 import { DEFAULT_DIAL_CODE, dialCodeOf, findAnyCountry, worldCountryCodes } from '../utils/countriesData';
+import AuthenticatorCodeField, { codeLooksComplete } from '../components/security/AuthenticatorCodeField';
+import { AuthenticatorCodeNeeded, unwrapWithCode, useAuthenticatorStatus } from '../components/security/authenticator';
 
 // Every country (members sign up from anywhere); opens on the member's own.
 const countryCodes = worldCountryCodes;
@@ -26,6 +28,11 @@ function ChangePhoneNumber() {
   const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [authCode, setAuthCode] = useState('');
+  const [needCode, setNeedCode] = useState(false);
+  // Security plan Phase 3: a member with an authenticator app confirms with its code.
+  const { status } = useAuthenticatorStatus(true);
+  const showCode = needCode || !!status?.enabled;
   const navigate = useNavigate();
 
   const handleCountryCodeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -40,14 +47,18 @@ function ChangePhoneNumber() {
       setError('Veuillez entrer un numéro de téléphone');
       return;
     }
+    if (showCode && !codeLooksComplete(authCode)) {
+      setError('Tapez le code de votre application d’authentification (ou un code de secours).');
+      return;
+    }
 
     setLoading(true);
     setError('');
 
     try {
       const fullPhoneNumber = `${selectedCode.code}${newPhoneNumber}`;
-      const response = await sbcApiService.requestPhoneChangeOtp(fullPhoneNumber);
-      handleApiResponse(response);
+      const response = await sbcApiService.requestPhoneChangeOtp(fullPhoneNumber, showCode ? authCode.trim() : undefined);
+      unwrapWithCode(response);
       
       setModalContent({
         type: 'success',
@@ -56,6 +67,7 @@ function ChangePhoneNumber() {
       setShowModal(true);
       setStep('verify');
     } catch (error) {
+      if (error instanceof AuthenticatorCodeNeeded) setNeedCode(true);
       const errorMessage = error instanceof Error ? error.message : 'Erreur lors de l\'envoi du code OTP';
       setError(errorMessage);
     } finally {
@@ -181,6 +193,8 @@ function ChangePhoneNumber() {
                 </div>
                 {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
               </div>
+
+              {showCode && <AuthenticatorCodeField id="change-phone-auth-code" value={authCode} onChange={setAuthCode} />}
 
               <button
                 type="submit"

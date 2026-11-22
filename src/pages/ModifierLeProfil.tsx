@@ -2,6 +2,7 @@ import { DEFAULT_AVATAR } from '../components/common/Avatar';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { Call02Icon, FloppyDiskIcon, Loading03Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -106,6 +107,7 @@ function ModifierLeProfil() {
   const [loading, setLoading] = useState(false);
   const [avatarUploading, setAvatarUploading] = useState(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+  const [phoneNeedsCode, setPhoneNeedsCode] = useState(false);
   const [displayedInterests, setDisplayedInterests] = useState<string[]>(predefinedInterestOptions);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [showModal, setShowModal] = useState(false);
@@ -314,11 +316,24 @@ function ModifierLeProfil() {
         updates.referralCode = formData.referralCode;
       }
 
-      // Update regular profile
-      await sbcApiService.updateUserProfile(updates);
+      // Update regular profile. The answer used to be ignored, so a refused save
+      // still said "sauvegardé".
+      let response = await sbcApiService.updateUserProfile(updates);
+      let phoneNeedsCode = false;
+      if (response.body?.code === 'PHONE_CHANGE_NEEDS_CODE') {
+        // Security plan Phase 3: with an authenticator app, the phone changes through
+        // « Changer de numéro » (it asks for the app code). Save the rest without it.
+        phoneNeedsCode = true;
+        delete updates.phoneNumber;
+        response = await sbcApiService.updateUserProfile(updates);
+      }
+      handleApiResponse(response);
 
       await refreshUser(); // Refresh user in context
-      setFeedback({ type: 'success', message: 'Profil sauvegardé avec succès!' });
+      setFeedback(phoneNeedsCode
+        ? { type: 'error', message: 'Profil enregistré, sauf le numéro de téléphone : changez-le avec « Changer de numéro », qui demande le code de votre application d’authentification.' }
+        : { type: 'success', message: 'Profil sauvegardé avec succès!' });
+      if (phoneNeedsCode) setPhoneNeedsCode(true);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'La sauvegarde a échoué.';
       setFeedback({ type: 'error', message: errorMessage });
@@ -593,6 +608,9 @@ function ModifierLeProfil() {
             {feedback && (
               <div className={`p-3 rounded-lg text-center text-sm ${feedback.type === 'success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                 {feedback.message}
+                {phoneNeedsCode && (
+                  <Link to="/change-phone" className="block mt-2 font-semibold underline">Changer de numéro</Link>
+                )}
               </div>
             )}
             <footer className="px-4 py-4 mt-6">

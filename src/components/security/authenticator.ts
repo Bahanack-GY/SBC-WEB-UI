@@ -18,6 +18,25 @@ export class AuthenticatorRequired extends Error {
   }
 }
 
+/**
+ * Thrown when the server answers 403 AUTHENTICATOR_CODE_REQUIRED (Security plan Phase 3,
+ * part 2): the member has the app, and this action (email, phone, password) needs its code.
+ */
+export class AuthenticatorCodeNeeded extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AuthenticatorCodeNeeded';
+  }
+}
+
+/** handleApiResponse, but a 403 AUTHENTICATOR_CODE_REQUIRED becomes AuthenticatorCodeNeeded. */
+export function unwrapWithCode(response: ApiResponse) {
+  if (response.body?.code === 'AUTHENTICATOR_CODE_REQUIRED') {
+    throw new AuthenticatorCodeNeeded(response.body?.message || 'Tapez le code de votre application d’authentification.');
+  }
+  return handleApiResponse(response);
+}
+
 /** handleApiResponse, but a 403 AUTHENTICATOR_REQUIRED becomes AuthenticatorRequired. */
 export function unwrap(response: ApiResponse) {
   if (response.body?.code === 'AUTHENTICATOR_REQUIRED') {

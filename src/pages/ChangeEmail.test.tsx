@@ -8,6 +8,7 @@ const api = vi.hoisted(() => ({
   requestEmailChangeOtp: vi.fn(),
   confirmEmailChange: vi.fn(),
   loginUser: vi.fn(),
+  getAuthenticatorStatus: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 const auth = vi.hoisted(() => ({ refreshUser: vi.fn(async () => undefined) }));
@@ -31,7 +32,10 @@ const typeCode = async (code: string) => {
   for (let i = 0; i < code.length; i++) await userEvent.type(boxes[i], code[i]);
 };
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  api.getAuthenticatorStatus.mockResolvedValue(ok({ enabled: false, enrolledAt: null, backupCodesRemaining: 0, lockedUntil: null }));
+});
 
 describe('Changer d’adresse e-mail', () => {
   it('asks the server for a code to the new address with the password, and never signs in', async () => {
@@ -40,9 +44,34 @@ describe('Changer d’adresse e-mail', () => {
     await userEvent.type(screen.getByPlaceholderText(/nouvel@email/), ' New.Address@gmail.com');
     await userEvent.type(screen.getByPlaceholderText('Votre mot de passe'), 'Secret123!');
     await userEvent.click(screen.getByRole('button', { name: 'Envoyer le code' }));
-    await waitFor(() => expect(api.requestEmailChangeOtp).toHaveBeenCalledWith('new.address@gmail.com', 'Secret123!'));
+    await waitFor(() => expect(api.requestEmailChangeOtp).toHaveBeenCalledWith('new.address@gmail.com', 'Secret123!', undefined));
     expect(api.loginUser).not.toHaveBeenCalled();
     expect(await screen.findByText('new.address@gmail.com')).toBeInTheDocument();
+  });
+
+  it('a member with the authenticator app types its code, which goes with the request', async () => {
+    api.getAuthenticatorStatus.mockResolvedValue(ok({ enabled: true, enrolledAt: '2026-11-20T10:00:00Z', backupCodesRemaining: 10, lockedUntil: null }));
+    api.requestEmailChangeOtp.mockResolvedValue(ok({}));
+    renderPage(pages, '/modifier-email');
+    const field = await screen.findByLabelText('Code de l’application d’authentification');
+    await userEvent.type(screen.getByPlaceholderText(/nouvel@email/), 'new.address@gmail.com');
+    await userEvent.type(screen.getByPlaceholderText('Votre mot de passe'), 'Secret123!');
+    await userEvent.click(screen.getByRole('button', { name: 'Envoyer le code' }));
+    expect(await screen.findByText(/Tapez le code de votre application/)).toBeInTheDocument();
+    expect(api.requestEmailChangeOtp).not.toHaveBeenCalled();
+    await userEvent.type(field, '123456');
+    await userEvent.click(screen.getByRole('button', { name: 'Envoyer le code' }));
+    await waitFor(() => expect(api.requestEmailChangeOtp).toHaveBeenCalledWith('new.address@gmail.com', 'Secret123!', '123456'));
+  });
+
+  it('when the server asks for the app code (403 AUTHENTICATOR_CODE_REQUIRED), the field appears', async () => {
+    api.requestEmailChangeOtp.mockResolvedValue({ ...fail(403, 'Confirmez avec le code de votre application d’authentification (ou un code de secours).'), body: { success: false, code: 'AUTHENTICATOR_CODE_REQUIRED', message: 'Confirmez avec le code de votre application d’authentification (ou un code de secours).' } });
+    renderPage(pages, '/modifier-email');
+    await userEvent.type(screen.getByPlaceholderText(/nouvel@email/), 'new.address@gmail.com');
+    await userEvent.type(screen.getByPlaceholderText('Votre mot de passe'), 'Secret123!');
+    await userEvent.click(screen.getByRole('button', { name: 'Envoyer le code' }));
+    expect(await screen.findByLabelText('Code de l’application d’authentification')).toBeInTheDocument();
+    expect(screen.getByText(/Confirmez avec le code/)).toBeInTheDocument();
   });
 
   it('stays on the form and shows the refusal (wrong password)', async () => {

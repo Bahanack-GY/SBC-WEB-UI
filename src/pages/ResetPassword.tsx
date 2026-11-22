@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react';
 import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { handleApiResponse } from '../utils/apiHelpers';
 import BackButton from '../components/common/BackButton';
+import AuthenticatorCodeField, { codeLooksComplete } from '../components/security/AuthenticatorCodeField';
+import { AuthenticatorCodeNeeded, unwrapWithCode } from '../components/security/authenticator';
 
 function ResetPassword() {
     const navigate = useNavigate();
@@ -18,6 +19,10 @@ function ResetPassword() {
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [modalContent, setModalContent] = useState<{ type: 'success' | 'error', message: string } | null>(null);
+    // Security plan Phase 3: an account with an authenticator app also needs its code;
+    // the server says so (the page is signed out, so it cannot ask beforehand).
+    const [needCode, setNeedCode] = useState(false);
+    const [authCode, setAuthCode] = useState('');
 
     useEffect(() => {
         if (!email || !passwordResetToken) {
@@ -46,13 +51,17 @@ function ResetPassword() {
             setError('Les mots de passe ne correspondent pas.');
             return;
         }
+        if (needCode && !codeLooksComplete(authCode)) {
+            setError('Tapez le code de votre application d’authentification (ou un code de secours).');
+            return;
+        }
 
         setError('');
         setLoading(true);
 
         try {
-            const response = await sbcApiService.resetPassword(email, passwordResetToken, newPassword);
-            handleApiResponse(response);
+            const response = await sbcApiService.resetPassword(email, passwordResetToken, newPassword, needCode ? authCode.trim() : undefined);
+            unwrapWithCode(response);
             
             setModalContent({
                 type: 'success',
@@ -65,6 +74,12 @@ function ResetPassword() {
             }, 3000);
             
         } catch (error) {
+            if (error instanceof AuthenticatorCodeNeeded) {
+                // the reset link is still valid: show the code field on this page
+                setNeedCode(true);
+                setError(error.message);
+                return;
+            }
             const errorMessage = error instanceof Error ? error.message : "Une erreur est survenue lors de la réinitialisation de votre mot de passe.";
             setModalContent({
                 type: 'error',
@@ -130,6 +145,8 @@ function ResetPassword() {
                         />
                     </div>
                     
+                    {needCode && <AuthenticatorCodeField id="reset-auth-code" value={authCode} onChange={setAuthCode} />}
+
                     {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
                     
                     {newPassword && (
