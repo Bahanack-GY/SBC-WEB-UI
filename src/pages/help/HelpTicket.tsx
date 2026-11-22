@@ -242,6 +242,18 @@ export default function HelpTicket({ guestKey }: {
                                 <h2 className="text-sm font-semibold text-ink">{t.subject || categoryLabel(t.category)}</h2>
                                 <p className="text-xs text-ink-3">{categoryLabel(t.category)}</p>
                             </section>
+                            {/* KYC level 3: an account-access request usually needs the person's ID + selfie. */}
+                            {!closed && t.category === 'compte_acces' && (
+                                <Notice tone="safety">
+                                    Un agent doit vérifier votre identité ?{' '}
+                                    <Link
+                                        to={guestKey ? `/signaler-un-probleme/identite/${id}` : `/aide/identite?motif=lost_access&demande=${encodeURIComponent(id)}`}
+                                        className="font-semibold text-primary underline"
+                                    >
+                                        Envoyer ma pièce d’identité et un selfie
+                                    </Link>
+                                </Notice>
+                            )}
 
                             <ol aria-label="Conversation" className="pb-1">
                                 {rows.map((r) => r.kind === 'day' ? (

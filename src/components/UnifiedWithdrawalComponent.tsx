@@ -2,6 +2,8 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { Alert02Icon, Bitcoin01Icon, Cancel01Icon, Loading03Icon, SmartPhone01Icon, Tick02Icon } from '@hugeicons/core-free-icons';
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { isRiskHold } from './security/riskHold';
+import { RiskHoldLink } from './security/RiskHoldLink';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { useAuth } from '../contexts/AuthContext';
@@ -92,6 +94,8 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   const [confirmCode, setConfirmCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  // Held by the security check (RISK_HOLD): the error comes with the way out, the identity check.
+  const [riskHold, setRiskHold] = useState(false);
   const [success, setSuccess] = useState('');
   const [isInitiating, setIsInitiating] = useState(false); // Prevent double-clicks
 
@@ -243,6 +247,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         setIsInitiating(false);
         return;
       }
+      setRiskHold(isRiskHold(response));
       const data = handleApiResponse(response);
 
       if (data && data.transactionId) {
@@ -323,7 +328,9 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     setLoading(true);
     setError('');
     try {
-      handleApiResponse(await sbcApiService.verifyWithdrawal({ transactionId: confirmTx.transactionId, verificationCode: confirmCode.trim() }));
+      const verified = await sbcApiService.verifyWithdrawal({ transactionId: confirmTx.transactionId, verificationCode: confirmCode.trim() });
+      setRiskHold(isRiskHold(verified));
+      handleApiResponse(verified);
       navigate('/transaction-confirmation', {
         state: { transactionId: confirmTx.transactionId, withdrawalAmount: confirmTx.amount, withdrawalCurrency: confirmTx.currency }
       });
@@ -641,6 +648,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
               </p>
               <AuthenticatorCodeField id="withdrawal-code" value={confirmCode} onChange={setConfirmCode} />
               {error && <p className="text-sm text-red-600" role="alert">{error}</p>}
+              {error && riskHold && <RiskHoldLink onNavigate={onClose} />}
               <button type="submit" disabled={loading} className="w-full bg-primary text-white rounded-xl py-3 font-medium disabled:opacity-60">
                 {loading ? 'Vérification…' : 'Confirmer le retrait'}
               </button>
@@ -666,6 +674,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
           {error && (
             <div className="mt-4 p-3 bg-red-50 border border-border rounded-lg">
               <p className="text-red-600 text-sm">{error}</p>
+              {riskHold && <RiskHoldLink onNavigate={onClose} />}
             </div>
           )}
 

@@ -1,3 +1,4 @@
+import { isRiskHold, RISK_HOLD_PATH } from '../components/security/riskHold';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowReloadHorizontalIcon, ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, CreditCardIcon, Exchange01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneyReceive01Icon, MoneySend01Icon, Share08Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import BackButton from "../components/common/BackButton";
@@ -257,7 +258,7 @@ function Wallet() {
   const [withdrawalFee, setWithdrawalFee] = useState(0);
   const [totalDeduction, setTotalDeduction] = useState(0);
   const [showModal, setShowModal] = useState(false);
-  const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void } | null>(null);
+  const [modalContent, setModalContent] = useState<{ type: 'success' | 'error' | 'confirm', message: string, onConfirm?: () => void, confirmLabel?: string } | null>(null);
   const [showCurrencyConverter, setShowCurrencyConverter] = useState(false);
   const [showFundActivationModal, setShowFundActivationModal] = useState(false);
   const [isSubmittingWithdrawal, setIsSubmittingWithdrawal] = useState(false); // Prevent double-clicks
@@ -422,6 +423,18 @@ function Wallet() {
           withdrawalAmount, 
           selectedBalanceType === 'FCFA' ? 'mobile_money' : 'crypto'
         );
+        // Held by the security check: offer the identity check (ID + selfie) instead of a dead end.
+        if (isRiskHold(response)) {
+          setModalContent({
+            type: 'confirm',
+            message: String(response.body?.message || 'Votre retrait est bloqué le temps d’une vérification de sécurité.'),
+            confirmLabel: 'Vérifier mon identité',
+            onConfirm: () => navigate(RISK_HOLD_PATH),
+          });
+          setShowModal(true);
+          setIsSubmittingWithdrawal(false);
+          return;
+        }
         const data = handleApiResponse(response); // This assumes handleApiResponse throws on !success
 
 
@@ -1601,7 +1614,7 @@ function Wallet() {
                           setShowModal(false);
                         }}
                       >
-                        Confirmer
+                        {modalContent.confirmLabel ?? 'Confirmer'}
                       </button>
                       <button
                         type="button"

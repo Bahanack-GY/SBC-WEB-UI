@@ -5,7 +5,7 @@ import { Card, HelpPage, RowLink } from './ui';
 /**
  * Changing the email or phone. A member who still receives codes uses the
  * secure flow that already exists (password + code sent to the new contact);
- * one who lost access opens an identity-verification request.
+ * one who lost access sends an ID + selfie (KYC level 3, /aide/identite).
  */
 export default function HelpContact() {
     return (
@@ -36,17 +36,17 @@ export default function HelpContact() {
 
             <Card title="Je n’ai plus accès à mon email ou à mon téléphone" icon={UserIdVerificationIcon}>
                 <p className="text-sm text-ink-2">
-                    Un agent doit d’abord vérifier votre identité. Il vous dira quels justificatifs envoyer ; le nouveau
-                    contact reçoit ensuite un code de confirmation avant le changement. L’équipe SBC ne vous demandera
-                    jamais votre mot de passe ni un code reçu par SMS ou email.
+                    Un agent doit d’abord vérifier votre identité : envoyez une photo de votre pièce d’identité et un
+                    selfie. Le nouveau contact reçoit ensuite un code de confirmation avant le changement. L’équipe SBC ne
+                    vous demandera jamais votre mot de passe ni un code reçu par SMS ou email.
                 </p>
                 <div className="mt-3">
                     <RowLink
-                        to="/aide/demandes/nouvelle?categorie=verification_identite"
+                        to="/aide/identite?motif=lost_access"
                         icon={UserIdVerificationIcon}
                         tint="bg-accent-soft text-accent"
-                        title="Demander une vérification d’identité"
-                        subtitle="Une demande est créée pour un agent"
+                        title="Vérifier mon identité"
+                        subtitle="Pièce d’identité + selfie, examinés par un agent"
                     />
                 </div>
             </Card>

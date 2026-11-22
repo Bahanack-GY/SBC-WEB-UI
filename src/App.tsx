@@ -112,6 +112,8 @@ import HelpTickets from './pages/help/HelpTickets'
 import HelpNewTicket from './pages/help/HelpNewTicket'
 import HelpTicket from './pages/help/HelpTicket'
 import GuestTicketPage from './pages/help/GuestTicketPage'
+import GuestIdentityPage from './pages/help/GuestIdentityPage'
+import HelpIdentity from './pages/help/HelpIdentity'
 import { prepareRobotAnswer, shouldPrepareOn } from './utils/robotCheck'
 
 function AppContent() {
@@ -256,7 +258,7 @@ function AppContent() {
   ];
   // A support request is a chat (WhatsApp-like): it owns the whole screen too.
   const isInSupportChat = (/^\/aide\/demandes\/[^/]+$/.test(location.pathname) && location.pathname !== '/aide/demandes/nouvelle') || location.pathname.startsWith('/signaler-un-probleme/suivi/');
-  const hideHeader = HEADERLESS.includes(location.pathname) || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp;
+  const hideHeader = HEADERLESS.includes(location.pathname) || location.pathname.startsWith('/signaler-un-probleme/') || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp;
 
   const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname.startsWith('/signaler-un-probleme') || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || isHelpPage || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
@@ -298,6 +300,7 @@ function AppContent() {
         {/* « Signaler un problème » without an account (people who cannot sign in); prefilled when signed in. */}
         <Route path="/signaler-un-probleme" element={<HelpNewTicket />} />
         <Route path="/signaler-un-probleme/suivi/:id" element={<GuestTicketPage />} />
+        <Route path="/signaler-un-probleme/identite/:id" element={<GuestIdentityPage />} />
         <Route path="/sso/authorize" element={<SsoAuthorize />} />
         {/* SBC Event animation — read-only screens that must open without an
             account: the live board on a venue's screen/projector, published
@@ -336,6 +339,7 @@ function AppContent() {
           <Route path="/aide/retraits" element={<HelpWithdrawals />} />
           <Route path="/aide/retraits/:id" element={<HelpWithdrawal />} />
           <Route path="/aide/contact" element={<HelpContact />} />
+          <Route path="/aide/identite" element={<HelpIdentity />} />
           <Route path="/aide/demandes" element={<HelpTickets />} />
           <Route path="/aide/demandes/nouvelle" element={<HelpNewTicket />} />
           <Route path="/aide/demandes/:id" element={<HelpTicket />} />

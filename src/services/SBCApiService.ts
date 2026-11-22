@@ -1218,6 +1218,21 @@ export class SBCApiService extends ApiService {
     return await this.post('/support/me/activation/check', { body: target });
   }
 
+  /**
+   * KYC level 3: recto (+ verso) of the ID and a selfie, sent to support (stored encrypted on the
+   * secondary server, deleted 30 days after the agent's decision). `ticketId`: the member's open request.
+   */
+  async supportIdentitySubmit(input: { purpose: string; ticketId?: string; images: Record<string, Blob> }): Promise<ApiResponse> {
+    return await this.uploadFiles({
+      endpoint: '/support/me/identity-verifications', files: [], fieldName: 'file', namedFiles: input.images,
+      fields: { purpose: input.purpose, ...(input.ticketId ? { ticketId: input.ticketId } : {}) },
+    });
+  }
+
+  async supportIdentityLatest(): Promise<ApiResponse> {
+    return await this.get('/support/me/identity-verifications/latest', { skipDeduplication: true });
+  }
+
   async supportWithdrawals(): Promise<ApiResponse> {
     return await this.get('/support/me/withdrawals');
   }
