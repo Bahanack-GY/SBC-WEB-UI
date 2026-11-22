@@ -67,6 +67,14 @@ npm run preview
   payment or write to an agent. Like the advertiser pages, a non-member gets no member
   header there and no floating « Se déconnecter ». API: support-service `/api/support/me/*`
   (contract: `server/docs/support/CONTRACT.md` §3.2); methods `support*` in `SBCApiService`.
+- **Identity check, KYC level 3 (2026-11-22).** `/aide/identite?motif=fraud_hold|authenticator_reset|lost_access`
+  (`&demande=<ticket>`; without a reason in the link the member picks one) and, without an account,
+  `/signaler-un-probleme/identite/:id` (request key on this device). The recto, optional verso and a
+  selfie are scaled to 1600 px JPEG on the phone (`pages/help/identity.ts`) and sent to support,
+  which keeps them encrypted on the secondary server until 30 days after the agent's decision.
+  - Linked from: a withdrawal refused with `RISK_HOLD` (Wallet + `UnifiedWithdrawalComponent`,
+    `components/security/riskHold.ts`), the lost-phone note of `AuthenticatorCard`, « Changer mon
+    email ou téléphone », and every open « Compte & accès » request chat.
 
 ### API Integration
 - Base URL proxy: `/api` → `https://sniperbuisnesscenter.com/api`

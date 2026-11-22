@@ -284,11 +284,14 @@ export class ApiService {
     fields?: Record<string, string> | null;
     requiresAuth?: boolean;
     httpMethod?: 'POST' | 'PUT';
+    /** Files under their own field names (e.g. id_front, selfie), after `files`. */
+    namedFiles?: Record<string, Blob> | null;
   }): Promise<ApiResponse> {
     const {
       endpoint,
       files,
       fieldName,
+      namedFiles = null,
       fields = null,
       requiresAuth = true,
       httpMethod = 'POST'
@@ -309,6 +312,9 @@ export class ApiService {
       files.forEach(file => {
         formData.append(fieldName, file);
       });
+      if (namedFiles) {
+        Object.entries(namedFiles).forEach(([name, blob]) => formData.append(name, blob, `${name}.jpg`));
+      }
 
       const response = await fetch(url, {
         method: httpMethod,

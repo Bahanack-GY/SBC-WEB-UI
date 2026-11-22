@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import AuthenticatorSetupSheet from './AuthenticatorSetupSheet';
 import { useAuthenticatorStatus } from './authenticator';
 
@@ -19,7 +20,11 @@ export default function AuthenticatorCard() {
         <div className="text-sm text-gray-700 space-y-1">
           <p><span className="text-green-700 font-medium">Activée</span>{status.enrolledAt ? ` depuis le ${new Date(status.enrolledAt).toLocaleDateString('fr-FR')}` : ''}.</p>
           <p>Codes de secours restants : {status.backupCodesRemaining}.</p>
-          <p className="text-xs text-gray-500">Téléphone perdu : utilisez un code de secours, sinon contactez le support (menu Aide).</p>
+          <p className="text-xs text-gray-500">
+            Téléphone perdu : utilisez un code de secours. Sans code de secours,{' '}
+            <Link to="/aide/identite?motif=authenticator_reset" className="font-medium text-primary underline">faites vérifier votre identité</Link>{' '}
+            pour que le support retire l’application de votre compte.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
