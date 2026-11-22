@@ -262,9 +262,10 @@ export class SBCApiService extends ApiService {
   /**
    * Reset password
    */
-  async resetPassword(email: string, passwordResetToken: string, newPassword: string): Promise<ApiResponse> {
+  async resetPassword(email: string, passwordResetToken: string, newPassword: string, authCode?: string): Promise<ApiResponse> {
+    // A member with an authenticator app also sends its code (403 AUTHENTICATOR_CODE_REQUIRED otherwise).
     return await this.post('/users/reset-password', {
-      body: { email, passwordResetToken, newPassword },
+      body: authCode ? { email, passwordResetToken, newPassword, authCode } : { email, passwordResetToken, newPassword },
       requiresAuth: false
     });
   }
@@ -276,9 +277,10 @@ export class SBCApiService extends ApiService {
    * checks the password; a resend from the code screen sends none, which is
    * accepted while the previous code for that address is still valid.
    */
-  async requestEmailChangeOtp(newEmail: string, password?: string): Promise<ApiResponse> {
+  async requestEmailChangeOtp(newEmail: string, password?: string, authCode?: string): Promise<ApiResponse> {
+    // A member with an authenticator app also sends its code (403 AUTHENTICATOR_CODE_REQUIRED otherwise).
     return await this.post('/users/request-change-email', {
-      body: password ? { newEmail, password } : { newEmail }
+      body: { newEmail, ...(password ? { password } : {}), ...(authCode ? { authCode } : {}) }
     });
   }
 
@@ -314,9 +316,10 @@ export class SBCApiService extends ApiService {
   /**
    * Request phone number change OTP
    */
-  async requestPhoneChangeOtp(newPhoneNumber: string): Promise<ApiResponse> {
+  async requestPhoneChangeOtp(newPhoneNumber: string, authCode?: string): Promise<ApiResponse> {
+    // A member with an authenticator app also sends its code; a resend for the same number needs none.
     return await this.post('/users/request-change-phone', {
-      body: { newPhoneNumber }
+      body: authCode ? { newPhoneNumber, authCode } : { newPhoneNumber }
     });
   }
 

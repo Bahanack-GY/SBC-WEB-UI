@@ -5,24 +5,31 @@ import { useMutation } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
 import { useNavigate } from 'react-router-dom';
-import { handleApiResponse } from '../utils/apiHelpers';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
+import AuthenticatorCodeField, { codeLooksComplete } from '../components/security/AuthenticatorCodeField';
+import { AuthenticatorCodeNeeded, unwrapWithCode, useAuthenticatorStatus } from '../components/security/authenticator';
 
 function ChangeEmail() {
     const [newEmail, setNewEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [authCode, setAuthCode] = useState('');
+    const [needCode, setNeedCode] = useState(false);
+    // Security plan Phase 3: a member with an authenticator app confirms with its code.
+    const { status } = useAuthenticatorStatus(true);
+    const showCode = needCode || !!status?.enabled;
     const navigate = useNavigate();
     const mutation = useMutation({
         // The server checks the password and sends the code to the new address.
         // (Checking the password by signing in again emailed a sign-in code to
         // the OLD address, and that is the code people then typed.)
-        mutationFn: async ({ email, password }: { email: string; password: string }) =>
-            handleApiResponse(await sbcApiService.requestEmailChangeOtp(email, password)),
+        mutationFn: async ({ email, password, code }: { email: string; password: string; code?: string }) =>
+            unwrapWithCode(await sbcApiService.requestEmailChangeOtp(email, password, code)),
         onSuccess: () => {
             navigate(`/verify-email-otp?email=${encodeURIComponent(newEmail.trim().toLowerCase())}`);
         },
         onError: (err: unknown) => {
+            if (err instanceof AuthenticatorCodeNeeded) setNeedCode(true);
             if (err instanceof Error) {
                 setError(err.message);
             } else if (typeof err === 'string') {
@@ -38,9 +45,11 @@ function ChangeEmail() {
             setError('Veuillez entrer une adresse email valide.');
         } else if (!password) {
             setError('Veuillez entrer votre mot de passe.');
+        } else if (showCode && !codeLooksComplete(authCode)) {
+            setError('Tapez le code de votre application d’authentification (ou un code de secours).');
         } else {
             setError('');
-            mutation.mutate({ email: newEmail.trim().toLowerCase(), password });
+            mutation.mutate({ email: newEmail.trim().toLowerCase(), password, code: showCode ? authCode.trim() : undefined });
         }
     };
     return (
@@ -73,6 +82,7 @@ function ChangeEmail() {
                             className={`w-full border ${error && error.toLowerCase().includes('passe') ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-400 text-gray-700 placeholder-gray-400`}
                         />
                     </div>
+                    {showCode && <AuthenticatorCodeField id="change-email-auth-code" value={authCode} onChange={setAuthCode} />}
                     {error && <div className="text-red-500 text-xs mt-1">{error}</div>}
                     <button
                         type="submit"
