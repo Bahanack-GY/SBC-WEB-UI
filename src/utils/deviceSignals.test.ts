@@ -38,7 +38,7 @@ describe('device signals (Security plan Phase 1)', () => {
     try {
       expect(clientKind()).toBe('app');
       await window.fetch('/api/users/register', { method: 'POST' });
-      expect(calls[0].headers.get('X-SBC-Client')).toBe('app');
+      expect(calls.find(c => c.url.endsWith('/api/users/register'))?.headers.get('X-SBC-Client')).toBe('app');
     } finally {
       window.matchMedia = realMatch;
     }

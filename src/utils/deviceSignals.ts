@@ -9,6 +9,7 @@
  * keeps it (a device is not a person).
  */
 import { noteServerDate, signatureFor } from './requestSigning';
+import { isProtectedAction, setRobotFetch, takeRobotAnswer } from './robotCheck';
 
 export const DEVICE_ID_KEY = 'sbc_device_id';
 
@@ -69,8 +70,33 @@ const SIGN_BUDGET_MS = 300;
 export function installDeviceSignals(): void {
   if (typeof window === 'undefined' || (window.fetch as { __sbcSignals?: boolean }).__sbcSignals) return;
   const original = window.fetch.bind(window);
+  setRobotFetch(original);
   const send = (input: RequestInfo | URL, init: RequestInit) =>
     original(input, init).then(res => { noteServerDate(res.headers.get('date')); return res; });
+  /**
+   * Sensitive actions carry the anti-robot answer (utils/robotCheck.ts). If the gateway
+   * refuses it (enforce mode: expired, already used…), one retry with a fresh answer, when
+   * the body can be sent again (text).
+   */
+  const sendProtected = async (input: RequestInfo | URL, init: RequestInit, headers: Headers) => {
+    const answer = await takeRobotAnswer().catch(() => null);
+    if (answer) headers.set('X-SBC-Altcha', answer);
+    const res = await send(input, { ...init, headers });
+    if (res.status !== 403 || !(init.body === undefined || typeof init.body === 'string')) return res;
+    const code = await res.clone().json().then((j: { code?: string }) => j?.code, () => undefined);
+    if (code !== 'ROBOT_CHECK_FAILED') return res;
+    const again = await takeRobotAnswer(15_000).catch(() => null);
+    if (!again) return res;
+    const retryHeaders = new Headers(headers);
+    retryHeaders.set('X-SBC-Altcha', again);
+    retryHeaders.delete('X-SBC-Signature'); // a new nonce is needed; signing again below
+    const sig = await Promise.race([
+      signatureFor(String(init.method ?? 'POST'), typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, retryHeaders.get('Authorization'), init.body),
+      new Promise<null>(r => setTimeout(() => r(null), SIGN_BUDGET_MS)),
+    ]).catch(() => null);
+    if (sig) retryHeaders.set('X-SBC-Signature', sig);
+    return send(input, { ...init, headers: retryHeaders });
+  };
   const wrapped = ((input: RequestInfo | URL, init?: RequestInit) => {
     try {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
@@ -88,6 +114,7 @@ export function installDeviceSignals(): void {
           .catch(() => null)
           .then(sig => {
             if (sig && !headers.has('X-SBC-Signature')) headers.set('X-SBC-Signature', sig);
+            if (isProtectedAction(method, url) && !headers.has('X-SBC-Altcha')) return sendProtected(input, init ?? {}, headers);
             return send(input, { ...init, headers });
           });
       }

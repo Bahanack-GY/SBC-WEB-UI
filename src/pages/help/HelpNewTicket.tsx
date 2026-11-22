@@ -12,7 +12,6 @@ import { ErrorNote, HelpPage } from './ui';
 import { inputCls, primaryBtn } from './styles';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../contexts/AuthContext';
-import TurnstileWidget, { turnstileEnabled } from '../../components/common/TurnstileWidget';
 
 const SUBJECT = { min: 5, max: 120 };
 const MESSAGE = { min: 20, max: 5000 };
@@ -72,8 +71,6 @@ export default function HelpNewTicket() {
     const [contact, setContact] = useState<Contact>(() => contactFromAccount(user));
     const touched = useRef(false);
     const [website, setWebsite] = useState(''); // hidden field: only bots fill it
-    const [robotToken, setRobotToken] = useState<string | null>(null);
-    const [robotReset, setRobotReset] = useState(0);
     const [sentNumber, setSentNumber] = useState<string | null>(null);
 
     // The account may load after the page: fill in what the member has not typed over.
@@ -110,11 +107,10 @@ export default function HelpNewTicket() {
         }
         const who = { name: contact.name.trim(), phone: contact.phone.trim(), email: contact.email.trim() };
         if (guest) {
-            if (turnstileEnabled() && !robotToken) { setSubmitError('Patientez un instant : la vérification anti-robot n’est pas terminée.'); return; }
             try {
                 setBusy('create');
                 const done = unwrap<{ id?: string; number?: string | null; key?: string }>(await sbcApiService.supportPublicTicket({
-                    category, subject: subject.trim(), message: message.trim(), contact: who, turnstileToken: robotToken ?? undefined, website,
+                    category, subject: subject.trim(), message: message.trim(), contact: who, website,
                 }));
                 if (done?.id && done.key) {
                     // Straight into the chat with the agent, like a member.
@@ -125,7 +121,6 @@ export default function HelpNewTicket() {
                 setSentNumber(done?.number ?? '');
             } catch (err) {
                 setSubmitError(supportErrorText(err, 'ticket'));
-                setRobotReset((n) => n + 1);
             } finally {
                 setBusy(null);
             }
@@ -255,7 +250,6 @@ export default function HelpNewTicket() {
                         <div aria-hidden="true" className="absolute -left-[9999px] h-px w-px overflow-hidden">
                             <label>Site web <input tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} name="website" /></label>
                         </div>
-                        <TurnstileWidget onToken={setRobotToken} resetKey={robotReset} />
                     </>
                 )}
 

@@ -1187,7 +1187,7 @@ export class SBCApiService extends ApiService {
   }
 
   /** « Signaler un problème » without an account (support-service /public/tickets): answers `{ number }` only. */
-  async supportPublicTicket(report: { category: string; subject: string; message: string; contact: SupportContact; turnstileToken?: string; website?: string }): Promise<ApiResponse> {
+  async supportPublicTicket(report: { category: string; subject: string; message: string; contact: SupportContact; website?: string }): Promise<ApiResponse> {
     return await this.post('/support/public/tickets', { body: report, requiresAuth: false });
   }
 
