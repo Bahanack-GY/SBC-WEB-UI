@@ -1,15 +1,18 @@
 import { useEffect, useSyncExternalStore } from 'react';
 
 /**
- * Live assistance (OpenReplay Assist, self-hosted): a support agent can watch a signed-in
- * member's screen live and, only if the member accepts, take control of it to help.
+ * Live assistance (OpenReplay Assist, self-hosted): with the member's agreement each time, a
+ * support agent can watch a signed-in member's screen live and, if the member accepts again,
+ * take control of it to help (privacy policy 2026-12, section 13 « Aide à distance »).
  * See server `docs/support/OPENREPLAY.md` « Assistance en direct ».
  *
  * Rules (2026-11-23):
- * - A control request is considered only when a support agent opened « Assistance en direct »
- *   for this member from the desk (support-service grant, checked by the agent's e-mail);
- *   anything else is declined at once. Then a French prompt naming SBC support opens; nothing
- *   happens without « Autoriser ». A banner stays on screen while control is active, with « Arrêter ».
+ * - Watching live: only an agent the desk let in (« Regarder » or « Assistance en direct »
+ *   opens a grant for that agent and member, checked here by the agent's e-mail), and only after
+ *   the member taps « Autoriser » (tracker-assist `requestConfirm`: nothing leaves the phone
+ *   before). The agreement ends when the agent leaves: the next viewing asks again.
+ * - Remote control: a grant that allows control (« Assistance en direct », support
+ *   administrators), then a second prompt; nothing happens without « Autoriser ». A banner stays on screen while control is active, with « Arrêter ».
  * - Calls and screen recording requests are refused: the prompt has no accept button.
  * - Remote control is never possible on a sensitive screen (money out, codes, passwords,
  *   contact or payout changes, authenticator setup, identity check, account deletion): a
@@ -97,19 +100,27 @@ export type RemoteControlLike = {
     releaseControl: (isDenied?: boolean, keepId?: boolean, skipUpdate?: boolean) => void;
     reconnect: (ids: string[]) => void;
 };
+type AgentInfo = { email?: string };
 type AssistLike = {
     remoteControl?: RemoteControlLike | null; stop?: () => void; start?: () => void;
-    agents?: Record<string, { agentInfo?: { email?: string } } | undefined>;
+    agents?: Record<string, { agentInfo?: AgentInfo } | undefined>;
+    // requestConfirm mode (view consent), tracker-assist 11.0.21
+    requestSessionConfirm?: (agentInfo?: AgentInfo) => void;
+    answerSessionConfirm?: (answer: boolean, agentInfo?: AgentInfo, fromAnotherTab?: boolean) => void;
+    sessionConfirmed?: boolean;
 };
+const SESSION_CONFIRM_KEY = '__openreplay_session_confirm';
 
-/** Asks support-service whether this agent may ask this member for control (desk grant). */
-export type GrantChecker = (agentEmail: string) => Promise<boolean>;
+/** What the desk allows this agent for this member (support-service grant). */
+export type Grant = { view: boolean; control: boolean };
+export type GrantChecker = (agentEmail: string) => Promise<Grant>;
 let grantChecker: GrantChecker = async (email) => {
     try {
         const { sbcApiService } = await import('./SBCApiService');
         const r = await sbcApiService.supportAssistGrant(email);
-        return r.isSuccessByStatusCode === true && r.body?.data?.allowed === true;
-    } catch { return false; }
+        const d = r.isSuccessByStatusCode === true ? r.body?.data : null;
+        return { view: d?.allowed === true, control: d?.allowed === true && d?.control === true };
+    } catch { return { view: false, control: false }; }
 };
 export function setGrantCheckerForTests(f: GrantChecker | null): void {
     grantChecker = f ?? grantChecker;
@@ -142,8 +153,8 @@ export function guardRemoteControl(rc: RemoteControlLike): RemoteControlLike {
         if (controlBlocked()) return decline(rc, id);
         const email = agentEmailOf(id);
         if (!email) return decline(rc, id);
-        void grantChecker(email).then((ok) => {
-            if (!ok || controlBlocked()) decline(rc, id);
+        void grantChecker(email).then((g) => {
+            if (!g.control || controlBlocked()) decline(rc, id);
             else request(id); // the member's prompt
         });
     };
@@ -156,7 +167,7 @@ export function guardRemoteControl(rc: RemoteControlLike): RemoteControlLike {
         try { stored = sessionStorage.getItem(CONTROL_PEER_KEY); } catch { /* ignore */ }
         const email = stored && ids.includes(stored) ? agentEmailOf(stored) : null;
         if (!email) return clear();
-        void grantChecker(email).then((ok) => { if (ok && !controlBlocked()) reconnect(ids); else clear(); });
+        void grantChecker(email).then((g) => { if (g.control && !controlBlocked()) reconnect(ids); else clear(); });
     };
     marked.__sbcGuarded = true;
     return rc;
@@ -176,7 +187,32 @@ export function attachAssist(instance: unknown): void {
             set: (v: RemoteControlLike | null) => { current = v ? guardRemoteControl(v) : v; },
         });
     } catch { /* checked by enforce(): falls back to stopping assist */ }
+    guardViewing(assist);
     enforce();
+}
+
+/**
+ * Viewing needs the member's agreement (requestConfirm) AND a desk grant for that agent: an
+ * OpenReplay user acting outside the desk is declined without the member being asked.
+ */
+function guardViewing(a: AssistLike): void {
+    const ask = a.requestSessionConfirm;
+    const answer = a.answerSessionConfirm;
+    if (typeof ask !== 'function' || typeof answer !== 'function') return; // test checks the pinned internals
+    a.requestSessionConfirm = (info?: AgentInfo) => {
+        const email = typeof info?.email === 'string' && info.email.includes('@') ? info.email : null;
+        if (!email) { answer(false, info); return; }
+        void grantChecker(email).then((g) => { if (g.view) ask(info); else answer(false, info); });
+    };
+}
+
+/** The agreement to be watched ends when the agents leave: the next viewing asks again. */
+function forgetViewingAgreement(): void {
+    if (!assist) return;
+    const others = Object.keys(assist.agents ?? {}).length;
+    if (others > 0) return;
+    assist.sessionConfirmed = false;
+    try { sessionStorage.removeItem(SESSION_CONFIRM_KEY); } catch { /* ignore */ }
 }
 
 /** Ends control now if a sensitive screen is up. If the plugin's internals changed, stops assist. */
@@ -233,26 +269,51 @@ const refuseOnly = (text: string) => {
     return { text, style: PROMPT_STYLE, confirmBtn: hidden ?? button('', false), declineBtn: button('Refuser', false) };
 };
 
+export const VIEW_PROMPT =
+    'Le support SBC demande à voir votre écran en direct pour vous aider. '
+    + 'L’agent ne voit jamais vos mots de passe ni vos codes. Il ne pourra rien toucher sans un second accord. Autoriser ?';
+
 export const CONTROL_PROMPT =
     'Le support SBC demande à prendre le contrôle de votre écran pour vous aider. '
     + 'L’agent pourra toucher et faire défiler à votre place. Il ne voit jamais vos mots de passe ni vos codes, '
     + 'et le contrôle est impossible sur les pages de retrait, de codes ou de changement de coordonnées. '
     + 'Vous pouvez arrêter à tout moment. Autoriser ?';
 
+/** An agent left; tracker-assist removes it from its list just after this callback. */
+function onAgentLeft(): void {
+    queueMicrotask(() => {
+        if (Object.keys(assist?.agents ?? {}).length === 0) {
+            setState({ watching: false });
+            forgetViewingAgreement();
+        }
+    });
+}
+
 /** Options for `@openreplay/tracker-assist`. */
 export function assistOptions(): Record<string, unknown> {
     return {
         // Live assistance only for signed-in members (found by their id from the desk).
         ignoreAnonymous: true,
+        // Nothing is shown live before the member agrees (privacy policy section 13).
+        requestConfirm: true,
+        sessionConfirm: { text: VIEW_PROMPT, style: PROMPT_STYLE, confirmBtn: button('Autoriser', true), declineBtn: button('Refuser', false) },
         // Our own call/control widget (same origin, French): the plugin would otherwise fetch
         // its template from static.openreplay.com.
         callUITemplate: '/openreplay-assist.html',
         controlConfirm: { text: CONTROL_PROMPT, style: PROMPT_STYLE, confirmBtn: button('Autoriser', true), declineBtn: button('Refuser', false) },
         callConfirm: refuseOnly('Le support SBC ne passe pas d’appel par l’application. Pour parler à un agent, utilisez « Aide ».'),
         recordingConfirm: refuseOnly('L’enregistrement vidéo de votre écran n’est pas utilisé par le support SBC.'),
-        onAgentConnect: (info: unknown) => {
-            setState({ watching: true, agentName: agentNameOf(info) });
-            return () => setState({ watching: false });
+        onSessionConfirmApprove: (info: unknown) => setState({ watching: true, agentName: agentNameOf(info) }),
+        onAgentConnect: () => {
+            // Another agent arriving while the member already agreed: the agreement was for the
+            // first one. Stop showing anything and ask again (tracker-assist then calls
+            // requestSessionConfirm, which checks this agent's desk grant first).
+            if (assist?.sessionConfirmed) {
+                assist.sessionConfirmed = false;
+                try { sessionStorage.removeItem(SESSION_CONFIRM_KEY); } catch { /* ignore */ }
+                setState({ watching: false });
+            }
+            return onAgentLeft;
         },
         onRemoteControlStart: (info: unknown) => {
             if (controlBlocked()) {

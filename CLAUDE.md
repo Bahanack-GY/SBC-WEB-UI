@@ -200,20 +200,25 @@ SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/A
   2026-11-23 (P1 switch-on) carries the recording paragraph. Server side: server
   `docs/support/OPENREPLAY.md`.
 - **Live assistance (2026-11-23).** `services/remoteAssist.ts` (`@openreplay/tracker-assist`
-  11.0.21, pinned: the guard relies on its internals, `remoteAssist.test.ts` checks them). A support
-  agent can watch a signed-in member live from the desk. **Remote control needs two things:** a desk
-  grant (an agent with `assist.control` opened « Assistance en direct » for this member; the app asks
-  `GET /support/me/assist/grant?agent=<OpenReplay e-mail>` before anything, so an OpenReplay user acting
-  outside the desk is declined without a prompt), then the member's « Autoriser » on a French prompt
-  naming SBC support; `RemoteAssistBanner` shows a red banner
-  with « Arrêter » while control runs. Calls and screen-recording requests can only be declined.
-  **No control on sensitive screens:** `SENSITIVE_ROUTES` (money out, codes, passwords, contact
-  changes, SSO, identity check, `/mes-donnees`) and every component calling
-  `useBlockRemoteControl()` (MoMo/crypto sheets, authenticator setup, VerifyEmailGate, withdrawal
-  forms, identity form): a request there is declined at once, running control ends. A new route
-  whose path looks sensitive fails `remoteAssist.test.ts` until it is listed (or exempted with a
-  reason); a new sensitive sheet must call the hook. The call/control widget is our own
-  `public/openreplay-assist.html` (the plugin would fetch one from static.openreplay.com).
+  11.0.21, pinned: the guard relies on its internals, `remoteAssist.test.ts` checks them). As the
+  privacy policy says (section 13), **every step needs the member's agreement, each time**:
+  - **Watching live** (`requestConfirm`): nothing leaves the phone until the member taps
+    « Autoriser » on « Le support SBC demande à voir votre écran… ». The prompt is shown only for an
+    agent the desk let in: the app first asks `GET /support/me/assist/grant?agent=<OpenReplay
+    e-mail>`; no grant → declined without asking. The agreement ends when the agent leaves, and a
+    second agent arriving makes the app ask again.
+  - **Remote control:** only with a grant that allows it (« Assistance en direct », support
+    administrators), then a second French prompt; `RemoteAssistBanner` shows a red banner with
+    « Arrêter » while it runs.
+  - Calls and screen-recording requests can only be declined.
+  - **No control on sensitive screens:** `SENSITIVE_ROUTES` (money out, codes, passwords, contact
+    changes, SSO, identity check, `/mes-donnees`) and every component calling
+    `useBlockRemoteControl()` (MoMo/crypto sheets, authenticator setup, VerifyEmailGate, withdrawal
+    forms, identity form): a request there is declined at once, running control ends. A new route
+    whose path looks sensitive fails `remoteAssist.test.ts` until it is listed (or exempted with a
+    reason); a new sensitive sheet must call the hook.
+  - The call/control widget is our own `public/openreplay-assist.html` (the plugin would fetch one
+    from static.openreplay.com).
 - **Device storage.** No analytics or ad cookies, ever. The cookie notice comes back 60 days
   after dismissal; `sweepExpiredStorage()` (main.tsx) wipes localStorage, except the token,
   every 60 days (the token and the `sbc_session` flag stay); logout removes `PERSONAL_STORAGE_KEYS`. Never store a password, and add any

@@ -55,10 +55,11 @@ describe('remote control is refused on sensitive screens', () => {
 
 describe('the guard around tracker-assist’s RemoteControl', () => {
     let granted = true;
+    let viewOnly = false;
     const asked: string[] = [];
     beforeEach(() => {
-        granted = true; asked.length = 0;
-        setGrantCheckerForTests(async (email) => { asked.push(email); return granted; });
+        granted = true; viewOnly = false; asked.length = 0;
+        setGrantCheckerForTests(async (email) => { asked.push(email); return { view: granted, control: granted && !viewOnly }; });
     });
     afterEach(() => { resetRemoteAssistForTests(); setAssistRoute('/'); try { sessionStorage.clear(); } catch { /* ignore */ } });
 
@@ -87,6 +88,45 @@ describe('the guard around tracker-assist’s RemoteControl', () => {
         await flush();
         expect(asked).toEqual(['Awa@SBC.test']);
         expect(request).toHaveBeenCalledWith('agent-1');
+    });
+
+    it('a view-only grant (« Regarder ») never leads to a control prompt', async () => {
+        const rc = fakeRc();
+        const request = rc.requestControl;
+        withAgent(rc);
+        viewOnly = true;
+        rc.requestControl('agent-1');
+        await flush();
+        expect(request).not.toHaveBeenCalled();
+        expect(rc.releaseControl).toHaveBeenCalledWith(true);
+    });
+
+    it('viewing: the member is asked only for an agent the desk let in; others are declined unasked', async () => {
+        const ask = vi.fn();
+        const answer = vi.fn();
+        // the plugin calls its own property, which is now our wrapper
+        const inst = { remoteControl: null, requestSessionConfirm: ask, answerSessionConfirm: answer } as Record<string, unknown>;
+        attachAssist(inst);
+        (inst.requestSessionConfirm as (i?: { email?: string }) => void)({ email: 'awa@sbc.test' });
+        await flush();
+        expect(ask).toHaveBeenCalledWith({ email: 'awa@sbc.test' });
+        granted = false;
+        (inst.requestSessionConfirm as (i?: { email?: string }) => void)({ email: 'intrus@sbc.test' });
+        (inst.requestSessionConfirm as (i?: { email?: string }) => void)({});
+        await flush();
+        expect(ask).toHaveBeenCalledTimes(1);
+        expect(answer).toHaveBeenCalledTimes(2);
+        expect(answer.mock.calls.every((c) => c[0] === false)).toBe(true);
+    });
+
+    it('a second agent arriving after the member agreed makes the app ask again', () => {
+        const inst = { remoteControl: null, sessionConfirmed: true, agents: {} } as Record<string, unknown>;
+        attachAssist(inst);
+        sessionStorage.setItem('__openreplay_session_confirm', '1');
+        const leave = (assistOptions().onAgentConnect as () => () => void)();
+        expect(inst.sessionConfirmed).toBe(false);
+        expect(sessionStorage.getItem('__openreplay_session_confirm')).toBeNull();
+        expect(typeof leave).toBe('function');
     });
 
     it('declines an agent without a desk grant, and one the plugin does not know', async () => {
@@ -197,10 +237,22 @@ describe('the guard around tracker-assist’s RemoteControl', () => {
         const aSrc = src('node_modules/@openreplay/tracker-assist/lib/Assist.js');
         expect(aSrc).toMatch(/this\.remoteControl\s*=\s*new RemoteControl/);
         expect(aSrc).toMatch(/this\.agents\[id\]\s*=\s*\{[\s\S]{0,200}agentInfo/);
+        // view consent (requestConfirm): the wrapper replaces this property; the plugin calls it through `this.`
+        expect(aSrc).toMatch(/this\.requestSessionConfirm\s*=\s*\(agentInfo\)/);
+        expect(aSrc).toMatch(/this\.answerSessionConfirm\s*=\s*\(answer, agentInfo/);
+        expect(aSrc.match(/this\.requestSessionConfirm\(/g)?.length).toBeGreaterThanOrEqual(2);
+        expect(aSrc).toContain('"__openreplay_session_confirm"');
     });
 });
 
 describe('what the member is asked', () => {
+    it('watching live needs the member’s « Autoriser » too (privacy policy section 13)', () => {
+        const o = assistOptions() as { requestConfirm: boolean; sessionConfirm: { text: string; confirmBtn: { innerHTML: string } } };
+        expect(o.requestConfirm).toBe(true);
+        expect(o.sessionConfirm.text).toMatch(/support SBC demande à voir votre écran/);
+        expect(o.sessionConfirm.confirmBtn.innerHTML).toBe('Autoriser');
+    });
+
     it('remote control needs the member’s « Autoriser », in French, naming SBC support', () => {
         const o = assistOptions() as { controlConfirm: { text: string; confirmBtn: { innerHTML: string } }; ignoreAnonymous: boolean; callUITemplate: string };
         expect(o.controlConfirm.text).toBe(CONTROL_PROMPT);
