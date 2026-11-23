@@ -29,6 +29,8 @@ export interface User {
   language?: string[];
   interests?: string[];
   isVerified?: boolean;
+  /** Paid but the e-mail was never verified (sign-ups from 2026-11-23): the app blocks on VerifyEmailGate. */
+  emailVerificationRequired?: boolean;
   createdAt?: string;
   updatedAt?: string;
   balance?: number;

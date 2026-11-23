@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { Route, Routes } from 'react-router-dom';
 import { ok, renderPage } from '../test/api';
 
 const api = vi.hoisted(() => ({
@@ -119,5 +120,41 @@ describe('sign-up form for an advertiser (/signup/formulaire?annonceur=1)', () =
         await user.click(register);
         expect(await screen.findByText('Code parrain requis.')).toBeInTheDocument();
         expect(auth.register).not.toHaveBeenCalled();
+    });
+
+    it('member sign-up signed in at once (email verified after payment): home, not the code page', async () => {
+        auth.register.mockResolvedValue({ userId: 'u1', signedIn: true });
+        renderPage(
+            <Routes>
+                <Route path="/signup/formulaire" element={<Signup />} />
+                <Route path="/" element={<p>Accueil</p>} />
+                <Route path="/otp" element={<p>Page du code</p>} />
+            </Routes>,
+            '/signup/formulaire',
+        );
+        await fillUntilAgreements('Cameroun');
+        await user.click(screen.getByRole('checkbox', { name: /conditions d'utilisation et la politique de confidentialité/ }));
+        const register = screen.getByRole('button', { name: "S'inscrire" });
+        await waitFor(() => expect(register).toBeEnabled());
+        await user.click(register);
+        expect(await screen.findByText('Accueil')).toBeInTheDocument();
+        expect(screen.queryByText('Page du code')).toBeNull();
+    });
+
+    it('a sign-up that still needs the code (annonceur, or the switch back) goes to the code page', async () => {
+        renderPage(
+            <Routes>
+                <Route path="/signup/formulaire" element={<Signup />} />
+                <Route path="/" element={<p>Accueil</p>} />
+                <Route path="/otp" element={<p>Page du code</p>} />
+            </Routes>,
+            '/signup/formulaire',
+        );
+        await fillUntilAgreements('Cameroun');
+        await user.click(screen.getByRole('checkbox', { name: /conditions d'utilisation et la politique de confidentialité/ }));
+        const register = screen.getByRole('button', { name: "S'inscrire" });
+        await waitFor(() => expect(register).toBeEnabled());
+        await user.click(register);
+        expect(await screen.findByText('Page du code')).toBeInTheDocument();
     });
 });

@@ -124,6 +124,18 @@ The codebase includes `ApiTestComponent` and `LoginDebugComponent` for API endpo
   with `false`, as AuthProvider does. Mock `AuthContext` whole, not with `importOriginal`:
   it and `useAdsRoles` import each other.
 
+### Email verified after payment, not at sign-up (2026-11-23)
+Sign-up no longer asks for a code (it lost people before they paid). `register` answers with a
+token for a member sign-up: `AuthContext.register` returns `{ signedIn: true }` and stores the
+session (`storeSession`, shared with the code step), the chat goes straight to the optional
+profile questions and the form to `/`. An annonceur sign-up still gets the code (no pack to pay).
+While the account is unpaid and unverified, `login` also answers with a token (password only).
+Once paid, `user.emailVerificationRequired` (server: paid, never verified, account from
+2026-11-23) makes `RequireSubscription` render `components/security/VerifyEmailGate`: a code to the
+account e-mail (`/users/me/verify-email/request|confirm`), « Mauvaise adresse ? » to correct a typo
+with the password (`…/correct`), « Se déconnecter ». The profile read before paying is stale, so the
+guard reads it again once when the pack turns active. Server switch back: `SIGNUP_EMAIL_CODE=at_signup`.
+
 ### New deploys reach open apps (2026-11-23)
 An installed app can stay open for days, so it kept running old screens after a deploy (on
 preprod an old MoMo screen still asked for an e-mailed code after the server retired it).
