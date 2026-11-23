@@ -37,7 +37,12 @@ describe('Contacts: Espace Pro banner', () => {
   it('tells every member to download the SBC Network app', async () => {
     auth.user = { activeSubscriptions: ['CIBLE', 'PRO'] };
     renderPage(<Contacts />, '/contacts');
-    expect(await screen.findByText(/sur Play Store ou App Store pour mieux gérer les contacts SBC/)).toBeInTheDocument();
+    expect(await screen.findByText(/pour mieux gérer les contacts SBC/)).toBeInTheDocument();
     expect(screen.getByText('SBC Network')).toBeInTheDocument();
+    const play = screen.getByRole('link', { name: /Google Play/ });
+    expect(play).toHaveAttribute('href', 'https://play.google.com/store/apps/details?id=com.sbc.sbc_contacts');
+    expect(play).toHaveAttribute('target', '_blank');
+    // No App Store link yet: no dead button.
+    expect(screen.queryByRole('link', { name: /App Store/ })).not.toBeInTheDocument();
   });
 });
