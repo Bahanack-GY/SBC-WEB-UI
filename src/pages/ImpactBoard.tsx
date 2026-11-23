@@ -7,8 +7,9 @@ import Skeleton from '../components/common/Skeleton';
 import MyVotePurchases from '../components/impact/MyVotePurchases';
 import { FREE_ROUND, MEDALS, PAID_ROUND, STAGE_INFO, plural, roundLine } from '../components/impact/stages';
 import { sbcApiService } from '../services/SBCApiService';
-import { openRound, useImpactBoard, useImpactCurrentEdition, useImpactMyVotes } from '../hooks/useImpactCandidate';
-import type { ImpactEdition, ImpactPublicCandidate, ImpactStage } from '../types/impact';
+import JuryEntryCard from '../components/impact/JuryEntryCard';
+import { isFinalEdition, openRound, useImpactBoard, useImpactCurrentEdition, useImpactMyVotes } from '../hooks/useImpactCandidate';
+import { FINAL_STAGES, type ImpactEdition, type ImpactPublicCandidate, type ImpactStage } from '../types/impact';
 import { listContainer, listItem, sectionRise, sequence } from '../utils/motion';
 import { cn } from '../lib/utils';
 
@@ -33,7 +34,7 @@ function StageBanner({ stage, edition }: { stage: ImpactStage; edition: ImpactEd
 }
 
 function Metric({ c, stage, position }: { c: ImpactPublicCandidate; stage: ImpactStage; position: number }) {
-  if (stage === 'TOP3') {
+  if (FINAL_STAGES.includes(stage)) {
     return (
       <span className="shrink-0 flex flex-col items-end">
         {c.rank ? (
@@ -66,7 +67,7 @@ function CandidateRow({ c, stage, position, votedFor, mine }: {
         to={`/impact-challenge/candidats/${encodeURIComponent(c._id)}`}
         aria-label={`${c.profile.name}, ${c.profile.projectName}`}
         className={cn(card, 'flex items-center gap-3 hover:bg-surface-2 transition-colors',
-          stage === 'TOP3' && c.status === 'FINALIST' && 'border-accent', mine && 'border-primary bg-primary-soft/40')}
+          FINAL_STAGES.includes(stage) && (c.status === 'FINALIST' || c.status === 'WINNER') && 'border-accent', mine && 'border-primary bg-primary-soft/40')}
       >
         <img
           src={sbcApiService.generateThumbnailUrl(c.profile.photoFileId, 128)}
@@ -85,7 +86,7 @@ function CandidateRow({ c, stage, position, votedFor, mine }: {
             {[c.profile.city, c.profile.country].filter(Boolean).join(', ')}
             {votedFor && <span className="ml-1 font-semibold text-success">· Votre vote</span>}
           </span>
-          {stage === 'TOP3' && (
+          {FINAL_STAGES.includes(stage) && (
             <span className={cn('mt-1 inline-block text-[11px] font-bold rounded-pill px-2 py-0.5',
               c.status === 'FINALIST' || c.status === 'WINNER' ? 'bg-accent-soft text-accent' : 'bg-surface-2 text-ink-3')}>
               {c.statusLabel}
@@ -151,6 +152,17 @@ export default function ImpactBoard() {
       <motion.div variants={sequence} initial="hidden" animate="show" className="flex flex-col gap-4">
         <StageBanner stage={stage} edition={current.data} />
 
+        {(stage === 'LIVE' || stage === 'RESULT') && (
+          <motion.div variants={sectionRise}>
+            <Link to="/impact-challenge/finale" className="flex items-center justify-between gap-2 bg-accent text-white font-semibold rounded-card px-4 py-3.5">
+              {stage === 'LIVE' ? 'Suivre la finale en direct' : 'Voir le résultat de la finale'}
+              <HugeiconsIcon icon={ArrowRight01Icon} size={18} />
+            </Link>
+          </motion.div>
+        )}
+
+        <JuryEntryCard active={isFinalEdition(current.data)} />
+
         {stage === 'WEEK2' && votedFor && (
           <motion.p variants={sectionRise} role="status" className="text-sm text-success bg-success-soft rounded-card px-4 py-3 flex items-center gap-2">
             <HugeiconsIcon icon={CheckmarkCircle02Icon} size={18} />
@@ -170,10 +182,10 @@ export default function ImpactBoard() {
         <motion.section variants={sectionRise} className="flex flex-col gap-3" aria-labelledby="impact-board-list">
           <div className="flex items-baseline justify-between gap-2">
             <h2 id="impact-board-list" className="text-lg font-bold text-ink">
-              {stage === 'TOP3' ? 'Classement final' : 'Les candidats'}
+              {stage === 'RESULT' ? 'Classement final' : FINAL_STAGES.includes(stage) ? 'Classement du TOP 3' : 'Les candidats'}
             </h2>
             {stage === 'WEEK2' && <span className="text-xs text-ink-3">{plural(board.data.totals.freeVotes, 'vote gratuit', 'votes gratuits')}</span>}
-            {(stage === 'WEEK3' || stage === 'TOP3') && <span className="text-xs text-ink-3">{plural(board.data.totals.paidVotes, 'vote', 'votes')}</span>}
+            {(stage === 'WEEK3' || FINAL_STAGES.includes(stage)) && <span className="text-xs text-ink-3">{plural(board.data.totals.paidVotes, 'vote', 'votes')}</span>}
           </div>
           {list.length === 0 ? (
             <p className="text-sm text-ink-3 bg-surface border border-border rounded-card p-4">Les candidats seront présentés très bientôt.</p>

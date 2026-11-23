@@ -14,6 +14,8 @@ const api = vi.hoisted(() => ({
   generateThumbnailUrl: vi.fn(),
   impactSubmitVideo: vi.fn(),
   impactSubmitProject: vi.fn(),
+  impactFinal: vi.fn(),
+  impactJuryMe: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 vi.mock('../contexts/AuthContext', () => ({
@@ -263,7 +265,7 @@ describe('candidate space', () => {
 const round = (status: string) => ({ status, opensAt: iso(-DAY), closesAt: iso(2 * DAY), openedAt: status === 'SCHEDULED' ? null : iso(-DAY), closedAt: status === 'CLOSED' ? iso(-60_000) : null });
 
 const competition = (stage: string, rounds: Record<string, unknown>, cand: Record<string, unknown>, submissions: Record<string, unknown> = {}) => ok({
-  edition: edition({ status: stage === 'TOP3' ? 'FINAL' : 'COMPETITION', stage, registrationOpen: false, rounds: { FREE: null, PAID: null, ...rounds } }),
+  edition: edition({ status: stage === 'TOP3' || stage === 'LIVE' ? 'FINAL' : 'COMPETITION', stage, registrationOpen: false, rounds: { FREE: null, PAID: null, ...rounds } }),
   candidacy: candidate({
     status: 'OFFICIAL', statusLabel: 'Candidat officiel', seatNumber: 4, review: { status: 'APPROVED' },
     invitations: { valid: 10, pending: 0, required: 10, reachedAt: iso(-9 * DAY), checkedAt: iso(-DAY) },
@@ -363,7 +365,9 @@ describe('competition: the candidate space', () => {
       ['L’impact attendu', PROJECT.expectedImpact], ['L’utilisation d’un éventuel financement', PROJECT.fundingUse],
       ['Les perspectives de développement', PROJECT.outlook],
     ]) {
-      await userEvent.type(within(form).getByLabelText(label), value);
+      // Pasted, not typed: 8 long texts typed key by key take seconds on a loaded CI machine.
+      await userEvent.click(within(form).getByLabelText(label));
+      await userEvent.paste(value);
     }
     await userEvent.click(within(form).getByRole('button', { name: 'Envoyer mon projet' }));
     await waitFor(() => expect(api.impactSubmitProject).toHaveBeenCalledWith(PROJECT));
@@ -386,5 +390,55 @@ describe('competition: the candidate space', () => {
     expect(screen.getByRole('link', { name: 'Voir la publication' })).toHaveAttribute('href', 'https://facebook.com/sbc/posts/9');
     expect(screen.queryByRole('form', { name: /Envoyer/ })).not.toBeInTheDocument();
     expect(screen.getByTestId('impact-step-5')).toHaveTextContent('En cours');
+  });
+});
+
+// ---------- Phase 3: the final ----------
+
+describe('competition: the finalist', () => {
+  beforeEach(() => {
+    api.impactJuryMe.mockResolvedValue(ok([]));
+  });
+
+  it('live: « La finale » leads to the live screen', async () => {
+    api.impactMe.mockResolvedValue(competition('LIVE', { FREE: round('CLOSED'), PAID: round('CLOSED') },
+      { status: 'FINALIST', statusLabel: 'Finaliste', rank: 2, votes: { free: 3, paid: 40, paidAmount: 8000 } }));
+    api.impactFinal.mockResolvedValue(ok({ editionId: 'ed1', stage: 'LIVE', finalists: [], result: null }));
+    renderPage(<ImpactCandidate />);
+    expect(await screen.findByRole('heading', { name: 'La finale' })).toBeInTheDocument();
+    expect(await screen.findByRole('link', { name: 'Suivre la finale en direct' })).toHaveAttribute('href', '/impact-challenge/finale');
+    expect(screen.getByTestId('impact-step-5')).toHaveTextContent('En cours');
+  });
+
+  it('after the result: the score and the rank, « Gagnant »', async () => {
+    api.impactMe.mockResolvedValue(ok({
+      ...(await competition('RESULT', { FREE: round('CLOSED'), PAID: round('CLOSED') },
+        { status: 'WINNER', statusLabel: 'Gagnant', rank: 1, votes: { free: 3, paid: 80, paidAmount: 16000 } })).body.data,
+      edition: edition({ status: 'FINISHED', stage: 'RESULT', registrationOpen: false, rounds: { FREE: round('CLOSED'), PAID: round('CLOSED') } }),
+    }));
+    api.impactFinal.mockResolvedValue(ok({
+      editionId: 'ed1', stage: 'RESULT', finalists: [],
+      result: {
+        publishedAt: iso(0), winnerCandidateId: 'cand1', weights: { paidVotes: 50, publicVote: 30, jury: 20 },
+        rows: [{ candidateId: 'cand1', name: 'Paul Mbarga', projectName: 'Ferme Verte', paidVotes: 80, finalVotes: 100, juryAverage: 40, juryMax: 50, jurorsCount: 3, components: { paidVotes: 100, publicVote: 100, jury: 100 }, score: 100, rank: 1 }],
+      },
+    }));
+    renderPage(<ImpactCandidate />);
+    const mine = await screen.findByTestId('impact-my-final');
+    expect(mine).toHaveTextContent('100/100');
+    expect(mine).toHaveTextContent('🥇 1er');
+    expect(screen.getByRole('link', { name: 'Voir le résultat' })).toHaveAttribute('href', '/impact-challenge/finale');
+    expect(screen.getByTestId('impact-my-result')).toHaveTextContent('Gagnant');
+    expect(screen.getByText(/Vous avez remporté le SBC Impact Challenge/)).toBeInTheDocument();
+    expect(screen.getByTestId('impact-step-5')).toHaveTextContent('Terminé');
+  });
+
+  it('a juror sees « Espace jury »', async () => {
+    api.impactMe.mockResolvedValue(competition('LIVE', { FREE: round('CLOSED'), PAID: round('CLOSED') },
+      { status: 'ELIMINATED', statusLabel: 'Éliminé', rank: 5 }));
+    api.impactJuryMe.mockResolvedValue(ok([{ edition: { _id: 'ed1' }, canScore: true, finalists: [] }]));
+    renderPage(<ImpactCandidate />);
+    expect(await screen.findByRole('link', { name: /Espace jury/ })).toHaveAttribute('href', '/impact-challenge/jury');
+    expect(screen.queryByRole('heading', { name: 'La finale' })).not.toBeInTheDocument();
   });
 });

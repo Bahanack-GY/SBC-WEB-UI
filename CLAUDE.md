@@ -218,6 +218,29 @@ FERMÉES ». `pages/ImpactCandidate.tsx`, `components/impact/{CandidateProfileFo
     - It calls `useBlockRemoteControl(open)`: money leaves the account.
   - **Videos** are uploaded with `uploadFile` and refused above 100 Mo (settings-service, nginx and Cloudflare
     all stop at 100 MB). They play from `generateSettingsFileUrl(fileId)`, like the event pages.
+- **Phase 3 (live final, jury, result; server `PHASE3.md`).**
+  - **Live screen** `/impact-challenge/finale` (`pages/ImpactFinal.tsx`, `GET /public/final`).
+    - Shows the 3 finalists and « En scène » with the phase.
+    - Shows the final public vote, driven by `canFinalVote` / `finalVote` / `myCandidateId` exactly like the
+      week-2 vote; self-vote follows `settings.freeVote.selfVote`.
+    - After the result: the winner, then each finalist's three parts (/100), the weights, the score, the rank and
+      the server's `formula`.
+    - Polled every 5 s while LIVE, every 60 s otherwise, paused when hidden. It is laid out for the big screen
+      too (`lg:`).
+    - Board, entry card and the finalist's candidate space (« La finale »: link, then their score and rank)
+      point to it during LIVE/RESULT.
+  - **Jury space** `/impact-challenge/jury` (`pages/ImpactJury.tsx`, `GET /jury/me`, `PUT …/score`).
+    - **Routing:** under `RequireAuth` only, since jurors can be outside personalities without a pack. A
+      non-member gets no member header there (`nonMemberOnJury` in App).
+    - **Marks:** one stepper + slider per criterion (half points), the live total, an optional comment. The
+      finalist on stage comes first.
+    - **Code:** on `AUTH_CODE_REQUIRED` a sheet asks the authenticator code (`AuthenticatorCodeField`, hidden
+      from replay) and resends with `authCode`. `AUTHENTICATOR_REQUIRED` opens `AuthenticatorRequiredNotice`
+      (setup in place).
+    - **Read-only** when locked or not LIVE; « Modifié N fois » comes from `edits`.
+    - `useBlockRemoteControl` while scoring is open and while the code sheet is open.
+  - « Espace jury » (`components/impact/JuryEntryCard.tsx`) shows on the Impact pages when `/jury/me` is
+    non-empty. It is only asked while the edition is FINAL/FINISHED, never from the home page.
 
 ### Withdrawals with the authenticator app
 With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.

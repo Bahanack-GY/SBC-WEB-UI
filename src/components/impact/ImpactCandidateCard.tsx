@@ -11,29 +11,32 @@ import { FREE_ROUND, PAID_ROUND, STAGE_INFO, roundLine } from './stages';
  * leads to the candidate space; once the competition starts, to the board.
  */
 export default function ImpactCandidateCard({ edition }: { edition: ImpactEdition }) {
-  const competition = edition.status === 'COMPETITION' || edition.status === 'FINAL';
+  const competition = edition.status === 'COMPETITION' || edition.status === 'FINAL' || edition.status === 'FINISHED';
   if (competition) {
     const stage = edition.stage ?? 'WEEK1';
+    const toFinal = stage === 'LIVE' || stage === 'RESULT';
     const info = STAGE_INFO[stage];
     const line = stage === 'WEEK2' ? roundLine(edition.rounds?.FREE, FREE_ROUND)
       : stage === 'WEEK3' ? roundLine(edition.rounds?.PAID, PAID_ROUND)
         : `${info.week} : ${info.title}`;
     return (
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} whileTap={{ scale: 0.98 }}>
-        <Link to="/impact-challenge/candidats" className="relative block overflow-hidden bg-ink text-white rounded-card p-4">
+        <Link to={toFinal ? '/impact-challenge/finale' : '/impact-challenge/candidats'} className="relative block overflow-hidden bg-ink text-white rounded-card p-4">
           <span aria-hidden className="absolute -right-8 -bottom-10 size-32 rounded-pill bg-white/10" />
           <span aria-hidden className="absolute right-4 top-4 size-10 grid place-items-center rounded-pill bg-accent text-white">
             <HugeiconsIcon icon={ChampionIcon} size={20} />
           </span>
           <span className="block text-[11px] font-semibold uppercase tracking-wide text-white/70">{edition.name}</span>
           <span className="block font-bold text-lg leading-tight mt-1 pr-12">
-            {stage === 'TOP3' ? 'SBC Impact Challenge : les finalistes' : 'SBC Impact Challenge : votez pour les candidats'}
+            {stage === 'LIVE' ? 'SBC Impact Challenge : la finale en direct'
+              : stage === 'RESULT' ? 'SBC Impact Challenge : le résultat'
+                : stage === 'TOP3' ? 'SBC Impact Challenge : les finalistes' : 'SBC Impact Challenge : votez pour les candidats'}
           </span>
           <span className="block text-sm text-white/85 mt-1 pr-6">{info.text}</span>
           <span className="mt-3 flex items-center justify-between gap-2">
             <span className="text-xs text-white/80 min-w-0">{line}</span>
             <span className="flex items-center gap-1 bg-white text-ink text-sm font-semibold rounded-pill px-3 py-1.5 shrink-0">
-              Voir les candidats
+              {stage === 'LIVE' ? 'Suivre la finale' : stage === 'RESULT' ? 'Voir le résultat' : 'Voir les candidats'}
               <HugeiconsIcon icon={ArrowRight01Icon} size={16} />
             </span>
           </span>
