@@ -17,10 +17,10 @@ vi.mock('../../contexts/AuthContext', () => ({ useAuth: () => auth }));
 import PrivacyNotices from './PrivacyNotices';
 
 const user = userEvent.setup();
-const CURRENT = { privacy: { acceptedAt: '2026-11-08T10:00:00Z', version: '2026-11' }, dataTransfer: { acceptedAt: '2026-11-08T10:00:00Z', version: '2026-11' } };
+const CURRENT = { privacy: { acceptedAt: '2026-11-23T10:00:00Z', version: '2026-12' }, dataTransfer: { acceptedAt: '2026-11-23T10:00:00Z', version: '2026-12' } };
 const DAY = 24 * 60 * 60 * 1000;
 
-/** A Benin member by default: the only members the consent window is for. */
+/** A Benin member by default (the only ones also asked about the transfer outside Benin). */
 const member = (consents?: unknown, country = 'BJ') => {
     auth.isAuthenticated = true;
     auth.user = { _id: 'u1', name: 'Awa', country, consents };
@@ -63,8 +63,21 @@ describe('consent window', () => {
         expect(await screen.findByRole('dialog', { name: 'Vos données personnelles' })).toBeInTheDocument();
     });
 
-    it('never asks a member outside Benin, even without consents', async () => {
-        member(undefined, 'CM');
+    it('asks a member outside Benin for the policy only, with what is new, and records it', async () => {
+        localStorage.setItem(COOKIE_NOTICE_KEY, String(Date.now()));
+        member({ privacy: { acceptedAt: '2026-11-08T10:00:00Z', version: '2026-11' } }, 'CM');
+        renderPage(<PrivacyNotices raised />, '/');
+        const dialog = await screen.findByRole('dialog', { name: 'Vos données personnelles' });
+        expect(dialog).toHaveTextContent('Notre politique de confidentialité a changé');
+        expect(dialog).toHaveTextContent('vos sessions dans l’application (jamais vos mots de passe ni vos codes)');
+        expect(screen.queryByRole('checkbox', { name: /hors du Bénin/ })).not.toBeInTheDocument();
+        await user.click(screen.getByRole('checkbox', { name: /conditions d’utilisation et la politique de confidentialité/ }));
+        await user.click(screen.getByRole('button', { name: 'J’accepte' }));
+        await waitFor(() => expect(api.recordConsents).toHaveBeenCalledWith({ privacy: true }));
+    });
+
+    it('never asks a member outside Benin who accepted the current policy', async () => {
+        member({ privacy: CURRENT.privacy }, 'CM');
         renderPage(<PrivacyNotices raised />, '/');
         expect(await screen.findByRole('region', { name: 'Cookies' })).toBeInTheDocument();
         expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

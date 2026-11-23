@@ -56,8 +56,8 @@ describe('Mes données personnelles (/mes-donnees)', () => {
         renderMyData();
         const accords = screen.getByRole('region', { name: 'Vos accords' });
         expect(within(accords).queryByText(/hors du Bénin/)).not.toBeInTheDocument();
-        // No consent window outside Benin, so no "new version" promise either.
-        expect(accords).not.toHaveTextContent('nouvelle version');
+        // Since version 2026-12 every member accepts the new policy in the consent window.
+        expect(accords).toHaveTextContent('nouvelle version');
     });
 
     it('shows a Benin member the hosting agreement still to give', () => {

@@ -141,7 +141,7 @@ export class SBCApiService extends ApiService {
   // ==================== PERSONAL DATA (APDP) ====================
 
   /** Records that the member accepts the privacy policy and the transfer of data outside Benin. */
-  async recordConsents(consents: { privacy: true; dataTransfer: true }): Promise<ApiResponse> {
+  async recordConsents(consents: { privacy: true; dataTransfer?: true }): Promise<ApiResponse> {
     return await this.post('/users/me/consents', { body: consents });
   }
 

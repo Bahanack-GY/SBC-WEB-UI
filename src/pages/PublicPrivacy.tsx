@@ -9,7 +9,7 @@ const MyData = () => <Link to="/mes-donnees">Mes données personnelles</Link>;
 
 export default function PublicPrivacy() {
   return (
-    <LegalPage title="Politique de confidentialité" updated="Dernière mise à jour : Novembre 2026">
+    <LegalPage title="Politique de confidentialité" updated="Dernière mise à jour : 23 novembre 2026">
       <p>
         Sniper Business Center (« <strong>SBC</strong> », « nous ») protège vos données personnelles. Cette
         politique explique quelles informations nous collectons, pourquoi, avec qui nous les partageons, où
@@ -68,8 +68,8 @@ export default function PublicPrivacy() {
       <H>5. Base légale</H>
       <p>
         Le traitement de vos données repose avant tout sur <strong>votre consentement</strong>, recueilli
-        lors de votre inscription (ou, pour les membres du Bénin déjà inscrits, dans la fenêtre d'accord
-        affichée dans l'application). Nous enregistrons la date de votre accord et la version de la politique que
+        lors de votre inscription ou dans la fenêtre d'accord affichée dans l'application à chaque
+        nouvelle version de cette politique. Nous enregistrons la date de votre accord et la version de la politique que
         vous avez acceptée. Il repose aussi sur l'exécution du service auquel vous avez souscrit, sur nos
         obligations légales et sur notre intérêt légitime à sécuriser le service.
       </p>
@@ -82,6 +82,7 @@ export default function PublicPrivacy() {
         <li><strong>Prestataires de paiement</strong> : MoneyFusion, CinetPay et FeexPay (Mobile Money), NOWPayments (crypto), pour traiter vos paiements et vos retraits.</li>
         <li><strong>WhatsApp (Meta)</strong> : envoi de vos codes de connexion par WhatsApp quand vous choisissez ce canal.</li>
         <li><strong>Un opérateur d'envoi de SMS</strong>, pour les SMS de relance (Cameroun uniquement).</li>
+        <li><strong>Gravatar (Automattic, Inc., États-Unis)</strong> : seulement si nos contrôles de sécurité signalent votre compte, pour savoir si votre adresse email a un profil Gravatar public (voir la section 14).</li>
         <li><strong>Le service de notifications de votre navigateur</strong> (Google, Apple ou Mozilla), si vous activez les notifications sur votre téléphone.</li>
         <li><strong>Les membres de la communauté SBC</strong> : uniquement votre fiche de contact, dans le fichier de contacts SBC, conformément aux <TermsLink>CGU</TermsLink> et tant que le partage est activé.</li>
         <li><strong>Les autorités</strong>, sur réquisition légale.</li>
@@ -124,7 +125,9 @@ export default function PublicPrivacy() {
         Nous conservons vos données tant que votre compte est actif. Quand vous supprimez votre compte,
         vos données sont effacées, sauf celles que la loi nous oblige à garder (transactions, données
         comptables), conservées jusqu'à 5 ans. Les journaux de connexion sont conservés 12 mois au plus.
-        Ce que le site garde sur votre appareil est effacé au plus tard après 60 jours.
+        Ce que le site garde sur votre appareil est effacé au plus tard après 60 jours. Les signaux de
+        sécurité (section 12) sont effacés après 180 jours, les enregistrements de sessions (section 13)
+        après 30 jours, et le résultat des vérifications de votre adresse email (section 14) après 12 mois.
       </p>
 
       <H id="droits">10. Vos droits et comment les exercer</H>
@@ -160,19 +163,71 @@ export default function PublicPrivacy() {
         journaux d'audit.
       </p>
 
-      <H>12. Mineurs</H>
+      <H id="signaux">12. Sécurité de votre compte : pays, réseau et appareil</H>
+      <p>
+        Pour protéger votre compte et votre argent contre le piratage et la fraude, nous enregistrons, à
+        chaque utilisation de SBC (site, application ou autre) :
+      </p>
+      <ul>
+        <li>le <strong>pays</strong> depuis lequel vous vous connectez (déduit de votre adresse IP par notre hébergeur Cloudflare) ;</li>
+        <li>votre <strong>réseau</strong> : l'opérateur internet et une plage d'adresses IP (jamais votre adresse IP complète) ;</li>
+        <li>un <strong>identifiant d'appareil</strong> : un numéro au hasard créé par le site dans votre navigateur (il ne contient aucune information sur vous et est renouvelé tous les 60 jours) ;</li>
+        <li>les <strong>jours où vous utilisez SBC</strong> et le nombre de vos actions ce jour-là, ainsi que vos connexions.</li>
+      </ul>
+      <p>
+        <strong>Pourquoi :</strong> repérer une connexion inhabituelle (un autre pays, un nouvel appareil)
+        avant un retrait ou un changement de vos coordonnées de paiement, et savoir quels comptes sont actifs.
+      </p>
+      <p>
+        <strong>Combien de temps :</strong> ces informations sont effacées automatiquement après
+        <strong> 180 jours</strong>. Votre pays habituel et la date de votre dernière activité sont gardés sur
+        votre compte tant qu'il existe.
+      </p>
+      <p>
+        <strong>Vos droits :</strong> elles figurent dans le fichier « Télécharger mes données » (page{' '}
+        <MyData />) et sont effacées si vous supprimez votre compte.
+      </p>
+
+      <H id="sessions">13. Enregistrement de vos sessions</H>
+      <p>
+        Pour aider le support à comprendre et régler vos problèmes, et pour repérer la fraude, nous
+        enregistrons la façon dont vous utilisez l'application : les pages ouvertes, vos clics, ce qui
+        s'affiche à l'écran et ce que vous tapez dans les champs. <strong>Vos mots de passe et vos codes
+        (connexion, retrait, application d'authentification) ne sont jamais enregistrés.</strong>
+      </p>
+      <p>
+        Ces enregistrements sont gardés sur notre propre serveur en Allemagne (Contabo), ne sont visibles
+        que par les agents du support SBC, et sont <strong>effacés après 30 jours</strong>.
+      </p>
+      <p>
+        <strong>Aide à distance :</strong> avec votre accord, donné à chaque fois, un agent du support SBC peut
+        voir votre écran en direct et agir dans l'application pour vous aider. Vous pouvez arrêter à tout
+        moment. Ce n'est jamais possible sur les écrans de retrait, de coordonnées de paiement, de mot de
+        passe ou de code.
+      </p>
+
+      <H id="verifications-email">14. Vérifications de votre adresse email</H>
+      <p>
+        Quand nos contrôles de sécurité signalent un compte, nous pouvons vérifier si son adresse email est
+        utilisée sur d'autres services publics (sites et applications, au moyen de leurs pages publiques
+        d'inscription ou de mot de passe oublié, <strong>sans qu'aucun message vous soit envoyé</strong>) et si
+        elle a un profil Gravatar public. Nous gardons seulement le résultat (par exemple « adresse utilisée
+        sur 6 services »), jamais les données de ces services, pendant <strong>12 mois</strong>.
+      </p>
+
+      <H>15. Mineurs</H>
       <p>
         SBC n'est pas destiné aux personnes de moins de 18 ans. Nous ne collectons pas sciemment les
         données de mineurs.
       </p>
 
-      <H>13. Modifications</H>
+      <H>16. Modifications</H>
       <p>
         Nous pouvons mettre à jour cette politique. En cas de changement important, nous vous en informons
         dans l'application ou par email et, si nécessaire, nous vous demandons à nouveau votre accord.
       </p>
 
-      <H>14. Contact</H>
+      <H>17. Contact</H>
       <p>
         Pour toute question sur vos données personnelles : <Mail /> ou +237 6 82 90 35 35. Voir aussi les{' '}
         <Link to="/mentions-legales">mentions légales</Link>.

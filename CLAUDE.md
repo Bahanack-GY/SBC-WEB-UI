@@ -154,12 +154,14 @@ history's « Continuer la vérification OTP » land there too.
 ### Personal data (APDP, Benin) — November 2026
 SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/APDP/DST/SC du
 27 août 2026) on conditions the app must keep meeting:
-- **Consent — Benin members only** (Rufus, 2026-11-08; `isBenin` in `utils/privacy.ts`).
-  Sign-up (chat and `/signup/formulaire`) always requires the terms + privacy box; the
-  hosting-outside-Benin box is shown and required only when the country is Benin, and
-  `consents.dataTransfer` is true only then. Existing Benin members get a blocking window
-  (`components/privacy/PrivacyNotices.tsx`) until `user.consents` matches
-  `PRIVACY_POLICY_VERSION`. Bumping that constant (with the backend's) asks them again. The window never covers the legal pages, sign-up, `/otp`, SSO, `/p/*`
+- **Consent** (`utils/privacy.ts`). Sign-up (chat and `/signup/formulaire`) always requires the
+  terms + privacy box; the hosting-outside-Benin box is shown and required only when the country
+  is Benin (Rufus, 2026-11-08), and `consents.dataTransfer` is true only then. **Since version
+  2026-12 (2026-11-23)** every member, whatever the country, gets the blocking window
+  (`components/privacy/PrivacyNotices.tsx`) until `user.consents.privacy.version` matches
+  `PRIVACY_POLICY_VERSION`; Benin members also until they gave `dataTransfer`. 2026-12 added the
+  security signals, session recordings (+ remote help on each request) and e-mail checks
+  (`/confidentialite` sections 12–14); the window says what is new to members who had accepted. Bumping that constant (with the backend's) asks them again. The window never covers the legal pages, sign-up, `/otp`, SSO, `/p/*`
   or `/mes-donnees` (a member who refuses must be able to delete the account).
 - **Legal texts.** `/confidentialite` and `/mentions-legales` name the controller, the APDP
   reference and the hosts (Contabo, Cloudflare R2). Change them when a processor changes.
