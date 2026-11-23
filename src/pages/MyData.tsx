@@ -12,7 +12,7 @@ import TermsLink from '../components/common/TermsLink';
 import { Switch } from '../components/relance/ui/Switch';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
-import { getToken, handleApiResponse } from '../utils/apiHelpers';
+import { bearerHeader, handleApiResponse } from '../utils/apiHelpers';
 import { PRIVACY_POLICY_VERSION, isBenin, type ConsentRecord } from '../utils/privacy';
 import { fcfa } from '../lib/utils';
 import { headerDrop, pageFade } from '../utils/motion';
@@ -39,8 +39,7 @@ export default function MyData() {
     const downloadData = async () => {
         setDownload({ state: 'busy' });
         try {
-            const token = getToken();
-            const res = await fetch(sbcApiService.getDataExportUrl(), { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+            const res = await fetch(sbcApiService.getDataExportUrl(), { headers: bearerHeader() }); // or the session cookie (Phase 9)
             if (!res.ok) throw new Error(String(res.status));
             const blob = await res.blob();
             const url = window.URL.createObjectURL(blob);

@@ -112,11 +112,26 @@ export async function prepareSignInKey(): Promise<string | null> {
   try { pending = await newPair(); return pending.spki; } catch { pending = null; return null; }
 }
 
-/** After the sign-in code was accepted: the pending key becomes this token's key. */
-export async function adoptSignInKey(token: string): Promise<void> {
-  if (!pending || !token) return;
-  try { await save({ pair: pending.pair, spki: pending.spki, tokenTag: await tokenTag(token), createdAt: Date.now() }); } catch { /* unsigned */ }
+/**
+ * Marker for a cookie session (utils/session.ts): the app holds no token, so the key is not
+ * tied to a token tag but to the session; the server binds it to every access token it issues.
+ */
+export const COOKIE_AUTH = 'Cookie';
+const COOKIE_TAG = 'cookie';
+
+/** After the sign-in was accepted: the pending key becomes this token's key (null = cookie session). */
+export async function adoptSignInKey(token: string | null): Promise<void> {
+  if (!pending) return;
+  try { await save({ pair: pending.pair, spki: pending.spki, tokenTag: token ? await tokenTag(token) : COOKIE_TAG, createdAt: Date.now() }); } catch { /* unsigned */ }
   pending = null;
+}
+
+/** A Bearer token moved to a cookie session (session/adopt) whose server copy kept this browser's key. */
+export async function retagKeyForCookieSession(token: string): Promise<void> {
+  try {
+    const s = await load();
+    if (s?.pair && s.tokenTag === await tokenTag(token)) await save({ ...s, tokenTag: COOKIE_TAG });
+  } catch { /* unsigned until the next sign-in */ }
 }
 
 /** Logout: this browser's key is forgotten (the server revokes it too). */
@@ -131,16 +146,17 @@ export async function clearSessionKey(): Promise<void> {
  * key for the token (made elsewhere, or browser data cleared), this browser
  * cannot sign until the next sign-in.
  */
-export async function ensureSessionKey(token: string | null, baseUrl: string, fetchImpl: typeof fetch = fetch): Promise<void> {
-  if (!token || !signingSupported()) return;
+export async function ensureSessionKey(token: string | null, baseUrl: string, fetchImpl: typeof fetch = fetch, cookieSession = false): Promise<void> {
+  if ((!token && !cookieSession) || !signingSupported()) return;
   try {
-    const tag = await tokenTag(token);
+    const tag = token ? await tokenTag(token) : COOKIE_TAG;
     const s = await load();
     if (s?.tokenTag === tag) return;
     const { pair, spki } = await newPair();
+    // A cookie session sends no Authorization: the fetch wrapper adds the cookie headers (CSRF).
     const r = await fetchImpl(`${baseUrl.replace(/\/+$/, '')}/users/me/session-key`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: token ? { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } : { 'Content-Type': 'application/json' },
       body: JSON.stringify({ publicKey: spki }),
     });
     if (r.status === 201) await save({ pair, spki, tokenTag: tag, createdAt: Date.now() });
@@ -162,14 +178,16 @@ const randomNonce = () => { const b = new Uint8Array(18); crypto.getRandomValues
 
 /**
  * The X-SBC-Signature value for one request, or null when it cannot be signed
- * (no member token, no key for this token). Never throws.
+ * (no member token or cookie session, no key for it). `authorization` is the Bearer header,
+ * or COOKIE_AUTH for a cookie session. Never throws.
  */
 export async function signatureFor(method: string, url: string, authorization: string | null, body: BodyInit | null | undefined): Promise<string | null> {
-  if (!authorization?.startsWith('Bearer ')) return null;
+  const cookie = authorization === COOKIE_AUTH;
+  if (!cookie && !authorization?.startsWith('Bearer ')) return null;
   if (!signingSupported()) return `none;r=${!subtle() ? 'nocrypto' : 'noidb'}`;
   try {
     const s = await load();
-    if (!s?.pair || s.tokenTag !== await tokenTag(authorization.slice(7))) return null;
+    if (!s?.pair || s.tokenTag !== (cookie ? COOKIE_TAG : await tokenTag(authorization!.slice(7)))) return null;
     const u = new URL(url, window.location.origin);
     const t = String(Date.now() + clockOffsetMs);
     const n = randomNonce();

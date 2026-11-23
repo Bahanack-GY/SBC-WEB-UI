@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
+import { getToken } from '../utils/apiHelpers';
+import { isCookieSession } from '../utils/session';
 import type { Socket } from 'socket.io-client';
 import { io } from 'socket.io-client';
 import { useAuth } from './AuthContext';
@@ -89,13 +91,15 @@ export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
       return;
     }
 
-    // Get token from localStorage
-    const token = localStorage.getItem('token');
-    if (!token) return;
+    // The token kept by the app, or (Security plan Phase 9) none: the HttpOnly session cookie goes
+    // with the handshake and chat-service reads it.
+    const token = getToken();
+    if (!token && !isCookieSession()) return;
 
     // Create socket connection
     const newSocket = io(SOCKET_URL, {
-      auth: { token },
+      ...(token ? { auth: { token } } : {}),
+      withCredentials: true,
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionAttempts: maxReconnectAttempts,

@@ -1,7 +1,7 @@
 import { createHash, createPublicKey, verify as nodeVerify, webcrypto } from 'node:crypto';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-  _resetSigning, adoptSignInKey, clearSessionKey, ensureSessionKey, prepareSignInKey, signatureFor,
+  _resetSigning, adoptSignInKey, clearSessionKey, COOKIE_AUTH, ensureSessionKey, prepareSignInKey, retagKeyForCookieSession, signatureFor,
 } from './requestSigning';
 
 /** Minimal in-memory IndexedDB: open / get / put, enough for requestSigning. */
@@ -60,6 +60,20 @@ describe('request signing (Security plan Phase 9)', () => {
     expect(fields((await signatureFor('POST', '/api/settings/files/upload', 'Bearer tok-1', fd))!).b).toBe('UNSIGNED');
     expect(await signatureFor('GET', '/api/users/me', 'Bearer other-token', undefined)).toBeNull();
     expect(await signatureFor('GET', '/api/users/me', null, undefined)).toBeNull();
+  });
+
+  it('Phase 9 cookie session: the key signs without any token; a Bearer request is not signed with it', async () => {
+    await prepareSignInKey();
+    await adoptSignInKey(null);
+    expect(fields((await signatureFor('PUT', '/api/users/me', COOKIE_AUTH, '{}'))!).b).toMatch(/^[a-f0-9]{64}$/);
+    expect(await signatureFor('GET', '/api/users/me', 'Bearer tok-1', undefined)).toBeNull();
+  });
+
+  it('Phase 9: a token moved to a cookie session keeps its key (retag)', async () => {
+    await prepareSignInKey();
+    await adoptSignInKey('tok-1');
+    await retagKeyForCookieSession('tok-1');
+    expect(await signatureFor('GET', '/api/users/me', COOKIE_AUTH, undefined)).toMatch(/^v1;/);
   });
 
   it('logout forgets the key', async () => {
