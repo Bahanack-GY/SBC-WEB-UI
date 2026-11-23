@@ -6,11 +6,20 @@ import tailwindcss from '@tailwindcss/vite'
 // single env read in the dev-server config.
 declare const process: { env: Record<string, string | undefined> }
 
+// Changes every build: versions the service worker URL (utils/cacheBuster.ts) and is
+// written to /version.json, which an open app compares with its own (utils/appUpdate.ts).
+const APP_BUILD = Date.now().toString(36)
+
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), tailwindcss()],
-  // Changes every build; versions the service worker URL (see utils/cacheBuster.ts).
-  define: { __APP_BUILD__: JSON.stringify(Date.now().toString(36)) },
+  plugins: [react(), tailwindcss(), {
+    name: 'sbc-version-json',
+    apply: 'build',
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'version.json', source: JSON.stringify({ build: APP_BUILD }) })
+    },
+  }],
+  define: { __APP_BUILD__: JSON.stringify(APP_BUILD) },
   // ponytail: import.meta.url instead of path.resolve — same result, no @types/node dep
   resolve: {
     alias: { '@': new URL('./src', import.meta.url).pathname },

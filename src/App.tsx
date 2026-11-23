@@ -115,6 +115,7 @@ import GuestTicketPage from './pages/help/GuestTicketPage'
 import GuestIdentityPage from './pages/help/GuestIdentityPage'
 import HelpIdentity from './pages/help/HelpIdentity'
 import { prepareRobotAnswer, shouldPrepareOn } from './utils/robotCheck'
+import { onRouteChange } from './utils/appUpdate'
 
 function AppContent() {
   const location = useLocation();
@@ -128,6 +129,11 @@ function AppContent() {
   useEffect(() => {
     if (shouldPrepareOn(location.pathname)) prepareRobotAnswer();
   }, [location.pathname]);
+
+  // A newer deploy is loaded on a page change, never mid-form (utils/appUpdate.ts).
+  useEffect(() => {
+    onRouteChange(location.state != null);
+  }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Drop all React Query cache when the authenticated user changes (login,
   // logout, account switch). Without this, the previous user's "active"

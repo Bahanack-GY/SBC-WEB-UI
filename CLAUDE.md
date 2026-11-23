@@ -124,6 +124,21 @@ The codebase includes `ApiTestComponent` and `LoginDebugComponent` for API endpo
   with `false`, as AuthProvider does. Mock `AuthContext` whole, not with `importOriginal`:
   it and `useAdsRoles` import each other.
 
+### New deploys reach open apps (2026-11-23)
+An installed app can stay open for days, so it kept running old screens after a deploy (on
+preprod an old MoMo screen still asked for an e-mailed code after the server retired it).
+`utils/appUpdate.ts`: each build writes `/version.json` (vite.config.ts, same id as
+`__APP_BUILD__`); the app checks it on return to the foreground and every 15 min, and loads the
+new build only at a safe moment: a page change without `location.state`, a return after ≥ 15 min
+away, or at once on a 410 `APP_UPDATE_REQUIRED` (ApiService; once per build per minute). Never
+reload mid-form: Rufus complained of pages "refreshing by themselves".
+
+### Withdrawals with the authenticator app
+With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.
+`/otp` checks it (state `confirmWith`, else `getAuthenticatorStatus`) and shows
+`components/security/WithdrawalAppCodeForm` instead of the e-mail boxes: the Wallet form and the
+history's « Continuer la vérification OTP » land there too.
+
 ### Personal data (APDP, Benin) — November 2026
 SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/APDP/DST/SC du
 27 août 2026) on conditions the app must keep meeting:
