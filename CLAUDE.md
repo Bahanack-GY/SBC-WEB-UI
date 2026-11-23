@@ -196,6 +196,28 @@ FERMÉES ». `pages/ImpactCandidate.tsx`, `components/impact/{CandidateProfileFo
 - The old monthly vote page `/impact-challenge` (tombola-service) is unchanged; the v2 card shows on top
   of it and in the home banner while an edition is live (`GET /tickets/impact/public/current`).
 - Wording: « vous », like the vote page and the server's messages (the push notifications say « tu »).
+- **Phase 2 (weeks 1–3, votes, TOP 3; server `PHASE2.md`).**
+  - **Pages.** Board `/impact-challenge/candidats` (`pages/ImpactBoard.tsx`, `GET /public/board`, null before the
+    competition) and a candidate's page `/impact-challenge/candidats/:id` (`pages/ImpactCandidateProfile.tsx`).
+    The entry card leads to the board once the competition starts. Board, round state and candidate page are
+    polled every 30 s only while a round is open, paused when hidden.
+  - **The candidate space** (same page as Phase 1) shows « Ma vidéo « Ma vision de SBC » » and « Mon projet »
+    (`components/impact/SubmissionCards.tsx`: the 8 headings, 20–2000 characters each), each submission's state,
+    the votes received, the rank, and the candidate's public page with a share button.
+  - **Votes.**
+    - Free-vote button only when `GET /me/votes` says `canFreeVote.ok`; otherwise its `message` is shown.
+    - Names (free vote, purchases) come from `candidateName`.
+    - `myCandidateId` marks « Vous » on the board. On the member's own page the free vote is hidden unless
+      `settings.freeVote.selfVote`, and « Acheter des votes » unless `settings.paidSelfVote`; the share button
+      takes their place.
+  - **Purchase sheet** `components/impact/VotePurchaseSheet.tsx`.
+    - A NEW `idempotencyKey` per click (`newIdempotencyKey`).
+    - Mobile Money → `redirectTo(generatePaymentUrl(sessionId))`.
+    - Balance → the result at once: counted, « en cours de vérification » (re-checked with
+      `/me/vote-purchases/:id`) or failed.
+    - It calls `useBlockRemoteControl(open)`: money leaves the account.
+  - **Videos** are uploaded with `uploadFile` and refused above 100 Mo (settings-service, nginx and Cloudflare
+    all stop at 100 MB). They play from `generateSettingsFileUrl(fileId)`, like the event pages.
 
 ### Withdrawals with the authenticator app
 With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.

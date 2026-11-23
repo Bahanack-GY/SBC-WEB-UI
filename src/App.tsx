@@ -102,6 +102,8 @@ import OpenDispute from './pages/OpenDispute'
 import MyDisputes from './pages/MyDisputes'
 import ImpactChallenge from './pages/ImpactChallenge'
 import ImpactCandidate from './pages/ImpactCandidate'
+import ImpactBoard from './pages/ImpactBoard'
+import ImpactCandidateProfile from './pages/ImpactCandidateProfile'
 import HelpHome from './pages/help/HelpHome'
 import HelpAssistant from './pages/help/HelpAssistant'
 import HelpArticle from './pages/help/HelpArticle'
@@ -430,6 +432,10 @@ function AppContent() {
           {/* SBC Impact Challenge v2: qualification and candidate space (event-service
               /api/tickets/impact). The notifications open this page. */}
           <Route path="/impact-challenge/candidat" element={<ImpactCandidate />} />
+          {/* Phase 2: the competition's board and a candidate's page (votes). The buyers'
+              notifications open the board; the candidates' open /impact-challenge/candidat. */}
+          <Route path="/impact-challenge/candidats" element={<ImpactBoard />} />
+          <Route path="/impact-challenge/candidats/:id" element={<ImpactCandidateProfile />} />
           {/* SBC Ads Network. The hub and the diffuseur pages are paywalled
               (diffuseurs are paid); the advertiser pages are not (RequireAuth). */}
           {/* Every Ads Network screen sits behind the launch gate — a

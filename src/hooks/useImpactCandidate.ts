@@ -1,7 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { sbcApiService } from '../services/SBCApiService';
 import type { ApiResponse } from '../services/ApiResponse';
-import type { ImpactCandidate, ImpactCandidateStatus, ImpactEdition, ImpactMySpace } from '../types/impact';
+import type {
+  ImpactBoard, ImpactCandidate, ImpactCandidateStatus, ImpactEdition, ImpactMySpace, ImpactMyVotes, ImpactPublicCandidate,
+} from '../types/impact';
 
 // SBC Impact Challenge v2: the qualification and the candidate space
 // (event-service, /api/tickets/impact). The old monthly vote page keeps
@@ -10,6 +12,9 @@ import type { ImpactCandidate, ImpactCandidateStatus, ImpactEdition, ImpactMySpa
 export const impactKeys = {
   current: ['impact-v2', 'current'] as const,
   me: ['impact-v2', 'me'] as const,
+  board: ['impact-v2', 'board'] as const,
+  candidate: (id: string) => ['impact-v2', 'candidate', id] as const,
+  myVotes: ['impact-v2', 'my-votes'] as const,
 };
 
 /** A refused call, with the server's French message, code and details. */
@@ -35,7 +40,7 @@ export const impactData = <T>(res: ApiResponse, fallback: string): T => {
  * The live edition, or null. Public and cached by the server; shared by the
  * home banner, the vote page's card and the candidate page.
  */
-export const useImpactCurrentEdition = () =>
+export const useImpactCurrentEdition = (opts: { followRounds?: boolean } = {}) =>
   useQuery<ImpactEdition | null>({
     queryKey: impactKeys.current,
     queryFn: async () => {
@@ -44,6 +49,9 @@ export const useImpactCurrentEdition = () =>
     },
     staleTime: 60 * 1000,
     refetchOnWindowFocus: false,
+    // The board and a candidate's page follow the rounds (open, closed) while one is open.
+    refetchInterval: (query) => (opts.followRounds && openRound(query.state.data) ? IMPACT_POLL_MS : false),
+    refetchIntervalInBackground: false,
     retry: 1,
   });
 
@@ -68,7 +76,22 @@ export const shouldPoll = (space: ImpactMySpace | null | undefined): boolean => 
   if (!c) return false;
   if (c.status === 'QUALIFYING') return e === 'QUALIFICATION';
   if (c.status === 'WAITLIST') return e === 'QUALIFICATION' || e === 'QUALIFICATION_CLOSED';
+  // Competition: a content waiting for the team's review, or votes coming in during a round.
+  if (e === 'COMPETITION' && COMPETING.includes(c.status)) {
+    const pending = space?.submissions?.VIDEO?.status === 'PENDING' || space?.submissions?.PROJECT?.status === 'PENDING';
+    return pending || !!openRound(space?.edition);
+  }
   return false;
+};
+
+/** Candidates still in the race during the competition. */
+const COMPETING: ImpactCandidateStatus[] = ['OFFICIAL', 'STAGE_2', 'STAGE_3'];
+
+/** The vote round open right now, if any. */
+export const openRound = (e: ImpactEdition | null | undefined): 'FREE' | 'PAID' | null => {
+  if (e?.rounds?.FREE?.status === 'OPEN') return 'FREE';
+  if (e?.rounds?.PAID?.status === 'OPEN') return 'PAID';
+  return null;
 };
 
 export const IMPACT_POLL_MS = 30 * 1000;
@@ -89,6 +112,7 @@ export const useImpactMySpace = () =>
         blocker: d.blocker ?? null,
         canEdit: !!d.canEdit,
         canWithdraw: !!d.canWithdraw,
+        submissions: d.submissions ?? null,
       };
     },
     refetchInterval: (query) => (shouldPoll(query.state.data) ? IMPACT_POLL_MS : false),
@@ -107,4 +131,56 @@ export const withCandidate = (space: ImpactMySpace | undefined, candidacy: Impac
     canEdit: open && (fresh || space.canEdit),
     canWithdraw: open && (fresh || space.canWithdraw),
   };
+};
+
+// ---------- Phase 2: the public board, a candidate's page, the member's votes ----------
+
+/** The competition's board, or null before it. Polled every 30 s while a round is open (paused when hidden). */
+export const useImpactBoard = (opts: { poll?: boolean } = {}) =>
+  useQuery<ImpactBoard | null>({
+    queryKey: impactKeys.board,
+    queryFn: async () => {
+      const data = impactData<ImpactBoard | null>(await sbcApiService.impactBoard(), 'Impossible de charger les candidats.');
+      return data && Array.isArray(data.candidates) ? data : null;
+    },
+    refetchInterval: opts.poll ? IMPACT_POLL_MS : false,
+    refetchIntervalInBackground: false,
+    retry: 1,
+  });
+
+export const useImpactPublicCandidate = (id: string | undefined, opts: { poll?: boolean } = {}) =>
+  useQuery<ImpactPublicCandidate>({
+    queryKey: impactKeys.candidate(id ?? ''),
+    queryFn: async () => impactData<ImpactPublicCandidate>(await sbcApiService.impactPublicCandidate(id!), 'Impossible de charger ce candidat.'),
+    enabled: !!id,
+    refetchInterval: opts.poll ? IMPACT_POLL_MS : false,
+    refetchIntervalInBackground: false,
+    retry: (count, err) => count < 1 && (err as ImpactApiError)?.status !== 404,
+  });
+
+/** The member's free vote and vote purchases. */
+export const useImpactMyVotes = (opts: { enabled?: boolean } = {}) =>
+  useQuery<ImpactMyVotes>({
+    queryKey: impactKeys.myVotes,
+    queryFn: async () => {
+      const d = impactData<Partial<ImpactMyVotes>>(await sbcApiService.impactMyVotes(), 'Impossible de charger vos votes.') ?? {};
+      return {
+        freeVote: d.freeVote ?? null,
+        purchases: d.purchases ?? [],
+        myCandidateId: d.myCandidateId ?? null,
+        canFreeVote: d.canFreeVote ?? null,
+      };
+    },
+    enabled: opts.enabled ?? true,
+    retry: 1,
+  });
+
+/** A new key for each purchase click (server: 8–100 characters of [A-Za-z0-9_-]). */
+export const newIdempotencyKey = (): string => {
+  const c = globalThis.crypto;
+  if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  const bytes = new Uint8Array(16);
+  if (c && typeof c.getRandomValues === 'function') c.getRandomValues(bytes);
+  else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 };
