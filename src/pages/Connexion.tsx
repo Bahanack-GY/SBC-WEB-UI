@@ -16,6 +16,7 @@ import PublicFooter from '../components/common/PublicFooter';
 import { pageFade, sectionRise, headerDrop } from '../utils/motion';
 import { ANNONCEUR_SIGNUP } from '../utils/annonceur';
 import { guestRequests } from './help/guest';
+import { ACCOUNT_BANNED_PATH, bannedState, isAccountBannedError } from '../components/security/accountBanned';
 
 function Connexion() {
   const { t } = useTranslation();
@@ -132,7 +133,12 @@ function Connexion() {
           navigate('/');
         }
       } catch (error: unknown) {
-        
+        // Suspended account (403 ACCOUNT_BANNED): its own screen, not an error under the password.
+        if (isAccountBannedError(error)) {
+          navigate(ACCOUNT_BANNED_PATH, { replace: true, state: bannedState(error.message) });
+          return;
+        }
+
         // Fall back to general recovery check for 401/404 errors
         if (error instanceof Error && (error.message.includes('401') || error.message.includes('404'))) {
           await checkRecoverableTransactions(identifier);

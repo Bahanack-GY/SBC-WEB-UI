@@ -163,6 +163,24 @@ so the app works with both. Rules:
   key to every new access token. The chat socket connects without a token (`withCredentials`).
 - Logout also calls `/users/session/logout` (clears the cookies even after the access cookie expired).
 
+### Suspended account, `/compte-suspendu` (2026-11-23)
+The server bans a member automatically when someone with no filleuls tries to withdraw money their
+records cannot explain, ends their sessions, and then refuses their calls with
+`403 { success: false, code: 'ACCOUNT_BANNED', message }` (withdrawal, login after a correct password,
+session refresh, `/users/me` and the other member routes). `components/security/accountBanned.ts`:
+- Detection: `ApiService.handleHttpResponse` (every `sbcApiService` call), the fetch wrapper
+  (`utils/deviceSignals.ts`, hand-made fetches) and `refreshSession` (`utils/session.ts`) call
+  `reportAccountBanned` → event `sbc:account-banned` (one per burst). AuthContext `forgetSession()`
+  clears the session on this device **without calling member routes** (only the cookie logout,
+  once); App navigates to `/compte-suspendu` with the message in router state (+ sessionStorage).
+  Other 403 codes (`RISK_HOLD`, `AUTHENTICATOR_REQUIRED`, `CSRF_FAILED`…) are not bans.
+- Login: `AuthContext.login` throws `AccountBannedError`; Connexion opens the page. Withdrawals
+  (Wallet, `UnifiedWithdrawalComponent`, `WithdrawalAppCodeForm`): `goToAccountBanned`, no modal.
+- The page (`pages/AccountSuspended.tsx`) is public, headerless, shows no member data and calls no
+  API (no loop). Support: « Signaler un problème » (guest request, `/signaler-un-probleme`), the
+  e-mail and phones of `/a-propos`; never `/aide` (needs a login). « Retour à la connexion » uses
+  `forgetSession`, not `logout` (whose server call would be refused and bounce back).
+
 ### Withdrawals with the authenticator app
 With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.
 `/otp` checks it (state `confirmWith`, else `getAuthenticatorStatus`) and shows

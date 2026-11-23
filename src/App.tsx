@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { MotionConfig } from 'motion/react'
 import Home from './pages/Home'
 import NavigationBar from './components/common/NavigationBar'
@@ -119,6 +119,8 @@ import { onRouteChange } from './utils/appUpdate'
 import { useSessionReplay } from './services/sessionReplay'
 import { setAssistRoute } from './services/remoteAssist'
 import RemoteAssistBanner from './components/security/RemoteAssistBanner'
+import AccountSuspended from './pages/AccountSuspended'
+import { ACCOUNT_BANNED_EVENT, ACCOUNT_BANNED_PATH, bannedState, type AccountBannedDetail } from './components/security/accountBanned'
 
 function AppContent() {
   const location = useLocation();
@@ -132,6 +134,24 @@ function AppContent() {
   useEffect(() => { setAssistRoute(location.pathname); }, [location.pathname]);
   const { isSubscribed, isLoading: subscriptionLoading } = useSubscriptionStatus();
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+
+  // A suspended account (403 ACCOUNT_BANNED, components/security/accountBanned.ts): AuthContext
+  // forgets the session, and the app shows /compte-suspendu, which calls no member route.
+  const pathRef = useRef(location.pathname);
+  pathRef.current = location.pathname;
+  useEffect(() => {
+    const onBanned = (e: Event) => {
+      if (pathRef.current === ACCOUNT_BANNED_PATH) return;
+      navigate(ACCOUNT_BANNED_PATH, { replace: true, state: bannedState((e as CustomEvent<AccountBannedDetail>).detail?.message) });
+    };
+    window.addEventListener(ACCOUNT_BANNED_EVENT, onBanned);
+    return () => window.removeEventListener(ACCOUNT_BANNED_EVENT, onBanned);
+  }, [navigate]);
+  // Nothing of the member's stays cached once that page shows (the pages that held it are gone).
+  useEffect(() => {
+    if (location.pathname === ACCOUNT_BANNED_PATH) queryClient.clear();
+  }, [location.pathname, queryClient]);
 
   // Anti-robot check (utils/robotCheck.ts): solve one answer ahead on the pages that lead to a
   // sensitive action, so signing in, a withdrawal or a change does not wait for it.
@@ -269,13 +289,13 @@ function AppContent() {
     '/splash-screen', '/connexion', '/signup', '/signup/formulaire', '/forgot-password', '/reset-password',
     '/reset-password-otp', '/verify-otp', '/verify-email-otp', '/otp', '/complete-profile',
     '/a-propos', '/conditions', '/confidentialite', '/mentions-legales', '/sso/authorize',
-    '/withdrawal-otp-verification', '/signaler-un-probleme',
+    '/withdrawal-otp-verification', '/signaler-un-probleme', ACCOUNT_BANNED_PATH,
   ];
   // A support request is a chat (WhatsApp-like): it owns the whole screen too.
   const isInSupportChat = (/^\/aide\/demandes\/[^/]+$/.test(location.pathname) && location.pathname !== '/aide/demandes/nouvelle') || location.pathname.startsWith('/signaler-un-probleme/suivi/');
   const hideHeader = HEADERLESS.includes(location.pathname) || location.pathname.startsWith('/signaler-un-probleme/') || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp;
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname.startsWith('/signaler-un-probleme') || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || isHelpPage || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === ACCOUNT_BANNED_PATH || location.pathname.startsWith('/signaler-un-probleme') || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname === '/impact-challenge' || isHelpPage || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -318,6 +338,8 @@ function AppContent() {
         <Route path="/signaler-un-probleme/suivi/:id" element={<GuestTicketPage />} />
         <Route path="/signaler-un-probleme/identite/:id" element={<GuestIdentityPage />} />
         <Route path="/sso/authorize" element={<SsoAuthorize />} />
+        {/* A suspended account (403 ACCOUNT_BANNED): public, calls no member route, so it cannot loop. */}
+        <Route path={ACCOUNT_BANNED_PATH} element={<AccountSuspended />} />
         {/* SBC Event animation — read-only screens that must open without an
             account: the live board on a venue's screen/projector, published
             results, and the public proof of a random draw. */}
