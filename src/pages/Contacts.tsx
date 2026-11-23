@@ -6,7 +6,7 @@ import BackButton from "../components/common/BackButton";
 import Avatar from '../components/common/Avatar';
 import { motion, AnimatePresence } from 'motion/react';
 import { sbcApiService } from '../services/SBCApiService';
-import { handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelpers';
+import { bearerHeader, handleApiResponse, getBaseUrl, removeAccents } from '../utils/apiHelpers';
 import type { User } from '../types/api';
 import ProtectedRoute from '../components/common/ProtectedRoute';
 import { useAuth } from '../contexts/AuthContext';
@@ -289,11 +289,8 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
     const downloadFile = async (url: string, filename: string = 'contacts.vcf') => {
         setDownloading(true);
         try {
-            const token = localStorage.getItem('token');
-            const headers: HeadersInit = {};
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            // Bearer token, or the session cookie (Security plan Phase 9).
+            const headers: HeadersInit = bearerHeader();
 
             const response = await fetch(url, { headers });
 

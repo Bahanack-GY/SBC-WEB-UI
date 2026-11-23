@@ -8,7 +8,8 @@
  * (`sweepExpiredStorage`) renews it, in line with the APDP 60-day rule; logout
  * keeps it (a device is not a person).
  */
-import { noteServerDate, signatureFor } from './requestSigning';
+import { COOKIE_AUTH, noteServerDate, signatureFor } from './requestSigning';
+import { csrfToken, isCookieSession, isSessionEndpoint, isUnsafeMethod, refreshSession } from './session';
 import { isProtectedAction, setRobotFetch, takeRobotAnswer } from './robotCheck';
 
 export const DEVICE_ID_KEY = 'sbc_device_id';
@@ -90,13 +91,31 @@ export function installDeviceSignals(): void {
     const retryHeaders = new Headers(headers);
     retryHeaders.set('X-SBC-Altcha', again);
     retryHeaders.delete('X-SBC-Signature'); // a new nonce is needed; signing again below
-    const sig = await Promise.race([
-      signatureFor(String(init.method ?? 'POST'), typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, retryHeaders.get('Authorization'), init.body),
-      new Promise<null>(r => setTimeout(() => r(null), SIGN_BUDGET_MS)),
-    ]).catch(() => null);
+    const sig = await sign(String(init.method ?? 'POST'), typeof input === 'string' ? input : input instanceof URL ? input.href : input.url, retryHeaders, init.body);
     if (sig) retryHeaders.set('X-SBC-Signature', sig);
     return send(input, { ...init, headers: retryHeaders });
   };
+  const sign = (method: string, url: string, headers: Headers, body: BodyInit | null | undefined) =>
+    Promise.race([
+      signatureFor(method, url, headers.get('Authorization') ?? (isCookieSession() ? COOKIE_AUTH : null), body),
+      new Promise<null>(resolve => setTimeout(() => resolve(null), SIGN_BUDGET_MS)),
+    ]).catch(() => null);
+  /**
+   * Security plan Phase 9 (utils/session.ts): every own-API call asks for a cookie session, and a
+   * cookie-authenticated change carries the CSRF value. A 401 on a cookie session refreshes it once
+   * (one refresh for the whole app) and sends the request again, signed anew.
+   */
+  const sessionHeaders = (headers: Headers, method: string) => {
+    if (!headers.has('X-SBC-Session')) headers.set('X-SBC-Session', 'cookie');
+    if (!headers.has('Authorization') && isUnsafeMethod(method)) {
+      const csrf = csrfToken();
+      if (csrf) headers.set('X-CSRF-Token', csrf);
+    }
+  };
+  const replayable = (input: RequestInfo | URL, body: unknown) => !(input instanceof Request)
+    && (body === undefined || body === null || typeof body === 'string' || body instanceof FormData || body instanceof URLSearchParams || body instanceof Blob);
+  const dispatch = (input: RequestInfo | URL, init: RequestInit, headers: Headers, method: string, url: string) =>
+    isProtectedAction(method, url) && !headers.has('X-SBC-Altcha') ? sendProtected(input, init, headers) : send(input, { ...init, headers });
   const wrapped = ((input: RequestInfo | URL, init?: RequestInit) => {
     try {
       const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
@@ -105,18 +124,25 @@ export function installDeviceSignals(): void {
         const id = deviceId();
         if (id && !headers.has('X-SBC-Device')) headers.set('X-SBC-Device', id);
         if (!headers.has('X-SBC-Client')) headers.set('X-SBC-Client', clientKind());
+        const method = init?.method ?? (input instanceof Request ? input.method : 'GET');
+        sessionHeaders(headers, method);
         // A keepalive call (page closing) goes at once: waiting to sign could lose it.
         if (init?.keepalive) return original(input, { ...init, headers });
-        const method = init?.method ?? (input instanceof Request ? input.method : 'GET');
         const body = init?.body ?? (input instanceof Request && !/^(GET|HEAD)$/i.test(method) ? new Blob() : undefined);
-        const timeout = new Promise<null>(resolve => setTimeout(() => resolve(null), SIGN_BUDGET_MS));
-        return Promise.race([signatureFor(method, url, headers.get('Authorization'), body), timeout])
-          .catch(() => null)
-          .then(sig => {
-            if (sig && !headers.has('X-SBC-Signature')) headers.set('X-SBC-Signature', sig);
-            if (isProtectedAction(method, url) && !headers.has('X-SBC-Altcha')) return sendProtected(input, init ?? {}, headers);
-            return send(input, { ...init, headers });
-          });
+        return sign(method, url, headers, body).then(async sig => {
+          if (sig && !headers.has('X-SBC-Signature')) headers.set('X-SBC-Signature', sig);
+          const res = await dispatch(input, init ?? {}, headers, method, url);
+          if (res.status !== 401 || headers.has('Authorization') || !isCookieSession() || isSessionEndpoint(url) || !replayable(input, init?.body)) return res;
+          if (!(await refreshSession(`${window.location.origin}/api`, original))) return res;
+          const again = new Headers(headers);
+          again.delete('X-SBC-Signature');
+          again.delete('X-SBC-Altcha');
+          again.delete('X-CSRF-Token');
+          sessionHeaders(again, method);
+          const sig2 = await sign(method, url, again, body);
+          if (sig2) again.set('X-SBC-Signature', sig2);
+          return dispatch(input, init ?? {}, again, method, url);
+        });
       }
     } catch {
       /* never block a request for a signal */

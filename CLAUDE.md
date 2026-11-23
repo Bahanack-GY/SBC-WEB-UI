@@ -78,7 +78,8 @@ npm run preview
 
 ### API Integration
 - Base URL proxy: `/api` → `https://sniperbuisnesscenter.com/api`
-- Token stored in localStorage with automatic header injection
+- Session in HttpOnly cookies when the server offers them (see "Session cookies" below), else a
+  token in localStorage with automatic header injection
 - Comprehensive error handling with session expiration detection
 - React Query for caching (`useApiCache` hook)
 
@@ -145,6 +146,23 @@ new build only at a safe moment: a page change without `location.state`, a retur
 away, or at once on a 410 `APP_UPDATE_REQUIRED` (ApiService; once per build per minute). Never
 reload mid-form: Rufus complained of pages "refreshing by themselves".
 
+### Session cookies, no token in the app (Security plan Phase 9 part 4, 2026-11-23)
+Every own-API call sends `X-SBC-Session: cookie` (fetch wrapper `utils/deviceSignals.ts`). When
+user-service has `SESSION_COOKIES=on`, the sign-in answers set HttpOnly cookies and say
+`session: 'cookie'` instead of returning `token`; `AuthContext.storeSession` then keeps only the flag
+`sbc_session` (`utils/session.ts`). With the switch off the token comes back and is stored as before,
+so the app works with both. Rules:
+- **Signed in** = `hasSession()` (token or flag), never `getToken()` alone. A hand-made `fetch` to our
+  API uses `bearerHeader()` (empty with cookies: the browser sends them).
+- The wrapper adds `X-CSRF-Token` (from the readable `sbc_csrf` cookie) to every change, and on a 401
+  of a cookie session refreshes once (`POST /users/session/refresh`, one at a time for the app) and
+  sends the request again. A refused refresh dispatches `sbc:session-ended` → logout + « session
+  expirée ». Never call `/users/session/*` through code that could loop.
+- At start an older localStorage token is swapped for cookies (`/users/session/adopt`) and deleted.
+- Request signing (`requestSigning.ts`) signs cookie sessions with `COOKIE_AUTH`; the server binds the
+  key to every new access token. The chat socket connects without a token (`withCredentials`).
+- Logout also calls `/users/session/logout` (clears the cookies even after the access cookie expired).
+
 ### Withdrawals with the authenticator app
 With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.
 `/otp` checks it (state `confirmWith`, else `getAuthenticatorStatus`) and shows
@@ -171,7 +189,7 @@ SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/A
   account deletion with password. Reachable without a subscription.
 - **Device storage.** No analytics or ad cookies, ever. The cookie notice comes back 60 days
   after dismissal; `sweepExpiredStorage()` (main.tsx) wipes localStorage, except the token,
-  every 60 days; logout removes `PERSONAL_STORAGE_KEYS`. Never store a password, and add any
+  every 60 days (the token and the `sbc_session` flag stay); logout removes `PERSONAL_STORAGE_KEYS`. Never store a password, and add any
   new personal localStorage key to that list.
 
 ### Internationalization

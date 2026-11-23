@@ -1,3 +1,4 @@
+import { isCookieSession } from './session';
 import { ApiResponse } from '../services/ApiResponse';
 
 /**
@@ -82,8 +83,21 @@ export const getPaymentUrl = (): string => {
 /**
  * Check if user is authenticated
  */
-export const isAuthenticated = (): boolean => {
-  return !!localStorage.getItem('token');
+export const isAuthenticated = (): boolean => hasSession();
+
+/**
+ * Signed in, either way: a token in localStorage (server switch off, or an app signed in
+ * before cookie sessions) or a cookie session (utils/session.ts, Security plan Phase 9).
+ */
+export const hasSession = (): boolean => {
+  try { return !!localStorage.getItem('token') || isCookieSession(); } catch { return false; }
+};
+
+/** Authorization for a hand-made fetch to our API: the Bearer token if the app holds one; with
+ * a cookie session nothing (the browser sends the cookie, the fetch wrapper adds CSRF). */
+export const bearerHeader = (): Record<string, string> => {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
 /**

@@ -1,3 +1,4 @@
+import { SESSION_FLAG_KEY } from './session';
 /**
  * Personal-data rules the app applies on the member's side, set by the
  * authorisation of Benin's data-protection authority (APDP, Délibération
@@ -76,7 +77,7 @@ export const sweepExpiredStorage = (now = Date.now()) => {
             const keys: string[] = [];
             for (let i = 0; i < localStorage.length; i++) {
                 const k = localStorage.key(i);
-                if (k && k !== 'token') keys.push(k);
+                if (k && k !== 'token' && k !== SESSION_FLAG_KEY) keys.push(k);
             }
             keys.forEach((k) => localStorage.removeItem(k));
         }

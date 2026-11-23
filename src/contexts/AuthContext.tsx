@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { sbcApiService } from '../services/SBCApiService';
 import { clearAdsRolesCache } from '../hooks/useAdsRoles';
-import { handleApiResponse, setToken, removeToken, getToken } from '../utils/apiHelpers';
-import { adoptSignInKey, clearSessionKey, prepareSignInKey } from '../utils/requestSigning';
+import { handleApiResponse, setToken, removeToken, getToken, getBaseUrl, hasSession } from '../utils/apiHelpers';
+import { clearCookieSessionFlag, csrfToken, isCookieSession, markCookieSession, SESSION_ENDED_EVENT } from '../utils/session';
+import { adoptSignInKey, clearSessionKey, ensureSessionKey, prepareSignInKey, retagKeyForCookieSession } from '../utils/requestSigning';
 import { invalidateApiCache } from '../hooks/useApiCache';
 import { clearPersonalStorage, type Consents } from '../utils/privacy';
 import type { ReactNode } from 'react';
@@ -42,6 +43,34 @@ interface AuthContextType {
   isAuthenticated: boolean;
 }
 
+/** The server granted a session: a token (as before) or HttpOnly cookies (Security plan Phase 9). */
+const granted = (data: { token?: unknown; session?: unknown } | null | undefined) => !!data && (!!data.token || data.session === 'cookie');
+
+/** A token kept from an earlier sign-in becomes a cookie session (the server answers `bearer` while its switch is off). */
+async function adoptCookieSession(token: string): Promise<void> {
+  try {
+    const r = await fetch(`${getBaseUrl()}/users/session/adopt`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: '{}',
+    });
+    if (!r.ok) return;
+    const data = (await r.json())?.data;
+    if (data?.session !== 'cookie') return;
+    if (data.keyKept) await retagKeyForCookieSession(token);
+    markCookieSession();
+    removeToken();
+  } catch { /* keep the token: it still works */ }
+}
+
+/** Ends the cookie session even when the access cookie has already expired (reads the refresh cookie). */
+async function endCookieSession(): Promise<void> {
+  try {
+    const csrf = csrfToken();
+    await fetch(`${getBaseUrl()}/users/session/logout`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json', ...(csrf ? { 'X-CSRF-Token': csrf } : {}) }, body: '{}',
+    });
+  } catch { /* the cookies expire by themselves */ }
+}
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuth = () => {
@@ -60,19 +89,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const isAuthenticated = !!user && !!getToken();
+  const isAuthenticated = !!user && hasSession();
 
   // Load user on app start
   useEffect(() => {
     const initAuth = async () => {
+      // Security plan Phase 9: an app still holding a token moves it to a cookie session once.
       const token = getToken();
-      if (token) {
+      if (token) await adoptCookieSession(token);
+      if (hasSession()) {
         try {
           await refreshUser();
         } catch (error) {
           removeToken();
+          clearCookieSessionFlag();
         }
       }
+      if (hasSession()) void ensureSessionKey(getToken(), getBaseUrl(), fetch, isCookieSession());
       setLoading(false);
     };
 
@@ -82,9 +115,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   /** A granted session (code step, or sign-up / password-only sign-in): token, browser key, cached fields. */
   type SessionUser = { id?: string; _id?: string; email?: string; name?: string; firstName?: string; lastName?: string;
     balance?: number; usdBalance?: number; avatar?: string; momoNumber?: string; momoOperator?: string };
-  const storeSession = async (data: { token: string; user?: SessionUser }, userId: string) => {
-    setToken(data.token);
-    await adoptSignInKey(data.token);
+  /**
+   * Security plan Phase 9: `session: 'cookie'` = the server set HttpOnly cookies and sent no token
+   * (utils/session.ts); otherwise the token is kept as before.
+   */
+  const storeSession = async (data: { token?: string; session?: string; user?: SessionUser }, userId: string) => {
+    if (data.session === 'cookie') {
+      removeToken();
+      markCookieSession();
+      await adoptSignInKey(null);
+    } else if (data.token) {
+      setToken(data.token);
+      await adoptSignInKey(data.token);
+    }
     localStorage.setItem('userId', data.user?.id || data.user?._id || userId);
     localStorage.setItem('userEmail', data.user?.email || '');
     localStorage.setItem('userName', data.user?.name || `${data.user?.firstName || ''} ${data.user?.lastName || ''}`.trim());
@@ -109,7 +152,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // Check if the response indicates OTP verification is required
       // This handles various possible response formats from the API
       const needsOtp = data.requiresOtp || data.otpRequired || data.needsVerification ||
-        (!data.token && (data.userId || data.id)) ||
+        (!data.token && data.session !== 'cookie' && (data.userId || data.id)) ||
         data.status === 'pending_verification';
 
 
@@ -133,7 +176,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
 
       // Direct login success (no OTP required): an unpaid, unverified account (password only).
-      if (data.token) {
+      if (granted(data)) {
         await storeSession(data, data.userId);
         sessionStorage.removeItem('tempUserId');
       }
@@ -179,7 +222,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             };
           }
         }
-      } else if (data.token) {
+      } else if (granted(data)) {
         // If user data not returned but token exists, fetch it
         await refreshUser();
       }
@@ -199,7 +242,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const userId = data.userId || data.id;
 
       // Email verified after payment (2026-11-23): a member sign-up opens the session at once.
-      if (data.token) {
+      if (granted(data)) {
         await storeSession(data, userId);
         if (data.user) setUser(data.user);
         else await refreshUser();
@@ -223,8 +266,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     } catch (error) {
       // Continue with local logout even if API call fails
     } finally {
+      // A cookie session: the cookies are cleared server-side even if the call above failed.
+      if (isCookieSession()) await endCookieSession();
       // Always clear local state
       removeToken();
+      clearCookieSessionFlag();
       void clearSessionKey();
       setUser(null);
 
@@ -263,11 +309,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = handleApiResponse(response);
 
       // Store authentication data as per documentation
-      if (data.token) await storeSession(data, userId);
+      if (granted(data)) await storeSession(data, userId);
 
       if (data.user) {
         setUser(data.user);
-      } else if (data.token) {
+      } else if (granted(data)) {
         await refreshUser();
       }
 
@@ -313,6 +359,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       throw error;
     }
   }, [setUser, logout]);
+
+  // Security plan Phase 9: the cookie session could not be refreshed (expired, revoked, reused):
+  // signed out, with the same "session expired" notice as a refused profile read.
+  useEffect(() => {
+    const onEnded = () => {
+      if (!user) return;
+      void logout().then(() => localStorage.setItem('sessionExpired', '1'));
+    };
+    window.addEventListener(SESSION_ENDED_EVENT, onEnded);
+    return () => window.removeEventListener(SESSION_ENDED_EVENT, onEnded);
+  }, [user, logout]);
 
   const value: AuthContextType = {
     user,

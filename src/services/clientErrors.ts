@@ -1,4 +1,5 @@
 import { getBaseUrl } from '../utils/apiHelpers';
+import { csrfToken, isCookieSession } from '../utils/session';
 
 /**
  * Reports the failed API calls the member's app hits (status 0 = unreachable, or
@@ -34,11 +35,13 @@ export function setReplayProvider(fn: (() => { sessionId: string; url: string } 
 }
 
 const token = () => { try { return localStorage.getItem('token'); } catch { return null; } };
+/** Signed in with a token or (Security plan Phase 9) a cookie session. */
+const signedIn = () => !!token() || isCookieSession();
 
 /** Queues one failure; returns false when it is not reported (rules above). */
 export function reportClientError(e: ReportedError, now = Date.now()): boolean {
     if (e.status === 401 || e.path.includes(ENDPOINT) || !e.path.includes('/api/')) return false;
-    if (!token()) return false;
+    if (!signedIn()) return false;
     const key = `${e.method} ${e.path} ${e.status}`;
     if (now - (lastSent.get(key) ?? -Infinity) < DEDUP_MS) return false;
     lastSent.set(key, now);
@@ -51,12 +54,15 @@ export function reportClientError(e: ReportedError, now = Date.now()): boolean {
 export async function flushClientErrors(keepalive = false): Promise<void> {
     if (timer) { clearTimeout(timer); timer = null; }
     const t = token();
-    if (!queue.length || !t) return;
+    if (!queue.length || !signedIn()) return;
+    // This goes around the fetch wrapper (no loop): the cookie session's headers are added here.
+    const csrf = t ? null : csrfToken();
+    const auth: Record<string, string> = t ? { Authorization: `Bearer ${t}` } : { 'X-SBC-Session': 'cookie', ...(csrf ? { 'X-CSRF-Token': csrf } : {}) };
     const batch = queue.splice(0, BATCH);
     try {
         await (originalFetch ?? fetch)(`${getBaseUrl()}${ENDPOINT}`, {
             method: 'POST', keepalive,
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${t}` },
+            headers: { 'Content-Type': 'application/json', ...auth },
             body: JSON.stringify({ errors: batch }),
         });
     } catch { /* best effort: never disturb the member */ }

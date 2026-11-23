@@ -9,8 +9,6 @@ import { purgeStaleCaches, registerAppServiceWorker } from './utils/cacheBuster'
 import { sweepExpiredStorage } from './utils/privacy'
 import { installClientErrorReporting } from './services/clientErrors'
 import { installDeviceSignals } from './utils/deviceSignals'
-import { ensureSessionKey } from './utils/requestSigning'
-import { getBaseUrl, getToken } from './utils/apiHelpers'
 import { startUpdateWatch } from './utils/appUpdate'
 
 // Nothing the site keeps on the device may be older than 60 days (APDP).
@@ -20,8 +18,8 @@ installClientErrorReporting();
 
 // Security plan Phase 1: our API calls say which browser (random ID) and client they come from.
 installDeviceSignals();
-// Security plan Phase 9: a member signed in before request signing existed gets this browser's key, once.
-void ensureSessionKey(getToken(), getBaseUrl());
+// Security plan Phase 9: the browser's signing key for an older session is bound by AuthContext
+// at start-up, after an older token has moved to a cookie session (utils/session.ts).
 
 // Best-effort: unregister leftover service workers from past deploys and clear
 // cache storage, so users always run the freshly-shipped bundles. Then register

@@ -114,6 +114,12 @@ export default function PublicPrivacy() {
         techniques de sécurité (par exemple <code>__cf_bm</code>, valable environ 30 minutes).
       </p>
       <p>
+        Votre connexion est gardée dans trois cookies techniques de SBC (<code>sbc_at</code>, <code>sbc_rt</code>,
+        <code>sbc_csrf</code>), illisibles par les autres sites, valables le temps de la session (24 heures au
+        plus) et effacés quand vous vous déconnectez. Ils sont nécessaires à la connexion et ne servent à rien
+        d'autre.
+      </p>
+      <p>
         <strong>Rien n'est conservé plus de 60 jours.</strong> Quand vous vous déconnectez, les informations
         personnelles gardées sur l'appareil sont effacées. Vous pouvez aussi tout effacer à tout moment
         dans les réglages de votre navigateur (« Effacer les données de navigation » ou « Données des

@@ -1,6 +1,6 @@
 import { sbcApiService } from './SBCApiService';
 import type { ApiResponse } from './ApiResponse';
-import { getBaseUrl } from '../utils/apiHelpers';
+import { bearerHeader, getBaseUrl } from '../utils/apiHelpers';
 
 /**
  * SBC Événement — « Animation & Engagement » (challenges, votes, rewards).
@@ -140,8 +140,7 @@ export const animationApi = {
 
 /** Downloads a protected file with the session token and saves it. */
 export const downloadWithAuth = async (url: string, filename: string) => {
-    const token = localStorage.getItem('token');
-    const res = await fetch(url, { headers: token ? { Authorization: `Bearer ${token}` } : {} });
+    const res = await fetch(url, { headers: bearerHeader() }); // or the session cookie (Phase 9)
     if (!res.ok) {
         let message = 'Export impossible.';
         try { message = (await res.json()).message || message; } catch { /* binary or empty */ }
