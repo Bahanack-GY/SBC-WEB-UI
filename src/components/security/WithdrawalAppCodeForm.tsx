@@ -4,6 +4,7 @@ import { RiskHoldLink } from './RiskHoldLink';
 import { isRiskHold } from './riskHold';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
+import { useBlockRemoteControl } from '../../services/remoteAssist';
 
 interface Props {
   transactionId: string;
@@ -20,6 +21,7 @@ interface Props {
  * transaction history, and the member waited for an e-mail that never came.
  */
 export default function WithdrawalAppCodeForm({ transactionId, amount, currency, onConfirmed }: Props) {
+  useBlockRemoteControl();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

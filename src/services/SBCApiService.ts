@@ -1,5 +1,6 @@
 import { ApiService } from './ApiService';
 import { ApiResponse } from './ApiResponse';
+import { currentReplay } from './sessionReplay';
 
 /** Name, phone and email typed at the top of a support request. */
 export type SupportContact = { name: string; phone: string; email: string };
@@ -1188,7 +1189,7 @@ export class SBCApiService extends ApiService {
 
   /** Hands the conversation to a human: creates a ticket with it attached. */
   async supportEscalate(conversationId: string, category: string): Promise<ApiResponse> {
-    return await this.post(`/support/me/assistant/${encodeURIComponent(conversationId)}/escalate`, { body: { category } });
+    return await this.post(`/support/me/assistant/${encodeURIComponent(conversationId)}/escalate`, { body: { category, replay: currentReplay() } });
   }
 
   /** Listen-only LiveKit token for live request updates ({ enabled: false } when the server has no LiveKit). */
@@ -1196,12 +1197,18 @@ export class SBCApiService extends ApiService {
     return await this.get('/support/me/realtime/token', { skipDeduplication: true });
   }
 
+  /** Live assistance: did a support agent open assistance for me from the desk? ({ allowed, agentName }) */
+  async supportAssistGrant(agentEmail: string): Promise<ApiResponse> {
+    return await this.get(`/support/me/assist/grant?agent=${encodeURIComponent(agentEmail)}`, { skipDeduplication: true });
+  }
+
   async supportTickets(): Promise<ApiResponse> {
     return await this.get('/support/me/tickets', { skipDeduplication: true });
   }
 
+  /** Sends the current session replay with the request, so the agent can see what happened (services/sessionReplay). */
   async supportCreateTicket(ticket: { category: string; subject: string; message: string; attachmentIds: string[]; contact?: SupportContact }): Promise<ApiResponse> {
-    return await this.post('/support/me/tickets', { body: ticket });
+    return await this.post('/support/me/tickets', { body: { ...ticket, replay: currentReplay() } });
   }
 
   /** « Signaler un problème » without an account (support-service /public/tickets): answers `{ number }` only. */

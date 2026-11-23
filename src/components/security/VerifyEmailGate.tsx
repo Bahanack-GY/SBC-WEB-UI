@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '../../contexts/AuthContext';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
+import { useBlockRemoteControl } from '../../services/remoteAssist';
 
 /**
  * Email verified after payment (2026-11-23). Sign-up no longer asks for a code; once the
@@ -11,6 +12,7 @@ import { handleApiResponse } from '../../utils/apiHelpers';
  * (`user.emailVerificationRequired`: paid, unverified, account from 2026-11-23).
  */
 export default function VerifyEmailGate() {
+  useBlockRemoteControl();
   const { user, refreshUser, logout } = useAuth();
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [wait, setWait] = useState(0);
@@ -100,6 +102,7 @@ export default function VerifyEmailGate() {
             <input
               id="verify-email-code"
               autoComplete="one-time-code"
+              data-openreplay-hidden=""
               maxLength={6}
               value={code}
               onChange={e => setCode(e.target.value.replace(/[^A-Za-z0-9]/g, '').slice(0, 6).toUpperCase())}

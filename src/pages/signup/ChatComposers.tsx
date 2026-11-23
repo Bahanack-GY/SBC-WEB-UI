@@ -49,7 +49,7 @@ export function PasswordComposer({ label, autoComplete, onSubmit, disabled }: {
     return (
         <form onSubmit={(e) => { e.preventDefault(); if (v) onSubmit(v); }} className="flex gap-2">
             <div className="relative flex-1 min-w-0">
-                <input ref={ref} aria-label={label} className={`${field} pr-12`} type={show ? 'text' : 'password'} value={v}
+                <input data-openreplay-hidden="" ref={ref} aria-label={label} className={`${field} pr-12`} type={show ? 'text' : 'password'} value={v}
                     onChange={(e) => setV(e.target.value)} autoComplete={autoComplete} disabled={disabled} placeholder="••••••••" />
                 <button type="button" onClick={() => setShow((s) => !s)} aria-label={show ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-3 p-1">
@@ -224,7 +224,7 @@ export function OtpComposer({ onSubmit, disabled, footer }: { onSubmit: (code: s
     return (
         <div className="space-y-2">
             <form onSubmit={(e) => { e.preventDefault(); if (v.length === 6) onSubmit(v); }} className="flex gap-2">
-                <input ref={ref} aria-label="Code de vérification" className={`${field} text-center tracking-[0.5em] font-semibold uppercase`}
+                <input data-openreplay-hidden="" ref={ref} aria-label="Code de vérification" className={`${field} text-center tracking-[0.5em] font-semibold uppercase`}
                     value={v} onChange={(e) => setV(clean(e.target.value))} autoComplete="one-time-code" autoCapitalize="characters"
                     spellCheck={false} placeholder="••••••" disabled={disabled} />
                 <SendButton disabled={disabled || v.length !== 6} label="Valider le code" />

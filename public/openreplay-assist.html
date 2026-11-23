@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<!-- Live assistance widget (OpenReplay Assist), served from our own origin so the plugin never
+     fetches its template from a third party. Element ids are the ones tracker-assist looks for. -->
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;background:transparent}
+body{font:14px system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1F2937;padding:6px;width:max-content}
+#or-assist{display:flex;flex-direction:column;gap:6px;min-width:190px;background:#fff;border:1px solid #E5E7EB;border-radius:14px;padding:10px;box-shadow:0 6px 18px rgba(0,0,0,.15)}
+.title{font-weight:600;font-size:13px}
+button{padding:9px 12px;border:none;border-radius:10px;cursor:pointer;font-weight:600;font-size:13px;width:100%}
+#end-call-btn{background:#DC2626;color:#fff}
+#end-control-btn{background:#DC2626;color:#fff}
+</style>
+</head>
+<body>
+<div id="or-assist">
+  <div id="controls" style="display:none">
+    <div class="title">Appel avec le support SBC</div>
+    <button id="end-call-btn">Raccrocher</button>
+  </div>
+  <div id="remote-control-row" style="display:none;flex-direction:column;gap:6px">
+    <div class="title">Le support SBC contrôle votre écran</div>
+    <button id="end-control-btn">Arrêter le contrôle</button>
+  </div>
+</div>
+</body>
+</html>

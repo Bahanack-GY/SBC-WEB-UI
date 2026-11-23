@@ -211,7 +211,7 @@ function ChangePhoneNumber() {
                 <label className="block text-gray-700 text-sm mb-1 font-medium">
                   Code de vérification
                 </label>
-                <input
+                <input data-openreplay-hidden=""
                   type="text"
                   value={otpCode}
                   onChange={(e) => {

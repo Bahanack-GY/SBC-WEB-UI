@@ -3,6 +3,7 @@ import { Cancel01Icon, Copy01Icon, Loading03Icon, LockPasswordIcon, Tick02Icon }
 import { useEffect, useState, type FormEvent } from 'react';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
+import { useBlockRemoteControl } from '../../services/remoteAssist';
 
 interface Props {
   open: boolean;
@@ -21,6 +22,7 @@ type Step = 'password' | 'email' | 'scan' | 'backup';
  *   3. the first code shown by the app → 10 backup codes, shown once
  */
 export default function AuthenticatorSetupSheet({ open, onClose, onDone }: Props) {
+  useBlockRemoteControl(open);
   const [step, setStep] = useState<Step>('password');
   const [password, setPassword] = useState('');
   const [emailCode, setEmailCode] = useState('');
@@ -176,7 +178,7 @@ export default function AuthenticatorSetupSheet({ open, onClose, onDone }: Props
               <li>Tapez le code à 6 chiffres que l’application affiche pour « SBC ».</li>
             </ol>
             <div className="flex justify-center">
-              <img src={qr.qrDataUrl} alt="Code QR à scanner avec l’application d’authentification" className="w-48 h-48" />
+              <img data-openreplay-hidden="" src={qr.qrDataUrl} alt="Code QR à scanner avec l’application d’authentification" className="w-48 h-48" />
             </div>
             <div className="bg-gray-50 border border-border rounded-xl p-3">
               <p className="text-xs text-gray-500 mb-1">Clé (à saisir dans l’application si vous ne pouvez pas scanner)</p>
@@ -186,7 +188,7 @@ export default function AuthenticatorSetupSheet({ open, onClose, onDone }: Props
                   <HugeiconsIcon icon={copied === 'key' ? Tick02Icon : Copy01Icon} size={18} />
                 </button>
               </div>
-              <a href={qr.otpauthUrl} className="text-xs text-primary underline mt-2 inline-block">Ouvrir directement dans l’application</a>
+              <a data-openreplay-hidden="" href={qr.otpauthUrl} className="text-xs text-primary underline mt-2 inline-block">Ouvrir directement dans l’application</a>
             </div>
             <div>
               <label className="block text-gray-700 text-sm mb-1" htmlFor="auth-first-code">Code affiché par l’application</label>
