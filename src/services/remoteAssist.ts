@@ -6,8 +6,10 @@ import { useEffect, useSyncExternalStore } from 'react';
  * See server `docs/support/OPENREPLAY.md` « Assistance en direct ».
  *
  * Rules (2026-11-23):
- * - Every remote-control request opens a French prompt naming SBC support; nothing happens
- *   without « Autoriser ». A banner stays on screen while control is active, with « Arrêter ».
+ * - A control request is considered only when a support agent opened « Assistance en direct »
+ *   for this member from the desk (support-service grant, checked by the agent's e-mail);
+ *   anything else is declined at once. Then a French prompt naming SBC support opens; nothing
+ *   happens without « Autoriser ». A banner stays on screen while control is active, with « Arrêter ».
  * - Calls and screen recording requests are refused: the prompt has no accept button.
  * - Remote control is never possible on a sensitive screen (money out, codes, passwords,
  *   contact or payout changes, authenticator setup, identity check, account deletion): a
@@ -95,7 +97,28 @@ export type RemoteControlLike = {
     releaseControl: (isDenied?: boolean, keepId?: boolean, skipUpdate?: boolean) => void;
     reconnect: (ids: string[]) => void;
 };
-type AssistLike = { remoteControl?: RemoteControlLike | null; stop?: () => void; start?: () => void };
+type AssistLike = {
+    remoteControl?: RemoteControlLike | null; stop?: () => void; start?: () => void;
+    agents?: Record<string, { agentInfo?: { email?: string } } | undefined>;
+};
+
+/** Asks support-service whether this agent may ask this member for control (desk grant). */
+export type GrantChecker = (agentEmail: string) => Promise<boolean>;
+let grantChecker: GrantChecker = async (email) => {
+    try {
+        const { sbcApiService } = await import('./SBCApiService');
+        const r = await sbcApiService.supportAssistGrant(email);
+        return r.isSuccessByStatusCode === true && r.body?.data?.allowed === true;
+    } catch { return false; }
+};
+export function setGrantCheckerForTests(f: GrantChecker | null): void {
+    grantChecker = f ?? grantChecker;
+}
+const agentEmailOf = (id: string): string | null => {
+    const e = assist?.agents?.[id]?.agentInfo?.email;
+    return typeof e === 'string' && e.includes('@') ? e : null;
+};
+const decline = (rc: RemoteControlLike, id: string) => { rc.agentID = id; rc.releaseControl(true); };
 
 const RC_ENABLED = 2; // RCStatus.Enabled
 const CONTROL_PEER_KEY = '__openreplay_control_peer';
@@ -115,21 +138,25 @@ export function guardRemoteControl(rc: RemoteControlLike): RemoteControlLike {
     const request = rc.requestControl;
     const reconnect = rc.reconnect.bind(rc);
     rc.requestControl = (id: string) => {
-        if (controlBlocked()) {
-            // Same answer as « Refuser »: the agent sees the request declined.
-            rc.agentID = id;
-            rc.releaseControl(true);
-            return;
-        }
-        request(id);
+        // Same answer as « Refuser »: the agent sees the request declined.
+        if (controlBlocked()) return decline(rc, id);
+        const email = agentEmailOf(id);
+        if (!email) return decline(rc, id);
+        void grantChecker(email).then((ok) => {
+            if (!ok || controlBlocked()) decline(rc, id);
+            else request(id); // the member's prompt
+        });
     };
     rc.reconnect = (ids: string[]) => {
-        // After a reload control resumes without asking again: never onto a sensitive screen.
-        if (controlBlocked()) {
-            try { sessionStorage.removeItem(CONTROL_PEER_KEY); } catch { /* ignore */ }
-            return;
-        }
-        reconnect(ids);
+        // After a reload control resumes without asking again: never onto a sensitive screen,
+        // and only while the desk grant is still open.
+        const clear = () => { try { sessionStorage.removeItem(CONTROL_PEER_KEY); } catch { /* ignore */ } };
+        if (controlBlocked()) return clear();
+        let stored: string | null = null;
+        try { stored = sessionStorage.getItem(CONTROL_PEER_KEY); } catch { /* ignore */ }
+        const email = stored && ids.includes(stored) ? agentEmailOf(stored) : null;
+        if (!email) return clear();
+        void grantChecker(email).then((ok) => { if (ok && !controlBlocked()) reconnect(ids); else clear(); });
     };
     marked.__sbcGuarded = true;
     return rc;

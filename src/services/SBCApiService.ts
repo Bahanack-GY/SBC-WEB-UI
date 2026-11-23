@@ -1197,6 +1197,11 @@ export class SBCApiService extends ApiService {
     return await this.get('/support/me/realtime/token', { skipDeduplication: true });
   }
 
+  /** Live assistance: did a support agent open assistance for me from the desk? ({ allowed, agentName }) */
+  async supportAssistGrant(agentEmail: string): Promise<ApiResponse> {
+    return await this.get(`/support/me/assist/grant?agent=${encodeURIComponent(agentEmail)}`, { skipDeduplication: true });
+  }
+
   async supportTickets(): Promise<ApiResponse> {
     return await this.get('/support/me/tickets', { skipDeduplication: true });
   }

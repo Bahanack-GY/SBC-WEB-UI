@@ -1,10 +1,12 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
-    CONTROL_PROMPT, SENSITIVE_ROUTES, assistOptions, attachAssist, blockRemoteControl, controlBlocked, guardRemoteControl,
-    isSensitiveRoute, resetRemoteAssistForTests, setAssistRoute, type RemoteControlLike,
+    CONTROL_PROMPT, SENSITIVE_ROUTES, assistOptions, attachAssist, blockRemoteControl, controlBlocked,
+    isSensitiveRoute, resetRemoteAssistForTests, setAssistRoute, setGrantCheckerForTests, type RemoteControlLike,
 } from './remoteAssist';
+
+const flush = () => new Promise((r) => setTimeout(r, 0));
 
 const src = (p: string) => readFileSync(join(process.cwd(), p), 'utf8');
 
@@ -52,7 +54,13 @@ describe('remote control is refused on sensitive screens', () => {
 });
 
 describe('the guard around tracker-assist’s RemoteControl', () => {
-    afterEach(() => { resetRemoteAssistForTests(); setAssistRoute('/'); });
+    let granted = true;
+    const asked: string[] = [];
+    beforeEach(() => {
+        granted = true; asked.length = 0;
+        setGrantCheckerForTests(async (email) => { asked.push(email); return granted; });
+    });
+    afterEach(() => { resetRemoteAssistForTests(); setAssistRoute('/'); try { sessionStorage.clear(); } catch { /* ignore */ } });
 
     const fakeRc = () => {
         const rc: RemoteControlLike = {
@@ -63,52 +71,109 @@ describe('the guard around tracker-assist’s RemoteControl', () => {
         };
         return rc;
     };
+    /** An Assist instance with one agent connected (as the plugin keeps them). */
+    const withAgent = (rc: RemoteControlLike | null = null) => {
+        const a = { remoteControl: rc, agents: { 'agent-1': { agentInfo: { email: 'Awa@SBC.test' } } } as Record<string, { agentInfo?: { email?: string } }> };
+        attachAssist(a);
+        return a;
+    };
 
-    it('lets a request through to the member’s prompt on an ordinary page', () => {
+    it('asks the member only when the desk opened assistance for that agent', async () => {
         const rc = fakeRc();
         const request = rc.requestControl;
-        guardRemoteControl(rc);
+        withAgent(rc);
         setAssistRoute('/aide/demandes');
         rc.requestControl('agent-1');
+        await flush();
+        expect(asked).toEqual(['Awa@SBC.test']);
         expect(request).toHaveBeenCalledWith('agent-1');
     });
 
-    it('declines a request at once on a sensitive route, and after a reload does not resume control there', () => {
+    it('declines an agent without a desk grant, and one the plugin does not know', async () => {
+        const rc = fakeRc();
+        const request = rc.requestControl;
+        const a = withAgent(rc);
+        granted = false;
+        rc.requestControl('agent-1');
+        await flush();
+        expect(request).not.toHaveBeenCalled();
+        expect(rc.releaseControl).toHaveBeenCalledWith(true);
+        granted = true;
+        rc.requestControl('agent-unknown');
+        await flush();
+        expect(request).not.toHaveBeenCalled();
+        expect(a.agents['agent-unknown']).toBeUndefined();
+    });
+
+    it('declines a request at once on a sensitive route, and after a reload does not resume control there', async () => {
         const rc = fakeRc();
         const request = rc.requestControl;
         const reconnect = rc.reconnect;
-        guardRemoteControl(rc);
+        withAgent(rc);
         setAssistRoute('/wallet');
         rc.requestControl('agent-1');
+        await flush();
+        expect(asked).toEqual([]);
         expect(request).not.toHaveBeenCalled();
         expect(rc.releaseControl).toHaveBeenCalledWith(true);
+        sessionStorage.setItem('__openreplay_control_peer', 'agent-1');
         rc.reconnect(['agent-1']);
+        await flush();
         expect(reconnect).not.toHaveBeenCalled();
+        expect(sessionStorage.getItem('__openreplay_control_peer')).toBeNull();
     });
 
-    it('a sensitive sheet blocks too, until it closes', () => {
+    it('after a reload on an ordinary page, control resumes only while the grant is open', async () => {
+        const rc = fakeRc();
+        const reconnect = rc.reconnect;
+        withAgent(rc);
+        sessionStorage.setItem('__openreplay_control_peer', 'agent-1');
+        granted = false;
+        rc.reconnect(['agent-1']);
+        await flush();
+        expect(reconnect).not.toHaveBeenCalled();
+        sessionStorage.setItem('__openreplay_control_peer', 'agent-1');
+        granted = true;
+        rc.reconnect(['agent-1']);
+        await flush();
+        expect(reconnect).toHaveBeenCalledWith(['agent-1']);
+    });
+
+    it('a sensitive sheet blocks too, until it closes', async () => {
         const rc = fakeRc();
         const request = rc.requestControl;
-        guardRemoteControl(rc);
+        withAgent(rc);
         setAssistRoute('/modifier-le-profil');
         const release = blockRemoteControl();
         expect(controlBlocked()).toBe(true);
         rc.requestControl('agent-1');
+        await flush();
         expect(request).not.toHaveBeenCalled();
         release();
         release(); // idempotent
         expect(controlBlocked()).toBe(false);
         rc.requestControl('agent-1');
+        await flush();
         expect(request).toHaveBeenCalledTimes(1);
     });
 
-    it('ends control already running when the member reaches a sensitive page, on any RemoteControl the plugin creates later', () => {
-        const assist: { remoteControl: RemoteControlLike | null } = { remoteControl: null };
-        attachAssist(assist);
+    it('a sensitive page reached while the grant is being checked still declines', async () => {
+        const rc = fakeRc();
+        const request = rc.requestControl;
+        withAgent(rc);
+        rc.requestControl('agent-1');
+        setAssistRoute('/otp');
+        await flush();
+        expect(request).not.toHaveBeenCalled();
+    });
+
+    it('ends control already running when the member reaches a sensitive page, on any RemoteControl the plugin creates later', async () => {
+        const a = withAgent(null);
         setAssistRoute('/');
         const rc = fakeRc();
-        assist.remoteControl = rc; // the plugin makes a new one at each socket connection
+        a.remoteControl = rc; // the plugin makes a new one at each socket connection
         rc.requestControl('agent-1');
+        await flush();
         expect(rc.status).toBe(2);
         setAssistRoute('/otp');
         expect(rc.releaseControl).toHaveBeenCalled();
@@ -129,7 +194,9 @@ describe('the guard around tracker-assist’s RemoteControl', () => {
         expect(pkg.version).toBe('11.0.21');
         const rcSrc = src('node_modules/@openreplay/tracker-assist/lib/RemoteControl.js');
         for (const k of ['requestControl', 'releaseControl', 'reconnect', 'agentID', 'status']) expect(rcSrc).toContain(k);
-        expect(src('node_modules/@openreplay/tracker-assist/lib/Assist.js')).toMatch(/this\.remoteControl\s*=\s*new RemoteControl/);
+        const aSrc = src('node_modules/@openreplay/tracker-assist/lib/Assist.js');
+        expect(aSrc).toMatch(/this\.remoteControl\s*=\s*new RemoteControl/);
+        expect(aSrc).toMatch(/this\.agents\[id\]\s*=\s*\{[\s\S]{0,200}agentInfo/);
     });
 });
 

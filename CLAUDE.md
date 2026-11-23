@@ -201,8 +201,11 @@ SBC's processing is authorised by Benin's APDP (Délibération n° 2026-523/AT/A
   `docs/support/OPENREPLAY.md`.
 - **Live assistance (2026-11-23).** `services/remoteAssist.ts` (`@openreplay/tracker-assist`
   11.0.21, pinned: the guard relies on its internals, `remoteAssist.test.ts` checks them). A support
-  agent can watch a signed-in member live from the desk; **remote control only after the member taps
-  « Autoriser »** on a French prompt naming SBC support; `RemoteAssistBanner` shows a red banner
+  agent can watch a signed-in member live from the desk. **Remote control needs two things:** a desk
+  grant (an agent with `assist.control` opened « Assistance en direct » for this member; the app asks
+  `GET /support/me/assist/grant?agent=<OpenReplay e-mail>` before anything, so an OpenReplay user acting
+  outside the desk is declined without a prompt), then the member's « Autoriser » on a French prompt
+  naming SBC support; `RemoteAssistBanner` shows a red banner
   with « Arrêter » while control runs. Calls and screen-recording requests can only be declined.
   **No control on sensitive screens:** `SENSITIVE_ROUTES` (money out, codes, passwords, contact
   changes, SSO, identity check, `/mes-donnees`) and every component calling
