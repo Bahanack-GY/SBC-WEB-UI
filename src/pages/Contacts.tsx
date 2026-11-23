@@ -1,5 +1,6 @@
 import { HugeiconsIcon } from '@hugeicons/react';
-import { CheckmarkCircle02Icon, Download01Icon, FilterIcon, Loading03Icon, Location01Icon, SmartPhone01Icon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { AppleIcon, CheckmarkCircle02Icon, Download01Icon, FilterIcon, Loading03Icon, Location01Icon, PlayStoreIcon, SmartPhone01Icon, WhatsappIcon } from '@hugeicons/core-free-icons';
+import { SBC_NETWORK_APP_STORE_URL, SBC_NETWORK_PLAY_STORE_URL } from '../config/apps';
 import { useState, useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import BackButton from "../components/common/BackButton";
@@ -80,6 +81,23 @@ interface Criteria {
 }
 
 const PAGE_SIZE = 20;
+
+function StoreButton({ href, icon, caption, store }: { href: string; icon: typeof PlayStoreIcon; caption: string; store: string }) {
+    return (
+        <a
+            href={href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-black px-3 py-1.5 text-white transition-opacity hover:opacity-85 active:opacity-75"
+        >
+            <HugeiconsIcon icon={icon} size={22} className="shrink-0" />
+            <span className="flex flex-col leading-tight text-left">
+                <span className="text-[10px] opacity-80">{caption}</span>
+                <span className="text-sm font-semibold">{store}</span>
+            </span>
+        </a>
+    );
+}
 
 function Contacts() {
     const { user } = useAuth();
@@ -415,11 +433,23 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                         </Link>
                     </section>
                 )}
-                {/* Rufus 2026-11-07. No store links yet: text only. */}
-                <p className="mb-3 flex items-center gap-2 rounded-card border border-border bg-surface px-3 py-2 text-xs text-ink-2 text-pretty">
-                    <HugeiconsIcon icon={SmartPhone01Icon} size={16} className="shrink-0 text-primary" />
-                    <span>Téléchargez l'application <strong className="font-semibold text-ink">SBC Network</strong> sur Play Store ou App Store pour mieux gérer les contacts SBC.</span>
-                </p>
+                {/* Rufus 2026-11-23: store buttons the member taps; text alone while no link is set. */}
+                <section className="mb-3 rounded-card border border-border bg-surface px-3 py-2.5">
+                    <p className="flex items-center gap-2 text-xs text-ink-2 text-pretty">
+                        <HugeiconsIcon icon={SmartPhone01Icon} size={16} className="shrink-0 text-primary" />
+                        <span>Téléchargez l'application <strong className="font-semibold text-ink">SBC Network</strong> pour mieux gérer les contacts SBC.</span>
+                    </p>
+                    {(SBC_NETWORK_PLAY_STORE_URL || SBC_NETWORK_APP_STORE_URL) && (
+                        <div className="mt-2 flex gap-2">
+                            {SBC_NETWORK_PLAY_STORE_URL && (
+                                <StoreButton href={SBC_NETWORK_PLAY_STORE_URL} icon={PlayStoreIcon} caption="Disponible sur" store="Google Play" />
+                            )}
+                            {SBC_NETWORK_APP_STORE_URL && (
+                                <StoreButton href={SBC_NETWORK_APP_STORE_URL} icon={AppleIcon} caption="Télécharger dans" store="l'App Store" />
+                            )}
+                        </div>
+                    )}
+                </section>
                 <input
                     type="text"
                     value={criteria.search}
