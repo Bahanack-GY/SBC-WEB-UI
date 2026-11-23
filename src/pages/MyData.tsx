@@ -216,7 +216,7 @@ export default function MyData() {
                 onCancel={closeDelete}
             >
                 <label className="mt-3 block text-sm font-medium text-ink" htmlFor="delete-password">Mot de passe</label>
-                <input id="delete-password" type="password" autoComplete="current-password" value={password}
+                <input data-openreplay-hidden="" id="delete-password" type="password" autoComplete="current-password" value={password}
                     onChange={(e) => { setPassword(e.target.value); setDeleteError(null); }}
                     onKeyDown={(e) => { if (e.key === 'Enter') void deleteAccount(); }}
                     className="mt-1 w-full h-11 rounded-tile border border-border bg-surface px-3 text-[15px] text-ink focus:outline-none focus:border-primary" />

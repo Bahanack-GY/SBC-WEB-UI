@@ -178,7 +178,7 @@ function Connexion() {
           <div>
             <label className="block text-gray-700 font-medium mb-2">{t('common.password')}</label>
             <div className="relative">
-              <input
+              <input data-openreplay-hidden=""
                 type={showPassword ? 'text' : 'password'}
                 placeholder={t('common.password')}
                 className={`w-full border ${errors.password ? 'border-danger' : 'border-border'} rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-primary text-gray-700 placeholder-gray-400 pr-12`}

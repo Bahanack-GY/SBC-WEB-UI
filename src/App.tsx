@@ -116,11 +116,20 @@ import GuestIdentityPage from './pages/help/GuestIdentityPage'
 import HelpIdentity from './pages/help/HelpIdentity'
 import { prepareRobotAnswer, shouldPrepareOn } from './utils/robotCheck'
 import { onRouteChange } from './utils/appUpdate'
+import { useSessionReplay } from './services/sessionReplay'
+import { setAssistRoute } from './services/remoteAssist'
+import RemoteAssistBanner from './components/security/RemoteAssistBanner'
 
 function AppContent() {
   const location = useLocation();
   const { setAffiliationCode } = useAffiliation();
   const { isAuthenticated, loading: authLoading, logout, user: authUser } = useAuth();
+  // Support session replay (OpenReplay): records every visit from the start, with the member's id
+  // once signed in (waits for the restored session so it is one recording); off unless configured.
+  // The profile comes back with `_id` (the typed `id` is often missing).
+  useSessionReplay(isAuthenticated ? (authUser?.id ?? authUser?._id) : null, !authLoading);
+  // Live assistance: no remote control on sensitive screens (services/remoteAssist.ts).
+  useEffect(() => { setAssistRoute(location.pathname); }, [location.pathname]);
   const { isSubscribed, isLoading: subscriptionLoading } = useSubscriptionStatus();
   const queryClient = useQueryClient();
 
@@ -274,6 +283,7 @@ function AppContent() {
   // Wallet "Voir toutes les transactions" button sat underneath the pill.
   return (
     <div className={`bg-white relative ${hideNav ? '' : 'pb-24'}`}>
+      <RemoteAssistBanner />
       {showLogout && (
         <button
           onClick={async () => { await logout(); window.location.replace('/connexion'); }}

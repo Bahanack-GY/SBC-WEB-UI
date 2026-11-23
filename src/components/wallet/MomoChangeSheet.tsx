@@ -6,6 +6,7 @@ import { getCountryByCode, getMomoOperatorDisplayName, momoCorrespondents } from
 import AuthenticatorCodeField, { codeLooksComplete } from '../security/AuthenticatorCodeField';
 import AuthenticatorRequiredNotice from '../security/AuthenticatorRequiredNotice';
 import { AuthenticatorRequired, unwrap, useAuthenticatorStatus } from '../security/authenticator';
+import { useBlockRemoteControl } from '../../services/remoteAssist';
 
 interface Props {
   open: boolean;
@@ -33,6 +34,7 @@ const nationalPart = (stored: string | undefined, dial: string): string => {
  * says so before and after.
  */
 export default function MomoChangeSheet({ open, onClose, onDone, countryCode, currentNumber, currentOperator }: Props) {
+  useBlockRemoteControl(open);
   const country = getCountryByCode(countryCode);
   const dial = country?.phoneCode || '';
   const operators = useMemo(() => momoCorrespondents[countryCode]?.operators || [], [countryCode]);

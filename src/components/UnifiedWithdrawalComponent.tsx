@@ -13,6 +13,7 @@ import AuthenticatorCodeField, { codeLooksComplete } from './security/Authentica
 import AuthenticatorRequiredNotice from './security/AuthenticatorRequiredNotice';
 import MomoChangeSheet from './wallet/MomoChangeSheet';
 import CryptoWalletChangeSheet from './wallet/CryptoWalletChangeSheet';
+import { useBlockRemoteControl } from '../services/remoteAssist';
 
 interface PendingWithdrawal {
   _id: string;
@@ -84,6 +85,7 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
   isOpen,
   onClose
 }) => {
+  useBlockRemoteControl(isOpen);
   const navigate = useNavigate();
   const { user, refreshUser } = useAuth();
   const [selectedType, setSelectedType] = useState<'mobile_money' | 'crypto' | null>(null);

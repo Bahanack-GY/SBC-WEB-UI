@@ -7,6 +7,7 @@ import { Card, Pill } from './ui';
 import { primaryBtn, secondaryBtn } from './styles';
 import { supportErrorText } from './support';
 import { shrinkPhoto, type IdentityKind, type IdentityStatus } from './identity';
+import { useBlockRemoteControl } from '../../services/remoteAssist';
 
 const SLOTS: { kind: IdentityKind; title: string; hint: string; required: boolean; capture: 'environment' | 'user' }[] = [
     { kind: 'id_front', title: 'Pièce d’identité (recto)', hint: 'Carte d’identité, passeport ou permis. Les 4 coins visibles, sans reflet, texte lisible.', required: true, capture: 'environment' },
@@ -44,7 +45,7 @@ function PhotoSlot({ slot, value, onChange, disabled }: {
                 {value && <Pill tone="success">Prête</Pill>}
             </div>
             <p className="mt-1 text-xs text-ink-2">{slot.hint}</p>
-            {value && <img src={value.url} alt={slot.title} className="mt-2 max-h-48 w-full rounded-tile object-contain bg-surface-2" />}
+            {value && <img data-openreplay-hidden="" src={value.url} alt={slot.title} className="mt-2 max-h-48 w-full rounded-tile object-contain bg-surface-2" />}
             {error && <p role="alert" className="mt-2 text-xs text-danger">{error}</p>}
             <input
                 ref={input} type="file" accept="image/*" capture={slot.capture} className="hidden"
@@ -93,6 +94,7 @@ export function IdentityStatusCard({ status, onRetry, ticketLink }: { status: Id
  * shows the result. Privacy and safety notes are always visible.
  */
 export function IdentityForm({ why, send }: { why: string; send: (images: Partial<Record<IdentityKind, Blob>>) => Promise<void> }) {
+  useBlockRemoteControl();
     const [photos, setPhotos] = useState<Partial<Record<IdentityKind, Picked | null>>>({});
     const [sending, setSending] = useState(false);
     const [error, setError] = useState('');

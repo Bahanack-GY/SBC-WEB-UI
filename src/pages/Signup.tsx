@@ -709,7 +709,7 @@ function Signup() {
               <div>
                 <label className="block text-gray-700 mb-1">🔒 Mot de passe</label>
                 <div className="relative">
-                  <input
+                  <input data-openreplay-hidden=""
                     name="password"
                     type={showPassword ? 'text' : 'password'}
                     value={data.password}
@@ -730,7 +730,7 @@ function Signup() {
               <div>
                 <label className="block text-gray-700 mb-1">🔐 Confirmer le mot de passe</label>
                 <div className="relative">
-                  <input
+                  <input data-openreplay-hidden=""
                     name="confirmPassword"
                     type={showConfirmPassword ? 'text' : 'password'}
                     value={data.confirmPassword}

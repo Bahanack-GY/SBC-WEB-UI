@@ -6,6 +6,7 @@ import { cryptoCurrencyName, normalizeCryptoAddress, supportedCryptoCurrencies }
 import AuthenticatorCodeField, { codeLooksComplete } from '../security/AuthenticatorCodeField';
 import AuthenticatorRequiredNotice from '../security/AuthenticatorRequiredNotice';
 import { AuthenticatorRequired, unwrap, useAuthenticatorStatus } from '../security/authenticator';
+import { useBlockRemoteControl } from '../../services/remoteAssist';
 
 interface Props {
   open: boolean;
@@ -24,6 +25,7 @@ interface Props {
  * wallet blocks withdrawals for 48 h; the window says so before and after.
  */
 export default function CryptoWalletChangeSheet({ open, onClose, onDone, currentAddress, currentCurrency }: Props) {
+  useBlockRemoteControl(open);
   const hasWallet = !!currentAddress;
   const { status, error: statusError, refresh } = useAuthenticatorStatus(open);
 
