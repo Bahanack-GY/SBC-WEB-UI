@@ -6,6 +6,8 @@ import { ChampionIcon, Clock01Icon, Location01Icon, Ticket01Icon, Rocket01Icon }
 import BackButton from '../components/common/BackButton';
 import Skeleton from '../components/common/Skeleton';
 import VoteSheet, { type VoteMode } from '../components/impact/VoteSheet';
+import ImpactCandidateCard from '../components/impact/ImpactCandidateCard';
+import { useImpactCurrentEdition } from '../hooks/useImpactCandidate';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import { redirectTo } from '../utils/redirect';
@@ -366,6 +368,8 @@ export default function ImpactChallenge() {
   const entrepreneurs = useMemo(() => current.data?.entrepreneurs ?? [], [current.data]);
   const leaderboard = useImpactChallengeLeaderboard(challenge?._id);
   const allowance = useTicketAllowance(challenge?._id);
+  // SBC Impact Challenge v2: while an edition is live, its candidate space is offered on top.
+  const edition = useImpactCurrentEdition().data;
 
   // Re-evaluated now and then, and at once when a countdown reaches zero, so the
   // vote buttons close the moment voting ends.
@@ -456,6 +460,7 @@ export default function ImpactChallenge() {
       </div>
 
       <div className="px-4 pb-10 max-w-2xl mx-auto">
+        {edition && <div className="mb-4"><ImpactCandidateCard edition={edition} /></div>}
         {current.isLoading ? (
           <LoadingState />
         ) : current.isError ? (

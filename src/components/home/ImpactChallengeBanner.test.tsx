@@ -2,7 +2,7 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, screen, waitFor } from '@testing-library/react';
 import { ok, fail, renderPage } from '../../test/api';
 
-const api = vi.hoisted(() => ({ getCurrentImpactChallenge: vi.fn() }));
+const api = vi.hoisted(() => ({ getCurrentImpactChallenge: vi.fn(), impactCurrent: vi.fn() }));
 vi.mock('../../services/SBCApiService', () => ({ sbcApiService: api }));
 
 import ImpactChallengeBanner from './ImpactChallengeBanner';
@@ -12,10 +12,12 @@ const DAY = 86_400_000;
 
 beforeEach(() => {
   vi.clearAllMocks();
+  api.impactCurrent.mockResolvedValue(ok(null));
 });
 
 const settle = async () => {
   await waitFor(() => expect(api.getCurrentImpactChallenge).toHaveBeenCalled());
+  await waitFor(() => expect(api.impactCurrent).toHaveBeenCalled());
   await act(async () => { await new Promise((r) => setTimeout(r, 0)); });
 };
 
@@ -45,6 +47,27 @@ describe('Impact Challenge on the home page', () => {
 
   it('is not shown when the service fails', async () => {
     api.getCurrentImpactChallenge.mockResolvedValue(fail(500, 'boom'));
+    const { container } = renderPage(<ImpactChallengeBanner />);
+    await settle();
+    expect(container).toBeEmptyDOMElement();
+  });
+
+  it('offers the v2 candidate space while an edition is live, even with no monthly challenge', async () => {
+    api.getCurrentImpactChallenge.mockResolvedValue(fail(404, 'No active challenge found'));
+    api.impactCurrent.mockResolvedValue(ok({
+      _id: 'ed1', name: 'SBC Impact Challenge 2027', status: 'QUALIFICATION', registrationOpen: true,
+      seats: { taken: 5, max: 20 }, settings: { invitationsRequired: 10 },
+    }));
+    renderPage(<ImpactChallengeBanner />);
+    const link = await screen.findByRole('link', { name: /SBC Impact Challenge : devenez candidat/ });
+    expect(link).toHaveAttribute('href', '/impact-challenge/candidat');
+    expect(link).toHaveTextContent('5/20 places prises');
+    expect(screen.queryByRole('link', { name: /Voter/ })).not.toBeInTheDocument();
+  });
+
+  it('is not shown when the edition call fails and no challenge runs', async () => {
+    api.getCurrentImpactChallenge.mockResolvedValue(fail(404, 'No active challenge found'));
+    api.impactCurrent.mockResolvedValue(fail(500, 'boom'));
     const { container } = renderPage(<ImpactChallengeBanner />);
     await settle();
     expect(container).toBeEmptyDOMElement();
