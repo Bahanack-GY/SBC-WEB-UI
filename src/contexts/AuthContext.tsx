@@ -34,7 +34,7 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   login: (identifier: string, password: string) => Promise<{ requiresOtp: boolean; userId?: string; email?: string; otpRetryAfterSeconds?: number; hasNegativeBalance?: boolean; recoveryMessage?: string }>;
-  register: (userData: any) => Promise<{ userId: string }>;
+  register: (userData: any) => Promise<{ userId: string; signedIn: boolean }>;
   logout: () => Promise<void>;
   verifyOtp: (userId: string, otp: string) => Promise<void>;
   updateProfile: (updates: Record<string, any>) => Promise<void>;
@@ -79,9 +79,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     initAuth();
   }, []);
 
+  /** A granted session (code step, or sign-up / password-only sign-in): token, browser key, cached fields. */
+  type SessionUser = { id?: string; _id?: string; email?: string; name?: string; firstName?: string; lastName?: string;
+    balance?: number; usdBalance?: number; avatar?: string; momoNumber?: string; momoOperator?: string };
+  const storeSession = async (data: { token: string; user?: SessionUser }, userId: string) => {
+    setToken(data.token);
+    await adoptSignInKey(data.token);
+    localStorage.setItem('userId', data.user?.id || data.user?._id || userId);
+    localStorage.setItem('userEmail', data.user?.email || '');
+    localStorage.setItem('userName', data.user?.name || `${data.user?.firstName || ''} ${data.user?.lastName || ''}`.trim());
+    localStorage.setItem('balance', data.user?.balance?.toString() || '0');
+    localStorage.setItem('usdBalance', data.user?.usdBalance?.toString() || '0');
+    if (data.user?.avatar) {
+      localStorage.setItem('avatar', data.user.avatar);
+    }
+    if (data.user?.momoNumber) {
+      localStorage.setItem('momo', data.user.momoNumber);
+      localStorage.setItem('momoCorrespondent', data.user.momoOperator || '');
+    }
+  };
+
   const login = async (identifier: string, password: string): Promise<{ requiresOtp: boolean; userId?: string; email?: string; otpRetryAfterSeconds?: number; hasNegativeBalance?: boolean; recoveryMessage?: string }> => {
     try {
-      const response = await sbcApiService.loginUser(identifier, password);
+      const devicePublicKey = await prepareSignInKey();
+      const response = await sbcApiService.loginUser(identifier, password, devicePublicKey);
 
       const data = handleApiResponse(response);
 
@@ -111,9 +132,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         return result;
       }
 
-      // Direct login success (no OTP required)
+      // Direct login success (no OTP required): an unpaid, unverified account (password only).
       if (data.token) {
-        setToken(data.token);
+        await storeSession(data, data.userId);
+        sessionStorage.removeItem('tempUserId');
       }
 
       if (data.user) {
@@ -168,17 +190,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const register = async (userData: any): Promise<{ userId: string }> => {
+  const register = async (userData: any): Promise<{ userId: string; signedIn: boolean }> => {
     try {
-      const response = await sbcApiService.registerUser(userData);
+      const devicePublicKey = await prepareSignInKey();
+      const response = await sbcApiService.registerUser({ ...userData, devicePublicKey });
       const data = handleApiResponse(response);
 
       const userId = data.userId || data.id;
 
+      // Email verified after payment (2026-11-23): a member sign-up opens the session at once.
+      if (data.token) {
+        await storeSession(data, userId);
+        if (data.user) setUser(data.user);
+        else await refreshUser();
+        sessionStorage.removeItem('tempUserId');
+        return { userId, signedIn: true };
+      }
+
       // Store userId for OTP verification (as per documentation)
       sessionStorage.setItem('tempUserId', userId);
 
-      return { userId };
+      return { userId, signedIn: false };
     } catch (error) {
       throw error;
     }
@@ -231,24 +263,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const data = handleApiResponse(response);
 
       // Store authentication data as per documentation
-      if (data.token) {
-        setToken(data.token);
-        await adoptSignInKey(data.token);
-        localStorage.setItem('userId', data.user?.id || userId);
-        localStorage.setItem('userEmail', data.user?.email || '');
-        localStorage.setItem('userName', data.user?.name || `${data.user?.firstName || ''} ${data.user?.lastName || ''}`.trim());
-        localStorage.setItem('balance', data.user?.balance?.toString() || '0');
-        localStorage.setItem('usdBalance', data.user?.usdBalance?.toString() || '0');
-
-        // Store user profile data
-        if (data.user?.avatar) {
-          localStorage.setItem('avatar', data.user.avatar);
-        }
-        if (data.user?.momoNumber) {
-          localStorage.setItem('momo', data.user.momoNumber);
-          localStorage.setItem('momoCorrespondent', data.user.momoOperator || '');
-        }
-      }
+      if (data.token) await storeSession(data, userId);
 
       if (data.user) {
         setUser(data.user);

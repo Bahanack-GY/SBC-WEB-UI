@@ -633,6 +633,14 @@ function Signup() {
         // Clear all signup cache including URL parameters
         clearSignupCache();
 
+        // Email verified after payment (2026-11-23): a member sign-up is signed in at once, no code.
+        if (result.signedIn) {
+          const sso = sessionStorage.getItem('sso_return_to');
+          if (sso) { sessionStorage.removeItem('sso_return_to'); window.location.replace(sso); return; }
+          navigate('/', { replace: true });
+          return;
+        }
+
         navigate('/otp', {
           state: {
             userId: result.userId,

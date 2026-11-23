@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
 import { ANNONCEUR_HOME, isAnnonceurAccount } from '../../utils/annonceur';
+import { useEffect, useRef } from 'react';
+import VerifyEmailGate from '../security/VerifyEmailGate';
 
 /**
  * Subscription status hook — single source of truth used by RequireSubscription
@@ -134,9 +136,20 @@ export function RequireAuth() {
  * That space sits under RequireAuth, so this cannot loop.
  */
 export function RequireSubscription() {
-  const { user, isAuthenticated, loading: authLoading } = useAuth();
+  const { user, isAuthenticated, loading: authLoading, refreshUser } = useAuth();
   const { isSubscribed, isLoading: subLoading } = useSubscriptionStatus();
   const location = useLocation();
+
+  // Email verified after payment: the profile loaded before paying says "not required";
+  // once the pack is active, read it again (once) so the server can ask for the e-mail code.
+  const refreshedAfterPay = useRef(false);
+  const unverified = !!user && (user as { isVerified?: boolean }).isVerified === false;
+  useEffect(() => {
+    if (isSubscribed && unverified && !refreshedAfterPay.current) {
+      refreshedAfterPay.current = true;
+      void refreshUser();
+    }
+  }, [isSubscribed, unverified, refreshUser]);
 
   if (authLoading) return <FullPageSpinner />;
 
@@ -161,6 +174,11 @@ export function RequireSubscription() {
   if (!isSubscribed) {
     const to = isAnnonceurAccount(user) ? ANNONCEUR_HOME : '/abonnement';
     return <Navigate to={to} replace state={{ from: location }} />;
+  }
+
+  // Paid, e-mail never verified (sign-ups from 2026-11-23): blocked until the code is entered.
+  if ((user as { emailVerificationRequired?: boolean } | null)?.emailVerificationRequired) {
+    return <VerifyEmailGate />;
   }
 
   return <Outlet />;

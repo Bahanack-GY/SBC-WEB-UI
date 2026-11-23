@@ -28,12 +28,14 @@ export class SBCApiService extends ApiService {
   /**
    * Login user - supports both email and phone number
    */
-  async loginUser(identifier: string, password: string): Promise<ApiResponse> {
+  async loginUser(identifier: string, password: string, devicePublicKey?: string | null): Promise<ApiResponse> {
     // Determine if identifier is email or phone number
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(identifier);
     const isPhone = /^\+?[\d\s-()]+$/.test(identifier) && identifier.replace(/\D/g, '').length >= 8;
     
-    const body: { email?: string; phoneNumber?: string; password: string } = { password };
+    // An unpaid, unverified account signs in with the password only: the browser's key goes along.
+    const body: { email?: string; phoneNumber?: string; password: string; devicePublicKey?: string } = { password };
+    if (devicePublicKey) body.devicePublicKey = devicePublicKey;
     
     if (isEmail) {
       body.email = identifier;
@@ -62,11 +64,27 @@ export class SBCApiService extends ApiService {
     referralCode?: string;
     /** Both must be true: the sign-up refuses to go on without them (APDP). */
     consents?: { privacy: boolean; dataTransfer: boolean };
+    /** The browser's signing key: sign-up now opens the session at once (no code). */
+    devicePublicKey?: string | null;
   }): Promise<ApiResponse> {
     return await this.post('/users/register', {
       body: userData,
       requiresAuth: false
     });
+  }
+
+  /** Email verified after payment: the code to the account's e-mail (sent again when asked). */
+  async requestEmailVerification(): Promise<ApiResponse> {
+    return await this.post('/users/me/verify-email/request', { body: {} });
+  }
+
+  async confirmEmailVerification(code: string): Promise<ApiResponse> {
+    return await this.post('/users/me/verify-email/confirm', { body: { code } });
+  }
+
+  /** A mistyped address, corrected before it was ever verified (password required). */
+  async correctUnverifiedEmail(email: string, password: string): Promise<ApiResponse> {
+    return await this.post('/users/me/verify-email/correct', { body: { email, password } });
   }
 
   /**

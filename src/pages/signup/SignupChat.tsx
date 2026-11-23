@@ -375,20 +375,7 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                         : msg);
                     return;
                 }
-                pendingRef.current = null;
-                try { sessionStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
-                // SSO: back to the consent screen that sent the member here.
-                const sso = sessionStorage.getItem('sso_return_to');
-                if (sso) { sessionStorage.removeItem('sso_return_to'); window.location.replace(sso); return; }
-                if (annonceur) {
-                    await bot({ content: `Votre compte annonceur est créé 🎉 Bienvenue, ${firstName(answersRef.current.name) || 'et merci'} !`, tone: 'success' });
-                    await bot('Créez maintenant votre annonce : notre équipe la valide avant sa diffusion. Aucun pack SBC n’est demandé.');
-                    setStep('done');
-                    return;
-                }
-                await bot({ content: `Votre compte est créé 🎉 Bienvenue chez SBC, ${firstName(answersRef.current.name) || 'et merci'} !`, tone: 'success' });
-                await bot('Encore quelques questions, toutes facultatives, pour personnaliser votre expérience ?');
-                setStep('profileIntro');
+                await accountReady();
                 return;
             }
             case 'profileIntro': {
@@ -530,6 +517,11 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
                 if (!rec) return;
                 try { const d = handleApiResponse(rec); if (d?.hasRecoveries) setRecovery(d); } catch { /* best-effort */ }
             }, 2000);
+            // Email verified after payment (2026-11-23): a member sign-up is signed in at once, no code.
+            if (result.signedIn) {
+                await accountReady();
+                return;
+            }
             setResendIn(RESEND_COOLDOWN);
             await bot(
                 <>C’est presque fini ! Je vous ai envoyé un code de 6 caractères par e-mail à <b>{a.email}</b>.</>,
@@ -545,6 +537,24 @@ export default function SignupChat({ pace = 450 }: { pace?: number }) {
         } finally {
             setBusy(false);
         }
+    };
+
+    /** The account is created and signed in (after the code, or at once for a member sign-up). */
+    const accountReady = async () => {
+        pendingRef.current = null;
+        try { sessionStorage.removeItem(PENDING_KEY); } catch { /* ignore */ }
+        // SSO: back to the consent screen that sent the member here.
+        const sso = sessionStorage.getItem('sso_return_to');
+        if (sso) { sessionStorage.removeItem('sso_return_to'); window.location.replace(sso); return; }
+        if (annonceur) {
+            await bot({ content: `Votre compte annonceur est créé 🎉 Bienvenue, ${firstName(answersRef.current.name) || 'et merci'} !`, tone: 'success' });
+            await bot('Créez maintenant votre annonce : notre équipe la valide avant sa diffusion. Aucun pack SBC n’est demandé.');
+            setStep('done');
+            return;
+        }
+        await bot({ content: `Votre compte est créé 🎉 Bienvenue chez SBC, ${firstName(answersRef.current.name) || 'et merci'} !`, tone: 'success' });
+        await bot('Encore quelques questions, toutes facultatives, pour personnaliser votre expérience ?');
+        setStep('profileIntro');
     };
 
     const resend = async (channel: 'email' | 'whatsapp') => {

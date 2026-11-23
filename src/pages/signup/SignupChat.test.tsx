@@ -120,6 +120,17 @@ describe('sign-up chat', () => {
         expect(await screen.findByRole('button', { name: 'Continuer' })).toBeInTheDocument();
     });
 
+    it('member sign-up signed in at once (email verified after payment): no code asked', async () => {
+        auth.register.mockResolvedValue({ userId: 'u1', signedIn: true });
+        renderPage(<SignupChat pace={0} />, '/signup');
+        await answerSignup();
+        await tap('Créer mon compte');
+        expect(await within(log()).findByText(/Votre compte est créé/)).toBeInTheDocument();
+        expect(within(log()).queryByText(/code de 6 caractères par e-mail/)).toBeNull();
+        expect(auth.verifyOtp).not.toHaveBeenCalled();
+        expect(await screen.findByRole('button', { name: 'Oui, allons-y' })).toBeInTheDocument();
+    });
+
     it('refuses an e-mail that already has an account, and offers to log in', async () => {
         api.checkUserExistence.mockImplementation(async (q: { email?: string }) => ok({ exists: !!q.email }));
         renderPage(<SignupChat pace={0} />, '/signup');
