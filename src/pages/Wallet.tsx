@@ -435,7 +435,39 @@ function Wallet() {
           setIsSubmittingWithdrawal(false);
           return;
         }
+        // No authenticator app yet: withdrawals need it (Security plan Phase 3). Offer the setup.
+        if (response.body?.code === 'AUTHENTICATOR_REQUIRED') {
+          setModalContent({
+            type: 'confirm',
+            message: String(response.body?.message || 'Pour retirer, configurez d’abord l’application d’authentification.'),
+            confirmLabel: 'Configurer',
+            onConfirm: () => navigate('/modifier-le-profil'),
+          });
+          setShowModal(true);
+          setIsSubmittingWithdrawal(false);
+          return;
+        }
         const data = handleApiResponse(response); // This assumes handleApiResponse throws on !success
+
+        // Confirmed with the authenticator app's code: nothing is sent by e-mail, so no
+        // « code envoyé » message; straight to the page that asks for the app's code.
+        if (data?.status === 'pending_otp_verification' && data.transactionId && data.confirmWith === 'authenticator') {
+          navigate('/otp', {
+            state: {
+              withdrawalId: data.transactionId,
+              withdrawalAmount: Number(withdrawAmount),
+              withdrawalCurrency: selectedBalanceType === 'USD' ? 'USD' : currency,
+              flow: 'withdrawal',
+              confirmWith: 'authenticator',
+            }
+          });
+          setWithdrawAmount('');
+          setWithdrawalFee(0);
+          setTotalDeduction(0);
+          setShowWithdrawForm(false);
+          setIsSubmittingWithdrawal(false);
+          return;
+        }
 
 
         if (data && response.isOverallSuccess) {

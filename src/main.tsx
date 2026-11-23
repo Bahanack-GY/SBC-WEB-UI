@@ -11,6 +11,7 @@ import { installClientErrorReporting } from './services/clientErrors'
 import { installDeviceSignals } from './utils/deviceSignals'
 import { ensureSessionKey } from './utils/requestSigning'
 import { getBaseUrl, getToken } from './utils/apiHelpers'
+import { startUpdateWatch } from './utils/appUpdate'
 
 // Nothing the site keeps on the device may be older than 60 days (APDP).
 sweepExpiredStorage();
@@ -26,6 +27,9 @@ void ensureSessionKey(getToken(), getBaseUrl());
 // cache storage, so users always run the freshly-shipped bundles. Then register
 // our own no-cache worker, which is what makes the app installable.
 purgeStaleCaches().then(registerAppServiceWorker);
+
+// An app left open picks up a new deploy at a safe moment (utils/appUpdate.ts).
+if (import.meta.env.PROD) startUpdateWatch();
 
 // No refetch on window focus: every return to the tab refetched every query,
 // and the resulting spinner flashes read as "the page refreshes by itself"

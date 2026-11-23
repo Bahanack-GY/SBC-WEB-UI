@@ -1,5 +1,6 @@
 import { ApiResponse } from './ApiResponse';
 import { getHeaders, getBaseUrl } from '../utils/apiHelpers';
+import { onServerSaysUpdate } from '../utils/appUpdate';
 
 /**
  * Main API Service class for handling all HTTP requests
@@ -29,6 +30,9 @@ export class ApiService {
     const isJsonHeader = contentType?.includes('application/json') ?? false;
 
     const responseText = await response.text();
+
+    // A route this (old) screen still calls was retired by the server: load the new app.
+    if (response.status === 410 && responseText.includes('APP_UPDATE_REQUIRED')) onServerSaysUpdate();
 
     // 304 Not Modified frequently omits Content-Type per RFC 7232, even though
     // the browser cache serves the original JSON body. Treat any 304 with a

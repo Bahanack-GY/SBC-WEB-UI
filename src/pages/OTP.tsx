@@ -8,6 +8,7 @@ import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
 import { motion } from 'motion/react';
 import { ANNONCEUR_HOME } from '../utils/annonceur';
+import WithdrawalAppCodeForm from '../components/security/WithdrawalAppCodeForm';
 
 /**
  * Matches the server's per-account cooldown. "Renvoyer" used to have none —
@@ -32,7 +33,20 @@ function OTP() {
   const [showMethodModal, setShowMethodModal] = useState(false);
 
   // Get data from navigation state, including withdrawalId, amount, and currency
-  const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow, resendAfterSeconds, annonceur } = location.state || {};
+  const { userId: userIdFromState, email: emailFromState, fromRegistration, fromLogin, withdrawalId, withdrawalAmount, withdrawalCurrency, flow, resendAfterSeconds, annonceur, confirmWith } = location.state || {};
+
+  // A withdrawal of a member who has the authenticator app is confirmed with the app's code:
+  // nothing is e-mailed (Security plan Phase 3). Known from the withdrawal answer (confirmWith),
+  // else asked (the Wallet form and the transaction history open this page too).
+  const [viaApp, setViaApp] = useState<boolean | null>(!withdrawalId ? false : confirmWith === 'authenticator' ? true : null);
+  useEffect(() => {
+    if (viaApp !== null) return;
+    let gone = false;
+    sbcApiService.getAuthenticatorStatus()
+      .then(r => { if (!gone) setViaApp(!!handleApiResponse(r)?.enabled); })
+      .catch(() => { if (!gone) setViaApp(false); });
+    return () => { gone = true; };
+  }, [viaApp]);
 
   // A code was sent on the way here, so the cooldown starts now. Login passes the
   // server's own figure, which can be longer when it sent nothing new.
@@ -182,6 +196,30 @@ function OTP() {
       setLoading(false);
     }
   };
+
+  if (withdrawalId && viaApp !== false) {
+    return (
+      <>
+        <div className="flex items-center mb-4 px-3">
+          <BackButton />
+          <h3 className="text-xl font-medium text-center w-full text-gray-900">Verification</h3>
+        </div>
+        <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
+          <img src={Security} alt="Analyse" className="size-44 mb-6 mx-auto" />
+          {viaApp === null ? (
+            <p className="text-sm text-gray-500" role="status">Chargement…</p>
+          ) : (
+            <WithdrawalAppCodeForm
+              transactionId={withdrawalId}
+              amount={withdrawalAmount}
+              currency={withdrawalCurrency}
+              onConfirmed={() => navigate('/transaction-confirmation', { state: { transactionId: withdrawalId, withdrawalAmount, withdrawalCurrency } })}
+            />
+          )}
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
