@@ -4,7 +4,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
 import TermsLink from '../common/TermsLink';
-import { dismissCookieNotice, isConsentFreePath, isCookieNoticeDue, needsConsent } from '../../utils/privacy';
+import { dismissCookieNotice, isBenin, isConsentFreePath, isCookieNoticeDue, needsConsent } from '../../utils/privacy';
 
 /**
  * The two privacy messages every page can show, one at a time:
@@ -55,7 +55,10 @@ function useConsentWindowOpen(): boolean {
 }
 
 function ConsentWindow() {
-    const { refreshUser, logout } = useAuth();
+    const { user, refreshUser, logout } = useAuth();
+    // The transfer outside Benin is asked of Benin members only (Rufus, 2026-11-08).
+    const askTransfer = isBenin(user?.country);
+    const hadAccepted = !!user?.consents?.privacy;
     const [privacy, setPrivacy] = useState(false);
     const [transfer, setTransfer] = useState(false);
     const [busy, setBusy] = useState(false);
@@ -64,11 +67,11 @@ function ConsentWindow() {
     const titleId = useId();
 
     const accept = async () => {
-        if (!privacy || !transfer || busy) return;
+        if (!privacy || (askTransfer && !transfer) || busy) return;
         setBusy(true);
         setError(null);
         try {
-            handleApiResponse(await sbcApiService.recordConsents({ privacy: true, dataTransfer: true }));
+            handleApiResponse(await sbcApiService.recordConsents(askTransfer ? { privacy: true, dataTransfer: true } : { privacy: true }));
             await refreshUser();
         } catch {
             setError('Votre accord n’a pas pu être enregistré. Vérifiez votre connexion, puis touchez « J’accepte » pour réessayer.');
@@ -91,24 +94,34 @@ function ConsentWindow() {
                 {!refusing ? (
                     <>
                         <p className="mt-2 text-sm text-ink-2">
+                            {hadAccepted ? 'Notre politique de confidentialité a changé. ' : ''}
                             Pour continuer à utiliser SBC, nous avons besoin de votre accord sur la façon dont nous
                             traitons vos données. Lisez la <Link to="/confidentialite" className="text-primary underline">politique de confidentialité</Link>,
-                            puis cochez les deux cases.
+                            puis {askTransfer ? 'cochez les deux cases' : 'cochez la case'}.
                         </p>
+                        {hadAccepted && (
+                            <p className="mt-2 text-sm text-ink-2">
+                                Nouveau : pour protéger votre compte, nous enregistrons votre pays, votre réseau et votre appareil,
+                                ainsi que vos sessions dans l’application (jamais vos mots de passe ni vos codes), et nous pouvons
+                                vérifier votre adresse email si un compte est signalé.
+                            </p>
+                        )}
 
                         <div className="mt-4 space-y-3">
                             <ConsentCheckbox checked={privacy} onChange={setPrivacy}>
                                 J’accepte les <TermsLink className="text-primary underline">conditions d’utilisation</TermsLink> et
                                 la <Link to="/confidentialite" className="text-primary underline">politique de confidentialité</Link>
                             </ConsentCheckbox>
-                            <ConsentCheckbox checked={transfer} onChange={setTransfer}>
-                                J’accepte que mes données soient hébergées et traitées hors du Bénin (serveurs en Allemagne)
-                            </ConsentCheckbox>
+                            {askTransfer && (
+                                <ConsentCheckbox checked={transfer} onChange={setTransfer}>
+                                    J’accepte que mes données soient hébergées et traitées hors du Bénin (serveurs en Allemagne)
+                                </ConsentCheckbox>
+                            )}
                         </div>
 
                         {error && <p role="alert" className="mt-3 rounded-tile bg-danger-soft px-3 py-2 text-sm text-danger">{error}</p>}
 
-                        <button type="button" onClick={accept} disabled={!privacy || !transfer || busy}
+                        <button type="button" onClick={accept} disabled={!privacy || (askTransfer && !transfer) || busy}
                             className="mt-5 w-full h-12 rounded-pill bg-primary text-white font-semibold disabled:opacity-50">
                             {busy ? 'Enregistrement…' : 'J’accepte'}
                         </button>

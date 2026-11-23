@@ -12,15 +12,16 @@ describe('needsConsent', () => {
     it('for a Benin member: needed without consents, with an older policy, or without the transfer agreement', () => {
         const country = 'BJ';
         expect(needsConsent({ country })).toBe(true);
-        expect(needsConsent({ country, consents: { privacy: record('2026-01'), dataTransfer: record('2026-01') } })).toBe(true);
-        expect(needsConsent({ country, consents: { privacy: record('2026-11') } })).toBe(true);
-        expect(needsConsent({ country, consents: { privacy: record('2026-11'), dataTransfer: record('2026-11') } })).toBe(false);
+        expect(needsConsent({ country, consents: { privacy: record('2026-11'), dataTransfer: record('2026-11') } })).toBe(true);
+        expect(needsConsent({ country, consents: { privacy: record('2026-12') } })).toBe(true);
+        expect(needsConsent({ country, consents: { privacy: record('2026-12'), dataTransfer: record('2026-12') } })).toBe(false);
     });
 
-    it('is never needed outside Benin, nor when the country is unknown', () => {
-        expect(needsConsent({ country: 'CM' })).toBe(false);
-        expect(needsConsent({ country: 'CI', consents: { privacy: record('2026-01') } })).toBe(false);
-        expect(needsConsent({})).toBe(false);
+    it('outside Benin (version 2026-12): every member accepts the policy, never the transfer', () => {
+        expect(needsConsent({ country: 'CM' })).toBe(true);
+        expect(needsConsent({ country: 'CI', consents: { privacy: record('2026-11') } })).toBe(true);
+        expect(needsConsent({ country: 'CI', consents: { privacy: record('2026-12') } })).toBe(false);
+        expect(needsConsent({ consents: { privacy: record('2026-12') } })).toBe(false);
         expect(needsConsent(null)).toBe(false);
     });
 

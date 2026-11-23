@@ -16,14 +16,27 @@ import PublicLegal from './PublicLegal';
 const APDP = 'Délibération n° 2026-523/AT/APDP/DST/SC du 27 août 2026';
 
 describe('privacy policy (/confidentialite)', () => {
-    it('names the controller, the APDP authorisation, and is dated November 2026', () => {
+    it('names the controller, the APDP authorisation, and is dated 23 November 2026', () => {
         renderPage(<PublicPrivacy />, '/confidentialite');
         const page = screen.getByRole('article');
         expect(page).toHaveTextContent('Madame Adèle AGONGNON');
         expect(page).toHaveTextContent('RCCM RB/PNO/25/A/113290');
         expect(page).toHaveTextContent(APDP);
         expect(page).toHaveTextContent('Loi n° 2017-20 du 20 avril 2018');
-        expect(page).toHaveTextContent('Dernière mise à jour : Novembre 2026');
+        expect(page).toHaveTextContent('Dernière mise à jour : 23 novembre 2026');
+    });
+
+    it('version 2026-12: security signals, session recordings with remote help on request, e-mail checks', () => {
+        renderPage(<PublicPrivacy />, '/confidentialite');
+        for (const [title, id] of [['pays, réseau et appareil', 'signaux'], ['Enregistrement de vos sessions', 'sessions'], ['Vérifications de votre adresse email', 'verifications-email']]) {
+            expect(screen.getByRole('heading', { name: new RegExp(title) })).toHaveAttribute('id', id);
+        }
+        const page = screen.getByRole('article');
+        expect(page).toHaveTextContent('ne sont jamais enregistrés');
+        expect(page).toHaveTextContent('effacés après 30 jours');
+        expect(page).toHaveTextContent('avec votre accord, donné à chaque fois');
+        expect(page).toHaveTextContent('jamais possible sur les écrans de retrait');
+        expect(page).toHaveTextContent('Gravatar');
     });
 
     it('has the sections the authorisation requires, with the cookies anchor the notice links to', () => {

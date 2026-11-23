@@ -6,7 +6,7 @@
  */
 
 /** Version of the privacy policy a member's consent must match. */
-export const PRIVACY_POLICY_VERSION = '2026-11';
+export const PRIVACY_POLICY_VERSION = '2026-12';
 
 export const APDP_DELIBERATION = 'Délibération n° 2026-523/AT/APDP/DST/SC du 27 août 2026';
 
@@ -18,13 +18,14 @@ export const isBenin = (country?: string | null): boolean =>
     ['BJ', 'BENIN', 'BÉNIN'].includes(String(country ?? '').trim().toUpperCase());
 
 /**
- * True when a Benin member has not accepted the current policy, or never
- * accepted that their data is hosted and processed outside Benin. Members of
- * other countries are never asked (Rufus, 2026-11-08).
+ * True when the member has not accepted the current policy (every member: version
+ * 2026-12 adds the security signals, session recordings and e-mail checks), or, for a
+ * Benin member, never accepted that their data is hosted and processed outside Benin
+ * (that second box is asked of Benin members only, Rufus 2026-11-08).
  */
 export const needsConsent = (user: { consents?: Consents | null; country?: string | null } | null | undefined): boolean =>
-    isBenin(user?.country) &&
-    (user?.consents?.privacy?.version !== PRIVACY_POLICY_VERSION || !user?.consents?.dataTransfer);
+    !!user && (user.consents?.privacy?.version !== PRIVACY_POLICY_VERSION ||
+        (isBenin(user.country) && !user.consents?.dataTransfer));
 
 /**
  * Pages the consent window never covers: the texts it links to, the sign-up

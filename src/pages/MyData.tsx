@@ -123,7 +123,7 @@ export default function MyData() {
                 <Card title="Vos accords" icon={Shield01Icon}>
                     <ul className="space-y-2 text-sm">
                         <ConsentLine label="Conditions d’utilisation et politique de confidentialité" record={consents?.privacy}
-                            outdated={benin && !!consents?.privacy && consents.privacy.version !== PRIVACY_POLICY_VERSION} />
+                            outdated={!!consents?.privacy && consents.privacy.version !== PRIVACY_POLICY_VERSION} />
                         {(benin || consents?.dataTransfer) && (
                             <ConsentLine label="Hébergement et traitement de mes données hors du Bénin (serveurs en Allemagne)" record={consents?.dataTransfer} />
                         )}
