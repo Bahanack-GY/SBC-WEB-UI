@@ -3,6 +3,7 @@ import { Alert02Icon, Bitcoin01Icon, Cancel01Icon, Loading03Icon, SmartPhone01Ic
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { isRiskHold } from './security/riskHold';
+import { goToAccountBanned, isAccountBanned } from './security/accountBanned';
 import { RiskHoldLink } from './security/RiskHoldLink';
 import { sbcApiService } from '../services/SBCApiService';
 import { handleApiResponse } from '../utils/apiHelpers';
@@ -244,6 +245,12 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
         selectedType
       );
 
+      // Suspended by the security check (403 ACCOUNT_BANNED): its own screen, not an error here.
+      if (isAccountBanned(response)) {
+        onClose();
+        goToAccountBanned(navigate, response.body?.message);
+        return;
+      }
       if (response.body?.code === 'AUTHENTICATOR_REQUIRED') {
         setStep('authenticator');
         setIsInitiating(false);
@@ -331,6 +338,11 @@ const UnifiedWithdrawalComponent: React.FC<UnifiedWithdrawalComponentProps> = ({
     setError('');
     try {
       const verified = await sbcApiService.verifyWithdrawal({ transactionId: confirmTx.transactionId, verificationCode: confirmCode.trim() });
+      if (isAccountBanned(verified)) {
+        onClose();
+        goToAccountBanned(navigate, verified.body?.message);
+        return;
+      }
       setRiskHold(isRiskHold(verified));
       handleApiResponse(verified);
       navigate('/transaction-confirmation', {

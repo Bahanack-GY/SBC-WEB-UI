@@ -11,6 +11,7 @@
 import { COOKIE_AUTH, noteServerDate, signatureFor } from './requestSigning';
 import { csrfToken, isCookieSession, isSessionEndpoint, isUnsafeMethod, refreshSession } from './session';
 import { isProtectedAction, setRobotFetch, takeRobotAnswer } from './robotCheck';
+import { isAccountBannedBody, reportAccountBanned } from '../components/security/accountBanned';
 
 export const DEVICE_ID_KEY = 'sbc_device_id';
 
@@ -112,6 +113,14 @@ export function installDeviceSignals(): void {
       if (csrf) headers.set('X-CSRF-Token', csrf);
     }
   };
+  /** A 403 ACCOUNT_BANNED from any call (hand-made fetches included): /compte-suspendu (components/security/accountBanned.ts). */
+  const noteBan = (res: Response) => {
+    if (res.status !== 403) return;
+    res.clone().json().then(
+      (j: { message?: unknown }) => { if (isAccountBannedBody(res.status, j)) reportAccountBanned(j?.message); },
+      () => undefined,
+    );
+  };
   const replayable = (input: RequestInfo | URL, body: unknown) => !(input instanceof Request)
     && (body === undefined || body === null || typeof body === 'string' || body instanceof FormData || body instanceof URLSearchParams || body instanceof Blob);
   const dispatch = (input: RequestInfo | URL, init: RequestInit, headers: Headers, method: string, url: string) =>
@@ -132,6 +141,7 @@ export function installDeviceSignals(): void {
         return sign(method, url, headers, body).then(async sig => {
           if (sig && !headers.has('X-SBC-Signature')) headers.set('X-SBC-Signature', sig);
           const res = await dispatch(input, init ?? {}, headers, method, url);
+          noteBan(res);
           if (res.status !== 401 || headers.has('Authorization') || !isCookieSession() || isSessionEndpoint(url) || !replayable(input, init?.body)) return res;
           if (!(await refreshSession(`${window.location.origin}/api`, original))) return res;
           const again = new Headers(headers);
@@ -141,7 +151,7 @@ export function installDeviceSignals(): void {
           sessionHeaders(again, method);
           const sig2 = await sign(method, url, again, body);
           if (sig2) again.set('X-SBC-Signature', sig2);
-          return dispatch(input, init ?? {}, again, method, url);
+          return dispatch(input, init ?? {}, again, method, url).then(r => { noteBan(r); return r; });
         });
       }
     } catch {

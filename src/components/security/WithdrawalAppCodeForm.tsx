@@ -2,6 +2,8 @@ import { useState } from 'react';
 import AuthenticatorCodeField, { codeLooksComplete } from './AuthenticatorCodeField';
 import { RiskHoldLink } from './RiskHoldLink';
 import { isRiskHold } from './riskHold';
+import { goToAccountBanned, isAccountBanned } from './accountBanned';
+import { useNavigate } from 'react-router-dom';
 import { sbcApiService } from '../../services/SBCApiService';
 import { handleApiResponse } from '../../utils/apiHelpers';
 import { useBlockRemoteControl } from '../../services/remoteAssist';
@@ -22,6 +24,7 @@ interface Props {
  */
 export default function WithdrawalAppCodeForm({ transactionId, amount, currency, onConfirmed }: Props) {
   useBlockRemoteControl();
+  const navigate = useNavigate();
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,6 +41,10 @@ export default function WithdrawalAppCodeForm({ transactionId, amount, currency,
     setError('');
     try {
       const verified = await sbcApiService.verifyWithdrawal({ transactionId, verificationCode: code.trim() });
+      if (isAccountBanned(verified)) {
+        goToAccountBanned(navigate, verified.body?.message);
+        return;
+      }
       setHeld(isRiskHold(verified));
       handleApiResponse(verified);
       onConfirmed();

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
@@ -60,6 +60,7 @@ vi.mock('./components/privacy/PrivacyNotices', () => ({ default: () => null }));
 vi.mock('./components/common/TourButton', () => ({ default: () => null }));
 
 import App from './App';
+import { _resetBanReports, reportAccountBanned } from './components/security/accountBanned';
 
 /**
  * Starts like the real app: the account is known one render before the auth
@@ -208,5 +209,27 @@ describe('« Aide » (SBC Support)', () => {
         expect(await screen.findByRole('heading', { level: 1, name: 'Support SBC' })).toBeInTheDocument();
         expect(await screen.findByRole('textbox', { name: 'Message' })).toBeInTheDocument();
         expect(screen.queryByText('En-tête membre')).toBeNull();
+    });
+});
+
+describe('suspended account (403 ACCOUNT_BANNED anywhere)', () => {
+    it('leaves the member page for /compte-suspendu, without the member header, with the server’s message', async () => {
+        _resetBanReports();
+        auth.user = member;
+        withPack();
+        renderApp('/aide');
+        expect(await screen.findByRole('heading', { name: 'Aide' })).toBeInTheDocument();
+        act(() => reportAccountBanned('Compte suspendu par la sécurité.'));
+        expect(await screen.findByRole('heading', { name: 'Compte suspendu' })).toBeInTheDocument();
+        expect(screen.getByText('Compte suspendu par la sécurité.')).toBeInTheDocument();
+        expect(screen.queryByText('En-tête membre')).toBeNull();
+    });
+
+    it('opens directly while signed out (public page)', async () => {
+        auth.isAuthenticated = false;
+        auth.user = null;
+        renderApp('/compte-suspendu');
+        expect(await screen.findByRole('heading', { name: 'Compte suspendu' })).toBeInTheDocument();
+        expect(screen.getByRole('button', { name: 'Retour à la connexion' })).toBeInTheDocument();
     });
 });

@@ -14,6 +14,8 @@
  * again. If the refresh is refused the session is over: `sbc:session-ended` is dispatched and
  * AuthContext signs out.
  */
+import { isAccountBannedBody, reportAccountBanned } from '../components/security/accountBanned';
+
 export const SESSION_FLAG_KEY = 'sbc_session';
 export const CSRF_COOKIE = 'sbc_csrf';
 export const SESSION_ENDED_EVENT = 'sbc:session-ended';
@@ -68,6 +70,15 @@ export function refreshSession(baseUrl: string, fetchImpl: typeof fetch): Promis
         method: 'POST', credentials: 'same-origin', headers, body: '{}',
       });
       if (r.ok) return true;
+      // The account was suspended (and its sessions ended): /compte-suspendu, not « session expirée ».
+      if (r.status === 403) {
+        const body = await r.clone().json().catch(() => null);
+        if (isAccountBannedBody(r.status, body)) {
+          clearCookieSessionFlag();
+          reportAccountBanned((body as { message?: unknown }).message);
+          return false;
+        }
+      }
       if (r.status === 401 || r.status === 404) {
         clearCookieSessionFlag();
         try { window.dispatchEvent(new Event(SESSION_ENDED_EVENT)); } catch { /* no window */ }

@@ -6,6 +6,7 @@ import { clearCookieSessionFlag, csrfToken, isCookieSession, markCookieSession, 
 import { adoptSignInKey, clearSessionKey, ensureSessionKey, prepareSignInKey, retagKeyForCookieSession } from '../utils/requestSigning';
 import { invalidateApiCache } from '../hooks/useApiCache';
 import { clearPersonalStorage, type Consents } from '../utils/privacy';
+import { ACCOUNT_BANNED_EVENT, AccountBannedError, isAccountBanned } from '../components/security/accountBanned';
 import type { ReactNode } from 'react';
 
 interface User {
@@ -37,6 +38,8 @@ interface AuthContextType {
   login: (identifier: string, password: string) => Promise<{ requiresOtp: boolean; userId?: string; email?: string; otpRetryAfterSeconds?: number; hasNegativeBalance?: boolean; recoveryMessage?: string }>;
   register: (userData: any) => Promise<{ userId: string; signedIn: boolean }>;
   logout: () => Promise<void>;
+  /** Signs out on this device only, without calling member routes (a suspended account). */
+  forgetSession: () => void;
   verifyOtp: (userId: string, otp: string) => Promise<void>;
   updateProfile: (updates: Record<string, any>) => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -146,6 +149,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       const devicePublicKey = await prepareSignInKey();
       const response = await sbcApiService.loginUser(identifier, password, devicePublicKey);
+      // Suspended account (403 ACCOUNT_BANNED after a correct password): the login page shows /compte-suspendu.
+      if (isAccountBanned(response)) throw new AccountBannedError(response.body?.message);
 
       const data = handleApiResponse(response);
 
@@ -302,6 +307,23 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  /**
+   * A suspended account (components/security/accountBanned.ts): the server already ended its
+   * sessions, so nothing here calls a member route (each would be refused again). Only the
+   * cookie logout, once, so the browser drops the cookies too.
+   */
+  const forgetSession = useCallback((): void => {
+    const hadCookieSession = isCookieSession();
+    removeToken();
+    clearCookieSessionFlag();
+    void clearSessionKey();
+    setUser(null);
+    try { sessionStorage.removeItem('tempUserId'); } catch { /* ignore */ }
+    clearPersonalStorage();
+    clearAdsRolesCache();
+    if (hadCookieSession) void endCookieSession();
+  }, []);
+
   const verifyOtp = useCallback(async (userId: string, otp: string): Promise<void> => {
     try {
       const devicePublicKey = await prepareSignInKey();
@@ -371,12 +393,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     return () => window.removeEventListener(SESSION_ENDED_EVENT, onEnded);
   }, [user, logout]);
 
+  // The server refused a call with ACCOUNT_BANNED: forget the session here (App shows /compte-suspendu).
+  useEffect(() => {
+    const onBanned = () => forgetSession();
+    window.addEventListener(ACCOUNT_BANNED_EVENT, onBanned);
+    return () => window.removeEventListener(ACCOUNT_BANNED_EVENT, onBanned);
+  }, [forgetSession]);
+
   const value: AuthContextType = {
     user,
     loading,
     login,
     register,
     logout,
+    forgetSession,
     verifyOtp,
     updateProfile,
     refreshUser,

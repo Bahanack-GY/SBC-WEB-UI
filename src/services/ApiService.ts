@@ -1,6 +1,7 @@
 import { ApiResponse } from './ApiResponse';
 import { getHeaders, getBaseUrl } from '../utils/apiHelpers';
 import { onServerSaysUpdate } from '../utils/appUpdate';
+import { isAccountBanned, reportAccountBanned } from '../components/security/accountBanned';
 
 /**
  * Main API Service class for handling all HTTP requests
@@ -49,7 +50,10 @@ export class ApiService {
     }
 
     if (treatAsJson) {
-      return ApiResponse.fromHttpResponse(response, responseText, response.url);
+      const parsed = ApiResponse.fromHttpResponse(response, responseText, response.url);
+      // The account was suspended: the app forgets the session and shows /compte-suspendu.
+      if (isAccountBanned(parsed)) reportAccountBanned(parsed.body?.message);
+      return parsed;
     } else {
       // For non-JSON responses (like files)
       const success =

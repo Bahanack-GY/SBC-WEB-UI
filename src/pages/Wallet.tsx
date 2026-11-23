@@ -1,4 +1,5 @@
 import { isRiskHold, RISK_HOLD_PATH } from '../components/security/riskHold';
+import { goToAccountBanned, isAccountBanned } from '../components/security/accountBanned';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ArrowReloadHorizontalIcon, ArrowRight01Icon, ArrowUp01Icon, Cancel01Icon, CreditCardIcon, Exchange01Icon, GiftIcon, Loading03Icon, Money01Icon, MoneyReceive01Icon, MoneySend01Icon, Share08Icon, Tick02Icon, Wallet01Icon } from '@hugeicons/core-free-icons';
 import BackButton from "../components/common/BackButton";
@@ -423,6 +424,13 @@ function Wallet() {
           withdrawalAmount, 
           selectedBalanceType === 'FCFA' ? 'mobile_money' : 'crypto'
         );
+        // Suspended by the security check (403 ACCOUNT_BANNED): its own screen, not a modal.
+        if (isAccountBanned(response)) {
+          setShowWithdrawForm(false);
+          setIsSubmittingWithdrawal(false);
+          goToAccountBanned(navigate, response.body?.message);
+          return;
+        }
         // Held by the security check: offer the identity check (ID + selfie) instead of a dead end.
         if (isRiskHold(response)) {
           setModalContent({
