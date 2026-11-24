@@ -1210,6 +1210,28 @@ export class SBCApiService extends ApiService {
     return await this.put(`/tickets/impact/jury/editions/${encodeURIComponent(editionId)}/candidates/${encodeURIComponent(candidateId)}/score`, { body });
   }
 
+  // ----- Phase 4 (server docs/impact-challenge/PHASE4.md): SBC Tombola (not the monthly tombola above) -----
+
+  /** The current edition's tombola: prizes, rules, tickets, and the draw (revealed winners only), or data: null. */
+  async impactTombola(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/public/tombola', { requiresAuth: false, skipDeduplication: true });
+  }
+
+  /** Every draw done, newest first. */
+  async impactTombolaHistory(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/public/tombola/history', { requiresAuth: false });
+  }
+
+  /** What anyone needs to check a draw: seed, commitment, ticket segments, exclusions, method, winners. */
+  async impactTombolaProof(drawId: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/impact/public/tombola/draws/${encodeURIComponent(drawId)}/proof`, { requiresAuth: false });
+  }
+
+  /** The member's tickets in the current edition (count, numbers, chance, revealed wins), or data: null. */
+  async impactMyTombola(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/me/tombola', { skipDeduplication: true });
+  }
+
   /** One of the member's vote purchases (to follow a PENDING balance payment). */
   async impactMyPurchase(purchaseId: string): Promise<ApiResponse> {
     return await this.get(`/tickets/impact/me/vote-purchases/${encodeURIComponent(purchaseId)}`, { skipDeduplication: true });

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { CheckmarkCircle02Icon, Clock01Icon } from '@hugeicons/core-free-icons';
@@ -152,6 +153,11 @@ export default function VotePurchaseSheet({
                   ? `${plural(result.purchase.votes, 'vote compté', 'votes comptés')} pour ${candidateName}. Merci !`
                   : 'Paiement reçu.'}
               </p>
+              {result.purchase.counted && (
+                <Link to="/impact-challenge/tombola" className="text-sm font-semibold text-accent" data-testid="impact-tombola-tickets">
+                  {`+${plural(result.purchase.votes, 'ticket', 'tickets')} de tombola`}
+                </Link>
+              )}
               {!result.purchase.counted && (
                 <p className="text-sm text-ink-2">Le paiement est arrivé après la clôture des votes : il vous sera rendu sur votre solde SBC.</p>
               )}

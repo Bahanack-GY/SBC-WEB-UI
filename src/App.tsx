@@ -106,6 +106,8 @@ import ImpactBoard from './pages/ImpactBoard'
 import ImpactCandidateProfile from './pages/ImpactCandidateProfile'
 import ImpactFinal from './pages/ImpactFinal'
 import ImpactJury from './pages/ImpactJury'
+import ImpactTombola from './pages/ImpactTombola'
+import ImpactTombolaProof from './pages/ImpactTombolaProof'
 import HelpHome from './pages/help/HelpHome'
 import HelpAssistant from './pages/help/HelpAssistant'
 import HelpArticle from './pages/help/HelpArticle'
@@ -445,6 +447,10 @@ function AppContent() {
           <Route path="/impact-challenge/candidats/:id" element={<ImpactCandidateProfile />} />
           {/* Phase 3: the live final screen (also on the big screen). The finalists' result notices open it. */}
           <Route path="/impact-challenge/finale" element={<ImpactFinal />} />
+          {/* Phase 4: SBC Tombola (live draw, my tickets, history) and the draw's proof. The winners'
+              notification opens it. Not the old monthly tombola of tombola-service. */}
+          <Route path="/impact-challenge/tombola" element={<ImpactTombola />} />
+          <Route path="/impact-challenge/tombola/preuve/:drawId" element={<ImpactTombolaProof />} />
           {/* SBC Ads Network. The hub and the diffuseur pages are paywalled
               (diffuseurs are paid); the advertiser pages are not (RequireAuth). */}
           {/* Every Ads Network screen sits behind the launch gate — a
