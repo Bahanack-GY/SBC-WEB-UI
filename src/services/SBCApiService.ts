@@ -1,7 +1,7 @@
 import { ApiService } from './ApiService';
 import { ApiResponse } from './ApiResponse';
 import { currentReplay } from './sessionReplay';
-import type { ImpactPayMethod, ImpactProfileInput, ImpactProjectContent } from '../types/impact';
+import type { ImpactPayMethod, ImpactProfileInput, ImpactProjectContent, ImpactShowcaseKind } from '../types/impact';
 
 /** Name, phone and email typed at the top of a support request. */
 export type SupportContact = { name: string; phone: string; email: string };
@@ -1230,6 +1230,31 @@ export class SBCApiService extends ApiService {
   /** The member's tickets in the current edition (count, numbers, chance, revealed wins), or data: null. */
   async impactMyTombola(): Promise<ApiResponse> {
     return await this.get('/tickets/impact/me/tombola', { skipDeduplication: true });
+  }
+
+  // ----- Phase 5 (server docs/impact-challenge/PHASE5.md): « SBC Impact » showcase -----
+
+  /** The pages on show and the archive: { active, archived }. Public, no member ids. */
+  async impactShowcase(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/public/showcase', { requiresAuth: false });
+  }
+
+  /** One page with its published news. */
+  async impactShowcasePage(id: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/impact/public/showcase/${encodeURIComponent(id)}`, { requiresAuth: false });
+  }
+
+  /** The finalist's own pages, with every news they proposed and its review. */
+  async impactMyShowcase(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/me/showcase', { skipDeduplication: true });
+  }
+
+  /** A finalist proposes news of their project (validated by SBC before publication). */
+  async impactProposeShowcaseUpdate(
+    showcaseId: string,
+    body: { kind?: ImpactShowcaseKind; title: string; body: string; imageFileId?: string; link?: string },
+  ): Promise<ApiResponse> {
+    return await this.post(`/tickets/impact/me/showcase/${encodeURIComponent(showcaseId)}/updates`, { body });
   }
 
   /** One of the member's vote purchases (to follow a PENDING balance payment). */

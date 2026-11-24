@@ -1,3 +1,4 @@
+import type { NavigateFunction } from 'react-router-dom';
 import type { ImpactRound, ImpactStage } from '../../types/impact';
 
 // Wording of the competition's weeks and vote rounds (Phase 2), shared by the
@@ -73,3 +74,23 @@ export const candidatePageUrl = (id: string) => `${window.location.origin}/impac
 /** Most a « Ma vision de SBC » or project video may weigh: settings-service and nginx take 100 Mo. */
 export const MAX_VIDEO_BYTES = 100 * 1000 * 1000;
 export const MAX_VIDEO_LABEL = '100 Mo';
+
+/** Kinds of news on a « SBC Impact » page. */
+export const SHOWCASE_KIND: Record<'STEP' | 'PRODUCT' | 'ACHIEVEMENT' | 'NEWS' | 'RESULT', string> = {
+  STEP: 'Étape',
+  PRODUCT: 'Produit',
+  ACHIEVEMENT: 'Réalisation',
+  NEWS: 'Actualité',
+  RESULT: 'Résultat',
+};
+
+export const showcasePageUrl = (id: string) => `${window.location.origin}/impact/${encodeURIComponent(id)}`;
+
+export const day = (iso: string | null | undefined) =>
+  iso ? new Date(iso).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '';
+
+/** Back in the app's history when there is one, else somewhere sensible (a page opened from a shared link). */
+export const goBack = (navigate: NavigateFunction, fallback: string) => {
+  const idx = (window.history.state as { idx?: number } | null)?.idx ?? 0;
+  if (idx > 0) navigate(-1); else navigate(fallback);
+};

@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ArrowRight01Icon, CheckmarkCircle02Icon, GiftIcon, Location01Icon, Rocket01Icon } from '@hugeicons/core-free-icons';
+import { ArrowRight01Icon, CheckmarkCircle02Icon, GiftIcon, Location01Icon, Rocket01Icon, StarIcon } from '@hugeicons/core-free-icons';
 import BackButton from '../components/common/BackButton';
 import Skeleton from '../components/common/Skeleton';
 import MyVotePurchases from '../components/impact/MyVotePurchases';
@@ -162,6 +162,19 @@ export default function ImpactBoard() {
         )}
 
         <JuryEntryCard active={isFinalEdition(current.data)} />
+
+        {stage === 'RESULT' && (
+          <motion.div variants={sectionRise}>
+            <Link to="/impact" className={cn(card, 'flex items-center gap-3 py-3 border-accent')}>
+              <span className="size-9 grid place-items-center rounded-tile bg-accent-soft text-accent shrink-0"><HugeiconsIcon icon={StarIcon} size={18} /></span>
+              <span className="flex-1 min-w-0">
+                <span className="block text-sm font-semibold text-ink">SBC Impact</span>
+                <span className="block text-xs text-ink-2">Suivez les finalistes et les nouvelles de leurs projets.</span>
+              </span>
+              <HugeiconsIcon icon={ArrowRight01Icon} size={16} className="text-primary shrink-0" />
+            </Link>
+          </motion.div>
+        )}
 
         {(stage === 'WEEK3' || FINAL_STAGES.includes(stage)) && (
           <motion.div variants={sectionRise}>

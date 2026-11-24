@@ -233,3 +233,22 @@ describe('suspended account (403 ACCOUNT_BANNED anywhere)', () => {
         expect(screen.getByRole('button', { name: 'Retour à la connexion' })).toBeInTheDocument();
     });
 });
+
+describe('« SBC Impact » (Impact Challenge phase 5)', () => {
+    it('opens without an account, with no member header', async () => {
+        auth.isAuthenticated = false;
+        auth.user = null;
+        renderApp('/impact');
+        expect(await screen.findByRole('heading', { name: 'Les entrepreneurs SBC Impact' })).toBeInTheDocument();
+        expect(screen.queryByText('En-tête membre')).not.toBeInTheDocument();
+        expect(screen.queryByRole('button', { name: /Se déconnecter/ })).not.toBeInTheDocument();
+    });
+
+    it('keeps the member header for a paying member', async () => {
+        auth.user = member;
+        withPack();
+        renderApp('/impact');
+        expect(await screen.findByRole('heading', { name: 'Les entrepreneurs SBC Impact' })).toBeInTheDocument();
+        expect(await screen.findByText('En-tête membre')).toBeInTheDocument();
+    });
+});

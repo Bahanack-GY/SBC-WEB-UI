@@ -134,6 +134,15 @@ describe('the public board', () => {
     expect(await screen.findByRole('link', { name: /Espace jury/ })).toHaveAttribute('href', '/impact-challenge/jury');
   });
 
+  it('after the result: « SBC Impact »', async () => {
+    api.impactCurrent.mockResolvedValue(ok({ ...edition('RESULT', { FREE: round('CLOSED'), PAID: round('CLOSED') }), status: 'FINISHED' }));
+    api.impactBoard.mockResolvedValue(board('RESULT', [
+      cand('c2', 'Paul Kamga', 'Agri Tech', { status: 'WINNER', statusLabel: 'Gagnant', rank: 1, votes: { free: 3, paid: 90 } }),
+    ]));
+    renderPage(<ImpactBoard />);
+    expect(await screen.findByRole('link', { name: /SBC Impact/ })).toHaveAttribute('href', '/impact');
+  });
+
   it('TOP 3: the ranking with medals and the finalists', async () => {
     api.impactCurrent.mockResolvedValue(ok(edition('TOP3', { FREE: round('CLOSED'), PAID: round('CLOSED') })));
     api.impactBoard.mockResolvedValue(board('TOP3', [

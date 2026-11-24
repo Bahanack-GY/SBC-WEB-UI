@@ -408,3 +408,51 @@ export interface ImpactTombolaProof {
   prizes?: ImpactTombolaPrize[];
   winners?: { order: number; prizeLabel: string; ticketNumber: number | null; holderHash: string | null; attempts: number }[];
 }
+
+// ---------- Phase 5: « SBC Impact » showcase (the finalists, followed for at least a year) ----------
+
+export type ImpactShowcaseKind = 'STEP' | 'PRODUCT' | 'ACHIEVEMENT' | 'NEWS' | 'RESULT';
+
+export interface ImpactShowcaseCard {
+  _id: string;
+  editionId: string;
+  candidateId: string;
+  profile: {
+    name: string; photoFileId: string; activity: string; category: string; country: string; city: string;
+    presentation: string; projectName: string; projectDescription: string; sbcId: string | null;
+  };
+  result: { rank: number; score: number; winner: boolean; editionName: string; decidedAt: string };
+  videoFileId: string | null;
+  podcast: { url: string; title?: string | null; platform?: string | null } | null;
+  youtubeUrl: string | null;
+  shopUrl: string | null;
+  visibleFrom: string;
+  visibleUntil: string;
+  archived: boolean;
+  /** Number of published news, and the last one's date (list only). */
+  updates?: number;
+  lastUpdateAt?: string | null;
+}
+
+export interface ImpactShowcaseUpdate {
+  _id: string;
+  kind: ImpactShowcaseKind;
+  title: string;
+  body: string;
+  imageFileId: string | null;
+  link: string | null;
+  publishedAt: string | null;
+  /** The finalist's own view only. */
+  status?: 'PENDING' | 'PUBLISHED' | 'REJECTED';
+  review?: { reason: string | null; at: string } | null;
+  createdAt?: string;
+}
+
+export interface ImpactShowcasePage extends Omit<ImpactShowcaseCard, 'updates'> {
+  updates: ImpactShowcaseUpdate[];
+}
+
+export interface ImpactMyShowcasePage extends Omit<ImpactShowcaseCard, 'updates'> {
+  hidden: boolean;
+  updates: ImpactShowcaseUpdate[];
+}
