@@ -42,7 +42,8 @@ describe('Contacts: Espace Pro banner', () => {
     const play = screen.getByRole('link', { name: /Google Play/ });
     expect(play).toHaveAttribute('href', 'https://play.google.com/store/apps/details?id=com.sbc.sbc_contacts');
     expect(play).toHaveAttribute('target', '_blank');
-    // No App Store link yet: no dead button.
-    expect(screen.queryByRole('link', { name: /App Store/ })).not.toBeInTheDocument();
+    const appStore = screen.getByRole('link', { name: /App Store/ });
+    expect(appStore).toHaveAttribute('href', 'https://apps.apple.com/app/sbc-network/id6812552437');
+    expect(appStore).toHaveAttribute('target', '_blank');
   });
 });
