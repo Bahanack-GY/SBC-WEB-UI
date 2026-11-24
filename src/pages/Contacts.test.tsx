@@ -39,7 +39,7 @@ describe('Contacts: Espace Pro banner', () => {
     renderPage(<Contacts />, '/contacts');
     expect(await screen.findByText(/pour mieux gérer les contacts SBC/)).toBeInTheDocument();
     expect(screen.getByText('SBC Network')).toBeInTheDocument();
-    const play = screen.getByRole('link', { name: /Google Play/ });
+    const play = screen.getByRole('link', { name: /Play Store/ });
     expect(play).toHaveAttribute('href', 'https://play.google.com/store/apps/details?id=com.sbc.sbc_contacts');
     expect(play).toHaveAttribute('target', '_blank');
     const appStore = screen.getByRole('link', { name: /App Store/ });
