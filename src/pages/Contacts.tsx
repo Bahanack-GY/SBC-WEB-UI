@@ -442,7 +442,7 @@ Je suis ton parrain à la SBC et je suis là pour t'accompagner vers le succès 
                     {(SBC_NETWORK_PLAY_STORE_URL || SBC_NETWORK_APP_STORE_URL) && (
                         <div className="mt-2 flex gap-2">
                             {SBC_NETWORK_PLAY_STORE_URL && (
-                                <StoreButton href={SBC_NETWORK_PLAY_STORE_URL} icon={PlayStoreIcon} caption="Disponible sur" store="Google Play" />
+                                <StoreButton href={SBC_NETWORK_PLAY_STORE_URL} icon={PlayStoreIcon} caption="Télécharger sur" store="Play Store" />
                             )}
                             {SBC_NETWORK_APP_STORE_URL && (
                                 <StoreButton href={SBC_NETWORK_APP_STORE_URL} icon={AppleIcon} caption="Télécharger dans" store="l'App Store" />
