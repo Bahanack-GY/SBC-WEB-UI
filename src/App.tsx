@@ -108,6 +108,8 @@ import ImpactFinal from './pages/ImpactFinal'
 import ImpactJury from './pages/ImpactJury'
 import ImpactTombola from './pages/ImpactTombola'
 import ImpactTombolaProof from './pages/ImpactTombolaProof'
+import ImpactShowcase from './pages/ImpactShowcase'
+import ImpactShowcasePage from './pages/ImpactShowcasePage'
 import HelpHome from './pages/help/HelpHome'
 import HelpAssistant from './pages/help/HelpAssistant'
 import HelpArticle from './pages/help/HelpArticle'
@@ -273,6 +275,9 @@ function AppContent() {
   // asking the optional profile questions, and the button would cover its header.
   // Pack Winner sales pages (/p/<code>) are public marketing pages, like /a-propos.
   const isSalesPage = location.pathname.startsWith('/p/');
+  // « SBC Impact » (Impact Challenge phase 5) is public: the finalists' pages are shared outside SBC.
+  // A visitor without an account gets no member header; a member keeps it.
+  const isShowcase = location.pathname === '/impact' || location.pathname.startsWith('/impact/');
   // The advertiser pages are open without a pack. For someone without one, the
   // member header leads only to pages they cannot open, so it is hidden there,
   // and the advertiser dashboard carries its own « Se déconnecter ».
@@ -286,7 +291,7 @@ function AppContent() {
   // A juror from outside SBC (no pack) scores the final from /impact-challenge/jury: no member header there.
   const nonMemberOnJury = location.pathname === '/impact-challenge/jury' && isAuthenticated && !subscriptionLoading && !isSubscribed;
 
-  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup' && !isSalesPage && !isAdsPage && !isHelpPage;
+  const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup' && !isSalesPage && !isAdsPage && !isHelpPage && !isShowcase;
 
   // Check if we're in a chat conversation (has conversation query param)
   const isInChatConversation = location.pathname === '/chat' && new URLSearchParams(location.search).has('conversation');
@@ -302,9 +307,9 @@ function AppContent() {
   ];
   // A support request is a chat (WhatsApp-like): it owns the whole screen too.
   const isInSupportChat = (/^\/aide\/demandes\/[^/]+$/.test(location.pathname) && location.pathname !== '/aide/demandes/nouvelle') || location.pathname.startsWith('/signaler-un-probleme/suivi/');
-  const hideHeader = HEADERLESS.includes(location.pathname) || location.pathname.startsWith('/signaler-un-probleme/') || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp || nonMemberOnJury;
+  const hideHeader = HEADERLESS.includes(location.pathname) || location.pathname.startsWith('/signaler-un-probleme/') || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp || nonMemberOnJury || (isShowcase && (!isAuthenticated || (!subscriptionLoading && !isSubscribed)));
 
-  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === ACCOUNT_BANNED_PATH || location.pathname.startsWith('/signaler-un-probleme') || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname.startsWith('/impact-challenge') || isHelpPage || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
+  const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === ACCOUNT_BANNED_PATH || location.pathname.startsWith('/signaler-un-probleme') || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname.startsWith('/impact-challenge') || isShowcase || isHelpPage || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
   // be reserved by whatever scrolls underneath. Done here rather than per page:
   // the nav is rendered globally, so every page showing it needs the padding,
@@ -339,6 +344,10 @@ function AppContent() {
         <Route path="/a-propos" element={<PublicLanding />} />
         {/* A Pack Winner member's sales page: a prospect signs up under them. */}
         <Route path="/p/:code" element={<SalesPage />} />
+        {/* « SBC Impact »: the Impact Challenge finalists' pages, public (no member data; shared outside SBC).
+            The showcase notifications open /impact. */}
+        <Route path="/impact" element={<ImpactShowcase />} />
+        <Route path="/impact/:id" element={<ImpactShowcasePage />} />
         <Route path="/conditions" element={<PublicTerms />} />
         <Route path="/confidentialite" element={<PublicPrivacy />} />
         <Route path="/mentions-legales" element={<PublicLegal />} />

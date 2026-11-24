@@ -260,6 +260,23 @@ FERMÉES ». `pages/ImpactCandidate.tsx`, `components/impact/{CandidateProfileFo
       `sha256(segments text) = segmentsHash`.
     - Shows the method, the winners and exclusions, the segments (collapsed), and « Télécharger la preuve (JSON) ».
   - **Links:** from the board (week 3 on), the live final screen, and the purchase sheet's « +N tickets de tombola ».
+- **Phase 5 (« SBC Impact » showcase; server `PHASE5.md`).**
+  - **Public pages, like `/p/:code`:** the finalists' pages are made to be shared outside SBC and the API holds no
+    member data.
+    - `/impact` (`pages/ImpactShowcase.tsx`: cards on show, then « Archives » collapsed) and `/impact/:id`
+      (`pages/ImpactShowcasePage.tsx`).
+    - A page shows the result, the video, podcast / YouTube / « Boutique / site » opening outside, and the
+      « Nouvelles du projet » timeline.
+    - A visitor, or a signed-in non-member, gets no member header (`isShowcase` in App).
+    - Back buttons fall back to `/impact` or `/` when there is no history (`goBack` in `components/impact/stages.ts`).
+  - **« Ma page SBC Impact »** (`components/impact/MyShowcaseCard.tsx`, `GET /me/showcase`).
+    - Shown on `/impact` for a signed-in member, and in the candidate space of a FINALIST/WINNER after the result.
+    - Has a link to the page and « Publier une nouvelle »: kind, title 3–120, text 20–3000, optional image
+      (`shrinkPhoto` + `uploadFile`) and https link.
+    - Lists each news with its state (en attente / publiée / refusée + reason).
+    - `INVALID_UPDATE` / `INVALID_URL` errors go next to `details.field`; ARCHIVED and TOO_MANY_PENDING show
+      their message.
+  - **Links to `/impact`:** from the board after the result, and from `/impact-challenge` while pages are on show.
 
 ### Withdrawals with the authenticator app
 With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.

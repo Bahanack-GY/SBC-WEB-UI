@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ChampionIcon, Clock01Icon, Location01Icon, Ticket01Icon, Rocket01Icon } from '@hugeicons/core-free-icons';
+import { ChampionIcon, Clock01Icon, Location01Icon, Ticket01Icon, Rocket01Icon, StarIcon } from '@hugeicons/core-free-icons';
 import BackButton from '../components/common/BackButton';
 import Skeleton from '../components/common/Skeleton';
 import VoteSheet, { type VoteMode } from '../components/impact/VoteSheet';
 import ImpactCandidateCard from '../components/impact/ImpactCandidateCard';
 import JuryEntryCard from '../components/impact/JuryEntryCard';
+import { useImpactShowcase } from '../hooks/useImpactShowcase';
 import { isFinalEdition, useImpactCurrentEdition } from '../hooks/useImpactCandidate';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
@@ -371,6 +372,7 @@ export default function ImpactChallenge() {
   const allowance = useTicketAllowance(challenge?._id);
   // SBC Impact Challenge v2: while an edition is live, its candidate space is offered on top.
   const edition = useImpactCurrentEdition().data;
+  const showcase = useImpactShowcase();
 
   // Re-evaluated now and then, and at once when a countdown reaches zero, so the
   // vote buttons close the moment voting ends.
@@ -463,6 +465,15 @@ export default function ImpactChallenge() {
       <div className="px-4 pb-10 max-w-2xl mx-auto">
         {edition && <div className="mb-4"><ImpactCandidateCard edition={edition} /></div>}
         <JuryEntryCard active={isFinalEdition(edition)} className="mb-4" />
+        {(showcase.data?.active.length ?? 0) > 0 && (
+          <Link to="/impact" className="mb-4 flex items-center gap-3 bg-surface border border-accent rounded-card p-4">
+            <span className="size-10 grid place-items-center rounded-tile bg-accent-soft text-accent shrink-0"><HugeiconsIcon icon={StarIcon} size={20} /></span>
+            <span className="flex-1 min-w-0">
+              <span className="block font-semibold text-ink">SBC Impact</span>
+              <span className="block text-sm text-ink-2">Les finalistes du SBC Impact Challenge et les nouvelles de leurs projets.</span>
+            </span>
+          </Link>
+        )}
         {current.isLoading ? (
           <LoadingState />
         ) : current.isError ? (

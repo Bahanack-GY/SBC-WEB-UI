@@ -13,6 +13,7 @@ const api = vi.hoisted(() => ({
   generateThumbnailUrl: vi.fn(),
   generateStreamedFileUrl: vi.fn(),
   impactCurrent: vi.fn(),
+  impactShowcase: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { name: 'Paul Mbarga' } }) }));
@@ -67,6 +68,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   // No v2 edition: the page stays the monthly vote page.
   api.impactCurrent.mockResolvedValue(ok(null));
+  api.impactShowcase.mockResolvedValue(ok({ active: [], archived: [] }));
   setCurrent();
   setAllowance(3, 22);
   // The leaderboard is fresher than the counts that came with the challenge.
@@ -237,6 +239,14 @@ describe('SBC Impact Challenge v2 (candidates)', () => {
     await screen.findByText('Impact Challenge Octobre');
     await waitFor(() => expect(api.impactCurrent).toHaveBeenCalled());
     expect(screen.queryByRole('link', { name: /candidat/ })).not.toBeInTheDocument();
+  });
+});
+
+describe('SBC Impact', () => {
+  it('links to SBC Impact while finalists are on show', async () => {
+    api.impactShowcase.mockResolvedValue(ok({ active: [{ _id: 's1' }], archived: [] }));
+    renderPage(<ImpactChallenge />);
+    expect(await screen.findByRole('link', { name: /SBC Impact/ })).toHaveAttribute('href', '/impact');
   });
 });
 

@@ -17,6 +17,7 @@ import ShareLink from '../components/impact/ShareLink';
 import { ProjectSubmissionCard, VideoSubmissionCard } from '../components/impact/SubmissionCards';
 import { MEDALS, STAGE_INFO, candidatePageUrl, plural as countOf, rankLabel, score as formatScore } from '../components/impact/stages';
 import JuryEntryCard from '../components/impact/JuryEntryCard';
+import MyShowcaseCard from '../components/impact/MyShowcaseCard';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import {
@@ -635,6 +636,7 @@ export default function ImpactCandidate() {
         <StatusCard c={candidacy} e={edition} />
         <JuryEntryCard active={isFinalEdition(edition)} />
         {(st === 'FINALIST' || st === 'WINNER') && isFinalEdition(edition) && <FinalCard c={candidacy} stage={edition.stage} />}
+        <MyShowcaseCard enabled={(st === 'FINALIST' || st === 'WINNER') && edition.stage === 'RESULT'} />
         {competing && <VotesCard c={candidacy} stage={edition.stage} />}
         {competing && candidacy.publishedAt && <PublicPageCard c={candidacy} />}
         {competing && (videoOpen || subs?.VIDEO) && (

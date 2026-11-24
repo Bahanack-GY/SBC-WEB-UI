@@ -16,6 +16,7 @@ const api = vi.hoisted(() => ({
   impactSubmitProject: vi.fn(),
   impactFinal: vi.fn(),
   impactJuryMe: vi.fn(),
+  impactMyShowcase: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 vi.mock('../contexts/AuthContext', () => ({
@@ -431,6 +432,25 @@ describe('competition: the finalist', () => {
     expect(screen.getByTestId('impact-my-result')).toHaveTextContent('Gagnant');
     expect(screen.getByText(/Vous avez remporté le SBC Impact Challenge/)).toBeInTheDocument();
     expect(screen.getByTestId('impact-step-5')).toHaveTextContent('Terminé');
+  });
+
+  it('after the result: « Ma page SBC Impact » with « Publier une nouvelle »', async () => {
+    api.impactMe.mockResolvedValue(ok({
+      ...(await competition('RESULT', { FREE: round('CLOSED'), PAID: round('CLOSED') },
+        { status: 'FINALIST', statusLabel: 'Finaliste', rank: 2, votes: { free: 3, paid: 60, paidAmount: 12000 } })).body.data,
+      edition: edition({ status: 'FINISHED', stage: 'RESULT', registrationOpen: false, rounds: { FREE: round('CLOSED'), PAID: round('CLOSED') } }),
+    }));
+    api.impactFinal.mockResolvedValue(ok({ editionId: 'ed1', stage: 'RESULT', finalists: [], result: null }));
+    api.impactMyShowcase.mockResolvedValue(ok([{
+      _id: 's9', editionId: 'ed1', candidateId: 'cand1', hidden: false, archived: false, updates: [],
+      profile: { name: 'Paul Mbarga', photoFileId: 'p.jpg', activity: '', category: '', country: 'Cameroun', city: 'Douala', presentation: '', projectName: 'Ferme Verte', projectDescription: '', sbcId: null },
+      result: { rank: 2, score: 80, winner: false, editionName: 'SBC Impact Challenge 2027', decidedAt: iso(0) },
+      videoFileId: null, podcast: null, youtubeUrl: null, shopUrl: null, visibleFrom: iso(0), visibleUntil: iso(365 * DAY),
+    }]));
+    renderPage(<ImpactCandidate />);
+    expect(await screen.findByRole('heading', { name: 'Ma page SBC Impact' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Voir ma page' })).toHaveAttribute('href', '/impact/s9');
+    expect(screen.getByRole('button', { name: 'Publier une nouvelle' })).toBeInTheDocument();
   });
 
   it('a juror sees « Espace jury »', async () => {
