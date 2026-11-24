@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { sbcApiService } from '../services/SBCApiService';
 import type { ApiResponse } from '../services/ApiResponse';
 import type {
-  ImpactBoard, ImpactCandidate, ImpactCandidateStatus, ImpactEdition, ImpactMySpace, ImpactMyVotes, ImpactPublicCandidate,
+  ImpactBoard, ImpactCandidate, ImpactCandidateStatus, ImpactEdition, ImpactFinal, ImpactJuryEdition, ImpactMySpace,
+  ImpactMyVotes, ImpactPublicCandidate,
 } from '../types/impact';
 
 // SBC Impact Challenge v2: the qualification and the candidate space
@@ -15,6 +16,8 @@ export const impactKeys = {
   board: ['impact-v2', 'board'] as const,
   candidate: (id: string) => ['impact-v2', 'candidate', id] as const,
   myVotes: ['impact-v2', 'my-votes'] as const,
+  final: ['impact-v2', 'final'] as const,
+  jury: ['impact-v2', 'jury'] as const,
 };
 
 /** A refused call, with the server's French message, code and details. */
@@ -169,9 +172,51 @@ export const useImpactMyVotes = (opts: { enabled?: boolean } = {}) =>
         purchases: d.purchases ?? [],
         myCandidateId: d.myCandidateId ?? null,
         canFreeVote: d.canFreeVote ?? null,
+        finalVote: d.finalVote ?? null,
+        canFinalVote: d.canFinalVote ?? null,
       };
     },
     enabled: opts.enabled ?? true,
+    retry: 1,
+  });
+
+// ---------- Phase 3: the live final and the jury ----------
+
+/** The edition is in its final (TOP 3, live, result): jurors and the live screen exist. */
+export const isFinalEdition = (e: { status?: string } | null | undefined) => e?.status === 'FINAL' || e?.status === 'FINISHED';
+
+export const FINAL_LIVE_POLL_MS = 5 * 1000;
+export const FINAL_IDLE_POLL_MS = 60 * 1000;
+
+/**
+ * The live final screen, or null. Every 5 s while the final is LIVE (the server caches 5 s),
+ * every minute otherwise; paused while the page is hidden.
+ */
+export const useImpactFinal = (opts: { enabled?: boolean } = {}) =>
+  useQuery<ImpactFinal | null>({
+    queryKey: impactKeys.final,
+    queryFn: async () => {
+      const data = impactData<ImpactFinal | null>(await sbcApiService.impactFinal(), 'Impossible de charger la finale.');
+      return data && Array.isArray(data.finalists) ? data : null;
+    },
+    enabled: opts.enabled ?? true,
+    refetchInterval: (query) => (query.state.data?.stage === 'LIVE' ? FINAL_LIVE_POLL_MS : FINAL_IDLE_POLL_MS),
+    refetchIntervalInBackground: false,
+    retry: 1,
+  });
+
+/** The juror's editions ([] for everyone else). */
+export const useImpactJury = (opts: { enabled?: boolean } = {}) =>
+  useQuery<ImpactJuryEdition[]>({
+    queryKey: impactKeys.jury,
+    queryFn: async () => {
+      const data = impactData<ImpactJuryEdition[] | null>(await sbcApiService.impactJuryMe(), 'Impossible de charger votre espace jury.');
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: opts.enabled ?? true,
+    // The finalist on stage changes during the live.
+    refetchInterval: (query) => (query.state.data?.some((j) => j.canScore) ? 15 * 1000 : false),
+    refetchIntervalInBackground: false,
     retry: 1,
   });
 

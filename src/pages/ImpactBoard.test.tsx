@@ -6,6 +6,7 @@ const api = vi.hoisted(() => ({
   impactCurrent: vi.fn(),
   impactBoard: vi.fn(),
   impactMyVotes: vi.fn(),
+  impactJuryMe: vi.fn(),
   generateThumbnailUrl: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
@@ -39,6 +40,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   api.generateThumbnailUrl.mockImplementation((id: string) => `https://sbc.example/${id}?w=128`);
   api.impactMyVotes.mockResolvedValue(ok({ freeVote: null, purchases: [], myCandidateId: null, canFreeVote: null }));
+  api.impactJuryMe.mockResolvedValue(ok([]));
 });
 
 describe('the public board', () => {
@@ -119,6 +121,18 @@ describe('the public board', () => {
     expect(screen.getByRole('link', { name: 'Mon espace candidat' })).toHaveAttribute('href', '/impact-challenge/candidat');
   });
 
+  it('live final: points to the live screen, and a juror to the jury space', async () => {
+    api.impactCurrent.mockResolvedValue(ok({ ...edition('LIVE', { FREE: round('CLOSED'), PAID: round('CLOSED') }), status: 'FINAL' }));
+    api.impactBoard.mockResolvedValue(board('LIVE', [
+      cand('c2', 'Paul Kamga', 'Agri Tech', { status: 'FINALIST', statusLabel: 'Finaliste', rank: 1, votes: { free: 3, paid: 90 } }),
+    ]));
+    api.impactJuryMe.mockResolvedValue(ok([{ edition: { _id: 'ed1' }, canScore: true, finalists: [] }]));
+    renderPage(<ImpactBoard />);
+    expect(await screen.findByText('La grande finale en direct')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Suivre la finale en direct' })).toHaveAttribute('href', '/impact-challenge/finale');
+    expect(await screen.findByRole('link', { name: /Espace jury/ })).toHaveAttribute('href', '/impact-challenge/jury');
+  });
+
   it('TOP 3: the ranking with medals and the finalists', async () => {
     api.impactCurrent.mockResolvedValue(ok(edition('TOP3', { FREE: round('CLOSED'), PAID: round('CLOSED') })));
     api.impactBoard.mockResolvedValue(board('TOP3', [
@@ -127,7 +141,7 @@ describe('the public board', () => {
       cand('c3', 'Marie Ngo', 'Couture', { status: 'ELIMINATED', statusLabel: 'Éliminé', rank: 4, votes: { free: 0, paid: 5 } }),
     ], { freeVotes: 4, paidVotes: 135 }));
     renderPage(<ImpactBoard />);
-    expect(await screen.findByText('Classement final')).toBeInTheDocument();
+    expect(await screen.findByText('Classement du TOP 3')).toBeInTheDocument();
     const first = screen.getByRole('link', { name: 'Paul Kamga, Agri Tech' });
     expect(first).toHaveTextContent('🥇');
     expect(first).toHaveTextContent('1er');

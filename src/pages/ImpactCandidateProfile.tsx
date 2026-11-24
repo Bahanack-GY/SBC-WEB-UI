@@ -17,7 +17,7 @@ import {
   useImpactMyVotes, useImpactPublicCandidate,
 } from '../hooks/useImpactCandidate';
 import {
-  IMPACT_PROJECT_FIELDS, type ImpactMyVotes, type ImpactPublicCandidate, type ImpactSubmission,
+  FINAL_STAGES, IMPACT_PROJECT_FIELDS, type ImpactMyVotes, type ImpactPublicCandidate, type ImpactSubmission,
 } from '../types/impact';
 import { sectionRise, sequence } from '../utils/motion';
 import { cn } from '../lib/utils';
@@ -158,8 +158,8 @@ export default function ImpactCandidateProfile() {
   } else {
     const p = c.profile;
     const poster = sbcApiService.generateThumbnailUrl(p.photoFileId, 768);
-    const showFree = stage === 'WEEK2' || stage === 'WEEK3' || stage === 'TOP3';
-    const showPaid = stage === 'WEEK3' || stage === 'TOP3';
+    const showFree = stage === 'WEEK2' || stage === 'WEEK3' || (!!stage && FINAL_STAGES.includes(stage));
+    const showPaid = stage === 'WEEK3' || (!!stage && FINAL_STAGES.includes(stage));
     const ownNote = (stage === 'WEEK2' && ownFreeHidden) || (stage === 'WEEK3' && ownPaidHidden);
     const share = (
       <ShareLink url={candidatePageUrl(c._id)} text={`Votez pour ${p.name} (${p.projectName}) au SBC Impact Challenge`} />
@@ -197,6 +197,14 @@ export default function ImpactCandidateProfile() {
         </motion.section>
 
         <VotesStats c={c} showFree={showFree} showPaid={showPaid} />
+
+        {(stage === 'LIVE' || stage === 'RESULT') && (c.status === 'FINALIST' || c.status === 'WINNER') && (
+          <motion.div variants={sectionRise}>
+            <Link to="/impact-challenge/finale" className="block text-center bg-accent text-white font-semibold py-3 rounded-pill">
+              {stage === 'LIVE' ? 'Suivre la finale en direct' : 'Voir le résultat de la finale'}
+            </Link>
+          </motion.div>
+        )}
 
         {/* ---------- Votes of the current week ---------- */}
         {stage === 'WEEK2' && (

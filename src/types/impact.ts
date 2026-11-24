@@ -2,10 +2,13 @@
 // Contract: server docs/impact-challenge/PHASE1.md and PHASE2.md. Not the old monthly
 // challenge of tombola-service (/api/challenges, hooks/useImpactChallenge).
 
-export type ImpactEditionStatus = 'QUALIFICATION' | 'QUALIFICATION_CLOSED' | 'COMPETITION' | 'FINAL';
+export type ImpactEditionStatus = 'QUALIFICATION' | 'QUALIFICATION_CLOSED' | 'COMPETITION' | 'FINAL' | 'FINISHED';
 
-/** Where the competition is (Phase 2): weeks 1–3, then the TOP 3. */
-export type ImpactStage = 'WEEK1' | 'WEEK2' | 'WEEK3' | 'TOP3';
+/** Where the competition is: weeks 1–3, the TOP 3 (Phase 2), then the live final and its result (Phase 3). */
+export type ImpactStage = 'WEEK1' | 'WEEK2' | 'WEEK3' | 'TOP3' | 'LIVE' | 'RESULT';
+
+/** Stages once the TOP 3 is set (ranks, finalists). */
+export const FINAL_STAGES: ImpactStage[] = ['TOP3', 'LIVE', 'RESULT'];
 
 /** A vote round: the free vote of week 2 (FREE), the paid votes of week 3 (PAID). */
 export interface ImpactRound {
@@ -223,6 +226,85 @@ export interface ImpactMyVotes {
   myCandidateId: string | null;
   /** Null while the free round is not open; otherwise whether a free vote would be accepted, and why not. */
   canFreeVote: { ok: boolean; code?: string; message?: string } | null;
+  /** Phase 3: the final public vote, like the free vote (null while the FINAL round is not open). */
+  finalVote?: { candidateId: string; candidateName: string | null; at: string } | null;
+  canFinalVote?: { ok: boolean; code?: string; message?: string } | null;
+}
+
+// ---------- Phase 3: the live final, the jury, the result ----------
+
+export type ImpactFinalPhase = 'PRESENTATION' | 'QUESTIONS' | 'SCORING';
+
+export interface ImpactJuryCriterion { key: string; label: string; max: number }
+
+export interface ImpactFinalistProfile {
+  name: string; photoFileId: string; city: string; country: string; activity: string; projectName: string; projectDescription: string;
+}
+
+export interface ImpactResultRow {
+  candidateId: string;
+  name: string;
+  projectName: string;
+  paidVotes: number;
+  finalVotes: number;
+  juryAverage: number;
+  juryMax: number;
+  jurorsCount: number;
+  /** Each part on 0–100. */
+  components: { paidVotes: number; publicVote: number; jury: number };
+  score: number;
+  rank: number;
+}
+
+export interface ImpactWeights { paidVotes: number; publicVote: number; jury: number }
+
+export interface ImpactFinal {
+  editionId: string;
+  name: string;
+  status: ImpactEditionStatus;
+  stage: ImpactStage | null;
+  onStageCandidateId: string | null;
+  phase: ImpactFinalPhase | null;
+  finalVote: { status: ImpactRound['status']; opensAt: string | null; closesAt: string | null } | null;
+  weights: ImpactWeights;
+  juryCriteria: ImpactJuryCriterion[];
+  formula: string;
+  finalists: {
+    _id: string; top3Rank: number | null; status: ImpactCandidateStatus; profile: ImpactFinalistProfile;
+    video: ImpactSubmission | null; project: ImpactSubmission | null;
+  }[];
+  result: null | {
+    publishedAt: string;
+    winnerCandidateId: string;
+    weights: ImpactWeights;
+    rows: ImpactResultRow[];
+  };
+}
+
+export interface ImpactJuryScore {
+  scores: Record<string, number>;
+  total: number;
+  comment: string | null;
+  updatedAt: string;
+  /** Earlier versions kept by the server (« Modifié N fois »). */
+  edits: number;
+}
+
+export interface ImpactJuryEdition {
+  edition: { _id: string; name: string; status: ImpactEditionStatus; stage: ImpactStage | null };
+  /** LIVE and not locked. */
+  canScore: boolean;
+  lockedAt: string | null;
+  /** The juror's authenticator code was given less than 30 min ago: no code needed. */
+  codeWindowOpen: boolean;
+  criteria: ImpactJuryCriterion[];
+  maxTotal: number;
+  onStageCandidateId: string | null;
+  finalists: {
+    _id: string; rank: number | null; profile: ImpactFinalistProfile;
+    project: ImpactSubmission | null; video: ImpactSubmission | null;
+    myScore: ImpactJuryScore | null;
+  }[];
 }
 
 /** Limits of the profile, the same as the server's (`parseProfile`). */

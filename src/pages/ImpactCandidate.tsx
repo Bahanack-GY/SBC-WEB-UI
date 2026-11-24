@@ -15,15 +15,17 @@ import CandidateProfileForm from '../components/impact/CandidateProfileForm';
 import { countryName } from '../components/impact/profile';
 import ShareLink from '../components/impact/ShareLink';
 import { ProjectSubmissionCard, VideoSubmissionCard } from '../components/impact/SubmissionCards';
-import { MEDALS, STAGE_INFO, candidatePageUrl, plural as countOf } from '../components/impact/stages';
+import { MEDALS, STAGE_INFO, candidatePageUrl, plural as countOf, rankLabel, score as formatScore } from '../components/impact/stages';
+import JuryEntryCard from '../components/impact/JuryEntryCard';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import {
-  ImpactApiError, impactData, impactKeys, isCounting, useImpactMySpace, withCandidate,
+  ImpactApiError, impactData, impactKeys, isCounting, isFinalEdition, useImpactFinal, useImpactMySpace, withCandidate,
 } from '../hooks/useImpactCandidate';
 import type {
   ImpactCandidate as Candidate, ImpactCandidateStatus, ImpactEdition, ImpactMySpace, ImpactProfileInput, ImpactStage, ImpactSubmission,
 } from '../types/impact';
+import { FINAL_STAGES } from '../types/impact';
 import { sequence, sectionRise } from '../utils/motion';
 import { cn } from '../lib/utils';
 
@@ -35,7 +37,7 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
 const card = 'bg-surface border border-border rounded-card p-4';
 
 /** The competition (Phase 2) has started: weeks, contents and votes replace the qualification. */
-const inCompetition = (e: ImpactEdition) => e.status === 'COMPETITION' || e.status === 'FINAL';
+const inCompetition = (e: ImpactEdition) => e.status === 'COMPETITION' || e.status === 'FINAL' || e.status === 'FINISHED';
 
 // ---------- Pieces ----------
 
@@ -125,6 +127,8 @@ function statusSentence(c: Candidate, e: ImpactEdition): string {
       return 'Vous êtes à l’étape 3 : votre projet est en lice pour les votes de la semaine 3, qui désignent le TOP 3.';
     case 'FINALIST':
       return c.rank ? `Félicitations ! Vous êtes finaliste, ${c.rank === 1 ? '1er' : `${c.rank}e`} du classement.` : 'Félicitations ! Vous êtes finaliste.';
+    case 'WINNER':
+      return 'Bravo ! Vous avez remporté le SBC Impact Challenge. L’équipe SBC vous contacte pour la suite.';
     case 'ELIMINATED':
       return 'Vous n’êtes pas dans le TOP 3 cette fois. Merci pour votre parcours dans le Challenge !';
     case 'NOT_SELECTED':
@@ -315,7 +319,7 @@ const STEPS = [
 ];
 
 /** Index in STEPS of each competition stage (the TOP 3 is the way to the final). */
-const STAGE_STEP: Record<ImpactStage, number> = { WEEK1: 2, WEEK2: 3, WEEK3: 4, TOP3: 5 };
+const STAGE_STEP: Record<ImpactStage, number> = { WEEK1: 2, WEEK2: 3, WEEK3: 4, TOP3: 5, LIVE: 5, RESULT: 6 };
 
 function Timeline({ c, stage }: { c: Candidate | null; stage?: ImpactStage | null }) {
   const official = !!c && (!!c.seatNumber || ['OFFICIAL', 'STAGE_2', 'STAGE_3', 'FINALIST', 'WINNER', 'FINISHED', 'ELIMINATED'].includes(c.status));
@@ -356,7 +360,7 @@ function Timeline({ c, stage }: { c: Candidate | null; stage?: ImpactStage | nul
 
 function VotesCard({ c, stage }: { c: Candidate; stage?: ImpactStage | null }) {
   const v = c.votes ?? { free: 0, paid: 0, paidAmount: 0 };
-  const decided = stage === 'TOP3' || c.status === 'FINALIST' || c.status === 'ELIMINATED';
+  const decided = (!!stage && FINAL_STAGES.includes(stage)) || ['FINALIST', 'WINNER', 'ELIMINATED'].includes(c.status);
   return (
     <motion.section variants={sectionRise} className={cn(card, 'flex flex-col gap-3')} aria-labelledby="impact-votes">
       <h2 id="impact-votes" className="text-sm font-semibold text-ink-2">Mes votes</h2>
@@ -374,10 +378,43 @@ function VotesCard({ c, stage }: { c: Candidate; stage?: ImpactStage | null }) {
         <p className={cn('self-start text-sm font-bold rounded-pill px-3 py-1',
           c.status === 'FINALIST' || c.status === 'WINNER' ? 'bg-accent-soft text-accent' : 'bg-surface-2 text-ink-2')} data-testid="impact-my-result">
           {c.rank ? `${MEDALS[c.rank] ? `${MEDALS[c.rank]} ` : ''}${c.rank === 1 ? '1er' : `${c.rank}e`} · ` : ''}
-          {c.status === 'FINALIST' || c.status === 'WINNER' ? 'Finaliste' : c.status === 'ELIMINATED' ? 'Éliminé' : c.statusLabel}
+          {c.status === 'WINNER' ? 'Gagnant' : c.status === 'FINALIST' ? 'Finaliste' : c.status === 'ELIMINATED' ? 'Éliminé' : c.statusLabel}
         </p>
       )}
-      <p className="text-xs text-ink-3">Seuls les votes payants de la semaine 3 désignent le TOP 3.</p>
+      {stage !== 'RESULT' && <p className="text-xs text-ink-3">Seuls les votes payants de la semaine 3 désignent le TOP 3.</p>}
+    </motion.section>
+  );
+}
+
+/** « La finale » for a finalist: the live screen, then their score and rank once the result is published. */
+function FinalCard({ c, stage }: { c: Candidate; stage?: ImpactStage | null }) {
+  const final = useImpactFinal();
+  const row = final.data?.result?.rows.find((r) => r.candidateId === c._id) ?? null;
+  const live = (final.data?.stage ?? stage) === 'LIVE';
+  return (
+    <motion.section variants={sectionRise} className={cn(card, 'flex flex-col gap-3 border-accent')} aria-labelledby="impact-final">
+      <h2 id="impact-final" className="text-lg font-bold text-ink">La finale</h2>
+      {row ? (
+        <div className="grid grid-cols-2 gap-2" data-testid="impact-my-final">
+          <div className="bg-surface-2 rounded-tile px-3 py-2">
+            <p className="text-xs text-ink-2">Score final</p>
+            <p className="text-lg font-bold text-ink">{formatScore(row.score)}/100</p>
+          </div>
+          <div className="bg-surface-2 rounded-tile px-3 py-2">
+            <p className="text-xs text-ink-2">Classement</p>
+            <p className="text-lg font-bold text-ink">{MEDALS[row.rank] ? `${MEDALS[row.rank]} ` : ''}{rankLabel(row.rank)}</p>
+          </div>
+        </div>
+      ) : (
+        <p className="text-sm text-ink-2">
+          {live
+            ? 'La finale est en direct : présentez votre projet au jury, puis le public vote.'
+            : 'Vous présenterez votre projet en direct devant le jury, puis le public votera. Le résultat combine les votes de la semaine 3, le vote du public et la note du jury.'}
+        </p>
+      )}
+      <Link to="/impact-challenge/finale" className="w-full text-center bg-accent text-white font-semibold py-3 rounded-pill">
+        {row ? 'Voir le résultat' : live ? 'Suivre la finale en direct' : 'Voir la finale'}
+      </Link>
     </motion.section>
   );
 }
@@ -596,6 +633,8 @@ export default function ImpactCandidate() {
         )}
         <Hero edition={edition} />
         <StatusCard c={candidacy} e={edition} />
+        <JuryEntryCard active={isFinalEdition(edition)} />
+        {(st === 'FINALIST' || st === 'WINNER') && isFinalEdition(edition) && <FinalCard c={candidacy} stage={edition.stage} />}
         {competing && <VotesCard c={candidacy} stage={edition.stage} />}
         {competing && candidacy.publishedAt && <PublicPageCard c={candidacy} />}
         {competing && (videoOpen || subs?.VIDEO) && (

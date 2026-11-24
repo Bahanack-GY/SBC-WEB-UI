@@ -104,6 +104,8 @@ import ImpactChallenge from './pages/ImpactChallenge'
 import ImpactCandidate from './pages/ImpactCandidate'
 import ImpactBoard from './pages/ImpactBoard'
 import ImpactCandidateProfile from './pages/ImpactCandidateProfile'
+import ImpactFinal from './pages/ImpactFinal'
+import ImpactJury from './pages/ImpactJury'
 import HelpHome from './pages/help/HelpHome'
 import HelpAssistant from './pages/help/HelpAssistant'
 import HelpArticle from './pages/help/HelpArticle'
@@ -279,6 +281,8 @@ function AppContent() {
   // someone without a pack, and its own back buttons instead of « Se déconnecter ».
   const isHelpPage = location.pathname === '/aide' || location.pathname.startsWith('/aide/');
   const nonMemberOnHelp = isHelpPage && isAuthenticated && !subscriptionLoading && !isSubscribed;
+  // A juror from outside SBC (no pack) scores the final from /impact-challenge/jury: no member header there.
+  const nonMemberOnJury = location.pathname === '/impact-challenge/jury' && isAuthenticated && !subscriptionLoading && !isSubscribed;
 
   const showLogout = isAuthenticated && !subscriptionLoading && !isSubscribed && location.pathname !== '/signup' && !isSalesPage && !isAdsPage && !isHelpPage;
 
@@ -296,7 +300,7 @@ function AppContent() {
   ];
   // A support request is a chat (WhatsApp-like): it owns the whole screen too.
   const isInSupportChat = (/^\/aide\/demandes\/[^/]+$/.test(location.pathname) && location.pathname !== '/aide/demandes/nouvelle') || location.pathname.startsWith('/signaler-un-probleme/suivi/');
-  const hideHeader = HEADERLESS.includes(location.pathname) || location.pathname.startsWith('/signaler-un-probleme/') || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp;
+  const hideHeader = HEADERLESS.includes(location.pathname) || location.pathname.startsWith('/signaler-un-probleme/') || isSalesPage || isInChatConversation || isInSupportChat || nonMemberOnAds || nonMemberOnHelp || nonMemberOnJury;
 
   const hideNav = location.pathname === '/filleuls' || location.pathname === '/abonnement' || location.pathname === '/single-product' || location.pathname === '/profile' || location.pathname === '/contacts' || location.pathname === '/otp' || location.pathname === '/transaction-confirmation' || location.pathname === '/splash-screen' || location.pathname === '/connexion' || location.pathname === '/signup' || location.pathname === '/signup/formulaire' || location.pathname === '/forgot-password' || location.pathname === '/change-password' || location.pathname === '/modifier-le-profil' || location.pathname === '/ajouter-produit' || location.pathname === '/mes-produits' || location.pathname.startsWith('/modifier-produit/') || location.pathname === '/verify-otp' || location.pathname === '/reset-password' || location.pathname === '/reset-password-otp' || location.pathname === '/verify-email-otp' || location.pathname === '/modifier-email' || location.pathname === '/change-email' || location.pathname === '/change-phone' || location.pathname === '/numeros-supplementaires' || location.pathname === '/changer-mot-de-passe' || location.pathname === '/withdrawal-otp-verification' || location.pathname.startsWith('/relance') || location.pathname.startsWith('/notifications') || location.pathname === '/activation-balance' || location.pathname === '/complete-profile' || location.pathname === '/a-propos' || location.pathname === '/conditions' || location.pathname === '/confidentialite' || location.pathname === '/mentions-legales' || location.pathname === '/mes-donnees' || location.pathname === ACCOUNT_BANNED_PATH || location.pathname.startsWith('/signaler-un-probleme') || location.pathname === '/sso/authorize' || location.pathname.startsWith('/ads-network') || location.pathname.startsWith('/impact-challenge') || isHelpPage || location.pathname.startsWith('/events/organizer/') && location.pathname.endsWith('/scanner') || isSalesPage || isInChatConversation || /^\/events\/organizer\/[^/]+\/animation\/(defis|recompenses)\//.test(location.pathname) || (location.pathname.startsWith('/events/') && location.pathname.endsWith('/live'));
   // The nav is a fixed pill ~68px tall at bottom-3, so the space it covers must
@@ -384,6 +388,9 @@ function AppContent() {
           <Route path="/aide/demandes" element={<HelpTickets />} />
           <Route path="/aide/demandes/nouvelle" element={<HelpNewTicket />} />
           <Route path="/aide/demandes/:id" element={<HelpTicket />} />
+          {/* SBC Impact Challenge jury (Phase 3): a login, not a pack — jurors can be outside
+              personalities with an SBC account. The jurors' notifications open it. */}
+          <Route path="/impact-challenge/jury" element={<ImpactJury />} />
           {/* The advertiser pages need a login, not a pack (Rufus, 2026-11-13:
               requiring the pack was costing campaigns). The hub and the
               diffuseur pages stay paywalled below: diffuseurs earn money, and
@@ -436,6 +443,8 @@ function AppContent() {
               notifications open the board; the candidates' open /impact-challenge/candidat. */}
           <Route path="/impact-challenge/candidats" element={<ImpactBoard />} />
           <Route path="/impact-challenge/candidats/:id" element={<ImpactCandidateProfile />} />
+          {/* Phase 3: the live final screen (also on the big screen). The finalists' result notices open it. */}
+          <Route path="/impact-challenge/finale" element={<ImpactFinal />} />
           {/* SBC Ads Network. The hub and the diffuseur pages are paywalled
               (diffuseurs are paid); the advertiser pages are not (RequireAuth). */}
           {/* Every Ads Network screen sits behind the launch gate — a

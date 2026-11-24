@@ -24,7 +24,28 @@ export const STAGE_INFO: Record<ImpactStage, { week: string; title: string; text
     title: 'Les finalistes',
     text: 'Les votes de la semaine 3 ont désigné les finalistes.',
   },
+  LIVE: {
+    week: 'Finale',
+    title: 'La grande finale en direct',
+    text: 'Les finalistes présentent leur projet devant le jury. Votez pour votre finaliste préféré.',
+  },
+  RESULT: {
+    week: 'Finale',
+    title: 'Le résultat',
+    text: 'Le jury, le vote du public et les votes de la semaine 3 ont désigné le gagnant.',
+  },
 };
+
+export const PHASE_LABEL: Record<'PRESENTATION' | 'QUESTIONS' | 'SCORING', string> = {
+  PRESENTATION: 'Présentation',
+  QUESTIONS: 'Questions du jury',
+  SCORING: 'Notation',
+};
+
+/** 79.76 → « 79,76 ». */
+export const score = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 2 });
+
+export const rankLabel = (rank: number) => (rank === 1 ? '1er' : `${rank}e`);
 
 export const dateTime = (iso: string | null | undefined) =>
   iso
@@ -32,7 +53,7 @@ export const dateTime = (iso: string | null | undefined) =>
     : '';
 
 /** « Votes ouverts jusqu’au … », « Ouverture le … », « Votes clos ». */
-export function roundLine(round: ImpactRound | null | undefined, what: string): string {
+export function roundLine(round: Pick<ImpactRound, 'status' | 'opensAt' | 'closesAt'> | null | undefined, what: string): string {
   if (!round) return `${what} : dates bientôt annoncées.`;
   if (round.status === 'OPEN') return round.closesAt ? `${what} ouvert jusqu’au ${dateTime(round.closesAt)}.` : `${what} ouvert.`;
   if (round.status === 'SCHEDULED') return round.opensAt ? `${what} : ouverture le ${dateTime(round.opensAt)}.` : `${what} : ouverture bientôt.`;

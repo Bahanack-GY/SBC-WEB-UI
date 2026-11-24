@@ -1185,6 +1185,31 @@ export class SBCApiService extends ApiService {
     return await this.get('/tickets/impact/me/votes', { skipDeduplication: true });
   }
 
+  // ----- Phase 3 (server docs/impact-challenge/PHASE3.md): live final, jury -----
+
+  /** The live final screen (finalists, on stage, final vote, result once published), or data: null. */
+  async impactFinal(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/public/final', { requiresAuth: false, skipDeduplication: true });
+  }
+
+  /** The final public vote (1 per account and edition). Answers { candidateId, at }. */
+  async impactFinalVote(candidateId: string): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/final-votes', { body: { candidateId } });
+  }
+
+  /** The juror's editions and finalists, with their own marks ([] when the member is no juror). */
+  async impactJuryMe(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/jury/me', { skipDeduplication: true });
+  }
+
+  /** Saves the juror's marks for one finalist; `authCode` when the server asks for it (AUTH_CODE_REQUIRED). */
+  async impactJuryScore(
+    editionId: string, candidateId: string,
+    body: { scores: Record<string, number>; comment?: string; authCode?: string },
+  ): Promise<ApiResponse> {
+    return await this.put(`/tickets/impact/jury/editions/${encodeURIComponent(editionId)}/candidates/${encodeURIComponent(candidateId)}/score`, { body });
+  }
+
   /** One of the member's vote purchases (to follow a PENDING balance payment). */
   async impactMyPurchase(purchaseId: string): Promise<ApiResponse> {
     return await this.get(`/tickets/impact/me/vote-purchases/${encodeURIComponent(purchaseId)}`, { skipDeduplication: true });
