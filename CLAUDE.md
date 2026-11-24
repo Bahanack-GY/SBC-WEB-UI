@@ -181,6 +181,22 @@ session refresh, `/users/me` and the other member routes). `components/security/
   e-mail and phones of `/a-propos`; never `/aide` (needs a login). « Retour à la connexion » uses
   `forgetSession`, not `logout` (whose server call would be refused and bounce back).
 
+### SBC Impact Challenge v2 candidate space, `/impact-challenge/candidat` (2026-11-23)
+Phase 1 of the new Impact Challenge (server `docs/impact-challenge/PHASE1.md`, event-service
+`/api/tickets/impact`): a member creates a candidate profile, then needs N filleuls who pay their
+pack during the qualification; the first N get a seat, then a waiting list, then « INSCRIPTIONS
+FERMÉES ». `pages/ImpactCandidate.tsx`, `components/impact/{CandidateProfileForm,ImpactCandidateCard,profile}`,
+`hooks/useImpactCandidate.ts`, `types/impact.ts`. Behind `RequireSubscription` (candidates need a pack).
+- Edit/withdraw buttons follow `canEdit`/`canWithdraw` from `GET /me`; never re-derive the rule.
+- `/me` is polled every 30 s only while the space can change by itself (`shouldPoll`: qualifying
+  during qualification, or on the waiting list), paused when the page is hidden.
+- The photo is shrunk with `shrinkPhoto` (help/identity) and uploaded at once; the profile keeps the
+  `fileId`. The consent text (publication in the app, on social networks and in SBC Impact for 12
+  months) is in `components/impact/profile.ts`.
+- The old monthly vote page `/impact-challenge` (tombola-service) is unchanged; the v2 card shows on top
+  of it and in the home banner while an edition is live (`GET /tickets/impact/public/current`).
+- Wording: « vous », like the vote page and the server's messages (the push notifications say « tu »).
+
 ### Withdrawals with the authenticator app
 With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.
 `/otp` checks it (state `confirmWith`, else `getAuthenticatorStatus`) and shows

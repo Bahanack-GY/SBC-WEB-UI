@@ -1,6 +1,7 @@
 import { ApiService } from './ApiService';
 import { ApiResponse } from './ApiResponse';
 import { currentReplay } from './sessionReplay';
+import type { ImpactProfileInput } from '../types/impact';
 
 /** Name, phone and email typed at the top of a support request. */
 export type SupportContact = { name: string; phone: string; email: string };
@@ -1106,6 +1107,41 @@ export class SBCApiService extends ApiService {
     isAnonymous?: boolean;
   }): Promise<ApiResponse> {
     return await this.post(`/challenges/${challengeId}/support`, { body });
+  }
+
+  // ==================== SBC IMPACT CHALLENGE v2 (candidates) ====================
+  // event-service, behind the gateway at /api/tickets/impact (server
+  // docs/impact-challenge/PHASE1.md). Answers { success, data } or
+  // { success: false, message, code?, details? }; messages are French.
+
+  /** The live edition and its rules, or data: null. Public, cached 15 s by the server. */
+  async impactCurrent(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/public/current', { requiresAuth: false });
+  }
+
+  /** The member's space: { edition, candidacy, canApply, blocker }. */
+  async impactMe(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/me', { skipDeduplication: true });
+  }
+
+  /** Become a candidate: the whole profile + consent: true. Answers the Candidate. */
+  async impactApply(profile: ImpactProfileInput & { consent: true }): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/me/candidacy', { body: profile });
+  }
+
+  /** Edit the profile (any fields). 409 PROFILE_LOCKED once the competition starts. */
+  async impactUpdateCandidacy(profile: Partial<ImpactProfileInput>): Promise<ApiResponse> {
+    return await this.patch('/tickets/impact/me/candidacy', { body: profile });
+  }
+
+  /** Recount the invitations now (once per 20 s, else 429). Answers the Candidate. */
+  async impactRefreshCandidacy(): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/me/candidacy/refresh');
+  }
+
+  /** Leave the Challenge (before the competition). Answers the Candidate. */
+  async impactWithdraw(): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/me/candidacy/withdraw');
   }
 
   // ==================== ADVERTISING ====================

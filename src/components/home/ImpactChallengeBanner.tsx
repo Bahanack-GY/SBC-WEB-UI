@@ -2,18 +2,29 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ChampionIcon, ArrowRight01Icon, Ticket01Icon } from '@hugeicons/core-free-icons';
-import { useCurrentImpactChallenge, timeLeftLabel } from '../../hooks/useImpactChallenge';
+import { useCurrentImpactChallenge, timeLeftLabel, type CurrentChallenge } from '../../hooks/useImpactChallenge';
+import { useImpactCurrentEdition } from '../../hooks/useImpactCandidate';
+import ImpactCandidateCard from '../impact/ImpactCandidateCard';
 
 /**
- * Home entry to the Impact Challenge. Shown only while a challenge is open to
- * votes: the API answers 404 otherwise, and a failing call hides it too — the
- * home page must not show a broken card for an optional module.
+ * Home entry to the Impact Challenge. The monthly vote card shows only while a
+ * challenge is open to votes: the API answers 404 otherwise, and a failing call
+ * hides it too — the home page must not show a broken card for an optional
+ * module. The v2 candidate card shows while an edition is live (same rule).
  */
 function ImpactChallengeBanner() {
   const { data } = useCurrentImpactChallenge();
-  if (!data) return null;
-  const { challenge, entrepreneurs } = data;
+  const edition = useImpactCurrentEdition().data;
+  if (!data && !edition) return null;
+  return (
+    <>
+      {edition && <ImpactCandidateCard edition={edition} />}
+      {data && <VoteBanner challenge={data.challenge} entrepreneurs={data.entrepreneurs} />}
+    </>
+  );
+}
 
+function VoteBanner({ challenge, entrepreneurs }: Pick<CurrentChallenge, 'challenge' | 'entrepreneurs'>) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}

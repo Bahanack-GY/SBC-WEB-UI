@@ -12,6 +12,7 @@ const api = vi.hoisted(() => ({
   generatePaymentUrl: vi.fn(),
   generateThumbnailUrl: vi.fn(),
   generateStreamedFileUrl: vi.fn(),
+  impactCurrent: vi.fn(),
 }));
 vi.mock('../services/SBCApiService', () => ({ sbcApiService: api }));
 vi.mock('../contexts/AuthContext', () => ({ useAuth: () => ({ user: { name: 'Paul Mbarga' } }) }));
@@ -64,6 +65,8 @@ const setAllowance = (used: number, remaining: number, max = 25) =>
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // No v2 edition: the page stays the monthly vote page.
+  api.impactCurrent.mockResolvedValue(ok(null));
   setCurrent();
   setAllowance(3, 22);
   // The leaderboard is fresher than the counts that came with the challenge.
@@ -212,6 +215,28 @@ describe('outside the voting window', () => {
     renderPage(<ImpactChallenge />);
     expect((await screen.findAllByText(/Les votes sont fermés/)).length).toBeGreaterThan(0);
     expect(screen.getByRole('button', { name: 'Voter pour Agri Tech' })).toBeDisabled();
+  });
+});
+
+describe('SBC Impact Challenge v2 (candidates)', () => {
+  it('offers the candidate space on top while an edition is live', async () => {
+    api.impactCurrent.mockResolvedValue(ok({
+      _id: 'ed1', name: 'SBC Impact Challenge 2027', status: 'QUALIFICATION', registrationOpen: true,
+      seats: { taken: 3, max: 20 }, settings: { invitationsRequired: 10 },
+    }));
+    renderPage(<ImpactChallenge />);
+    const link = await screen.findByRole('link', { name: /devenez candidat/ });
+    expect(link).toHaveAttribute('href', '/impact-challenge/candidat');
+    expect(link).toHaveTextContent('3/20 places prises');
+    // The monthly challenge is still there.
+    expect(await screen.findByText('Impact Challenge Octobre')).toBeInTheDocument();
+  });
+
+  it('shows no candidate card without an edition', async () => {
+    renderPage(<ImpactChallenge />);
+    await screen.findByText('Impact Challenge Octobre');
+    await waitFor(() => expect(api.impactCurrent).toHaveBeenCalled());
+    expect(screen.queryByRole('link', { name: /candidat/ })).not.toBeInTheDocument();
   });
 });
 
