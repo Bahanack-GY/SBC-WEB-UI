@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { act, screen, within } from '@testing-library/react';
 import { Route, Routes } from 'react-router-dom';
-import { createHash } from 'node:crypto';
+import { createHash, webcrypto } from 'node:crypto';
 import { ok, renderPage } from '../test/api';
 
 const api = vi.hoisted(() => ({
@@ -171,6 +171,8 @@ describe('the live draw', () => {
 });
 
 describe('the draw’s proof', () => {
+  // Node 18 (CI) has no global WebCrypto in the test environment; browsers and Node ≥ 19 do.
+  beforeEach(() => { if (!globalThis.crypto?.subtle) vi.stubGlobal('crypto', webcrypto); });
   const SEED = '9f'.repeat(32);
   const SEGMENTS = [
     { from: 1, to: 5, weight: 10000, holderHash: 'aa'.repeat(32) },
