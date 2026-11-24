@@ -101,6 +101,7 @@ describe('the public board', () => {
     expect(await screen.findByText('Votes payants : les projets')).toBeInTheDocument();
     expect(screen.getByTestId('impact-round-line')).toHaveTextContent(/Vote payant ouvert jusqu’au/);
     expect(within(screen.getByRole('link', { name: 'Awa Ndiaye, Savons Bio' })).getByText('40 votes')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /Tombola/ })).toHaveAttribute('href', '/impact-challenge/tombola');
     expect(await screen.findByText('Mes achats de votes')).toBeInTheDocument();
     const purchases = screen.getAllByTestId('impact-purchase');
     expect(purchases[0]).toHaveTextContent('5 votes pour Awa Ndiaye');

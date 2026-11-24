@@ -319,3 +319,92 @@ export const IMPACT_PROFILE_LIMITS = {
   presentation: [50, 4000],
   link: [0, 300],
 } as const satisfies Record<string, readonly [number, number]>;
+
+// ---------- Phase 4: SBC Tombola (not the old monthly tombola of tombola-service) ----------
+
+export interface ImpactTicketTier { upTo: number | null; weight: number }
+export interface ImpactTombolaPrize { key: string; label: string; category: string }
+
+export type ImpactTombolaWinnerStatus = 'PENDING' | 'DELIVERED' | 'FORFEITED' | 'NOT_AWARDED';
+
+export interface ImpactTombolaWinner {
+  order: number;
+  prizeKey: string;
+  prizeLabel: string;
+  category: string;
+  /** Null when no eligible ticket was left for this prize (NOT_AWARDED). */
+  ticketNumber: number | null;
+  /** First name + initial (« Awa N. »). */
+  displayName: string | null;
+  status: ImpactTombolaWinnerStatus;
+}
+
+export interface ImpactTombolaDraw {
+  _id: string;
+  editionId: string;
+  status: 'COMMITTED' | 'DONE';
+  /** sha256 of the seed's hex text, published before the draw. */
+  seedCommitment: string;
+  committedAt: string;
+  committedBeforeTicketsClosed: boolean;
+  seed: string | null;
+  drawnAt: string | null;
+  prizes: ImpactTombolaPrize[];
+  totalTickets: number | null;
+  participants: number | null;
+  segmentsHash: string | null;
+  revealedCount: number;
+  winnersCount: number;
+  /** Only the revealed winners, in draw order. */
+  winners: ImpactTombolaWinner[];
+}
+
+export interface ImpactTombola {
+  editionId: string;
+  editionName: string;
+  prizes: ImpactTombolaPrize[];
+  tiers: ImpactTicketTier[];
+  cooldownDays: number;
+  totalTickets: number;
+  participants: number;
+  draw: ImpactTombolaDraw | null;
+}
+
+export interface ImpactMyTombola {
+  editionId: string;
+  tickets: number;
+  ranges: { from: number; to: number }[];
+  /** The member's share of the total weight, in %: their chance for the first prize. */
+  sharePct: number;
+  totalTickets: number;
+  drawn: boolean;
+  wins: { prizeLabel: string; ticketNumber: number; status: ImpactTombolaWinnerStatus }[];
+}
+
+export interface ImpactTombolaHistoryItem {
+  drawId: string;
+  editionId: string;
+  editionName: string | null;
+  drawnAt: string;
+  totalTickets: number;
+  participants: number;
+  winners: { order: number; prize: string; category: string; ticketNumber: number | null; displayName: string | null; status: ImpactTombolaWinnerStatus }[];
+}
+
+export interface ImpactTombolaProof {
+  drawId: string;
+  status: 'COMMITTED' | 'DONE';
+  seedCommitment: string;
+  committedAt: string;
+  committedBeforeTicketsClosed: boolean;
+  seed?: string;
+  drawnAt?: string;
+  weightScale?: number;
+  method?: string;
+  segmentsHash?: string;
+  segmentsFormat?: string;
+  segments?: { from: number; to: number; weight: number; holderHash: string }[];
+  exclusions?: { order: number; holderHashes: string[] }[];
+  prizes?: ImpactTombolaPrize[];
+  winners?: { order: number; prizeLabel: string; ticketNumber: number | null; holderHash: string | null; attempts: number }[];
+}

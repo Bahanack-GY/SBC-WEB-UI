@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { ChampionIcon, CheckmarkCircle02Icon, Location01Icon, Mic01Icon } from '@hugeicons/core-free-icons';
+import { ChampionIcon, CheckmarkCircle02Icon, GiftIcon, Location01Icon, Mic01Icon } from '@hugeicons/core-free-icons';
 import BackButton from '../components/common/BackButton';
 import Skeleton from '../components/common/Skeleton';
 import JuryEntryCard from '../components/impact/JuryEntryCard';
@@ -319,6 +319,13 @@ export default function ImpactFinal() {
             <p className="text-xs text-ink-3" data-testid="impact-formula">{data.formula}</p>
           </motion.section>
         )}
+
+        <motion.div variants={sectionRise}>
+          <Link to="/impact-challenge/tombola" className={cn(card, 'flex items-center gap-3 py-3')}>
+            <span className="size-9 grid place-items-center rounded-tile bg-accent-soft text-accent shrink-0"><HugeiconsIcon icon={GiftIcon} size={18} /></span>
+            <span className="flex-1 text-sm font-semibold text-ink">Tombola : les lots et le tirage</span>
+          </Link>
+        </motion.div>
 
         <JuryEntryCard active />
       </motion.div>

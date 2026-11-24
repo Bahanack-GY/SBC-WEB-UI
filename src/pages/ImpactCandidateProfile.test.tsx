@@ -234,6 +234,8 @@ describe('week 3: buying votes', () => {
     await userEvent.click(within(sheet).getByRole('radio', { name: /5 votes/ }));
     await userEvent.click(within(sheet).getByRole('button', { name: /^Payer 1\s000 F$/ }));
     expect(await within(sheet).findByText('5 votes comptés pour Awa Ndiaye. Merci !')).toBeInTheDocument();
+    expect(within(sheet).getByTestId('impact-tombola-tickets')).toHaveTextContent('+5 tickets de tombola');
+    expect(within(sheet).getByTestId('impact-tombola-tickets')).toHaveAttribute('href', '/impact-challenge/tombola');
     expect(api.impactBuyVotes).toHaveBeenCalledWith(expect.objectContaining({ method: 'BALANCE', packIndex: 1 }));
     expect(nav.redirectTo).not.toHaveBeenCalled();
     // The counts are read again.

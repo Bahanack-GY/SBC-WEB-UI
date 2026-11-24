@@ -77,6 +77,7 @@ describe('the live final', () => {
     for (const name of ['Awa Ndiaye', 'Paul Kamga', 'Marie Ngo']) {
       expect(screen.getByRole('listitem', { name })).toBeInTheDocument();
     }
+    expect(screen.getByRole('link', { name: /Tombola/ })).toHaveAttribute('href', '/impact-challenge/tombola');
   });
 
   it('votes for a finalist, then says for whom', async () => {

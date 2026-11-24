@@ -241,6 +241,25 @@ FERMÉES ». `pages/ImpactCandidate.tsx`, `components/impact/{CandidateProfileFo
     - `useBlockRemoteControl` while scoring is open and while the code sheet is open.
   - « Espace jury » (`components/impact/JuryEntryCard.tsx`) shows on the Impact pages when `/jury/me` is
     non-empty. It is only asked while the edition is FINAL/FINISHED, never from the home page.
+- **Phase 4 (SBC Tombola; server `PHASE4.md`). Not the old monthly tombola of tombola-service.**
+  - **Page** `/impact-challenge/tombola` (`pages/ImpactTombola.tsx`, `hooks/useImpactTombola.ts`, same guard as the
+    finale). It shows:
+    - the tickets and participants, and the prizes in draw order;
+    - the rules: 1 paid vote = 1 ticket, the weights from `tiers` with the 100-tickets example computed from them,
+      one prize per person, no same category within `cooldownDays`;
+    - « Empreinte du tirage » with « Pourquoi ? », and a plain warning when `committedBeforeTicketsClosed` is false;
+    - « Mes tickets » (`/me/tombola`: count, ranges, chance at the 1st prize, « Gagné ! »);
+    - the history.
+  - **Reveal.** Only the revealed winners come from the server. A winner that appears while the page is open
+    gets the drawing effect once: orders already seen are kept in a ref, and the winners present at the first
+    load never animate. Prizes not yet revealed show « À venir »; NOT_AWARDED shows « Lot non attribué ».
+  - **Polling:** every 3 s while revealing (`revealedCount < winnersCount`) or while the final is LIVE, 60 s
+    otherwise, paused when hidden. The timings live in `hooks/tombolaTiming.ts` so tests can shorten them.
+  - **Proof** `/impact-challenge/tombola/preuve/:drawId` (`pages/ImpactTombolaProof.tsx`).
+    - Recomputes in the browser (SubtleCrypto) `sha256(seed hex text) = seedCommitment` and
+      `sha256(segments text) = segmentsHash`.
+    - Shows the method, the winners and exclusions, the segments (collapsed), and « Télécharger la preuve (JSON) ».
+  - **Links:** from the board (week 3 on), the live final screen, and the purchase sheet's « +N tickets de tombola ».
 
 ### Withdrawals with the authenticator app
 With the app set up (`confirmWith: 'authenticator'` in the initiate answer), nothing is e-mailed.
