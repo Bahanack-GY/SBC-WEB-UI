@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { useQueryClient } from '@tanstack/react-query';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -13,12 +13,17 @@ import { Sheet } from '../components/relance/ui/Sheet';
 import { ConfirmSheet } from '../components/relance/ui/ConfirmSheet';
 import CandidateProfileForm from '../components/impact/CandidateProfileForm';
 import { countryName } from '../components/impact/profile';
+import ShareLink from '../components/impact/ShareLink';
+import { ProjectSubmissionCard, VideoSubmissionCard } from '../components/impact/SubmissionCards';
+import { MEDALS, STAGE_INFO, candidatePageUrl, plural as countOf } from '../components/impact/stages';
 import { useAuth } from '../contexts/AuthContext';
 import { sbcApiService } from '../services/SBCApiService';
 import {
   ImpactApiError, impactData, impactKeys, isCounting, useImpactMySpace, withCandidate,
 } from '../hooks/useImpactCandidate';
-import type { ImpactCandidate as Candidate, ImpactCandidateStatus, ImpactEdition, ImpactMySpace, ImpactProfileInput } from '../types/impact';
+import type {
+  ImpactCandidate as Candidate, ImpactCandidateStatus, ImpactEdition, ImpactMySpace, ImpactProfileInput, ImpactStage, ImpactSubmission,
+} from '../types/impact';
 import { sequence, sectionRise } from '../utils/motion';
 import { cn } from '../lib/utils';
 
@@ -29,6 +34,9 @@ const plural = (n: number, one: string, many: string) => `${n} ${n > 1 ? many : 
 
 const card = 'bg-surface border border-border rounded-card p-4';
 
+/** The competition (Phase 2) has started: weeks, contents and votes replace the qualification. */
+const inCompetition = (e: ImpactEdition) => e.status === 'COMPETITION' || e.status === 'FINAL';
+
 // ---------- Pieces ----------
 
 function Hero({ edition }: { edition: ImpactEdition }) {
@@ -36,7 +44,8 @@ function Hero({ edition }: { edition: ImpactEdition }) {
     <motion.section variants={sectionRise} className="bg-primary text-white rounded-card p-4 flex flex-col gap-3 relative overflow-hidden">
       <span aria-hidden className="absolute -right-10 -top-10 size-40 rounded-pill bg-white/10" />
       <span className="self-start text-[11px] font-semibold uppercase tracking-wide bg-white/15 rounded-pill px-2.5 py-1">
-        {edition.status === 'QUALIFICATION' ? 'Qualification en cours' : 'SBC Impact Challenge'}
+        {edition.status === 'QUALIFICATION' ? 'Qualification en cours'
+          : edition.stage ? `${STAGE_INFO[edition.stage].week} : ${STAGE_INFO[edition.stage].title}` : 'SBC Impact Challenge'}
       </span>
       <div className="relative">
         <h2 className="text-xl font-bold leading-tight">{edition.name}</h2>
@@ -82,6 +91,10 @@ function KeyRules({ edition, onRules }: { edition: ImpactEdition; onRules: () =>
 
 const STATUS_TONE: Partial<Record<ImpactCandidateStatus, string>> = {
   OFFICIAL: 'bg-success-soft text-success',
+  STAGE_2: 'bg-success-soft text-success',
+  STAGE_3: 'bg-success-soft text-success',
+  FINALIST: 'bg-accent-soft text-accent',
+  ELIMINATED: 'bg-surface-2 text-ink-2',
   WAITLIST: 'bg-accent-soft text-accent',
   QUALIFYING: 'bg-primary-soft text-primary',
   NOT_SELECTED: 'bg-surface-2 text-ink-2',
@@ -100,9 +113,20 @@ function statusSentence(c: Candidate, e: ImpactEdition): string {
         ? `Vous avez vos ${req} invitations, mais toutes les places sont prises : vous êtes n° ${c.waitlistRank} sur la liste d’attente. Si une place se libère, elle vous revient.`
         : `Vous avez vos ${req} invitations, mais toutes les places sont prises : vous êtes sur la liste d’attente.`;
     case 'OFFICIAL':
+      if (inCompetition(e)) {
+        return `Vous êtes candidat officiel${c.seatNumber ? ` (place n° ${c.seatNumber})` : ''}. Envoyez votre vidéo « Ma vision de SBC » : une fois validée, elle vous qualifie pour le vote gratuit de la semaine 2.`;
+      }
       return c.seatNumber
         ? `Félicitations ! Vous êtes candidat officiel, place n° ${c.seatNumber}. La suite du Challenge commence le ${day(e.schedule.competitionStartsAt) || 'jour annoncé par SBC'}.`
         : 'Félicitations ! Vous êtes candidat officiel.';
+    case 'STAGE_2':
+      return 'Vous êtes à l’étape 2 : votre vidéo « Ma vision de SBC » est en lice pour le vote gratuit. Préparez déjà la présentation de votre projet pour la semaine 3.';
+    case 'STAGE_3':
+      return 'Vous êtes à l’étape 3 : votre projet est en lice pour les votes de la semaine 3, qui désignent le TOP 3.';
+    case 'FINALIST':
+      return c.rank ? `Félicitations ! Vous êtes finaliste, ${c.rank === 1 ? '1er' : `${c.rank}e`} du classement.` : 'Félicitations ! Vous êtes finaliste.';
+    case 'ELIMINATED':
+      return 'Vous n’êtes pas dans le TOP 3 cette fois. Merci pour votre parcours dans le Challenge !';
     case 'NOT_SELECTED':
       return 'Les inscriptions ont fermé avant que vous atteigniez le nombre d’invitations demandé. Merci pour votre participation !';
     case 'SUSPENDED':
@@ -290,13 +314,18 @@ const STEPS = [
   'Finale',
 ];
 
-function Timeline({ c }: { c: Candidate | null }) {
+/** Index in STEPS of each competition stage (the TOP 3 is the way to the final). */
+const STAGE_STEP: Record<ImpactStage, number> = { WEEK1: 2, WEEK2: 3, WEEK3: 4, TOP3: 5 };
+
+function Timeline({ c, stage }: { c: Candidate | null; stage?: ImpactStage | null }) {
   const official = !!c && (!!c.seatNumber || ['OFFICIAL', 'STAGE_2', 'STAGE_3', 'FINALIST', 'WINNER', 'FINISHED', 'ELIMINATED'].includes(c.status));
   const qualified = !!c && (official || !!c.invitations.reachedAt || c.status === 'WAITLIST');
+  const at = stage ? STAGE_STEP[stage] : null;
   const state = (i: number): 'done' | 'current' | 'upcoming' => {
     if (i === 0) return qualified ? 'done' : c && c.status === 'QUALIFYING' ? 'current' : 'upcoming';
     if (i === 1) return official ? 'done' : qualified ? 'current' : 'upcoming';
-    return 'upcoming';
+    if (at === null) return 'upcoming';
+    return i < at ? 'done' : i === at ? 'current' : 'upcoming';
   };
   return (
     <motion.section variants={sectionRise} className={cn(card, 'flex flex-col gap-3')} aria-labelledby="impact-steps">
@@ -315,12 +344,55 @@ function Timeline({ c }: { c: Candidate | null }) {
               </div>
               <div className="pb-3 min-w-0">
                 <p className={cn('text-sm font-semibold', s === 'upcoming' ? 'text-ink-3' : 'text-ink')}>{label}</p>
-                <p className="text-xs text-ink-3">{s === 'done' ? 'Terminé' : s === 'current' ? 'En cours' : 'À venir'}</p>
+                <p className="text-xs text-ink-3" data-testid={`impact-step-${i}`}>{s === 'done' ? 'Terminé' : s === 'current' ? 'En cours' : 'À venir'}</p>
               </div>
             </li>
           );
         })}
       </ol>
+    </motion.section>
+  );
+}
+
+function VotesCard({ c, stage }: { c: Candidate; stage?: ImpactStage | null }) {
+  const v = c.votes ?? { free: 0, paid: 0, paidAmount: 0 };
+  const decided = stage === 'TOP3' || c.status === 'FINALIST' || c.status === 'ELIMINATED';
+  return (
+    <motion.section variants={sectionRise} className={cn(card, 'flex flex-col gap-3')} aria-labelledby="impact-votes">
+      <h2 id="impact-votes" className="text-sm font-semibold text-ink-2">Mes votes</h2>
+      <div className="grid grid-cols-2 gap-2">
+        <div className="bg-surface-2 rounded-tile px-3 py-2">
+          <p className="text-xs text-ink-2">Vote gratuit (semaine 2)</p>
+          <p className="text-lg font-bold text-ink" data-testid="impact-my-free-votes">{countOf(v.free, 'vote', 'votes')}</p>
+        </div>
+        <div className="bg-surface-2 rounded-tile px-3 py-2">
+          <p className="text-xs text-ink-2">Votes payants (semaine 3)</p>
+          <p className="text-lg font-bold text-ink" data-testid="impact-my-paid-votes">{countOf(v.paid, 'vote', 'votes')}</p>
+        </div>
+      </div>
+      {decided && (
+        <p className={cn('self-start text-sm font-bold rounded-pill px-3 py-1',
+          c.status === 'FINALIST' || c.status === 'WINNER' ? 'bg-accent-soft text-accent' : 'bg-surface-2 text-ink-2')} data-testid="impact-my-result">
+          {c.rank ? `${MEDALS[c.rank] ? `${MEDALS[c.rank]} ` : ''}${c.rank === 1 ? '1er' : `${c.rank}e`} · ` : ''}
+          {c.status === 'FINALIST' || c.status === 'WINNER' ? 'Finaliste' : c.status === 'ELIMINATED' ? 'Éliminé' : c.statusLabel}
+        </p>
+      )}
+      <p className="text-xs text-ink-3">Seuls les votes payants de la semaine 3 désignent le TOP 3.</p>
+    </motion.section>
+  );
+}
+
+function PublicPageCard({ c }: { c: Candidate }) {
+  return (
+    <motion.section variants={sectionRise} className={cn(card, 'flex flex-col gap-3')} aria-labelledby="impact-public-page">
+      <div>
+        <h2 id="impact-public-page" className="text-lg font-bold text-ink">Ma page de candidat</h2>
+        <p className="text-sm text-ink-2 mt-1">Partagez-la : votre communauté y découvre votre projet et vote pour vous.</p>
+      </div>
+      <Link to={`/impact-challenge/candidats/${encodeURIComponent(c._id)}`} className="self-start text-sm font-semibold text-primary py-1">
+        Voir ma page publique
+      </Link>
+      <ShareLink url={candidatePageUrl(c._id)} text={`Votez pour moi, ${c.profile.name} (${c.profile.projectName}), au SBC Impact Challenge`} />
     </motion.section>
   );
 }
@@ -374,6 +446,17 @@ export default function ImpactCandidate() {
 
   const putCandidate = (c: Candidate) =>
     queryClient.setQueryData<ImpactMySpace>(impactKeys.me, (cur) => withCandidate(cur, c));
+
+  const putSubmission = (sub: ImpactSubmission) => {
+    queryClient.setQueryData<ImpactMySpace>(impactKeys.me, (cur) => (cur ? {
+      ...cur,
+      submissions: { VIDEO: cur.submissions?.VIDEO ?? null, PROJECT: cur.submissions?.PROJECT ?? null, [sub.kind]: sub },
+    } : cur));
+    setNotice(sub.kind === 'VIDEO'
+      ? 'Vidéo envoyée. L’équipe SBC va la vérifier avant de la publier.'
+      : 'Projet envoyé. L’équipe SBC va le vérifier avant de le publier.');
+    toTop();
+  };
 
   const openForm = (mode: 'create' | 'edit') => {
     setNotice('');
@@ -494,6 +577,60 @@ export default function ImpactCandidate() {
           </motion.p>
         ) : null}
         <Timeline c={null} />
+      </motion.div>
+    );
+  } else if (inCompetition(edition)) {
+    // Phase 2: the weeks, the contents to send, the votes received.
+    const st = candidacy.status;
+    const rounds = edition.rounds;
+    const running = edition.status === 'COMPETITION';
+    const videoOpen = running && ['OFFICIAL', 'STAGE_2'].includes(st) && rounds?.FREE?.status !== 'CLOSED';
+    const projectOpen = running && ['OFFICIAL', 'STAGE_2', 'STAGE_3'].includes(st) && rounds?.PAID?.status !== 'CLOSED';
+    const competing = ['OFFICIAL', 'STAGE_2', 'STAGE_3', 'FINALIST', 'WINNER', 'ELIMINATED', 'FINISHED', 'SUSPENDED'].includes(st);
+    const subs = space?.submissions;
+    const reload = () => { me.refetch(); };
+    body = (
+      <motion.div variants={sequence} initial="hidden" animate="show" className="flex flex-col gap-4">
+        {notice && (
+          <motion.p variants={sectionRise} role="status" className="text-sm text-success bg-success-soft rounded-card px-4 py-3">{notice}</motion.p>
+        )}
+        <Hero edition={edition} />
+        <StatusCard c={candidacy} e={edition} />
+        {competing && <VotesCard c={candidacy} stage={edition.stage} />}
+        {competing && candidacy.publishedAt && <PublicPageCard c={candidacy} />}
+        {competing && (videoOpen || subs?.VIDEO) && (
+          <VideoSubmissionCard
+            key={`video-${subs?.VIDEO?._id ?? 'new'}-${subs?.VIDEO?.updatedAt ?? ''}`}
+            submission={subs?.VIDEO ?? null}
+            canSubmit={videoOpen}
+            onSubmitted={putSubmission}
+            onReload={reload}
+          />
+        )}
+        {competing && (projectOpen || subs?.PROJECT) && (
+          <ProjectSubmissionCard
+            key={`project-${subs?.PROJECT?._id ?? 'new'}-${subs?.PROJECT?.updatedAt ?? ''}`}
+            submission={subs?.PROJECT ?? null}
+            canSubmit={projectOpen}
+            onSubmitted={putSubmission}
+            onReload={reload}
+          />
+        )}
+        <motion.div variants={sectionRise}>
+          <Link to="/impact-challenge/candidats" className={cn(card, 'flex items-center justify-between gap-2 py-3 text-sm font-semibold text-primary')}>
+            Voir tous les candidats
+            <HugeiconsIcon icon={UserGroupIcon} size={16} />
+          </Link>
+        </motion.div>
+        <Timeline c={candidacy} stage={edition.stage} />
+        {edition.rulesText && (
+          <motion.div variants={sectionRise} className="flex justify-center">
+            <button type="button" onClick={() => setRulesOpen(true)} className="flex items-center gap-1.5 text-sm font-semibold text-primary py-2">
+              <HugeiconsIcon icon={Book02Icon} size={16} />
+              Lire le règlement
+            </button>
+          </motion.div>
+        )}
       </motion.div>
     );
   } else {

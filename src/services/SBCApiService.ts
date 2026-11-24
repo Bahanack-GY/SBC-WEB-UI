@@ -1,7 +1,7 @@
 import { ApiService } from './ApiService';
 import { ApiResponse } from './ApiResponse';
 import { currentReplay } from './sessionReplay';
-import type { ImpactProfileInput } from '../types/impact';
+import type { ImpactPayMethod, ImpactProfileInput, ImpactProjectContent } from '../types/impact';
 
 /** Name, phone and email typed at the top of a support request. */
 export type SupportContact = { name: string; phone: string; email: string };
@@ -1142,6 +1142,52 @@ export class SBCApiService extends ApiService {
   /** Leave the Challenge (before the competition). Answers the Candidate. */
   async impactWithdraw(): Promise<ApiResponse> {
     return await this.post('/tickets/impact/me/candidacy/withdraw');
+  }
+
+  // ----- Phase 2 (server docs/impact-challenge/PHASE2.md): board, contents, votes -----
+
+  /** The competition's public board (published candidates, sorted for the stage), or data: null before it. */
+  async impactBoard(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/public/board', { requiresAuth: false, skipDeduplication: true });
+  }
+
+  /** One published candidate, with their accepted video and project. */
+  async impactPublicCandidate(candidateId: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/impact/public/candidates/${encodeURIComponent(candidateId)}`, { requiresAuth: false, skipDeduplication: true });
+  }
+
+  /** The candidate's « Ma vision de SBC » video. Answers the Submission. */
+  async impactSubmitVideo(body: { videoFileId: string; caption?: string }): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/me/submissions/video', { body });
+  }
+
+  /** The candidate's project presentation (8 headings, 20–2000 characters each). Answers the Submission. */
+  async impactSubmitProject(body: ImpactProjectContent): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/me/submissions/project', { body });
+  }
+
+  /** The week-2 free vote (one per account and edition). Answers { candidateId, at }. */
+  async impactFreeVote(candidateId: string): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/free-votes', { body: { candidateId } });
+  }
+
+  /**
+   * Buys a pack of week-3 votes. `idempotencyKey` must be NEW for each click (the same key
+   * returns the same purchase). Answers { transaction, sessionId }: Mobile Money → open
+   * generatePaymentUrl(sessionId); balance → the transaction is already settled (or PENDING).
+   */
+  async impactBuyVotes(body: { candidateId: string; packIndex: number; method: ImpactPayMethod; idempotencyKey: string }): Promise<ApiResponse> {
+    return await this.post('/tickets/impact/vote-purchases', { body });
+  }
+
+  /** The member's free vote and vote purchases in the live edition. */
+  async impactMyVotes(): Promise<ApiResponse> {
+    return await this.get('/tickets/impact/me/votes', { skipDeduplication: true });
+  }
+
+  /** One of the member's vote purchases (to follow a PENDING balance payment). */
+  async impactMyPurchase(purchaseId: string): Promise<ApiResponse> {
+    return await this.get(`/tickets/impact/me/vote-purchases/${encodeURIComponent(purchaseId)}`, { skipDeduplication: true });
   }
 
   // ==================== ADVERTISING ====================

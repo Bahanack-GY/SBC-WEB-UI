@@ -65,6 +65,19 @@ describe('Impact Challenge on the home page', () => {
     expect(screen.queryByRole('link', { name: /Voter/ })).not.toBeInTheDocument();
   });
 
+  it('during the competition, leads to the board instead', async () => {
+    api.getCurrentImpactChallenge.mockResolvedValue(fail(404, 'No active challenge found'));
+    api.impactCurrent.mockResolvedValue(ok({
+      _id: 'ed1', name: 'SBC Impact Challenge 2027', status: 'COMPETITION', stage: 'WEEK2', registrationOpen: false,
+      seats: { taken: 20, max: 20 }, settings: { invitationsRequired: 10 },
+      rounds: { FREE: { status: 'OPEN', opensAt: null, closesAt: null, openedAt: null, closedAt: null }, PAID: null },
+    }));
+    renderPage(<ImpactChallengeBanner />);
+    const link = await screen.findByRole('link', { name: /votez pour les candidats/ });
+    expect(link).toHaveAttribute('href', '/impact-challenge/candidats');
+    expect(link).toHaveTextContent('Vote gratuit ouvert.');
+  });
+
   it('is not shown when the edition call fails and no challenge runs', async () => {
     api.getCurrentImpactChallenge.mockResolvedValue(fail(404, 'No active challenge found'));
     api.impactCurrent.mockResolvedValue(fail(500, 'boom'));
